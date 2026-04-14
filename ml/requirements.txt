@@ -1,0 +1,11 @@
+# BASA-PLUS-AI ML Service
+# Python dependencies for the ML classification API
+# Compatible with Python 3.12+ (including 3.14)
+
+flask>=3.0.0
+flask-cors>=4.0.0
+scikit-learn>=1.5.0
+numpy>=2.0.0
+pandas>=2.2.0
+joblib>=1.3.2
+gunicorn>=21.2.0

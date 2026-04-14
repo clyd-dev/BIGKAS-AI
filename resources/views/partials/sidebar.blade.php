@@ -1,0 +1,96 @@
+{{-- Sidebar Navigation --}}
+<div class="bg-white border-end shadow-sm" id="sidebar-wrapper" style="min-width: 250px; max-width: 250px; min-height: calc(100vh - 56px);">
+    <div class="list-group list-group-flush pt-2">
+        @php $role = Auth::user()->role ?? 'teacher'; @endphp
+
+        {{-- Dashboard --}}
+        <a href="{{ route('dashboard') }}"
+           class="list-group-item list-group-item-action border-0 {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <i class="bi bi-speedometer2 me-2"></i> Dashboard
+        </a>
+
+        @if(in_array($role, ['admin', 'teacher']))
+            {{-- Learners --}}
+            <a href="{{ route('learners.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('learners.*') ? 'active' : '' }}">
+                <i class="bi bi-people me-2"></i> Learners
+            </a>
+
+            {{-- Assessments --}}
+            <a href="{{ route('assessments.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('assessments.*') ? 'active' : '' }}">
+                <i class="bi bi-clipboard-check me-2"></i> Assessments
+            </a>
+
+            {{-- Reading Materials --}}
+            <a href="{{ route('materials.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('materials.*') ? 'active' : '' }}">
+                <i class="bi bi-journal-text me-2"></i> Materials
+            </a>
+
+            {{-- Interventions --}}
+            <a href="{{ route('interventions.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('interventions.*') ? 'active' : '' }}">
+                <i class="bi bi-lightbulb me-2"></i> Interventions
+            </a>
+        @endif
+
+        @if(in_array($role, ['admin', 'teacher', 'student']))
+            {{-- Practice Center --}}
+            <a href="{{ route('practice.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('practice.*') ? 'active' : '' }}">
+                <i class="bi bi-controller me-2"></i> Practice Center
+            </a>
+        @endif
+
+        @if(in_array($role, ['admin', 'teacher', 'parent']))
+            {{-- Reports --}}
+            <a href="{{ route('reports.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                <i class="bi bi-bar-chart me-2"></i> Reports
+            </a>
+        @endif
+
+        @if($role === 'student')
+            <hr class="my-1">
+            <small class="text-muted px-3">MY LEARNING</small>
+
+            <a href="{{ route('student.progress') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('student.progress') ? 'active' : '' }}">
+                <i class="bi bi-graph-up me-2"></i> My Progress
+            </a>
+
+            <a href="{{ route('student.assessments') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('student.assessments*') ? 'active' : '' }}">
+                <i class="bi bi-clipboard-data me-2"></i> My Assessments
+            </a>
+
+            <a href="{{ route('student.interventions') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('student.interventions') ? 'active' : '' }}">
+                <i class="bi bi-lightbulb me-2"></i> My Interventions
+            </a>
+        @endif
+
+        @if($role === 'admin')
+            <hr class="my-1">
+            <small class="text-muted px-3">ADMINISTRATION</small>
+
+            <a href="{{ route('admin.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.index') ? 'active' : '' }}">
+                <i class="bi bi-gear me-2"></i> Admin Panel
+            </a>
+            <a href="{{ route('admin.users') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.users') ? 'active' : '' }}">
+                <i class="bi bi-person-badge me-2"></i> Users
+            </a>
+            <a href="{{ route('admin.schools') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.schools') ? 'active' : '' }}">
+                <i class="bi bi-building me-2"></i> Schools
+            </a>
+            <a href="{{ route('admin.settings') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
+                <i class="bi bi-sliders me-2"></i> Settings
+            </a>
+        @endif
+    </div>
+</div>

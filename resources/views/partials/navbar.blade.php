@@ -2,7 +2,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="{{ route('dashboard') }}">
-            <i class="bi bi-book"></i> BIGKAS-AI
+            <i class="bi bi-book"></i> BIGKAS
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">

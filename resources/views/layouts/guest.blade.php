@@ -14,7 +14,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="{{ url('/') }}">
-                <i class="bi bi-book"></i> BIGKAS-AI
+                <i class="bi bi-book"></i> BIGKAS
             </a>
             <div class="ms-auto">
                 <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm me-2">Login</a>
@@ -27,7 +27,7 @@
 
     <footer class="bg-dark text-white py-4 mt-5">
         <div class="container text-center">
-            <p class="mb-0">&copy; {{ date('Y') }} BIGKAS-AI &mdash; Sagay City Division, Negros Occidental</p>
+            <p class="mb-0">&copy; {{ date('Y') }} BIGKAS &mdash; Sagay City Division, Negros Occidental</p>
         </div>
     </footer>
 

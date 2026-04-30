@@ -18,7 +18,7 @@
                         <label for="learner_id" class="form-label">Select Learner <span class="text-danger">*</span></label>
                         <select class="form-select @error('learner_id') is-invalid @enderror" id="learner_id" name="learner_id" required>
                             <option value="">Choose a learner...</option>
-                            @foreach($learners ?? [] as $learner)
+                            @foreach($learners as $learner)
                                 <option value="{{ $learner->id }}" {{ old('learner_id') == $learner->id ? 'selected' : '' }}>
                                     {{ $learner->full_name }} (Grade {{ $learner->grade_level }})
                                 </option>

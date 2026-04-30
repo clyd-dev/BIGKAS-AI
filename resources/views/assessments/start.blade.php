@@ -4,14 +4,14 @@
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-play-circle me-2"></i>Start Assessment for {{ $learner->full_name }}</h4>
+        <h4 class="mb-0"><i class="bi bi-play-circle me-2"></i>Start Assessment for {{ $learner->getFullName() }}</h4>
         <a href="{{ route('learners.show', $learner) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
     </div>
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <div class="alert alert-info">
-                <i class="bi bi-info-circle me-1"></i> Select a reading material for <strong>{{ $learner->full_name }}</strong> (Grade {{ $learner->grade_level }}).
+                <i class="bi bi-info-circle me-1"></i> Select a reading material for <strong>{{ $learner->getFullName() }}</strong> (Grade {{ $learner->grade_level }}).
             </div>
 
             <form method="POST" action="{{ route('assessments.store') }}">

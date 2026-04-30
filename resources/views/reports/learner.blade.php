@@ -122,7 +122,7 @@
                     <tbody>
                         @php $weaknessLabels = config('bigkas.weakness_categories', []); @endphp
                         @forelse($assessments ?? [] as $assessment)
-                            @php $r = $assessment->results->first(); @endphp
+                            @php $r = $assessment->result; @endphp
                             <tr>
                                 <td>{{ $assessment->created_at?->format('M d, Y') }}</td>
                                 <td>{{ $assessment->material?->title ?? 'N/A' }}</td>
@@ -139,7 +139,7 @@
                                         <span class="badge bg-secondary">-</span>
                                     @endif
                                 </td>
-                                <td>{{ $weaknessLabels[$r?->primary_weakness] ?? '-' }}</td>
+                                <td>{{ $weaknessLabels[$r?->primary_weakness]['name'] ?? '-' }}</td>
                                 <td><a href="{{ route('assessments.results', $assessment) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
                             </tr>
                         @empty

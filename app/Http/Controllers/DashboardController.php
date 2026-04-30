@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Assessment;
+use App\Models\AssessmentResult;
 use App\Models\Learner;
 use Illuminate\Http\Request;
 
@@ -20,16 +21,43 @@ class DashboardController extends Controller
             return $this->studentDashboard($user);
         }
 
-        // Teacher / Parent dashboard
+        if ($user->isParent()) {
+            return redirect()->route('parent.dashboard');
+        }
+
+        // Teacher dashboard
         $learners = $user->learners()->orderBy('last_name')->get();
-        $stats = $user->getStats();
+        $baseStats = $user->getStats();
+
+        // Augment stats with avg_accuracy and avg_wpm across all teacher's learners
+        $learnerIds = $learners->pluck('id');
+        $avgAccuracy = $learnerIds->isEmpty() ? 0 :
+            AssessmentResult::whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
+                ->avg('accuracy_rate') ?? 0;
+        $avgWpm = $learnerIds->isEmpty() ? 0 :
+            AssessmentResult::whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
+                ->avg('words_per_minute') ?? 0;
+
+        $stats = array_merge($baseStats, [
+            'avg_accuracy' => round((float) $avgAccuracy, 1),
+            'avg_wpm'      => round((float) $avgWpm, 1),
+        ]);
+
+        // Reading level distribution for chart
+        $distribution = [
+            'independent'  => $learners->where('reading_level', 'independent')->count(),
+            'instructional' => $learners->where('reading_level', 'instructional')->count(),
+            'frustration'  => $learners->where('reading_level', 'frustration')->count(),
+            'not_assessed' => $learners->whereNull('reading_level')->count(),
+        ];
+
         $recentAssessments = Assessment::forUser($user->id)
             ->with(['learner', 'material', 'result'])
             ->latest()
             ->limit(10)
             ->get();
 
-        return view('dashboard.index', compact('stats', 'learners', 'recentAssessments'));
+        return view('dashboard.index', compact('stats', 'learners', 'recentAssessments', 'distribution'));
     }
 
     private function adminDashboard($user)

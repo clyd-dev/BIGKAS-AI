@@ -58,7 +58,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($assessments ?? [] as $assessment)
+                        @forelse($assessments as $assessment)
                             <tr>
                                 <td>{{ $assessment->learner?->full_name ?? 'N/A' }}</td>
                                 <td>{{ Str::limit($assessment->material?->title ?? 'N/A', 30) }}</td>
@@ -72,10 +72,10 @@
                                         <span class="badge bg-secondary">Pending</span>
                                     @endif
                                 </td>
-                                <td>{{ $assessment->results->first()?->accuracy_rate ?? '-' }}%</td>
-                                <td>{{ $assessment->results->first()?->words_per_minute ?? '-' }}</td>
+                                <td>{{ $assessment->accuracy_rate ?? '-' }}%</td>
+                                <td>{{ $assessment->words_per_minute ?? '-' }}</td>
                                 <td>
-                                    @php $level = $assessment->results->first()?->reading_level; @endphp
+                                    @php $level = $assessment->reading_level; @endphp
                                     @if($level === 'independent')
                                         <span class="badge bg-success">Ind.</span>
                                     @elseif($level === 'instructional')

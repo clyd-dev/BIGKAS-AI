@@ -62,11 +62,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($learners ?? [] as $learner)
+                        @forelse($learners as $learner)
                             <tr>
                                 <td>
                                     <a href="{{ route('learners.show', $learner) }}" class="text-decoration-none fw-semibold">
-                                        {{ $learner->full_name }}
+                                        {{ $learner->getFullName() }}
                                     </a>
                                 </td>
                                 <td><code>{{ $learner->lrn ?? '-' }}</code></td>

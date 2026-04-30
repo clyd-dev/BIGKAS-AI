@@ -28,13 +28,13 @@
                         @forelse($logs ?? [] as $log)
                             <tr>
                                 <td><strong>{{ $log->intervention?->name ?? 'N/A' }}</strong></td>
-                                <td>{{ $weaknessLabels[$log->intervention?->target_weakness] ?? 'General' }}</td>
+                                <td>{{ $weaknessLabels[$log->intervention?->target_weakness]['name'] ?? 'General' }}</td>
                                 <td>
                                     <span class="badge {{ $log->status === 'completed' ? 'bg-success' : ($log->status === 'in_progress' ? 'bg-primary' : ($log->status === 'skipped' ? 'bg-secondary' : 'bg-warning text-dark')) }}">
                                         {{ ucfirst(str_replace('_', ' ', $log->status)) }}
                                     </span>
                                 </td>
-                                <td>{{ $log->assigned_at ? \Carbon\Carbon::parse($log->assigned_at)->format('M d, Y') : '-' }}</td>
+                                <td>{{ $log->created_at ? \Carbon\Carbon::parse($log->created_at)->format('M d, Y') : '-' }}</td>
                                 <td>{{ $log->completed_at ? \Carbon\Carbon::parse($log->completed_at)->format('M d, Y') : '-' }}</td>
                                 <td>{{ Str::limit($log->notes, 40) }}</td>
                                 <td class="text-end">

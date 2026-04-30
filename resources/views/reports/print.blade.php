@@ -61,7 +61,7 @@
                     <td>{{ $r?->accuracy_rate ?? '-' }}%</td>
                     <td>{{ $r?->words_per_minute ?? '-' }}</td>
                     <td>{{ ucfirst($r?->reading_level ?? '-') }}</td>
-                    <td>{{ $weaknessLabels[$r?->primary_weakness] ?? '-' }}</td>
+                    <td>{{ $weaknessLabels[$r?->primary_weakness]['name'] ?? '-' }}</td>
                 </tr>
             @empty
                 <tr><td colspan="6" class="text-center">No assessments</td></tr>

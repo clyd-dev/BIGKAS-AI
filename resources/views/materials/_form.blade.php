@@ -10,9 +10,9 @@
         <label for="language" class="form-label">Language <span class="text-danger">*</span></label>
         <select class="form-select @error('language') is-invalid @enderror" id="language" name="language" required>
             <option value="">Select</option>
-            <option value="english" {{ old('language', $material->language ?? '') === 'english' ? 'selected' : '' }}>English</option>
-            <option value="filipino" {{ old('language', $material->language ?? '') === 'filipino' ? 'selected' : '' }}>Filipino</option>
-            <option value="hiligaynon" {{ old('language', $material->language ?? '') === 'hiligaynon' ? 'selected' : '' }}>Hiligaynon</option>
+            <option value="en" {{ old('language', $material->language ?? '') === 'english' ? 'selected' : '' }}>English</option>
+            <option value="fil" {{ old('language', $material->language ?? '') === 'filipino' ? 'selected' : '' }}>Filipino</option>
+            <option value="hil" {{ old('language', $material->language ?? '') === 'hiligaynon' ? 'selected' : '' }}>Hiligaynon</option>
         </select>
         @error('language') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>

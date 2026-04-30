@@ -1,5 +1,5 @@
 """
-BASA-PLUS-AI: ML Classification Flask API
+BIGKAS: ML Classification Flask API
 
 This Flask server exposes the trained reading weakness classifier
 as a REST API that the PHP application calls.
@@ -562,7 +562,7 @@ def generate_interpretation(features, primary_weakness):
 # ============================================================
 
 if __name__ == '__main__':
-    logger.info("Starting BASA-PLUS-AI ML Service...")
+    logger.info("Starting BIGKAS ML Service...")
     model_loaded = load_model()
 
     if not model_loaded:

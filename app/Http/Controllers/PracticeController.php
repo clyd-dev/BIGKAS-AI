@@ -11,7 +11,18 @@ class PracticeController extends Controller
 {
     public function index()
     {
-        return view('practice.index');
+        $user = auth()->user();
+        $learnerIds = $user->isAdmin()
+            ? Learner::pluck('id')
+            : $user->learners()->pluck('learners.id');
+
+        $recentSessions = PracticeSession::whereIn('learner_id', $learnerIds)
+            ->with('learner')
+            ->latest()
+            ->limit(15)
+            ->get();
+
+        return view('practice.index', compact('recentSessions'));
     }
 
     public function phonemic()

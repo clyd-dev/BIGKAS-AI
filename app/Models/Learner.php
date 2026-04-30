@@ -29,9 +29,14 @@ class Learner extends Model
         'grade_level',
         'reading_level',
         'mother_tongue',
+        'pin',
         'notes',
         'avatar',
         'is_active',
+        'current_streak',
+        'longest_streak',
+        'total_xp',
+        'last_activity_date',
     ];
 
     protected function casts(): array
@@ -40,6 +45,10 @@ class Learner extends Model
             'birth_date' => 'date',
             'grade_level' => 'integer',
             'is_active' => 'boolean',
+            'current_streak' => 'integer',
+            'longest_streak' => 'integer',
+            'total_xp' => 'integer',
+            'last_activity_date' => 'date',
         ];
     }
 
@@ -82,6 +91,18 @@ class Learner extends Model
         return $this->hasMany(ProgressSnapshot::class);
     }
 
+    public function badges(): BelongsToMany
+    {
+        return $this->belongsToMany(Badge::class, 'learner_badges')
+            ->withPivot('earned_at', 'context')
+            ->orderByPivot('earned_at', 'desc');
+    }
+
+    public function assessmentSessions(): HasMany
+    {
+        return $this->hasMany(AssessmentSession::class);
+    }
+
     // ── Scopes ──
 
     public function scopeActive($query)
@@ -90,6 +111,14 @@ class Learner extends Model
     }
 
     // ── Helpers ──
+
+    /**
+     * Full name attribute accessor — allows $learner->full_name in views.
+     */
+    public function getFullNameAttribute(): string
+    {
+        return $this->getFullName();
+    }
 
     public function getFullName(): string
     {
@@ -184,5 +213,65 @@ class Learner extends Model
             'completed_interventions' => $this->interventionLogs()->where('status', 'completed')->count(),
             'practice_sessions' => $this->practiceSessions()->count(),
         ];
+    }
+
+    // ── Student Portal / Gamification ──
+
+    public static function generatePin(): string
+    {
+        do {
+            $pin = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        } while (self::where('pin', $pin)->exists());
+
+        return $pin;
+    }
+
+    public function hasBadge(string $slug): bool
+    {
+        return $this->badges()->where('slug', $slug)->exists();
+    }
+
+    public function getBadgeCount(): int
+    {
+        return $this->badges()->count();
+    }
+
+    public function addXp(int $amount): void
+    {
+        $this->increment('total_xp', $amount);
+    }
+
+    public function recordActivity(): void
+    {
+        $today = now()->toDateString();
+        $lastDate = $this->last_activity_date?->toDateString();
+
+        if ($lastDate === $today) {
+            return; // already recorded today
+        }
+
+        $yesterday = now()->subDay()->toDateString();
+
+        if ($lastDate === $yesterday) {
+            // Continue streak
+            $newStreak = $this->current_streak + 1;
+            $this->update([
+                'current_streak' => $newStreak,
+                'longest_streak' => max($this->longest_streak, $newStreak),
+                'last_activity_date' => $today,
+            ]);
+        } else {
+            // Reset streak (or first activity)
+            $this->update([
+                'current_streak' => 1,
+                'longest_streak' => max($this->longest_streak, 1),
+                'last_activity_date' => $today,
+            ]);
+        }
+    }
+
+    public function getActiveSession(): ?AssessmentSession
+    {
+        return $this->assessmentSessions()->active()->latest()->first();
     }
 }

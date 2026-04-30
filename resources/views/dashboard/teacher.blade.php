@@ -68,7 +68,7 @@
                 <h6 class="mb-0"><i class="bi bi-pie-chart me-1"></i> Reading Level Distribution</h6>
             </div>
             <div class="card-body">
-                <canvas id="teacherDistChart" height="200"></canvas>
+                <canvas id="teacherDistChart" height="50"></canvas>
             </div>
         </div>
     </div>
@@ -92,9 +92,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($learners ?? [] as $learner)
+                    @forelse($learners as $learner)
                         <tr>
-                            <td>{{ $learner->full_name }}</td>
+                            <td>{{ $learner->getFullName() }}</td>
                             <td>Grade {{ $learner->grade_level }}</td>
                             <td>
                                 @if($learner->reading_level === 'independent')

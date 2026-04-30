@@ -15,8 +15,8 @@
                     <label class="form-label small">Target Weakness</label>
                     <select name="target_weakness" class="form-select form-select-sm">
                         <option value="">All</option>
-                        @foreach(config('bigkas.weakness_categories', []) as $id => $label)
-                            <option value="{{ $id }}" {{ request('target_weakness') == $id ? 'selected' : '' }}>{{ $label }}</option>
+                        @foreach(config('bigkas.weakness_categories', []) as $id => $cat)
+                            <option value="{{ $id }}" {{ request('target_weakness') == $id ? 'selected' : '' }}>{{ $cat['name'] }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -38,7 +38,7 @@
 
     {{-- Interventions Grid --}}
     <div class="row g-3">
-        @forelse($interventions ?? [] as $intervention)
+        @forelse($interventions as $intervention)
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
@@ -52,7 +52,7 @@
                                 $weaknessLabels = config('bigkas.weakness_categories', []);
                             @endphp
                             <span class="badge bg-warning text-dark">
-                                <i class="bi bi-crosshair me-1"></i>{{ $weaknessLabels[$intervention->target_weakness] ?? 'General' }}
+                                <i class="bi bi-crosshair me-1"></i>{{ $weaknessLabels[$intervention->target_weakness]['name'] ?? 'General' }}
                             </span>
                             <span class="badge bg-light text-dark">
                                 <i class="bi bi-clock me-1"></i>{{ $intervention->duration_minutes ?? '?' }} min

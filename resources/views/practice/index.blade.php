@@ -72,7 +72,7 @@
                         @forelse($recentSessions ?? [] as $session)
                             <tr>
                                 <td>{{ $session->learner?->full_name ?? 'N/A' }}</td>
-                                <td>{{ ucfirst(str_replace('_', ' ', $session->activity_type)) }}</td>
+                                <td>{{ ucfirst(str_replace('_', ' ', $session->session_type)) }}</td>
                                 <td>
                                     @if($session->score !== null)
                                         <span class="badge {{ $session->score >= 80 ? 'bg-success' : ($session->score >= 60 ? 'bg-warning text-dark' : 'bg-danger') }}">
@@ -82,7 +82,7 @@
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
-                                <td>{{ $session->duration_seconds ? gmdate('i:s', $session->duration_seconds) : '-' }}</td>
+                                <td>{{ $session->time_spent ? gmdate('i:s', $session->time_spent) : '-' }}</td>
                                 <td>{{ $session->created_at?->diffForHumans() }}</td>
                             </tr>
                         @empty

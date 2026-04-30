@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', $learner->full_name)
+@section('title', $learner->getFullName())
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-person me-2"></i>{{ $learner->full_name }}</h4>
+        <h4 class="mb-0"><i class="bi bi-person me-2"></i>{{ $learner->getFullName() }}</h4>
         <div>
             <a href="{{ route('assessments.start', $learner) }}" class="btn btn-primary btn-sm">
                 <i class="bi bi-mic me-1"></i> New Assessment
@@ -103,14 +103,14 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($assessments ?? [] as $assessment)
+                                @forelse($assessments as $assessment)
                                     <tr>
                                         <td>{{ $assessment->created_at?->format('M d, Y') }}</td>
                                         <td>{{ $assessment->material?->title ?? 'N/A' }}</td>
-                                        <td>{{ $assessment->results->first()?->accuracy_rate ?? '-' }}%</td>
-                                        <td>{{ $assessment->results->first()?->words_per_minute ?? '-' }}</td>
+                                        <td>{{ $assessment->results->accuracy_rate ?? '-' }}%</td>
+                                        <td>{{ $assessment->results->words_per_minute ?? '-' }}</td>
                                         <td>
-                                            @php $level = $assessment->results->first()?->reading_level; @endphp
+                                            @php $level = $assessment->reading_level; @endphp
                                             @if($level === 'independent')
                                                 <span class="badge bg-success">Ind.</span>
                                             @elseif($level === 'instructional')

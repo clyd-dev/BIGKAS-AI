@@ -1,5 +1,9 @@
 {{-- Admin Dashboard Partial --}}
+@extends('layouts.app')
 
+@section('title', 'Admin')
+
+@section('content')
 {{-- Stats Cards --}}
 <div class="row g-3 mb-4">
     <div class="col-md-3">
@@ -64,7 +68,7 @@
                 <h6 class="mb-0"><i class="bi bi-pie-chart me-1"></i> Reading Level Distribution</h6>
             </div>
             <div class="card-body">
-                <canvas id="levelDistributionChart" height="250"></canvas>
+                <canvas id="levelDistributionChart" height="50"></canvas>
             </div>
         </div>
     </div>
@@ -100,14 +104,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($recentAssessments ?? [] as $assessment)
+                    @forelse($recentAssessments as $assessment)
                         <tr>
-                            <td>{{ $assessment->learner?->full_name ?? 'N/A' }}</td>
+                            <td>{{ $assessment->learner?->getFullName() ?? 'N/A' }}</td>
                             <td>{{ $assessment->material?->title ?? 'N/A' }}</td>
-                            <td>{{ $assessment->results->first()?->accuracy_rate ?? '-' }}%</td>
-                            <td>{{ $assessment->results->first()?->words_per_minute ?? '-' }}</td>
+                            <td>{{ $assessment->accuracy_rate ?? '-' }}%</td>
+                            <td>{{ $assessment->words_per_minute ?? '-' }}</td>
                             <td>
-                                @php $level = $assessment->results->first()?->reading_level; @endphp
+                                @php $level = $assessment->reading_level; @endphp
                                 @if($level === 'independent')
                                     <span class="badge bg-success">Independent</span>
                                 @elseif($level === 'instructional')
@@ -130,6 +134,7 @@
         </div>
     </div>
 </div>
+@endsection
 
 @push('scripts')
 <script>

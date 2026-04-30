@@ -43,16 +43,13 @@ class MLApiController extends Controller
 
         $result = $this->mlService->classify($features);
 
-        $weaknessLabels = config('bigkas.weakness_categories', [
-            1 => 'Phonemic Awareness',
-            2 => 'Decoding Accuracy',
-            3 => 'Oral Reading Fluency',
-            4 => 'Reading Comprehension',
-        ]);
+        $weaknessCategories = config('bigkas.weakness_categories', []);
+        $primaryWeakness = $result['primary_weakness'] ?? null;
+        $weaknessInfo = $weaknessCategories[$primaryWeakness] ?? null;
 
         return $this->success([
-            'primary_weakness' => $result['primary_weakness'] ?? null,
-            'weakness_label' => $weaknessLabels[$result['primary_weakness'] ?? 0] ?? 'Unknown',
+            'primary_weakness' => $primaryWeakness,
+            'weakness_label' => $weaknessInfo['name'] ?? 'Unknown',
             'confidence' => $result['confidence'] ?? null,
             'probabilities' => $result['probabilities'] ?? null,
             'method' => $result['method'] ?? 'unknown',

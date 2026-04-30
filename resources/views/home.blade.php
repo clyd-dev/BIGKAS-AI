@@ -6,10 +6,10 @@
     {{-- Hero Section --}}
     <section class="bg-primary text-white py-5">
         <div class="container text-center py-5">
-            <h1 class="display-4 fw-bold mb-3">BIGKAS-AI</h1>
+            <h1 class="display-4 fw-bold mb-3">BIGKAS</h1>
             <p class="lead mb-4">
-                AI-Assisted Reading Assessment and Intervention System<br>
-                for Philippine Public Elementary Schools
+                AI/ML-Assisted Reading Assessment and Intervention System<br>
+                for Philippine Public Elementary and Secondary Schools
             </p>
             <div class="d-flex justify-content-center gap-3">
                 <a href="{{ route('register') }}" class="btn btn-light btn-lg px-4">
@@ -83,7 +83,7 @@
         <div class="container text-center">
             <h2 class="mb-3">Serving Sagay City Division</h2>
             <p class="text-muted">Negros Occidental, Philippines</p>
-            <p class="text-muted">Designed for Grade 1-3 learners in public elementary schools, aligned with Phil-IRI reading level standards.</p>
+            <p class="text-muted">Designed for learners in public elementary and secondary schools, aligned with Phil-IRI reading level standards.</p>
         </div>
     </section>
 @endsection

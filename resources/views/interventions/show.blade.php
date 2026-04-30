@@ -60,7 +60,7 @@
                 <div class="card-body">
                     @php $weaknessLabels = config('bigkas.weakness_categories', []); @endphp
                     <table class="table table-borderless table-sm mb-0">
-                        <tr><th class="text-muted">Target</th><td>{{ $weaknessLabels[$intervention->target_weakness] ?? 'General' }}</td></tr>
+                        <tr><th class="text-muted">Target</th><td>{{ $weaknessLabels[$intervention->target_weakness]['name'] ?? 'General' }}</td></tr>
                         <tr><th class="text-muted">Type</th><td>{{ ucfirst($intervention->type ?? 'activity') }}</td></tr>
                         <tr><th class="text-muted">Difficulty</th><td>{{ ucfirst($intervention->difficulty ?? 'medium') }}</td></tr>
                         <tr><th class="text-muted">Duration</th><td>{{ $intervention->duration_minutes ?? '?' }} minutes</td></tr>
@@ -81,7 +81,7 @@
                                         {{ ucfirst(str_replace('_', ' ', $log->status)) }}
                                     </span>
                                 </div>
-                                <small class="text-muted">{{ $log->assigned_at ? \Carbon\Carbon::parse($log->assigned_at)->diffForHumans() : '' }}</small>
+                                <small class="text-muted">{{ $log->created_at ? \Carbon\Carbon::parse($log->created_at)->diffForHumans() : '' }}</small>
                             </div>
                         @empty
                             <div class="list-group-item text-muted small text-center">No assignments yet</div>

@@ -71,6 +71,36 @@
             </a>
         @endif
 
+        @if($role === 'parent')
+            <hr class="my-1">
+            <small class="text-muted px-3">MY CHILDREN</small>
+
+            <a href="{{ route('parent.dashboard') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('parent.dashboard') ? 'active' : '' }}">
+                <i class="bi bi-house-heart me-2"></i> Home
+            </a>
+
+            @php $parentLearners = auth()->user()->learners()->orderBy('first_name')->get(); @endphp
+            @foreach($parentLearners as $child)
+                <a href="{{ route('parent.children.profile', $child) }}"
+                   class="list-group-item list-group-item-action border-0 ps-4 {{ request()->is('parent/children/'.$child->id.'*') ? 'active' : '' }}">
+                    <i class="bi bi-person me-2"></i> {{ $child->first_name }}
+                </a>
+            @endforeach
+
+            <hr class="my-1">
+            <small class="text-muted px-3">COMMUNICATION</small>
+
+            <a href="{{ route('parent.messages.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('parent.messages.*') ? 'active' : '' }}">
+                <i class="bi bi-envelope me-2"></i> Messages
+                @php $unreadMsgCount = \App\Models\Message::where('receiver_id', auth()->id())->whereNull('read_at')->count(); @endphp
+                @if($unreadMsgCount > 0)
+                    <span class="badge bg-danger rounded-pill float-end">{{ $unreadMsgCount }}</span>
+                @endif
+            </a>
+        @endif
+
         @if($role === 'admin')
             <hr class="my-1">
             <small class="text-muted px-3">ADMINISTRATION</small>

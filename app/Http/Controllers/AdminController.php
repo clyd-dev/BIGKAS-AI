@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Badge;
 use App\Models\User;
 use App\Models\School;
 use App\Models\Learner;
@@ -18,16 +19,18 @@ class AdminController extends Controller
     public function index()
     {
         $stats = [
-            'total_users' => User::count(),
-            'total_teachers' => User::where('role', 'teacher')->count(),
-            'total_parents' => User::where('role', 'parent')->count(),
-            'total_students' => User::where('role', 'student')->count(),
-            'total_learners' => Learner::count(),
-            'total_assessments' => Assessment::count(),
-            'total_schools' => School::count(),
-            'frustration_learners' => Learner::where('reading_level', 'frustration')->count(),
+            'total_users'            => User::count(),
+            'total_teachers'         => User::where('role', 'teacher')->count(),
+            'total_parents'          => User::where('role', 'parent')->count(),
+            'total_students'         => User::where('role', 'student')->count(),
+            'total_learners'         => Learner::count(),
+            'total_assessments'      => Assessment::count(),
+            'total_schools'          => School::count(),
+            'total_interventions'    => Intervention::where('is_active', true)->count(),
+            'total_materials'        => ReadingMaterial::where('is_active', true)->count(),
+            'frustration_learners'   => Learner::where('reading_level', 'frustration')->count(),
             'instructional_learners' => Learner::where('reading_level', 'instructional')->count(),
-            'independent_learners' => Learner::where('reading_level', 'independent')->count(),
+            'independent_learners'   => Learner::where('reading_level', 'independent')->count(),
         ];
 
         $recentActivity = ActivityLog::with('user')->latest()->limit(20)->get();
@@ -44,12 +47,19 @@ class AdminController extends Controller
         }
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+            $query->where(fn($q) => $q
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+            );
+        }
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'active');
         }
 
-        $users = $query->orderBy('name')->paginate(20);
+        $users   = $query->orderBy('name')->paginate(20);
+        $schools = School::orderBy('name')->get();
 
-        return view('admin.users', compact('users'));
+        return view('admin.users', compact('users', 'schools'));
     }
 
     public function updateUserRole(Request $request, User $user)
@@ -74,8 +84,32 @@ class AdminController extends Controller
 
     public function resetUserPassword(User $user)
     {
-        $user->update(['password' => 'admin123']);
-        return back()->with('success', "Password reset for {$user->name}. Temporary: admin123");
+        $tempPassword = 'Bigkas@123';
+        $user->update(['password' => Hash::make($tempPassword)]);
+        return back()->with('success', "Password reset for {$user->name}. Temporary password: {$tempPassword}");
+    }
+
+    public function createUser(Request $request)
+    {
+        $request->validate([
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|email|unique:users,email',
+            'role'      => 'required|in:admin,teacher,parent,student',
+            'password'  => 'required|string|min:8|confirmed',
+            'school_id' => 'nullable|exists:schools,id',
+        ]);
+
+        User::create([
+            'name'      => $request->name,
+            'email'     => $request->email,
+            'role'      => $request->role,
+            'password'  => Hash::make($request->password),
+            'school_id' => $request->school_id,
+            'is_active' => true,
+        ]);
+
+        return redirect()->route('admin.users')
+            ->with('success', "User {$request->name} created successfully.");
     }
 
     public function schools()
@@ -173,5 +207,113 @@ class AdminController extends Controller
         }
 
         return back()->with('success', 'Settings saved.');
+    }
+
+    // ── Badge Management ──
+
+    public function badges()
+    {
+        $badges = Badge::orderBy('sort_order')->get();
+        return view('admin.badges', compact('badges'));
+    }
+
+    public function storeBadge(Request $request)
+    {
+        $request->validate([
+            'name'        => 'required|string|max:255',
+            'slug'        => 'required|string|max:100|unique:badges,slug',
+            'description' => 'required|string',
+            'icon'        => 'required|string|max:10',
+            'category'    => 'required|string|max:100',
+            'xp_reward'   => 'required|integer|min:0',
+        ]);
+
+        Badge::create([
+            'name'        => $request->name,
+            'slug'        => $request->slug,
+            'description' => $request->description,
+            'icon'        => $request->icon,
+            'color'       => $request->color ?? '#6C63FF',
+            'category'    => $request->category,
+            'xp_reward'   => $request->xp_reward,
+            'criteria'    => json_decode($request->criteria ?? '{}', true),
+            'sort_order'  => $request->sort_order ?? 99,
+            'is_active'   => true,
+        ]);
+
+        return back()->with('success', 'Badge created.');
+    }
+
+    public function updateBadge(Request $request, Badge $badge)
+    {
+        $request->validate([
+            'name'        => 'required|string|max:255',
+            'description' => 'required|string',
+            'xp_reward'   => 'required|integer|min:0',
+        ]);
+
+        $badge->update([
+            'name'        => $request->name,
+            'description' => $request->description,
+            'icon'        => $request->icon ?? $badge->icon,
+            'color'       => $request->color ?? $badge->color,
+            'xp_reward'   => $request->xp_reward,
+            'sort_order'  => $request->sort_order ?? $badge->sort_order,
+        ]);
+
+        return back()->with('success', 'Badge updated.');
+    }
+
+    public function toggleBadge(Badge $badge)
+    {
+        $badge->update(['is_active' => !$badge->is_active]);
+        $state = $badge->is_active ? 'activated' : 'deactivated';
+        return back()->with('success', "Badge \"{$badge->name}\" {$state}.");
+    }
+
+    // ── Learner Portal Oversight ──
+
+    public function learnerPortal(Request $request)
+    {
+        $query = Learner::with(['schoolClass', 'school', 'badges'])
+            ->withCount('badges');
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(fn($q) => $q
+                ->where('first_name', 'like', "%{$s}%")
+                ->orWhere('last_name', 'like', "%{$s}%")
+                ->orWhere('lrn', 'like', "%{$s}%")
+            );
+        }
+
+        if ($request->filled('school_id')) {
+            $query->where('school_id', $request->school_id);
+        }
+
+        $learners = $query->orderByDesc('total_xp')->paginate(25);
+        $schools  = School::orderBy('name')->get();
+
+        return view('admin.learner-portal', compact('learners', 'schools'));
+    }
+
+    public function generateLearnerPin(Learner $learner)
+    {
+        $pin = Learner::generatePin();
+        $learner->update(['pin' => $pin]);
+
+        return back()->with('success', "PIN for {$learner->getFullName()}: {$pin}");
+    }
+
+    public function resetLearnerXp(Learner $learner)
+    {
+        $learner->update([
+            'total_xp'        => 0,
+            'current_streak'  => 0,
+            'longest_streak'  => 0,
+            'last_activity_date' => null,
+        ]);
+
+        return back()->with('success', "XP and streak reset for {$learner->getFullName()}.");
     }
 }

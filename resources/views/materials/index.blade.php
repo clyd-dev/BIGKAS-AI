@@ -22,9 +22,9 @@
                     <label class="form-label small">Language</label>
                     <select name="language" class="form-select form-select-sm">
                         <option value="">All</option>
-                        <option value="english" {{ request('language') === 'english' ? 'selected' : '' }}>English</option>
-                        <option value="filipino" {{ request('language') === 'filipino' ? 'selected' : '' }}>Filipino</option>
-                        <option value="hiligaynon" {{ request('language') === 'hiligaynon' ? 'selected' : '' }}>Hiligaynon</option>
+                        <option value="en" {{ request('language') === 'en' ? 'selected' : '' }}>English</option>
+                        <option value="fil" {{ request('language') === 'fil' ? 'selected' : '' }}>Filipino</option>
+                        <option value="hil" {{ request('language') === 'hil' ? 'selected' : '' }}>Hiligaynon</option>
                     </select>
                 </div>
                 <div class="col-md-2">

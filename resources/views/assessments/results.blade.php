@@ -85,17 +85,12 @@
                     <div class="card-header bg-white"><h6 class="mb-0">Weakness Classification</h6></div>
                     <div class="card-body">
                         @php
-                            $weaknessLabels = config('bigkas.weakness_categories', [
-                                1 => 'Phonemic Awareness',
-                                2 => 'Decoding Accuracy',
-                                3 => 'Oral Reading Fluency',
-                                4 => 'Reading Comprehension',
-                            ]);
+                            $weaknessLabels = config('bigkas.weakness_categories', []);
                         @endphp
 
                         @if($result->primary_weakness)
                             <div class="alert alert-warning mb-3">
-                                <strong>Primary:</strong> {{ $weaknessLabels[$result->primary_weakness] ?? 'Unknown' }}
+                                <strong>Primary:</strong> {{ $weaknessLabels[$result->primary_weakness]['name'] ?? 'Unknown' }}
                                 @if($result->weakness_confidence)
                                     <br><small>Confidence: {{ number_format($result->weakness_confidence * 100, 0) }}%</small>
                                 @endif
@@ -108,10 +103,10 @@
 
                         <h6 class="small text-muted mt-3">Skill Scores</h6>
                         @php $mlData = $result->ml_classification_data ?? []; @endphp
-                        @foreach($weaknessLabels as $id => $label)
+                        @foreach($weaknessLabels as $id => $cat)
                             <div class="mb-2">
                                 <div class="d-flex justify-content-between small">
-                                    <span>{{ $label }}</span>
+                                    <span>{{ $cat['name'] }}</span>
                                     <span>{{ $mlData['all_scores'][$id] ?? 0 }}</span>
                                 </div>
                                 <div class="progress" style="height: 6px;">

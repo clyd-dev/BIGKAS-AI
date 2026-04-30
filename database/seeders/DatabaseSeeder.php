@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ComprehensionQuestionSeeder::class,
             InterventionSeeder::class,
             SystemSettingSeeder::class,
+            BadgeSeeder::class,
         ]);
     }
 }

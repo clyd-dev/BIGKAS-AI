@@ -24,13 +24,25 @@ class InterventionController extends Controller
         $interventions = $query->orderByDesc('effectiveness_score')->paginate(20);
         $weaknessCategories = config('bigkas.weakness_categories', []);
 
-        return view('intervention.index', compact('interventions', 'weaknessCategories'));
+        return view('interventions.index', compact('interventions', 'weaknessCategories'));
     }
 
     public function show(Intervention $intervention)
     {
         $stats = $intervention->getStats();
-        return view('intervention.show', compact('intervention', 'stats'));
+
+        // Learners for the assign form (scoped to teacher)
+        $user = auth()->user();
+        $learners = $user->isAdmin() ? Learner::orderBy('last_name')->get() : $user->learners()->orderBy('last_name')->get();
+
+        // Recent assignments of this intervention
+        $recentLogs = InterventionLog::where('intervention_id', $intervention->id)
+            ->with(['learner', 'assigner'])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return view('interventions.show', compact('intervention', 'stats', 'learners', 'recentLogs'));
     }
 
     public function assign(Request $request)
@@ -86,6 +98,6 @@ class InterventionController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('intervention.learner', compact('learner', 'logs'));
+        return view('interventions.learner', compact('learner', 'logs'));
     }
 }

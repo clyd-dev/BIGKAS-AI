@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register custom middleware aliases
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'student.auth' => \App\Http\Middleware\StudentAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

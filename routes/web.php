@@ -13,9 +13,17 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InterventionController;
 use App\Http\Controllers\LearnerController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Student\StudentAuthController;
+use App\Http\Controllers\Student\StudentDashboardController;
+use App\Http\Controllers\Student\StudentAssessmentController;
+use App\Http\Controllers\Student\StudentActivityController;
+use App\Http\Controllers\Student\StudentBadgeController;
+use App\Http\Controllers\Parent\ParentDashboardController;
+use App\Http\Controllers\Parent\ParentMessageController;
 use Illuminate\Support\Facades\Route;
 
 // ============================================
@@ -43,7 +51,45 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 // ============================================
-// AUTHENTICATED ROUTES
+// STUDENT PORTAL (PIN-based auth, separate from main auth)
+// ============================================
+
+Route::prefix('student')->name('student.')->group(function () {
+    // Student login (public)
+    Route::get('/login', [StudentAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [StudentAuthController::class, 'login'])->name('login.submit');
+    Route::post('/logout', [StudentAuthController::class, 'logout'])->name('logout');
+
+    // Authenticated student routes
+    Route::middleware('student.auth')->group(function () {
+        Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+
+        // Live assessment reading
+        Route::get('/assessment/{session}', [StudentAssessmentController::class, 'show'])->name('assessment.show');
+        Route::post('/assessment/{session}/poll', [StudentAssessmentController::class, 'poll'])->name('assessment.poll');
+        Route::post('/assessment/{session}/start-reading', [StudentAssessmentController::class, 'startReading'])->name('assessment.start-reading');
+        Route::post('/assessment/{session}/finish', [StudentAssessmentController::class, 'finishReading'])->name('assessment.finish');
+        Route::post('/assessment/{session}/upload-audio', [StudentAssessmentController::class, 'uploadAudio'])->name('assessment.upload-audio');
+
+        // Activities
+        Route::get('/activities', [StudentActivityController::class, 'index'])->name('activities');
+        Route::get('/activities/{log}', [StudentActivityController::class, 'show'])->name('activities.show');
+        Route::post('/activities/{log}/start', [StudentActivityController::class, 'start'])->name('activities.start');
+        Route::post('/activities/{log}/complete', [StudentActivityController::class, 'complete'])->name('activities.complete');
+
+        // Flash cards & guided reading
+        Route::get('/flashcards', [StudentActivityController::class, 'flashCards'])->name('flashcards');
+        Route::post('/flashcards/save', [StudentActivityController::class, 'saveFlashCardResult'])->name('flashcards.save');
+        Route::get('/guided-reading', [StudentActivityController::class, 'guidedReading'])->name('guided-reading');
+
+        // Badges & leaderboard
+        Route::get('/badges', [StudentBadgeController::class, 'index'])->name('badges');
+        Route::get('/leaderboard', [StudentBadgeController::class, 'leaderboard'])->name('leaderboard');
+    });
+});
+
+// ============================================
+// AUTHENTICATED ROUTES (Teacher/Admin/Parent)
 // ============================================
 
 Route::middleware('auth')->group(function () {
@@ -57,6 +103,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin,teacher')->group(function () {
         Route::resource('learners', LearnerController::class);
         Route::get('/learners/{learner}/progress', [LearnerController::class, 'progress'])->name('learners.progress');
+        Route::post('/learners/{learner}/generate-pin', [AssessmentController::class, 'generatePin'])->name('learners.generate-pin');
     });
 
     // ----------------------------------------
@@ -78,6 +125,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/assessments/{assessment}/upload-audio', [AssessmentController::class, 'uploadAudio'])->name('assessments.upload-audio');
         Route::post('/assessments/{assessment}/analyze', [AssessmentController::class, 'analyze'])->name('assessments.analyze');
         Route::get('/assessments/{assessment}/results', [AssessmentController::class, 'results'])->name('assessments.results');
+
+        // Live assessment sessions
+        Route::post('/assessments/session/create', [AssessmentController::class, 'createSession'])->name('assessments.session.create');
+        Route::get('/assessments/session/{session}/monitor', [AssessmentController::class, 'monitorSession'])->name('assessments.session.monitor');
+        Route::get('/assessments/session/{session}/poll', [AssessmentController::class, 'pollSession'])->name('assessments.session.poll');
+        Route::post('/assessments/session/{session}/start-recording', [AssessmentController::class, 'sessionStartRecording'])->name('assessments.session.start-recording');
+        Route::post('/assessments/session/{session}/cancel', [AssessmentController::class, 'cancelSession'])->name('assessments.session.cancel');
     });
 
     // ----------------------------------------
@@ -92,9 +146,9 @@ Route::middleware('auth')->group(function () {
     });
 
     // ----------------------------------------
-    // Practice Center (admin, teacher, student)
+    // Practice Center (admin, teacher)
     // ----------------------------------------
-    Route::middleware('role:admin,teacher,student')->group(function () {
+    Route::middleware('role:admin,teacher')->group(function () {
         Route::get('/practice', [PracticeController::class, 'index'])->name('practice.index');
         Route::get('/practice/phonemic', [PracticeController::class, 'phonemic'])->name('practice.phonemic');
         Route::get('/practice/sight-words', [PracticeController::class, 'sightWords'])->name('practice.sight-words');
@@ -114,21 +168,22 @@ Route::middleware('auth')->group(function () {
     });
 
     // ----------------------------------------
+    // Messages (admin, teacher)
+    // ----------------------------------------
+    Route::middleware('role:admin,teacher')->group(function () {
+        Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+        Route::get('/messages/compose', [MessageController::class, 'create'])->name('messages.create');
+        Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+        Route::get('/messages/{message}', [MessageController::class, 'show'])->name('messages.show');
+        Route::post('/messages/{message}/reply', [MessageController::class, 'reply'])->name('messages.reply');
+    });
+
+    // ----------------------------------------
     // Profile (all authenticated users)
     // ----------------------------------------
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
-
-    // ----------------------------------------
-    // Student Portal Routes
-    // ----------------------------------------
-    Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {
-        Route::get('/progress', [DashboardController::class, 'studentProgress'])->name('progress');
-        Route::get('/assessments', [AssessmentController::class, 'studentAssessments'])->name('assessments');
-        Route::get('/assessments/{assessment}/results', [AssessmentController::class, 'studentResults'])->name('assessments.results');
-        Route::get('/interventions', [InterventionController::class, 'studentInterventions'])->name('interventions');
-    });
 
     // ----------------------------------------
     // Admin Routes (admin only)
@@ -138,6 +193,7 @@ Route::middleware('auth')->group(function () {
 
         // User management
         Route::get('/users', [AdminController::class, 'users'])->name('users');
+        Route::post('/users', [AdminController::class, 'createUser'])->name('users.create');
         Route::post('/users/{user}/role', [AdminController::class, 'updateUserRole'])->name('users.role');
         Route::post('/users/{user}/activate', [AdminController::class, 'activateUser'])->name('users.activate');
         Route::post('/users/{user}/deactivate', [AdminController::class, 'deactivateUser'])->name('users.deactivate');
@@ -159,5 +215,41 @@ Route::middleware('auth')->group(function () {
         Route::get('/materials', [AdminController::class, 'materials'])->name('materials');
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
         Route::post('/settings', [AdminController::class, 'saveSettings'])->name('settings.save');
+
+        // Badge management
+        Route::get('/badges', [AdminController::class, 'badges'])->name('badges');
+        Route::post('/badges', [AdminController::class, 'storeBadge'])->name('badges.store');
+        Route::put('/badges/{badge}', [AdminController::class, 'updateBadge'])->name('badges.update');
+        Route::post('/badges/{badge}/toggle', [AdminController::class, 'toggleBadge'])->name('badges.toggle');
+
+        // Learner portal oversight
+        Route::get('/learner-portal', [AdminController::class, 'learnerPortal'])->name('learner-portal');
+        Route::post('/learner-portal/{learner}/generate-pin', [AdminController::class, 'generateLearnerPin'])->name('learner-portal.generate-pin');
+        Route::post('/learner-portal/{learner}/reset-xp', [AdminController::class, 'resetLearnerXp'])->name('learner-portal.reset-xp');
+    });
+
+    // ----------------------------------------
+    // Parent Portal (parent only)
+    // ----------------------------------------
+    Route::middleware('role:parent')->prefix('parent')->name('parent.')->group(function () {
+        Route::get('/', [ParentDashboardController::class, 'index'])->name('dashboard');
+
+        // Feature 2: Learner's Reading Profile
+        Route::get('/children/{learner}', [ParentDashboardController::class, 'learnerProfile'])->name('children.profile');
+
+        // Feature 3: Assessment Results
+        Route::get('/children/{learner}/assessments', [ParentDashboardController::class, 'assessmentResults'])->name('children.assessments');
+        Route::get('/children/{learner}/assessments/{assessment}', [ParentDashboardController::class, 'assessmentDetail'])->name('children.assessment-detail');
+
+        // Feature 1: Home Intervention Activities
+        Route::get('/children/{learner}/interventions', [ParentDashboardController::class, 'interventions'])->name('children.interventions');
+        Route::post('/children/{learner}/interventions/{interventionLog}', [ParentDashboardController::class, 'updateIntervention'])->name('children.intervention-update');
+
+        // Feature 4: Messages
+        Route::get('/messages', [ParentMessageController::class, 'index'])->name('messages.index');
+        Route::get('/messages/compose', [ParentMessageController::class, 'create'])->name('messages.create');
+        Route::post('/messages', [ParentMessageController::class, 'store'])->name('messages.store');
+        Route::get('/messages/{message}', [ParentMessageController::class, 'show'])->name('messages.show');
+        Route::post('/messages/{message}/reply', [ParentMessageController::class, 'reply'])->name('messages.reply');
     });
 });

@@ -28,8 +28,8 @@
                         <div class="mb-3">
                             <label class="form-label">Target Weakness <span class="text-danger">*</span></label>
                             <select class="form-select" name="target_weakness" required>
-                                @foreach(config('bigkas.weakness_categories', []) as $id => $label)
-                                    <option value="{{ $id }}">{{ $label }}</option>
+                                @foreach(config('bigkas.weakness_categories', []) as $id => $cat)
+                                    <option value="{{ $id }}">{{ $cat['name'] }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -80,7 +80,7 @@
                                 @forelse($interventions ?? [] as $intervention)
                                     <tr>
                                         <td><strong>{{ $intervention->name }}</strong></td>
-                                        <td>{{ $weaknessLabels[$intervention->target_weakness] ?? 'General' }}</td>
+                                        <td>{{ $weaknessLabels[$intervention->target_weakness]['name'] ?? 'General' }}</td>
                                         <td>{{ ucfirst($intervention->type ?? '-') }}</td>
                                         <td>{{ ucfirst($intervention->difficulty ?? '-') }}</td>
                                         <td>{{ $intervention->duration_minutes ?? '-' }} min</td>

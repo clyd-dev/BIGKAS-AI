@@ -1,5 +1,5 @@
 """
-BASA-PLUS-AI: Reading Weakness Classification Model
+BIGKAS: Reading Weakness Classification Model
 
 This script trains a Decision Tree / Random Forest classifier
 to identify reading weaknesses from assessment features.

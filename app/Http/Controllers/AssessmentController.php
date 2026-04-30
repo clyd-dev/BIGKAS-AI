@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Assessment;
+use App\Models\AssessmentSession;
 use App\Models\Learner;
 use App\Models\ReadingMaterial;
 use App\Models\ActivityLog;
@@ -21,7 +22,7 @@ class AssessmentController extends Controller
             ? Assessment::with(['learner', 'material', 'result', 'assessor'])->latest()->paginate(20)
             : Assessment::forUser($user->id)->with(['learner', 'material', 'result'])->latest()->paginate(20);
 
-        return view('assessment.index', compact('assessments'));
+        return view('assessments.index', compact('assessments'));
     }
 
     public function create()
@@ -31,7 +32,7 @@ class AssessmentController extends Controller
             ? Learner::active()->orderBy('last_name')->get()
             : $user->learners()->orderBy('last_name')->get();
 
-        return view('assessment.create', compact('learners'));
+        return view('assessments.create', compact('learners'));
     }
 
     public function start(Learner $learner)
@@ -48,7 +49,7 @@ class AssessmentController extends Controller
 
         $languages = ['en' => 'English', 'fil' => 'Filipino', 'hil' => 'Hiligaynon'];
 
-        return view('assessment.start', compact('learner', 'materials', 'easierMaterials', 'languages'));
+        return view('assessments.start', compact('learner', 'materials', 'easierMaterials', 'languages'));
     }
 
     public function store(Request $request)
@@ -90,7 +91,7 @@ class AssessmentController extends Controller
     {
         $assessment->load(['learner', 'material']);
 
-        return view('assessment.show', [
+        return view('assessments.show', [
             'assessment' => $assessment,
             'learner' => $assessment->learner,
             'material' => $assessment->material,
@@ -185,7 +186,7 @@ class AssessmentController extends Controller
         $recommendations = $assessment->getRecommendedInterventions();
         $comparison = $result->getComparisonWithPrevious();
 
-        return view('assessment.results', [
+        return view('assessments.results', [
             'assessment' => $assessment,
             'result' => $result,
             'learner' => $assessment->learner,
@@ -196,5 +197,110 @@ class AssessmentController extends Controller
             'errorBreakdown' => $result->getErrorBreakdown(),
             'skillScores' => $result->getSkillScores(),
         ]);
+    }
+
+    // ── Live Assessment Session (Teacher <-> Student) ──
+
+    /**
+     * Create a live assessment session for a student.
+     */
+    public function createSession(Request $request)
+    {
+        $request->validate([
+            'learner_id' => 'required|exists:learners,id',
+            'material_id' => 'required|exists:reading_materials,id',
+        ]);
+
+        $material = ReadingMaterial::findOrFail($request->material_id);
+        $learner = Learner::findOrFail($request->learner_id);
+
+        // Create the assessment record
+        $assessment = Assessment::create([
+            'learner_id' => $request->learner_id,
+            'material_id' => $request->material_id,
+            'assessor_id' => auth()->id(),
+            'language' => $material->language,
+            'status' => Assessment::STATUS_PENDING,
+        ]);
+
+        // Create the live session
+        $session = AssessmentSession::create([
+            'assessment_id' => $assessment->id,
+            'learner_id' => $request->learner_id,
+            'teacher_id' => auth()->id(),
+            'material_id' => $request->material_id,
+            'session_code' => AssessmentSession::generateCode(),
+            'status' => 'waiting',
+            'started_at' => now(),
+        ]);
+
+        ActivityLog::log('create_live_session', "Started live session for learner #{$request->learner_id}", 'assessment_session', $session->id);
+
+        return redirect()->route('assessments.session.monitor', $session);
+    }
+
+    /**
+     * Teacher's real-time monitoring view for a live session.
+     */
+    public function monitorSession(AssessmentSession $session)
+    {
+        $session->load(['learner', 'material', 'assessment']);
+
+        return view('assessments.monitor', [
+            'session' => $session,
+            'learner' => $session->learner,
+            'material' => $session->material,
+        ]);
+    }
+
+    /**
+     * Polling endpoint: teacher gets student status updates.
+     */
+    public function pollSession(AssessmentSession $session)
+    {
+        $session->refresh();
+
+        return response()->json([
+            'status' => $session->status,
+            'student_joined' => $session->student_joined_at !== null,
+            'student_joined_at' => $session->student_joined_at?->diffForHumans(),
+            'reading_started_at' => $session->reading_started_at?->toIso8601String(),
+            'elapsed' => $session->reading_started_at
+                ? now()->diffInSeconds($session->reading_started_at)
+                : 0,
+            'student_progress' => $session->student_progress,
+        ]);
+    }
+
+    /**
+     * Teacher signals to start recording.
+     */
+    public function sessionStartRecording(AssessmentSession $session)
+    {
+        $session->startRecording();
+
+        return response()->json(['status' => 'recording']);
+    }
+
+    /**
+     * Teacher cancels a live session.
+     */
+    public function cancelSession(AssessmentSession $session)
+    {
+        $session->cancel();
+
+        return redirect()->route('assessments.index')
+            ->with('info', 'Live assessment session cancelled.');
+    }
+
+    /**
+     * Generate PIN for a learner (teacher action).
+     */
+    public function generatePin(Learner $learner)
+    {
+        $pin = Learner::generatePin();
+        $learner->update(['pin' => $pin]);
+
+        return back()->with('success', "PIN for {$learner->getFullName()}: {$pin}");
     }
 }

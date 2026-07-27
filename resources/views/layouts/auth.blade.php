@@ -12,7 +12,7 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     @stack('styles')
 </head>
-<body class="bg-light">
+<body class="@yield('body_class', 'bg-light')">
     <div class="container">
         <div class="row justify-content-center align-items-center min-vh-100">
             <div class="col-md-5 col-lg-4">

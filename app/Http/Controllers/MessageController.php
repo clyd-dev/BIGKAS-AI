@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Learner;
 use App\Models\Message;
 use App\Models\User;
@@ -102,6 +103,8 @@ class MessageController extends Controller
             'body'        => $request->body,
         ]);
 
+        ActivityLog::log('send_message', "Sent message to user #{$message->receiver_id}", 'message', $message->id);
+
         return redirect()->route('messages.show', $message)->with('success', 'Message sent.');
     }
 
@@ -123,7 +126,7 @@ class MessageController extends Controller
         $thread = $message->parent_message_id ? $message->parentMessage : $message;
         $receiverId = $thread->sender_id === $user->id ? $thread->receiver_id : $thread->sender_id;
 
-        Message::create([
+        $reply = Message::create([
             'sender_id'         => $user->id,
             'receiver_id'       => $receiverId,
             'learner_id'        => $thread->learner_id,
@@ -131,6 +134,8 @@ class MessageController extends Controller
             'body'              => $request->body,
             'parent_message_id' => $thread->id,
         ]);
+
+        ActivityLog::log('reply_message', "Replied to message thread #{$reply->parent_message_id}", 'message', $reply->id);
 
         return redirect()->route('messages.show', $thread)->with('success', 'Reply sent.');
     }

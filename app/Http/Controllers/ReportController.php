@@ -7,9 +7,11 @@ use App\Models\SchoolClass;
 use App\Models\Assessment;
 use App\Models\AssessmentResult;
 use Illuminate\Http\Request;
+use App\Traits\AuthorizesLearnerAccess;
 
 class ReportController extends Controller
 {
+    use AuthorizesLearnerAccess;
     public function index()
     {
         $user = auth()->user();
@@ -54,6 +56,7 @@ class ReportController extends Controller
 
     public function learnerReport(Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
         $assessmentResults = $learner->getAssessmentResults();
         $progressData      = $learner->getProgressData();
         $interventionLogs  = $learner->interventionLogs()->with(['intervention', 'assigner'])->latest()->get();
@@ -134,6 +137,7 @@ class ReportController extends Controller
 
     public function printReport(Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
         $assessmentResults = $learner->getAssessmentResults();
         $stats = $learner->getStats();
         $skillBreakdown = $learner->getSkillBreakdown();
@@ -143,7 +147,9 @@ class ReportController extends Controller
 
     public function downloadPdf(Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
         // TODO: Implement with DOMPDF/TCPDF
         return redirect()->route('reports.print', $learner);
     }
 }
+

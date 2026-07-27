@@ -92,6 +92,8 @@ class MaterialController extends Controller
             'word_count' => count(preg_split('/\s+/', trim($request->content), -1, PREG_SPLIT_NO_EMPTY)),
         ]));
 
+        ActivityLog::log('update_material', "Updated reading material: {$material->title}", 'reading_material', $material->id);
+
         return redirect()->route('materials.show', $material)
             ->with('success', 'Reading material updated successfully.');
     }
@@ -99,6 +101,8 @@ class MaterialController extends Controller
     public function destroy(ReadingMaterial $material)
     {
         $material->update(['is_active' => false]);
+
+        ActivityLog::log('delete_material', "Deactivated reading material: {$material->title}", 'reading_material', $material->id);
 
         return redirect()->route('materials.index')
             ->with('success', "Material \"{$material->title}\" has been deactivated.");

@@ -1,3 +1,57 @@
+# Consistent Login Layout Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Unify the visual layout between the professional and learner login portals so only the background and input form change when switching tabs.
+
+**Architecture:** Modify `layouts.auth` to accept a dynamic body class. Then, rewrite `student/auth/login.blade.php` to extend `layouts.auth`, inject the colorful background, and place the PIN input form inside the standard auth card.
+
+**Tech Stack:** Laravel Blade, Bootstrap 5, Custom CSS
+
+## Global Constraints
+- `student/auth/login.blade.php` must `@extends('layouts.auth')`.
+- The layout structure (logo, card, centered grid) must match exactly.
+- The 6-digit PIN auto-submit logic must be preserved.
+
+---
+
+### Task 1: Update Auth Layout for Dynamic Styling
+
+**Files:**
+- Modify: `resources/views/layouts/auth.blade.php`
+
+**Interfaces:**
+- Produces: `@yield('body_class', 'bg-light')` allowing child views to override the body background.
+
+- [ ] **Step 1: Make Body Class Dynamic**
+
+In `resources/views/layouts/auth.blade.php`, change `<body class="bg-light">` to:
+```html
+<body class="@yield('body_class', 'bg-light')">
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add resources/views/layouts/auth.blade.php
+git commit -m "refactor: allow dynamic body class in auth layout"
+```
+
+---
+
+### Task 2: Rewrite Learner Login View
+
+**Files:**
+- Modify: `resources/views/student/auth/login.blade.php`
+
+**Interfaces:**
+- Consumes: `layouts.auth` and its `@yield('body_class')`.
+
+- [ ] **Step 1: Replace contents of learner login**
+
+Replace the entire contents of `resources/views/student/auth/login.blade.php` with the following:
+
+```html
 @extends('layouts.auth')
 
 @section('title', 'Student Login')
@@ -10,8 +64,12 @@
     .student-login-bg {
         background: linear-gradient(135deg, var(--kid-primary) 0%, #8B83FF 50%, var(--kid-secondary) 100%);
     }
-    body.student-login-bg > .container > .row > div > .text-center > .text-muted, body.student-login-bg > .container > .row > div > p.text-muted { color: rgba(255, 255, 255, 0.9) !important; }
-    body.student-login-bg h1.text-primary { color: #fff !important; text-shadow: 0 2px 10px rgba(0,0,0,0.1); } .nav-pills .nav-link.text-muted { color: #6c757d !important; }
+    .student-login-bg .text-muted {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+    .student-login-bg .text-primary {
+        color: #fff !important;
+    }
     /* Pin input styles */
     .pin-input-group {
         display: flex;
@@ -35,7 +93,6 @@
         border-color: var(--kid-primary);
         box-shadow: 0 0 0 3px var(--kid-primary-light);
     }
-    @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
 </style>
 @endpush
 
@@ -54,12 +111,7 @@
         </li>
     </ul>
 
-    <div class="text-center mb-2" style="animation: float 3s ease-in-out infinite;">
-        {{-- If you download a custom GIF, uncomment the img tag below and delete the span --}}
-        {{-- <img src="{{ asset('images/waving-avatar.gif') }}" alt="Waving Avatar" style="height: 80px;"> --}}
-        <span style="font-size: 4rem;">🙋🏽‍♂️</span>
-    </div>
-    <h4 class="text-center mb-1" style="color: var(--kid-primary); font-weight: 800;">Welcome, Learner!</h4>
+    <h4 class="text-center mb-4">Welcome, Learner!</h4>
     <p class="text-center text-muted small mb-4">Enter your 6-digit PIN to start reading.</p>
 
     <form method="POST" action="{{ route('student.login.submit') }}" id="pinForm">
@@ -100,3 +152,11 @@
     });
 </script>
 @endpush
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add resources/views/student/auth/login.blade.php
+git commit -m "refactor: unify learner login layout with professional login"
+```

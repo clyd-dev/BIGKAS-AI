@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Parent;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Learner;
 use App\Models\Message;
 use App\Models\User;
@@ -121,6 +122,8 @@ class ParentMessageController extends Controller
             'body'        => $request->body,
         ]);
 
+        ActivityLog::log('parent_send_message', "Parent sent message to teacher #{$message->receiver_id}", 'message', $message->id);
+
         return redirect()->route('parent.messages.show', $message)->with('success', 'Message sent.');
     }
 
@@ -145,7 +148,7 @@ class ParentMessageController extends Controller
         // Determine receiver (the other participant)
         $receiverId = $thread->sender_id === $user->id ? $thread->receiver_id : $thread->sender_id;
 
-        Message::create([
+        $reply = Message::create([
             'sender_id'         => $user->id,
             'receiver_id'       => $receiverId,
             'learner_id'        => $thread->learner_id,
@@ -153,6 +156,8 @@ class ParentMessageController extends Controller
             'body'              => $request->body,
             'parent_message_id' => $thread->id,
         ]);
+
+        ActivityLog::log('parent_reply_message', "Parent replied to message thread", 'message', $reply->id);
 
         return redirect()->route('parent.messages.show', $thread)->with('success', 'Reply sent.');
     }

@@ -103,6 +103,30 @@
         </div>
     </div>
 
+    {{-- Row 3: ML Analytics & Assessment Trends --}}
+    <div class="row g-3 mb-4">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-pie-chart me-1"></i> School-Wide Reading Weaknesses
+                </div>
+                <div class="card-body">
+                    <canvas id="weaknessChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-graph-up-arrow me-1"></i> Assessments Conducted (This Year)
+                </div>
+                <div class="card-body">
+                    <canvas id="assessmentChart" style="max-height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-3">
         {{-- System Information --}}
         <div class="col-md-4">
@@ -171,3 +195,61 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Weakness Pie Chart
+        const weaknessCtx = document.getElementById('weaknessChart').getContext('2d');
+        new Chart(weaknessCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {!! json_encode($chartData['weaknesses']['labels'] ?? []) !!},
+                datasets: [{
+                    data: {!! json_encode($chartData['weaknesses']['data'] ?? []) !!},
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' }
+                }
+            }
+        });
+
+        // Assessments Line Chart
+        const assessmentCtx = document.getElementById('assessmentChart').getContext('2d');
+        new Chart(assessmentCtx, {
+            type: 'line',
+            data: {
+                labels: {!! json_encode($chartData['assessments']['labels'] ?? []) !!},
+                datasets: [{
+                    label: 'Assessments',
+                    data: {!! json_encode($chartData['assessments']['data'] ?? []) !!},
+                    borderColor: '#36A2EB',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    });
+</script>
+@endpush
+

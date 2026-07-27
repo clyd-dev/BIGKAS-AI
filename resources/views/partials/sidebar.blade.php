@@ -109,6 +109,10 @@
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.index') ? 'active' : '' }}">
                 <i class="bi bi-gear me-2"></i> Admin Panel
             </a>
+            <a href="{{ route('admin.classes') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.classes') ? 'active' : '' }}">
+                <i class="bi bi-diagram-3 me-2"></i> Classrooms
+            </a>
             <a href="{{ route('admin.users') }}"
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.users') ? 'active' : '' }}">
                 <i class="bi bi-person-badge me-2"></i> Users
@@ -116,6 +120,10 @@
             <a href="{{ route('admin.schools') }}"
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.schools') ? 'active' : '' }}">
                 <i class="bi bi-building me-2"></i> Schools
+            </a>
+            <a href="{{ route('admin.logs') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.logs') ? 'active' : '' }}">
+                <i class="bi bi-clock-history me-2"></i> Activity Logs
             </a>
             <a href="{{ route('admin.settings') }}"
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.settings') ? 'active' : '' }}">

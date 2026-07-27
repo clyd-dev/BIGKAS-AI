@@ -268,6 +268,18 @@ class Learner extends Model
                 'last_activity_date' => $today,
             ]);
         }
+
+        // Log to unified activity logs for Admin overview
+        ActivityLog::create([
+            'user_id' => null, // Learners aren't users
+            'action' => 'Learner Login',
+            'description' => "Learner {$this->getFullName()} logged into the student portal.",
+            'subject_type' => 'learner',
+            'subject_id' => $this->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
     }
 
     public function getActiveSession(): ?AssessmentSession

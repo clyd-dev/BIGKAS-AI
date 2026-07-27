@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\AssessmentSession;
 use App\Models\Learner;
 use App\Services\BadgeService;
@@ -75,6 +76,17 @@ class StudentAssessmentController extends Controller
             $session->startReading();
         }
 
+        ActivityLog::create([
+            'user_id' => null,
+            'action' => 'learner_start_reading',
+            'description' => "Learner {$learner->first_name} {$learner->last_name} started reading for assessment session #{$session->id}",
+            'subject_type' => 'learner',
+            'subject_id' => $learner->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
+
         return response()->json(['status' => 'reading']);
     }
 
@@ -94,6 +106,17 @@ class StudentAssessmentController extends Controller
         // Record activity & check badges
         $learner->recordActivity();
         app(BadgeService::class)->checkAndAward($learner);
+
+        ActivityLog::create([
+            'user_id' => null,
+            'action' => 'learner_finish_reading',
+            'description' => "Learner {$learner->first_name} {$learner->last_name} finished reading for assessment session #{$session->id}",
+            'subject_type' => 'learner',
+            'subject_id' => $learner->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
 
         return response()->json([
             'status' => 'completed',
@@ -122,6 +145,17 @@ class StudentAssessmentController extends Controller
 
         // Update assessment with audio path
         $session->assessment->update(['audio_file_path' => $path]);
+
+        ActivityLog::create([
+            'user_id' => null,
+            'action' => 'learner_upload_audio',
+            'description' => "Learner {$learner->first_name} {$learner->last_name} uploaded audio for assessment session #{$session->id}",
+            'subject_type' => 'learner',
+            'subject_id' => $learner->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
 
         return response()->json([
             'success' => true,

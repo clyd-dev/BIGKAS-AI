@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Parent;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Assessment;
 use App\Models\AssessmentResult;
 use App\Models\Intervention;
@@ -185,6 +186,8 @@ class ParentDashboardController extends Controller
             ),
             default    => null,
         };
+
+        ActivityLog::log('parent_update_intervention', "Parent updated intervention status to {$action} for learner #{$interventionLog->learner_id}", 'intervention_log', $interventionLog->id);
 
         return back()->with('success', 'Activity status updated.');
     }

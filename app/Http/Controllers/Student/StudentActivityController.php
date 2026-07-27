@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\InterventionLog;
 use App\Models\Learner;
 use App\Models\PracticeSession;

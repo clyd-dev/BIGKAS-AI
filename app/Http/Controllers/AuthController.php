@@ -152,6 +152,8 @@ class AuthController extends Controller
             logger()->info("Password reset link for {$user->email}: {$resetLink}");
         }
 
+        ActivityLog::log('forgot_password', "Password reset requested for: {$request->email}", 'user', null);
+
         return redirect()->route('login')
             ->with('success', 'If an account with that email exists, we have sent a password reset link.');
     }
@@ -194,6 +196,8 @@ class AuthController extends Controller
             $user->update(['password' => $request->password]);
             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
         }
+
+        ActivityLog::log('reset_password', "Password reset completed for: {$request->email}", 'user', null);
 
         return redirect()->route('login')
             ->with('success', 'Your password has been reset. Please login with your new password.');

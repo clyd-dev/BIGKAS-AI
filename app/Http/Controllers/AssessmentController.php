@@ -11,9 +11,11 @@ use App\Services\SpeechToTextService;
 use App\Services\ReadingAnalyzerService;
 use App\Services\InterventionRecommenderService;
 use Illuminate\Http\Request;
+use App\Traits\AuthorizesLearnerAccess;
 
 class AssessmentController extends Controller
 {
+    use AuthorizesLearnerAccess;
     public function index()
     {
         $user = auth()->user();
@@ -32,11 +34,14 @@ class AssessmentController extends Controller
             ? Learner::active()->orderBy('last_name')->get()
             : $user->learners()->orderBy('last_name')->get();
 
-        return view('assessments.create', compact('learners'));
+        $materials = ReadingMaterial::active()->orderBy('grade_level')->orderBy('title')->get();
+
+        return view('assessments.create', compact('learners', 'materials'));
     }
 
     public function start(Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
         $materials = ReadingMaterial::active()
             ->where('grade_level', $learner->grade_level)
             ->orderBy('title')
@@ -89,6 +94,7 @@ class AssessmentController extends Controller
 
     public function show(Assessment $assessment)
     {
+        $this->authorizeLearnerAccess($assessment->learner);
         $assessment->load(['learner', 'material']);
 
         return view('assessments.show', [
@@ -100,6 +106,7 @@ class AssessmentController extends Controller
 
     public function uploadAudio(Request $request, Assessment $assessment)
     {
+        $this->authorizeLearnerAccess($assessment->learner);
         $request->validate([
             'audio' => 'required|file|mimes:mp3,wav,webm,ogg|max:25600',
         ]);
@@ -115,6 +122,8 @@ class AssessmentController extends Controller
             'status' => Assessment::STATUS_RECORDING,
         ]);
 
+        ActivityLog::log('upload_audio', "Uploaded audio for assessment #{$assessment->id}", 'assessment', $assessment->id);
+
         return response()->json([
             'success' => true,
             'audio_file' => $filename,
@@ -122,45 +131,79 @@ class AssessmentController extends Controller
         ]);
     }
 
-    public function analyze(Assessment $assessment)
+    public function analyze(Request $request, Assessment $assessment, \App\Services\MLClassificationService $mlService)
     {
-        if (!$assessment->hasAudio()) {
-            return response()->json(['success' => false, 'message' => 'No audio recording found.'], 400);
+        $this->authorizeLearnerAccess($assessment->learner);
+        // For testing the ML pipeline, we accept the audio directly in the analyze endpoint.
+        if (!$request->hasFile('audio') && !$assessment->hasAudio()) {
+            return response()->json(['success' => false, 'message' => 'No audio recording provided.'], 400);
         }
 
         $assessment->updateStatus(Assessment::STATUS_PROCESSING);
 
         try {
-            // Step 1: Transcribe audio
+            // ==========================================
+            // REAL: SPEECH TO TEXT (Whisper API)
+            // ==========================================
+            $audioPath = $request->file('audio')->getRealPath();
             $sttService = app(SpeechToTextService::class);
-            $transcription = $sttService->transcribe(
-                $assessment->getAudioPath(),
-                $assessment->language
-            );
-
+            // Uses your OpenAI key in .env, or falls back to mock if not configured
+            $transcription = $sttService->transcribe($audioPath, $assessment->language ?? 'en');
+            
             $assessment->update(['transcription' => $transcription]);
 
-            // Step 2: Analyze reading performance
+            // ==========================================
+            // REAL: TEXT ALIGNMENT & METRICS
+            // ==========================================
+            $referenceText = $request->input('reference_text', $assessment->material?->content ?? '');
             $analyzer = app(ReadingAnalyzerService::class);
             $analysis = $analyzer->analyze(
                 $transcription,
-                $assessment->material->content,
+                $referenceText,
                 $transcription['duration'] ?? 60
             );
 
-            // Step 3: Create result
+            // ==========================================
+            // REAL: ML CLASSIFICATION (Calling your Python API!)
+            // ==========================================
+            $metrics = [
+                'wpm' => $analysis['words_per_minute'],
+                'accuracy' => $analysis['accuracy_rate'],
+                'omissions' => $analysis['omissions'],
+                'insertions' => $analysis['insertions'],
+                'substitutions' => $analysis['substitutions']
+            ];
+            
+            $classification = $mlService->classify($metrics);
+            
+            // Map the String predictions from Python back to the Database Integers
+            $weaknessMap = [
+                'Phonemic Awareness' => 1,
+                'Decoding Accuracy' => 2,
+                'Oral Reading Fluency' => 3,
+                'Comprehension' => 4,
+                'Instructional (Mixed)' => 2, // Fallback mapping
+                'None (Independent)' => null
+            ];
+            
+            $predictedString = $classification['primary'] ?? '';
+            $primaryWeaknessId = $weaknessMap[$predictedString] ?? null;
+            
+            // Merge ML classification into analysis results to store properly
+            $analysis['primary_weakness'] = $primaryWeaknessId ?? $analysis['primary_weakness'];
+            $analysis['secondary_weakness'] = null; // Update mapping if secondary model is implemented
+            $analysis['confidence_score'] = $classification['confidence'] ?? $analysis['confidence_score'];
+
+            // ==========================================
+            // SAVE TO DATABASE
+            // ==========================================
             $result = $assessment->createResult($analysis);
-
-            // Step 4: Get recommendations
-            $recommender = app(InterventionRecommenderService::class);
-            $recommendations = $recommender->getRecommendations($result, $assessment->learner);
-
+            
             ActivityLog::log('analyze_assessment', "Completed analysis for assessment #{$assessment->id}", 'assessment', $assessment->id);
 
+            // Return redirect URL to JS instead of just the JSON metrics
             return response()->json([
                 'success' => true,
-                'result' => $result->toArray(),
-                'recommendations' => $recommendations,
                 'redirect_url' => route('assessments.results', $assessment),
                 'message' => 'Analysis complete!',
             ]);
@@ -175,6 +218,7 @@ class AssessmentController extends Controller
 
     public function results(Assessment $assessment)
     {
+        $this->authorizeLearnerAccess($assessment->learner);
         $result = $assessment->result;
 
         if (!$result) {
@@ -213,6 +257,7 @@ class AssessmentController extends Controller
 
         $material = ReadingMaterial::findOrFail($request->material_id);
         $learner = Learner::findOrFail($request->learner_id);
+        $this->authorizeLearnerAccess($learner);
 
         // Create the assessment record
         $assessment = Assessment::create([
@@ -244,6 +289,7 @@ class AssessmentController extends Controller
      */
     public function monitorSession(AssessmentSession $session)
     {
+        $this->authorizeLearnerAccess($session->learner);
         $session->load(['learner', 'material', 'assessment']);
 
         return view('assessments.monitor', [
@@ -258,6 +304,7 @@ class AssessmentController extends Controller
      */
     public function pollSession(AssessmentSession $session)
     {
+        $this->authorizeLearnerAccess($session->learner);
         $session->refresh();
 
         return response()->json([
@@ -277,7 +324,10 @@ class AssessmentController extends Controller
      */
     public function sessionStartRecording(AssessmentSession $session)
     {
+        $this->authorizeLearnerAccess($session->learner);
         $session->startRecording();
+
+        ActivityLog::log('start_recording', "Started recording for session #{$session->id}", 'assessment_session', $session->id);
 
         return response()->json(['status' => 'recording']);
     }
@@ -287,7 +337,10 @@ class AssessmentController extends Controller
      */
     public function cancelSession(AssessmentSession $session)
     {
+        $this->authorizeLearnerAccess($session->learner);
         $session->cancel();
+
+        ActivityLog::log('cancel_session', "Cancelled assessment session #{$session->id}", 'assessment_session', $session->id);
 
         return redirect()->route('assessments.index')
             ->with('info', 'Live assessment session cancelled.');
@@ -298,9 +351,13 @@ class AssessmentController extends Controller
      */
     public function generatePin(Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
         $pin = Learner::generatePin();
         $learner->update(['pin' => $pin]);
+
+        ActivityLog::log('generate_pin', "Generated PIN for learner: {$learner->first_name} {$learner->last_name}", 'learner', $learner->id);
 
         return back()->with('success', "PIN for {$learner->getFullName()}: {$pin}");
     }
 }
+

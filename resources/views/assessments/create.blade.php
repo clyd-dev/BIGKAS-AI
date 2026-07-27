@@ -33,7 +33,7 @@
                             <option value="">Choose a material...</option>
                             @foreach($materials ?? [] as $material)
                                 <option value="{{ $material->id }}" {{ old('material_id') == $material->id ? 'selected' : '' }}>
-                                    {{ $material->title }} ({{ ucfirst($material->language) }}, {{ $material->word_count }} words)
+                                    Grade {{ $material->grade_level }} - {{ $material->title }} ({{ ucfirst($material->language) }}, {{ $material->word_count }} words)
                                 </option>
                             @endforeach
                         </select>

@@ -15,7 +15,7 @@
 <body class="@yield('body_class', 'bg-light')">
     <div class="container">
         <div class="row justify-content-center align-items-center min-vh-100">
-            <div class="col-md-5 col-lg-4">
+            <div class="col-sm-10 col-md-8 col-lg-5 col-xl-4">
                 {{-- Logo / Brand --}}
                 <div class="text-center mb-4">
                     <h1 class="fw-bold text-primary">

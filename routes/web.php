@@ -205,6 +205,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/schools/{school}', [AdminController::class, 'updateSchool'])->name('schools.update');
         Route::delete('/schools/{school}', [AdminController::class, 'deleteSchool'])->name('schools.delete');
 
+        // Classes Overview & Activity Logs
+        Route::get('/classes', [AdminController::class, 'classesOverview'])->name('classes');
+        Route::get('/logs', [AdminController::class, 'activityLogs'])->name('logs');
+
         // Intervention management
         Route::get('/interventions', [AdminController::class, 'interventions'])->name('interventions');
         Route::post('/interventions', [AdminController::class, 'storeIntervention'])->name('interventions.store');

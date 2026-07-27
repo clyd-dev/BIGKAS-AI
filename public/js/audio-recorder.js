@@ -55,16 +55,22 @@ async function startRecording() {
 
             // Show playback
             const audioPlayback = document.getElementById('audioPlayback');
-            audioPlayback.src = audioUrl;
-            audioPlayback.classList.remove('d-none');
+            if (audioPlayback) {
+                audioPlayback.src = audioUrl;
+                audioPlayback.classList.remove('d-none');
+            }
 
             // Update UI
             showStatus('idle');
-            document.getElementById('btnStartRecording').classList.add('d-none');
-            document.getElementById('btnStopRecording').classList.add('d-none');
-            document.getElementById('btnPlayback').classList.remove('d-none');
-            document.getElementById('btnRetry').classList.remove('d-none');
-            document.getElementById('btnAnalyze').classList.remove('d-none');
+            const btnStart = document.getElementById('btnStartRecording');
+            const btnStop = document.getElementById('btnStopRecording');
+            const btnRetry = document.getElementById('btnRetry');
+            const btnAnalyze = document.getElementById('btnAnalyze');
+
+            if (btnStart) btnStart.classList.add('d-none');
+            if (btnStop) btnStop.classList.add('d-none');
+            if (btnRetry) btnRetry.classList.remove('d-none');
+            if (btnAnalyze) btnAnalyze.classList.remove('d-none');
         };
 
         // Start recording
@@ -122,14 +128,20 @@ function retryRecording() {
 
     // Reset UI
     const audioPlayback = document.getElementById('audioPlayback');
-    audioPlayback.src = '';
-    audioPlayback.classList.add('d-none');
+    if (audioPlayback) {
+        audioPlayback.src = '';
+        audioPlayback.classList.add('d-none');
+    }
 
-    document.getElementById('btnStartRecording').classList.remove('d-none');
-    document.getElementById('btnStopRecording').classList.add('d-none');
-    document.getElementById('btnPlayback').classList.add('d-none');
-    document.getElementById('btnRetry').classList.add('d-none');
-    document.getElementById('btnAnalyze').classList.add('d-none');
+    const btnStart = document.getElementById('btnStartRecording');
+    const btnStop = document.getElementById('btnStopRecording');
+    const btnRetry = document.getElementById('btnRetry');
+    const btnAnalyze = document.getElementById('btnAnalyze');
+
+    if (btnStart) btnStart.classList.remove('d-none');
+    if (btnStop) btnStop.classList.add('d-none');
+    if (btnRetry) btnRetry.classList.add('d-none');
+    if (btnAnalyze) btnAnalyze.classList.add('d-none');
 
     showStatus('idle');
     resetTimer();
@@ -146,98 +158,68 @@ async function analyzeRecording() {
     }
 
     const assessmentId = document.getElementById('assessmentId').value;
-    const csrfToken = BigkasAI.getCsrfToken();
+    const csrfToken = window.BIGKAS_CSRF || document.querySelector('meta[name="csrf-token"]')?.content;
 
     // Show processing status
     showStatus('processing');
-    document.getElementById('btnPlayback').classList.add('d-none');
-    document.getElementById('btnRetry').classList.add('d-none');
-    document.getElementById('btnAnalyze').classList.add('d-none');
+    const btnAnalyze = document.getElementById('btnAnalyze');
+    const originalText = btnAnalyze.innerHTML;
+    btnAnalyze.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing AI...';
+    btnAnalyze.disabled = true;
 
     try {
-        // Step 1: Upload audio (0-40%)
-        updateProgress(5, 'Uploading audio recording...');
-
         const formData = new FormData();
         const extension = getExtensionFromMime(audioBlob.type);
         formData.append('audio', audioBlob, `recording.${extension}`);
         formData.append('_token', csrfToken);
-
-        const uploadResponse = await fetch(`/assessments/${assessmentId}/upload-audio`, {
+        
+        // We will send BOTH the audio and trigger analysis in a single step for this prototype
+        const response = await fetch(`/assessments/${assessmentId}/analyze`, {
             method: 'POST',
+            body: formData,
             headers: {
-                'X-CSRF-TOKEN': csrfToken
-            },
-            body: formData
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         });
 
-        const uploadResult = await uploadResponse.json();
+        const result = await response.json();
 
-        if (!uploadResult.success) {
-            throw new Error(uploadResult.message || 'Upload failed');
+        if (!result.success) {
+            throw new Error(result.message || 'Analysis failed');
         }
-
-        updateProgress(40, 'Audio uploaded. Starting AI analysis...');
-
-        // Step 2: Trigger analysis (40-100%)
-        updateProgress(50, 'Transcribing speech to text...');
-
-        const analyzeResponse = await fetch(`/assessments/${assessmentId}/analyze`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            body: JSON.stringify({})
-        });
-
-        // Simulate progress during analysis
-        let progress = 50;
-        const progressInterval = setInterval(() => {
-            progress = Math.min(progress + 5, 90);
-            const messages = {
-                55: 'Transcribing speech to text...',
-                65: 'Comparing with reference text...',
-                75: 'Running ML classification...',
-                85: 'Generating recommendations...',
-                90: 'Finalizing results...'
-            };
-            updateProgress(progress, messages[progress] || 'Processing...');
-        }, 1500);
-
-        const analyzeResult = await analyzeResponse.json();
-        clearInterval(progressInterval);
-
-        if (!analyzeResult.success) {
-            throw new Error(analyzeResult.message || 'Analysis failed');
-        }
-
-        updateProgress(100, 'Analysis complete!');
 
         // Show complete status
         showStatus('complete');
-
-        // Redirect to results after brief delay
+        btnAnalyze.innerHTML = '<i class="bi bi-check-circle"></i> Complete! Redirecting...';
+        
+        // Redirect to the actual Results page!
         setTimeout(() => {
-            if (analyzeResult.data && analyzeResult.data.redirect_url) {
-                window.location.href = analyzeResult.data.redirect_url;
-            } else {
-                window.location.href = `/assessments/${assessmentId}/results`;
-            }
-        }, 1500);
+            window.location.href = result.redirect_url;
+        }, 500);
 
     } catch (error) {
         console.error('Analysis error:', error);
         showStatus('idle');
-
-        document.getElementById('btnPlayback').classList.remove('d-none');
-        document.getElementById('btnRetry').classList.remove('d-none');
-        document.getElementById('btnAnalyze').classList.remove('d-none');
-
+        btnAnalyze.innerHTML = originalText;
+        btnAnalyze.disabled = false;
         alert('Analysis failed: ' + error.message + '\n\nPlease try again.');
     }
 }
+
+// ============================================================
+// EVENT LISTENERS BINDING
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    const btnStart = document.getElementById('btnStartRecording');
+    const btnStop = document.getElementById('btnStopRecording');
+    const btnRetry = document.getElementById('btnRetry');
+    const btnAnalyze = document.getElementById('btnAnalyze');
+
+    if (btnStart) btnStart.addEventListener('click', startRecording);
+    if (btnStop) btnStop.addEventListener('click', stopRecording);
+    if (btnRetry) btnRetry.addEventListener('click', retryRecording);
+    if (btnAnalyze) btnAnalyze.addEventListener('click', analyzeRecording);
+});
 
 // ============================================================
 // UI HELPERS

@@ -33,9 +33,57 @@ class AdminController extends Controller
             'independent_learners'   => Learner::where('reading_level', 'independent')->count(),
         ];
 
+        // Fetch breakdown of reading weaknesses (ML Classification Results)
+        // 1=Phonemic, 2=Decoding, 3=Fluency, 4=Comprehension
+        $weaknessDistribution = \App\Models\AssessmentResult::selectRaw('primary_weakness, COUNT(*) as count')
+            ->whereNotNull('primary_weakness')
+            ->groupBy('primary_weakness')
+            ->pluck('count', 'primary_weakness')
+            ->toArray();
+
+        // Map IDs to labels for Chart.js
+        $weaknessLabels = [];
+        $weaknessData = [];
+        $categories = config('bigkas.weakness_categories', [
+            1 => ['name' => 'Phonemic Awareness'],
+            2 => ['name' => 'Decoding'],
+            3 => ['name' => 'Fluency'],
+            4 => ['name' => 'Comprehension']
+        ]);
+
+        foreach ($categories as $id => $cat) {
+            $weaknessLabels[] = $cat['name'];
+            $weaknessData[] = $weaknessDistribution[$id] ?? 0;
+        }
+
+        // Fetch Assessments per month for line chart (current year)
+        $assessmentsPerMonth = Assessment::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+            ->whereYear('created_at', date('Y'))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('count', 'month')
+            ->toArray();
+
+        $monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        $monthData = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthData[] = $assessmentsPerMonth[$i] ?? 0;
+        }
+
+        $chartData = [
+            'weaknesses' => [
+                'labels' => $weaknessLabels,
+                'data' => $weaknessData,
+            ],
+            'assessments' => [
+                'labels' => $monthLabels,
+                'data' => $monthData,
+            ]
+        ];
+
         $recentActivity = ActivityLog::with('user')->latest()->limit(20)->get();
 
-        return view('admin.index', compact('stats', 'recentActivity'));
+        return view('admin.index', compact('stats', 'recentActivity', 'chartData'));
     }
 
     public function users(Request $request)
@@ -65,7 +113,10 @@ class AdminController extends Controller
     public function updateUserRole(Request $request, User $user)
     {
         $request->validate(['role' => 'required|in:admin,teacher,parent,student']);
+        $oldRole = $user->role;
         $user->update(['role' => $request->role]);
+
+        ActivityLog::log('admin_update_role', "Changed role of {$user->name} from {$oldRole} to {$request->role}", 'user', $user->id);
 
         return back()->with('success', "Role updated for {$user->name}.");
     }
@@ -73,12 +124,14 @@ class AdminController extends Controller
     public function activateUser(User $user)
     {
         $user->update(['is_active' => true]);
+        ActivityLog::log('admin_activate_user', "Activated user {$user->name} ({$user->role})", 'user', $user->id);
         return back()->with('success', "{$user->name} has been activated.");
     }
 
     public function deactivateUser(User $user)
     {
         $user->update(['is_active' => false]);
+        ActivityLog::log('admin_deactivate_user', "Deactivated user {$user->name} ({$user->role})", 'user', $user->id);
         return back()->with('success', "{$user->name} has been deactivated.");
     }
 
@@ -86,6 +139,7 @@ class AdminController extends Controller
     {
         $tempPassword = 'Bigkas@123';
         $user->update(['password' => Hash::make($tempPassword)]);
+        ActivityLog::log('admin_reset_password', "Reset password for {$user->name} ({$user->role})", 'user', $user->id);
         return back()->with('success', "Password reset for {$user->name}. Temporary password: {$tempPassword}");
     }
 
@@ -99,7 +153,7 @@ class AdminController extends Controller
             'school_id' => 'nullable|exists:schools,id',
         ]);
 
-        User::create([
+        $user = User::create([
             'name'      => $request->name,
             'email'     => $request->email,
             'role'      => $request->role,
@@ -107,6 +161,8 @@ class AdminController extends Controller
             'school_id' => $request->school_id,
             'is_active' => true,
         ]);
+
+        ActivityLog::log('admin_create_user', "Created {$request->role} user: {$request->name} ({$request->email})", 'user', $user->id);
 
         return redirect()->route('admin.users')
             ->with('success', "User {$request->name} created successfully.");
@@ -125,7 +181,9 @@ class AdminController extends Controller
             'school_id_number' => 'nullable|string|max:50|unique:schools,school_id_number',
         ]);
 
-        School::create($request->only(['name', 'school_id_number', 'address', 'district', 'division', 'region', 'contact_number', 'email', 'principal_name']));
+        $school = School::create($request->only(['name', 'school_id_number', 'address', 'district', 'division', 'region', 'contact_number', 'email', 'principal_name']));
+
+        ActivityLog::log('admin_create_school', "Created school: {$school->name}", 'school', $school->id);
 
         return back()->with('success', 'School added successfully.');
     }
@@ -135,13 +193,52 @@ class AdminController extends Controller
         $request->validate(['name' => 'required|string|max:255']);
         $school->update($request->only(['name', 'school_id_number', 'address', 'district', 'division', 'region', 'contact_number', 'email', 'principal_name']));
 
+        ActivityLog::log('admin_update_school', "Updated school: {$school->name}", 'school', $school->id);
+
         return back()->with('success', 'School updated.');
     }
 
     public function deleteSchool(School $school)
     {
         $school->update(['is_active' => false]);
+        ActivityLog::log('admin_deactivate_school', "Deactivated school: {$school->name}", 'school', $school->id);
         return back()->with('success', 'School deactivated.');
+    }
+
+    public function classesOverview(Request $request)
+    {
+        $query = \App\Models\SchoolClass::with(['teacher', 'school'])
+            ->withCount('learners');
+
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->whereHas('teacher', function($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%");
+            })->orWhere('section', 'like', "%{$s}%");
+        }
+
+        $classes = $query->orderBy('grade_level')->orderBy('section')->paginate(15);
+
+        return view('admin.classes', compact('classes'));
+    }
+
+    public function activityLogs(Request $request)
+    {
+        $query = ActivityLog::with('user');
+
+        if ($request->filled('role')) {
+            if ($request->role === 'learner') {
+                $query->where('subject_type', 'learner');
+            } else {
+                $query->whereHas('user', function($q) use ($request) {
+                    $q->where('role', $request->role);
+                });
+            }
+        }
+
+        $logs = $query->latest()->paginate(50);
+        
+        return view('admin.logs', compact('logs'));
     }
 
     public function interventions()
@@ -161,11 +258,13 @@ class AdminController extends Controller
             'instructions' => 'required|string',
         ]);
 
-        Intervention::create($request->only([
+        $intervention = Intervention::create($request->only([
             'name', 'description', 'target_weakness', 'activity_type', 'materials_needed',
             'instructions', 'for_teacher', 'for_parent', 'grade_level_min', 'grade_level_max',
             'estimated_duration', 'effectiveness_score',
         ]));
+
+        ActivityLog::log('admin_create_intervention', "Created intervention: {$intervention->name} (weakness: {$request->target_weakness})", 'intervention', $intervention->id);
 
         return back()->with('success', 'Intervention added.');
     }
@@ -179,12 +278,15 @@ class AdminController extends Controller
             'estimated_duration', 'effectiveness_score',
         ]));
 
+        ActivityLog::log('admin_update_intervention', "Updated intervention: {$intervention->name}", 'intervention', $intervention->id);
+
         return back()->with('success', 'Intervention updated.');
     }
 
     public function deleteIntervention(Intervention $intervention)
     {
         $intervention->update(['is_active' => false]);
+        ActivityLog::log('admin_deactivate_intervention', "Deactivated intervention: {$intervention->name}", 'intervention', $intervention->id);
         return back()->with('success', 'Intervention deactivated.');
     }
 
@@ -202,9 +304,13 @@ class AdminController extends Controller
 
     public function saveSettings(Request $request)
     {
+        $changedKeys = [];
         foreach ($request->except('_token') as $key => $value) {
             SystemSetting::setValue($key, $value);
+            $changedKeys[] = $key;
         }
+
+        ActivityLog::log('admin_update_settings', 'Updated system settings: ' . implode(', ', $changedKeys), 'system_setting', null);
 
         return back()->with('success', 'Settings saved.');
     }
@@ -228,7 +334,7 @@ class AdminController extends Controller
             'xp_reward'   => 'required|integer|min:0',
         ]);
 
-        Badge::create([
+        $badge = Badge::create([
             'name'        => $request->name,
             'slug'        => $request->slug,
             'description' => $request->description,
@@ -240,6 +346,8 @@ class AdminController extends Controller
             'sort_order'  => $request->sort_order ?? 99,
             'is_active'   => true,
         ]);
+
+        ActivityLog::log('admin_create_badge', "Created badge: {$badge->name} (category: {$badge->category})", 'badge', $badge->id);
 
         return back()->with('success', 'Badge created.');
     }
@@ -261,6 +369,8 @@ class AdminController extends Controller
             'sort_order'  => $request->sort_order ?? $badge->sort_order,
         ]);
 
+        ActivityLog::log('admin_update_badge', "Updated badge: {$badge->name}", 'badge', $badge->id);
+
         return back()->with('success', 'Badge updated.');
     }
 
@@ -268,6 +378,7 @@ class AdminController extends Controller
     {
         $badge->update(['is_active' => !$badge->is_active]);
         $state = $badge->is_active ? 'activated' : 'deactivated';
+        ActivityLog::log('admin_toggle_badge', "Badge \"{$badge->name}\" {$state}", 'badge', $badge->id);
         return back()->with('success', "Badge \"{$badge->name}\" {$state}.");
     }
 
@@ -302,6 +413,8 @@ class AdminController extends Controller
         $pin = Learner::generatePin();
         $learner->update(['pin' => $pin]);
 
+        ActivityLog::log('admin_generate_pin', "Generated new PIN for learner: {$learner->getFullName()}", 'learner', $learner->id);
+
         return back()->with('success', "PIN for {$learner->getFullName()}: {$pin}");
     }
 
@@ -313,6 +426,8 @@ class AdminController extends Controller
             'longest_streak'  => 0,
             'last_activity_date' => null,
         ]);
+
+        ActivityLog::log('admin_reset_learner_xp', "Reset XP and streak for learner: {$learner->getFullName()}", 'learner', $learner->id);
 
         return back()->with('success', "XP and streak reset for {$learner->getFullName()}.");
     }

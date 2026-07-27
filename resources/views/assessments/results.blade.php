@@ -15,7 +15,7 @@
         </div>
     </div>
 
-    @php $result = $assessment->results->first(); @endphp
+    @php $result = $assessment->result ?? $assessment->results()->first(); @endphp
 
     @if($result)
         {{-- Summary Cards --}}
@@ -139,12 +139,30 @@
                         <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-lightbulb me-1"></i> Recommended Interventions</h6></div>
                         <div class="card-body p-0">
                             <div class="list-group list-group-flush">
-                                @foreach($recommendations as $rec)
-                                    <div class="list-group-item">
-                                        <strong>{{ $rec->name ?? $rec['name'] ?? 'Intervention' }}</strong>
-                                        <p class="small text-muted mb-0">{{ $rec->description ?? $rec['description'] ?? '' }}</p>
-                                    </div>
-                                @endforeach
+                                  @foreach($recommendations as $rec)
+                                      <div class="list-group-item">
+                                          <div class="d-flex justify-content-between align-items-start">
+                                              <div>
+                                                  <strong>{{ $rec->name ?? $rec['name'] ?? 'Intervention' }}</strong>
+                                                  <p class="small text-muted mb-1">{{ $rec->description ?? $rec['description'] ?? '' }}</p>
+                                                  <span class="badge bg-light text-dark border">{{ ucfirst($rec->activity_type ?? 'Activity') }}</span>
+                                                  <span class="badge bg-light text-dark border">{{ $rec->estimated_duration ?? 15 }} mins</span>
+                                              </div>
+                                              
+                                              @if(isset($rec->id))
+                                              <form action="{{ route('interventions.assign') }}" method="POST">
+                                                  @csrf
+                                                  <input type="hidden" name="intervention_id" value="{{ $rec->id }}">
+                                                  <input type="hidden" name="learner_id" value="{{ $assessment->learner_id }}">
+                                                  <input type="hidden" name="assessment_result_id" value="{{ $result->id }}">
+                                                  <button type="submit" class="btn btn-sm btn-outline-primary" title="Assign to Learner">
+                                                      <i class="bi bi-plus-circle"></i> Assign
+                                                  </button>
+                                              </form>
+                                              @endif
+                                          </div>
+                                      </div>
+                                  @endforeach
                             </div>
                         </div>
                     </div>

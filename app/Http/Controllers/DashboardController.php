@@ -26,38 +26,70 @@ class DashboardController extends Controller
         }
 
         // Teacher dashboard
-        $learners = $user->learners()->orderBy('last_name')->get();
+        // 1. Scalability Fix: Don't fetch all learners at once for UI, use pagination
+        $learners = $user->learners()->orderBy('last_name')->paginate(10);
+        $learnerIds = $user->learners()->pluck('learners.id');
+        
         $baseStats = $user->getStats();
 
-        // Augment stats with avg_accuracy and avg_wpm across all teacher's learners
-        $learnerIds = $learners->pluck('id');
-        $avgAccuracy = $learnerIds->isEmpty() ? 0 :
-            AssessmentResult::whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
-                ->avg('accuracy_rate') ?? 0;
-        $avgWpm = $learnerIds->isEmpty() ? 0 :
-            AssessmentResult::whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
-                ->avg('words_per_minute') ?? 0;
+        // 2. Query Optimization: Fetch aggregates in a single query
+        $avgAccuracy = 0;
+        $avgWpm = 0;
+        if ($learnerIds->isNotEmpty()) {
+            $aggregates = AssessmentResult::whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
+                ->selectRaw('AVG(accuracy_rate) as avg_acc, AVG(words_per_minute) as avg_wpm')
+                ->first();
+            $avgAccuracy = $aggregates->avg_acc ?? 0;
+            $avgWpm = $aggregates->avg_wpm ?? 0;
+        }
 
         $stats = array_merge($baseStats, [
+            'total_learners' => $learnerIds->count(),
             'avg_accuracy' => round((float) $avgAccuracy, 1),
             'avg_wpm'      => round((float) $avgWpm, 1),
         ]);
 
-        // Reading level distribution for chart
+        // 3. Query Optimization: Group By for chart distribution (Avoid N+1 memory issues)
+        $distributionData = $user->learners()
+            ->select('reading_level', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('reading_level')
+            ->pluck('count', 'reading_level')
+            ->toArray();
+
         $distribution = [
-            'independent'  => $learners->where('reading_level', 'independent')->count(),
-            'instructional' => $learners->where('reading_level', 'instructional')->count(),
-            'frustration'  => $learners->where('reading_level', 'frustration')->count(),
-            'not_assessed' => $learners->whereNull('reading_level')->count(),
+            'independent'  => $distributionData['independent'] ?? 0,
+            'instructional' => $distributionData['instructional'] ?? 0,
+            'frustration'  => $distributionData['frustration'] ?? 0,
+            'not_assessed' => ($distributionData[''] ?? 0) + ($distributionData[null] ?? 0),
         ];
 
         $recentAssessments = Assessment::forUser($user->id)
             ->with(['learner', 'material', 'result'])
             ->latest()
-            ->limit(10)
+            ->limit(5) // Reduced from 10 to keep dashboard clean
             ->get();
 
-        return view('dashboard.index', compact('stats', 'learners', 'recentAssessments', 'distribution'));
+        // 4. Actionable Intelligence: At-Risk Students (Frustration level + ML Deficiencies)
+        $atRiskLearners = $user->learners()
+            ->where('reading_level', 'frustration')
+            ->with(['assessments' => function($query) {
+                // Get the latest assessment result which contains the ML primary weakness
+                $query->latest()->limit(1)->with('result');
+            }])
+            ->take(5)
+            ->get();
+
+        // 5. Actionable Intelligence: Pending Interventions for teacher's action center
+        $pendingInterventions = \App\Models\InterventionLog::whereIn('learner_id', $learnerIds)
+            ->where('status', 'pending')
+            ->with(['learner', 'intervention'])
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.index', compact(
+            'stats', 'learners', 'recentAssessments', 'distribution', 'atRiskLearners', 'pendingInterventions'
+        ));
     }
 
     private function adminDashboard($user)

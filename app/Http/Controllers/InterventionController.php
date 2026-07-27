@@ -7,9 +7,11 @@ use App\Models\InterventionLog;
 use App\Models\Learner;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use App\Traits\AuthorizesLearnerAccess;
 
 class InterventionController extends Controller
 {
+    use AuthorizesLearnerAccess;
     public function index(Request $request)
     {
         $query = Intervention::active();
@@ -84,6 +86,8 @@ class InterventionController extends Controller
             default => null,
         };
 
+        ActivityLog::log('update_intervention_log', "Updated intervention status to {$interventionLog->status} for learner #{$interventionLog->learner_id}", 'intervention_log', $interventionLog->id);
+
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'message' => "Intervention {$action}ed."]);
         }
@@ -93,6 +97,7 @@ class InterventionController extends Controller
 
     public function learnerInterventions(Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
         $logs = $learner->interventionLogs()
             ->with(['intervention', 'assigner'])
             ->latest()
@@ -101,3 +106,4 @@ class InterventionController extends Controller
         return view('interventions.learner', compact('learner', 'logs'));
     }
 }
+

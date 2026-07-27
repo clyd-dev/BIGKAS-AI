@@ -35,11 +35,43 @@
                     <div class="card-body">
                         {{-- Browser Audio Recorder --}}
                         <div id="audioRecorder" class="text-center mb-3">
-                            <button id="recordBtn" class="btn btn-danger btn-lg rounded-circle" style="width: 80px; height: 80px;">
-                                <i class="bi bi-mic-fill fs-3"></i>
+                            <input type="hidden" id="assessmentId" value="{{ $assessment->id }}">
+                            
+                            <button id="btnStartRecording" class="btn btn-danger btn-lg rounded-pill px-4">
+                                <i class="bi bi-mic-fill me-2"></i> Start Reading
                             </button>
-                            <div id="recordingTimer" class="mt-2 fw-bold text-danger d-none">00:00</div>
-                            <p class="small text-muted mt-2">Click to start/stop recording</p>
+                            <button id="btnStopRecording" class="btn btn-secondary btn-lg rounded-pill px-4 d-none">
+                                <i class="bi bi-stop-fill me-2"></i> Stop Recording
+                            </button>
+                            
+                            <div id="recordingTimer" class="mt-3 fw-bold text-danger">00:00</div>
+                            <canvas id="audioVisualizer" width="300" height="60" class="mt-2 bg-light rounded"></canvas>
+                            
+                            <div class="mt-3">
+                                <audio id="audioPlayback" controls class="w-100 d-none mb-2"></audio>
+                                <button id="btnRetry" class="btn btn-outline-secondary btn-sm d-none">Retry</button>
+                                <button id="btnAnalyze" class="btn btn-success btn-sm d-none">
+                                    <i class="bi bi-cpu me-1"></i> Analyze Reading
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- AI Results Area --}}
+                        <div id="resultsArea" class="mt-4 p-3 border border-primary rounded bg-light d-none">
+                            <h5 class="text-primary"><i class="bi bi-robot me-2"></i>AI Assessment Results</h5>
+                            <div class="d-flex justify-content-between mt-3">
+                                <div><small class="text-muted">Words Per Minute</small><br><strong class="fs-5" id="resWpm"></strong></div>
+                                <div><small class="text-muted">Accuracy</small><br><strong class="fs-5" id="resAccuracy"></strong>%</div>
+                            </div>
+                            <hr>
+                            <div class="mb-2">
+                                <small class="text-muted">Diagnosed Weakness:</small>
+                                <span id="resWeakness" class="badge bg-warning text-dark ms-2 fs-6"></span>
+                            </div>
+                            <div>
+                                <small class="text-muted">AI Confidence:</small>
+                                <span id="resConfidence" class="ms-2 fw-bold text-success"></span>%
+                            </div>
                         </div>
 
                         <hr>
@@ -90,9 +122,8 @@
 <script src="{{ asset('js/audio-recorder.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        if (typeof initAudioRecorder === 'function') {
-            initAudioRecorder('{{ route("assessments.upload-audio", $assessment) }}', '{{ csrf_token() }}');
-        }
+        // Pass the CSRF token to our JS file
+        window.BIGKAS_CSRF = '{{ csrf_token() }}';
     });
 </script>
 @endpush

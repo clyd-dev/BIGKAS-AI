@@ -6,9 +6,12 @@ use App\Models\Learner;
 use App\Models\School;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use App\Traits\AuthorizesLearnerAccess;
 
 class LearnerController extends Controller
 {
+    use AuthorizesLearnerAccess;
+
     public function index()
     {
         $user = auth()->user();
@@ -63,6 +66,8 @@ class LearnerController extends Controller
 
     public function show(Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
+
         $learner->load(['school', 'schoolClass']);
         $assessments = $learner->assessments()->with(['material', 'result'])->latest()->limit(10)->get();
         $stats = $learner->getStats();
@@ -78,6 +83,8 @@ class LearnerController extends Controller
 
     public function edit(Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
+
         $gradeLevels = config('bigkas.grade_levels', []);
         $schools = School::active()->orderBy('name')->get();
 
@@ -86,6 +93,8 @@ class LearnerController extends Controller
 
     public function update(Request $request, Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
+
         $request->validate([
             'first_name' => 'required|string|min:2',
             'last_name' => 'required|string|min:2',
@@ -105,14 +114,20 @@ class LearnerController extends Controller
             'notes' => $request->notes,
         ]);
 
+        ActivityLog::log('update_learner', "Updated learner: {$learner->first_name} {$learner->last_name}", 'learner', $learner->id);
+
         return redirect()->route('learners.show', $learner)
             ->with('success', 'Learner updated successfully.');
     }
 
     public function destroy(Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
+
         $name = $learner->getFullName();
         $learner->delete();
+
+        ActivityLog::log('delete_learner', "Deleted learner: {$name}", 'learner', $learner->id);
 
         return redirect()->route('learners.index')
             ->with('success', "Learner \"{$name}\" has been removed.");
@@ -120,6 +135,8 @@ class LearnerController extends Controller
 
     public function progress(Learner $learner)
     {
+        $this->authorizeLearnerAccess($learner);
+
         $progressData = $learner->getProgressData();
         $assessmentResults = $learner->getAssessmentResults();
         $interventionLogs = $learner->interventionLogs()

@@ -7,11 +7,26 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Student Login - BIGKAS-AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="{{ asset('css/student.css') }}" rel="stylesheet">
 </head>
 <body>
     <div class="login-container">
         <div class="login-card">
+            {{-- Unified Tab Navigation --}}
+            <ul class="nav nav-pills nav-justified mb-4" style="background-color: #f8f9fa; border-radius: 50rem; padding: 0.3rem;">
+                <li class="nav-item">
+                    <a class="nav-link text-muted" href="{{ route('login') }}" style="border-radius: 50rem; font-weight: 600;">
+                        <i class="bi bi-person-badge me-1"></i> Staff & Parents
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active shadow-sm" href="{{ route('student.login') }}" style="border-radius: 50rem; font-weight: 600; background-color: var(--kid-primary);">
+                        <i class="bi bi-emoji-smile me-1"></i> Learners (PIN)
+                    </a>
+                </li>
+            </ul>
+
             {{-- Logo --}}
             <div class="mb-3">
                 <span style="font-size: 3rem;">📖</span>
@@ -60,13 +75,6 @@
             <p class="text-muted mt-4 mb-0" style="font-size: 0.8rem;">
                 Ask your teacher for your PIN code
             </p>
-
-            {{-- Link back to teacher login --}}
-            <div class="mt-3">
-                <a href="{{ route('login') }}" class="text-decoration-none" style="font-size: 0.8rem; color: var(--kid-text-light);">
-                    Teacher / Admin Login
-                </a>
-            </div>
         </div>
     </div>
 

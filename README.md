@@ -672,7 +672,7 @@ POST /api/auth/login
 ### Step 1: Clone & Install Laravel Dependencies
 
 ```bash
-git clone https://github.com/your-org/bigkas.git
+git clone https://github.com/clyd-dev/BIGKAS-AI bigkas
 cd bigkas
 composer install
 ```

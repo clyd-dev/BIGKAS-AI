@@ -3,6 +3,20 @@
 @section('title', 'Login')
 
 @section('content')
+    {{-- Unified Tab Navigation --}}
+    <ul class="nav nav-pills nav-justified mb-4" style="background-color: #f8f9fa; border-radius: 50rem; padding: 0.3rem;">
+        <li class="nav-item">
+            <a class="nav-link active shadow-sm" href="{{ route('login') }}" style="border-radius: 50rem; font-weight: 600;">
+                <i class="bi bi-person-badge me-1"></i> Staff & Parents
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-muted" href="{{ route('student.login') }}" style="border-radius: 50rem; font-weight: 600;">
+                <i class="bi bi-emoji-smile me-1"></i> Learners (PIN)
+            </a>
+        </li>
+    </ul>
+
     <h4 class="text-center mb-4">Welcome Back</h4>
 
     <form method="POST" action="{{ route('login') }}">

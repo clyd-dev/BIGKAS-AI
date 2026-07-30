@@ -14,8 +14,21 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="{{ url('/') }}">
-                <i class="bi bi-book"></i> BIGKAS
+                <i class="bi bi-book"></i> BIGKAS-AI
             </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#teachers">For Teachers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#parents">For Parents</a>
+                    </li>
+                </ul>
+            </div>
             <div class="ms-auto">
                 <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm me-2">Login</a>
                 <a href="{{ route('register') }}" class="btn btn-primary btn-sm">Register</a>
@@ -27,7 +40,13 @@
 
     <footer class="bg-dark text-white py-4 mt-5">
         <div class="container text-center">
-            <p class="mb-0">&copy; {{ date('Y') }} BIGKAS &mdash; Sagay City Division, Negros Occidental</p>
+            <div class="mb-3">
+                <a href="#" class="text-white text-decoration-none mx-2">About</a>
+                <a href="#" class="text-white text-decoration-none mx-2">Help Center</a>
+                <a href="#" class="text-white text-decoration-none mx-2">Privacy Policy</a>
+                <a href="#" class="text-white text-decoration-none mx-2">Terms of Service</a>
+            </div>
+            <p class="mb-0">&copy; 2026 BIGKAS-AI. All rights reserved.</p>
         </div>
     </footer>
 

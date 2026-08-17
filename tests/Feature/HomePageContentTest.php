@@ -19,7 +19,7 @@ class HomePageContentTest extends TestCase
     {
         $response = $this->get('/');
         
-        $response->assertSee('Empowering Every Learner\'s Reading Journey', false);
+        $response->assertSee('AN INTELLIGENT READING PROGRESS ASSESSMENT AND INTERVENTION SYSTEM', false);
         $response->assertSee('Save Hours of Grading');
     }
 

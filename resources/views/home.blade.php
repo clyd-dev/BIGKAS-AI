@@ -39,9 +39,9 @@
                     <span class="badge bg-white text-primary mb-3 px-3 py-2 rounded-pill shadow-sm">
                         <i class="bi bi-stars me-1"></i> Smarter Reading Assessments
                     </span>
-                    <h1 class="display-3 fw-bold mb-4">Empowering Every Learner's Reading Journey</h1>
-                    <p class="lead mb-5 opacity-75">
-                        A Machine Learning-Assisted Reading Progress Assessment and Intervention System for Learner Monitoring and Decision Support. Say goodbye to manual grading.
+                    <h1 class="display-2 fw-bold mb-4 tracking-tight">BIGKAS-AI</h1>
+                    <p class="lead mb-5 opacity-90 fw-medium" style="max-width: 900px; margin: 0 auto; line-height: 1.6;">
+                        AN INTELLIGENT READING PROGRESS ASSESSMENT AND INTERVENTION SYSTEM USING MACHINE LEARNING FOR LEARNER MONITORING AND EDUCATIONAL DECISION SUPPORT
                     </p>
                     <div class="d-flex justify-content-center gap-3 flex-wrap">
                         <a href="{{ route('register') }}" class="btn btn-light btn-lg px-5 shadow-sm rounded-pill fw-medium">

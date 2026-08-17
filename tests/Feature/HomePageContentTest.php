@@ -14,4 +14,20 @@ class HomePageContentTest extends TestCase
         $response->assertSee('BIGKAS-AI');
         $response->assertSee('Privacy Policy');
     }
+
+    public function test_home_page_hero_and_benefits()
+    {
+        $response = $this->get('/');
+        
+        $response->assertSee('Empowering Every Learner\'s Reading Journey', false);
+        $response->assertSee('Save Hours of Grading');
+    }
+
+    public function test_home_page_how_it_works_and_portals()
+    {
+        $response = $this->get('/');
+        
+        $response->assertSee('Instant AI Analysis');
+        $response->assertSee('For Parents');
+    }
 }

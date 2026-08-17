@@ -2,7 +2,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="{{ route('dashboard') }}">
-            <i class="bi bi-book"></i> BIGKAS
+            <i class="bi bi-book"></i> BIGKAS-AI
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -17,6 +17,36 @@
 
             {{-- Right side --}}
             <ul class="navbar-nav ms-auto align-items-center">
+                {{-- Notification Bell --}}
+                <li class="nav-item dropdown me-2">
+                    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-bell fs-5"></i>
+                        @php $unreadNotifCount = auth()->user()->unreadNotifications->count(); @endphp
+                        @if($unreadNotifCount > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                {{ $unreadNotifCount }}
+                            </span>
+                        @endif
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end p-2" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                        <li><h6 class="dropdown-header">Notifications</h6></li>
+                        @forelse(auth()->user()->notifications()->latest()->limit(10)->get() as $notification)
+                            <li>
+                                <form method="POST" action="{{ route('notifications.read', $notification->id) }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item small text-wrap {{ $notification->read_at ? 'text-muted' : 'fw-bold' }}">
+                                        {{ $notification->data['message'] ?? 'Notification' }}
+                                        <br><span class="text-muted" style="font-size: 0.7rem;">{{ $notification->created_at->diffForHumans() }}</span>
+                                    </button>
+                                </form>
+                            </li>
+                        @empty
+                            <li><span class="dropdown-item-text text-muted small">No notifications</span></li>
+                        @endforelse
+                    </ul>
+                </li>
+
+                {{-- User Profile Dropdown --}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle me-1"></i>

@@ -35,8 +35,7 @@
                         <select class="form-select" id="language" name="language">
                             <option value="english">English</option>
                             <option value="filipino">Filipino</option>
-                            <option value="hiligaynon">Hiligaynon</option>
-                        </select>
+                            </select>
                     </div>
                     <div class="col-md-3">
                         <label for="assessment_type" class="form-label">Type</label>

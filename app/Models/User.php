@@ -82,6 +82,29 @@ class User extends Authenticatable
         return $this->hasMany(SchoolClass::class, 'teacher_id');
     }
 
+    /**
+     * Gets a query builder for all learners this user has access to.
+     */
+    public function accessibleLearnersQuery()
+    {
+        if ($this->isAdmin()) {
+            return Learner::query();
+        }
+
+        if ($this->isTeacher()) {
+            $classIds = $this->taughtClasses()->pluck('id');
+            $userId = $this->id;
+            return Learner::where(function($q) use ($classIds, $userId) {
+                $q->whereIn('class_id', $classIds)
+                  ->orWhereHas('users', function($uq) use ($userId) {
+                      $uq->where('users.id', $userId);
+                  });
+            });
+        }
+
+        return $this->learners(); // Parents only see their linked learners
+    }
+
     // ── Role Checks ──
 
     public function isAdmin(): bool

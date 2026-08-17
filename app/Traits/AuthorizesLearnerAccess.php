@@ -22,6 +22,11 @@ trait AuthorizesLearnerAccess
         // Check if the user is attached to the learner via the pivot table
         $hasAccess = $user->learners()->where('learners.id', $learner->id)->exists();
 
+        // If not attached directly, check if the user is the teacher for the learner's class
+        if (!$hasAccess && $user->isTeacher() && $learner->class_id) {
+            $hasAccess = $user->taughtClasses()->where('id', $learner->class_id)->exists();
+        }
+
         abort_unless($hasAccess, 403, 'Unauthorized. This student is not assigned to your class.');
     }
 }

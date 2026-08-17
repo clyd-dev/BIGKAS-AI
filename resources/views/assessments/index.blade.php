@@ -29,8 +29,7 @@
                         <option value="">All</option>
                         <option value="english" {{ request('language') === 'english' ? 'selected' : '' }}>English</option>
                         <option value="filipino" {{ request('language') === 'filipino' ? 'selected' : '' }}>Filipino</option>
-                        <option value="hiligaynon" {{ request('language') === 'hiligaynon' ? 'selected' : '' }}>Hiligaynon</option>
-                    </select>
+                        </select>
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-search me-1"></i> Filter</button>

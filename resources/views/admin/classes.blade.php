@@ -4,95 +4,128 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Teacher & Classrooms Overview</h4>
-</div>
-
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <form method="GET" action="{{ route('admin.classes') }}" class="row g-3 align-items-end">
-            <div class="col-md-8">
-                <label class="form-label text-muted small">Search Teacher or Section</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-                    <input type="text" name="search" class="form-control" placeholder="Search by teacher name or class section..." value="{{ request('search') }}">
-                </div>
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary w-100">Filter</button>
-            </div>
-        </form>
+    <div>
+        <h4 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Classrooms Overview</h4>
+        <small class="text-muted">Old Sagay Elementary School — Grades 3 to 6</small>
     </div>
+    <a href="{{ route('admin.schools') }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-pencil me-1"></i>Manage Grades &amp; Sections
+    </a>
 </div>
 
-<div class="row g-4">
-    @forelse($classes as $schoolClass)
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <span class="badge bg-primary mb-2">Grade {{ $schoolClass->grade_level }}</span>
-                            <h5 class="card-title mb-1 fw-bold">{{ $schoolClass->section }}</h5>
-                            <p class="text-muted small mb-0"><i class="bi bi-building me-1"></i>{{ $schoolClass->school->name ?? 'No School' }}</p>
-                        </div>
-                        <div class="text-end">
-                            <span class="fs-4 fw-bold text-success">{{ $schoolClass->learners_count }}</span>
-                            <div class="small text-muted" style="margin-top: -5px;">Learners</div>
-                        </div>
+@php
+    $grouped = $classes->groupBy('grade_level')->sortKeys();
+    $gradeColors = [3 => 'primary', 4 => 'success', 5 => 'warning', 6 => 'danger'];
+@endphp
+
+@if($classes->isEmpty())
+    <div class="card border-0 shadow-sm">
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-diagram-3 display-4 d-block mb-3"></i>
+            <h5>No classrooms set up yet</h5>
+            <p class="mb-3">Add grades and sections first.</p>
+            <a href="{{ route('admin.schools') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i>Add Grade &amp; Section
+            </a>
+        </div>
+    </div>
+@else
+    <div class="row g-4">
+        @foreach($grouped as $grade => $sections)
+            @php $color = $gradeColors[$grade] ?? 'secondary'; @endphp
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    {{-- Grade header --}}
+                    <div class="card-header bg-{{ $color }} text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-mortarboard me-2"></i>Grade {{ $grade }}</h5>
+                        <span class="badge bg-white text-{{ $color }} rounded-pill">
+                            {{ $sections->count() }} section{{ $sections->count() > 1 ? 's' : '' }}
+                            &middot; {{ $sections->sum('learners_count') }} learners
+                        </span>
                     </div>
-                </div>
-                <div class="card-body">
-                    <hr class="text-muted opacity-25">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-light rounded-circle p-2 me-3">
-                            <i class="bi bi-person-video3 text-primary fs-4"></i>
-                        </div>
-                        <div>
-                            <div class="small text-muted text-uppercase fw-semibold" style="letter-spacing: 0.5px;">Adviser / Teacher</div>
-                            <div class="fw-bold">{{ $schoolClass->teacher->name ?? 'Unassigned' }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light border-top-0 d-grid">
-                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseClass{{ $schoolClass->id }}">
-                        View Learners List <i class="bi bi-chevron-down ms-1"></i>
-                    </button>
-                    
-                    <div class="collapse mt-2" id="collapseClass{{ $schoolClass->id }}">
-                        <ul class="list-group list-group-flush rounded border mt-2">
-                            @forelse($schoolClass->learners as $learner)
-                                <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 small">
-                                    <span class="text-truncate" style="max-width: 150px;">{{ $learner->getFullName() }}</span>
-                                    @if($learner->reading_level === 'independent')
-                                        <span class="badge bg-success rounded-pill">Indep</span>
-                                    @elseif($learner->reading_level === 'instructional')
-                                        <span class="badge bg-warning text-dark rounded-pill">Instr</span>
-                                    @elseif($learner->reading_level === 'frustration')
-                                        <span class="badge bg-danger rounded-pill">Frust</span>
+
+                    {{-- Sections list --}}
+                    <div class="card-body p-0">
+                        @foreach($sections as $class)
+                            <div class="border-bottom px-3 py-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="fw-semibold">
+                                            <i class="bi bi-people me-1 text-{{ $color }}"></i>
+                                            Section {{ $class->section }}
+                                            <span class="badge bg-{{ $color }} bg-opacity-10 text-{{ $color }} ms-1">
+                                                {{ $class->learners_count }} learner{{ $class->learners_count != 1 ? 's' : '' }}
+                                            </span>
+                                        </div>
+                                        <div class="small text-muted mt-1">
+                                            <i class="bi bi-person-video3 me-1"></i>
+                                            <strong>Adviser:</strong>
+                                            {{ $class->teacher->name ?? 'Unassigned' }}
+                                        </div>
+                                        <div class="small text-muted">
+                                            <i class="bi bi-calendar3 me-1"></i>S.Y. {{ $class->school_year ?? '—' }}
+                                        </div>
+                                    </div>
+
+                                    {{-- Reading level mini-bar --}}
+                                    <div class="text-end" style="min-width: 120px;">
+                                        @php
+                                            $total = $class->learners_count ?: 1;
+                                            $indep  = $class->learners->where('reading_level','independent')->count();
+                                            $instr  = $class->learners->where('reading_level','instructional')->count();
+                                            $frust  = $class->learners->where('reading_level','frustration')->count();
+                                        @endphp
+                                        <div class="progress" style="height: 8px;" title="Independent / Instructional / Frustration">
+                                            <div class="progress-bar bg-success" style="width:{{ round($indep/$total*100) }}%"></div>
+                                            <div class="progress-bar bg-warning" style="width:{{ round($instr/$total*100) }}%"></div>
+                                            <div class="progress-bar bg-danger"  style="width:{{ round($frust/$total*100) }}%"></div>
+                                        </div>
+                                        <div class="small text-muted mt-1" style="font-size:0.72rem;">
+                                            <span class="text-success">{{ $indep }}</span> /
+                                            <span class="text-warning">{{ $instr }}</span> /
+                                            <span class="text-danger">{{ $frust }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Learner list toggle --}}
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#learners{{ $class->id }}">
+                                        <i class="bi bi-list-ul me-1"></i>View Learner List
+                                        <i class="bi bi-chevron-down ms-1"></i>
+                                    </button>
+                                </div>
+                                <div class="collapse mt-2" id="learners{{ $class->id }}">
+                                    @if($class->learners->isEmpty())
+                                        <p class="text-muted small fst-italic mb-0">No learners enrolled in this section.</p>
                                     @else
-                                        <span class="badge bg-secondary rounded-pill">N/A</span>
+                                        <ul class="list-group list-group-flush rounded border">
+                                            @foreach($class->learners->sortBy(fn($l) => $l->last_name) as $learner)
+                                                <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3 small">
+                                                    <span class="text-truncate" style="max-width: 160px;">{{ $learner->getFullName() }}</span>
+                                                    @php $lvl = $learner->reading_level; @endphp
+                                                    @if($lvl === 'independent')
+                                                        <span class="badge bg-success rounded-pill">Independent</span>
+                                                    @elseif($lvl === 'instructional')
+                                                        <span class="badge bg-warning text-dark rounded-pill">Instructional</span>
+                                                    @elseif($lvl === 'frustration')
+                                                        <span class="badge bg-danger rounded-pill">Frustration</span>
+                                                    @else
+                                                        <span class="badge bg-secondary rounded-pill">Not Assessed</span>
+                                                    @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
                                     @endif
-                                </li>
-                            @empty
-                                <li class="list-group-item text-muted text-center py-2 small">No learners enrolled</li>
-                            @endforelse
-                        </ul>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
-        </div>
-    @empty
-        <div class="col-12">
-            <div class="text-center text-muted py-5 card border-0 shadow-sm">
-                <i class="bi bi-diagram-3 display-4 d-block mb-3"></i>
-                <h5>No classrooms found</h5>
-                <p>Ensure teachers have classes assigned to them.</p>
-            </div>
-        </div>
-    @endforelse
-</div>
-
-<div class="mt-4">
-    {{ $classes->links() }}
-</div>
+        @endforeach
+    </div>
+@endif
 @endsection

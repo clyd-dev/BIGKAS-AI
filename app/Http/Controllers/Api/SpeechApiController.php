@@ -65,14 +65,7 @@ class SpeechApiController extends Controller
                 'whisper_code' => 'tl',
                 'supported' => true,
             ],
-            [
-                'code' => 'hiligaynon',
-                'name' => 'Hiligaynon',
-                'whisper_code' => 'hil',
-                'supported' => true,
-                'note' => 'Limited Whisper support; may use Filipino model as fallback',
-            ],
-        ];
+            ];
 
         return $this->success(['languages' => $languages]);
     }

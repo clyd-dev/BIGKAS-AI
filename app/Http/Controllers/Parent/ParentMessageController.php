@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\Learner;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\NewMessageReceived;
 use Illuminate\Http\Request;
 
 class ParentMessageController extends Controller
@@ -70,16 +71,23 @@ class ParentMessageController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $learners = $user->learners()->orderBy('last_name')->get();
+        $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
 
-        // Get teachers linked to parent's children
-        $learnerIds = $learners->pluck('id');
+        // Teachers who teach classes containing the parent's children
+        $classIds = $learners->pluck('class_id')->filter()->unique();
         $teachers = User::where('role', 'teacher')
-            ->whereHas('learners', fn($q) => $q->whereIn('learners.id', $learnerIds))
+            ->whereHas('taughtClasses', fn ($q) => $q->whereIn('classes.id', $classIds))
+            ->with('learners:id')
             ->orderBy('name')
             ->get();
 
-        return view('parent.messages.compose', compact('learners', 'teachers'));
+        // Admins (principal) — always available to any parent
+        $admins = User::where('role', 'admin')->with('learners:id')->orderBy('name')->get();
+
+        $recipients = collect(['teacher' => $teachers, 'admin' => $admins])
+            ->filter(fn ($group) => $group->isNotEmpty());
+
+        return view('parent.messages.compose', compact('learners', 'recipients'));
     }
 
     /**
@@ -96,23 +104,20 @@ class ParentMessageController extends Controller
 
         $user = auth()->user();
 
-        // Verify the receiver is a teacher linked to the parent's learners
-        $learnerIds = $user->learners()->pluck('learners.id');
+        // Verify the receiver is a teacher of the parent's children's classes, or an admin
+        $classIds = $user->accessibleLearnersQuery()
+            ->pluck('class_id')->filter()->unique();
+
         $receiverValid = User::where('id', $request->receiver_id)
-            ->where(function ($q) use ($learnerIds) {
-                $q->where('role', 'teacher')
-                  ->whereHas('learners', fn($q2) => $q2->whereIn('learners.id', $learnerIds));
-            })
-            ->orWhere(function ($q) {
-                $q->where('role', 'admin');
+            ->where(function ($q) use ($classIds) {
+                $q->where(function ($tq) use ($classIds) {
+                    $tq->where('role', 'teacher')
+                       ->whereHas('taughtClasses', fn($cq) => $cq->whereIn('classes.id', $classIds));
+                })->orWhere('role', 'admin');
             })
             ->exists();
-        // Also allow replying to admins
-        if (!$receiverValid) {
-            $receiverValid = User::where('id', $request->receiver_id)->where('role', 'admin')->exists();
-        }
 
-        abort_unless($receiverValid, 403, 'You can only message teachers linked to your children.');
+        abort_unless($receiverValid, 403, 'You can only message teachers of your children\'s classes or the admin.');
 
         $message = Message::create([
             'sender_id'   => $user->id,
@@ -123,6 +128,8 @@ class ParentMessageController extends Controller
         ]);
 
         ActivityLog::log('parent_send_message', "Parent sent message to teacher #{$message->receiver_id}", 'message', $message->id);
+
+        $message->receiver->notify(new NewMessageReceived($message));
 
         return redirect()->route('parent.messages.show', $message)->with('success', 'Message sent.');
     }
@@ -158,6 +165,8 @@ class ParentMessageController extends Controller
         ]);
 
         ActivityLog::log('parent_reply_message', "Parent replied to message thread", 'message', $reply->id);
+
+        $reply->receiver->notify(new NewMessageReceived($reply));
 
         return redirect()->route('parent.messages.show', $thread)->with('success', 'Reply sent.');
     }

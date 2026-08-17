@@ -27,8 +27,9 @@ class DashboardController extends Controller
 
         // Teacher dashboard
         // 1. Scalability Fix: Don't fetch all learners at once for UI, use pagination
-        $learners = $user->learners()->orderBy('last_name')->paginate(10);
-        $learnerIds = $user->learners()->pluck('learners.id');
+        $learnersQuery = $user->accessibleLearnersQuery();
+        $learners = (clone $learnersQuery)->orderBy('last_name')->paginate(10);
+        $learnerIds = (clone $learnersQuery)->pluck('learners.id');
         
         $baseStats = $user->getStats();
 
@@ -50,7 +51,7 @@ class DashboardController extends Controller
         ]);
 
         // 3. Query Optimization: Group By for chart distribution (Avoid N+1 memory issues)
-        $distributionData = $user->learners()
+        $distributionData = (clone $learnersQuery)
             ->select('reading_level', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
             ->groupBy('reading_level')
             ->pluck('count', 'reading_level')
@@ -63,14 +64,14 @@ class DashboardController extends Controller
             'not_assessed' => ($distributionData[''] ?? 0) + ($distributionData[null] ?? 0),
         ];
 
-        $recentAssessments = Assessment::forUser($user->id)
+        $recentAssessments = Assessment::forUser($user)
             ->with(['learner', 'material', 'result'])
             ->latest()
             ->limit(5) // Reduced from 10 to keep dashboard clean
             ->get();
 
         // 4. Actionable Intelligence: At-Risk Students (Frustration level + ML Deficiencies)
-        $atRiskLearners = $user->learners()
+        $atRiskLearners = (clone $learnersQuery)
             ->where('reading_level', 'frustration')
             ->with(['assessments' => function($query) {
                 // Get the latest assessment result which contains the ML primary weakness

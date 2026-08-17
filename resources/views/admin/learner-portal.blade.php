@@ -18,17 +18,25 @@
                     <input type="text" name="search" class="form-control form-control-sm"
                            placeholder="Search by name or LRN..." value="{{ request('search') }}">
                 </div>
-                <div class="col-md-3">
-                    <select name="school_id" class="form-select form-select-sm">
-                        <option value="">All Schools</option>
-                        @foreach($schools as $school)
-                            <option value="{{ $school->id }}" {{ request('school_id') == $school->id ? 'selected' : '' }}>
-                                {{ $school->name }}
-                            </option>
+                <div class="col-md-4">
+                    <select name="class_id" class="form-select form-select-sm">
+                        <option value="">All Sections</option>
+                        @foreach($allClasses->groupBy('grade_level') as $grade => $classes)
+                            <optgroup label="Grade {{ $grade }}">
+                                @foreach($classes as $class)
+                                    <option value="{{ $class->id }}"
+                                        {{ request('class_id') == $class->id ? 'selected' : '' }}>
+                                        {{ $class->section }}
+                                        @if($class->teacher)
+                                            — {{ $class->teacher->name }}
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </optgroup>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2 d-flex gap-1">
+                <div class="col-md-3 d-flex gap-1">
                     <button type="submit" class="btn btn-sm btn-outline-primary">
                         <i class="bi bi-search"></i> Filter
                     </button>
@@ -51,7 +59,7 @@
                         <tr>
                             <th style="width: 30px;">#</th>
                             <th>Learner</th>
-                            <th>School / Class</th>
+                            <th>Grade &amp; Section</th>
                             <th>Reading Level</th>
                             <th>PIN</th>
                             <th class="text-center">XP</th>
@@ -78,9 +86,14 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="small text-muted">
-                                    {{ $learner->school?->name ?? '-' }}<br>
-                                    {{ $learner->schoolClass?->name ?? '-' }}
+                                <td class="small">
+                                    @if($learner->schoolClass)
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">
+                                            Gr.{{ $learner->grade_level }} – {{ $learner->schoolClass->section }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="badge"

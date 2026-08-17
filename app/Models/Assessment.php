@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\NewAssessmentCompleted;
 
 class Assessment extends Model
 {
@@ -141,6 +142,12 @@ class Assessment extends Model
         $this->learner->update(['reading_level' => $result->reading_level]);
         $this->markCompleted();
 
+        // Notify linked parent(s)
+        $parents = $this->learner->users()->wherePivot('relationship', 'parent')->get();
+        foreach ($parents as $parent) {
+            $parent->notify(new NewAssessmentCompleted($this));
+        }
+
         return $result;
     }
 
@@ -152,13 +159,26 @@ class Assessment extends Model
             return collect();
         }
 
-        return Intervention::where('target_weakness', $result->primary_weakness)
+        $interventions = Intervention::where('target_weakness', $result->primary_weakness)
             ->where('grade_level_min', '<=', $this->learner->grade_level)
             ->where('grade_level_max', '>=', $this->learner->grade_level)
             ->where('is_active', true)
             ->orderByDesc('effectiveness_score')
             ->limit(5)
             ->get();
+
+        // Fallback: If no interventions match the exact grade level (e.g. a Grade 6 learner lacking Grade 1 Phonemic Awareness),
+        // we provide the most advanced available interventions for that fundamental weakness.
+        if ($interventions->isEmpty()) {
+            $interventions = Intervention::where('target_weakness', $result->primary_weakness)
+                ->where('is_active', true)
+                ->orderByDesc('grade_level_max')
+                ->orderByDesc('effectiveness_score')
+                ->limit(5)
+                ->get();
+        }
+
+        return $interventions;
     }
 
     public function getSummary(): array
@@ -183,8 +203,9 @@ class Assessment extends Model
     /**
      * Scope: assessments for learners belonging to a user.
      */
-    public function scopeForUser($query, int $userId)
+    public function scopeForUser($query, \App\Models\User $user)
     {
-        return $query->whereHas('learner.users', fn($q) => $q->where('users.id', $userId));
+        $learnerIds = $user->accessibleLearnersQuery()->select('learners.id');
+        return $query->whereIn('learner_id', $learnerIds);
     }
 }

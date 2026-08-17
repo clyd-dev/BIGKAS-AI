@@ -26,11 +26,11 @@
             <div class="card border-0 shadow-sm bg-success text-white h-100">
                 <div class="card-body text-center">
                     <i class="bi bi-building display-6"></i>
-                    <h3 class="mt-2 mb-0">{{ $stats['total_schools'] ?? 0 }}</h3>
-                    <small>Schools</small>
+                    <h6 class="mt-2 mb-0 fw-bold" style="font-size:0.85rem; line-height:1.3;">{{ $schoolName ?? 'Old Sagay Elementary School' }}</h6>
+                    <small class="opacity-75">Current School</small>
                 </div>
                 <a href="{{ route('admin.schools') }}" class="card-footer text-white text-center text-decoration-none bg-transparent border-top border-white border-opacity-25 small">
-                    Manage Schools <i class="bi bi-arrow-right ms-1"></i>
+                    Manage School <i class="bi bi-arrow-right ms-1"></i>
                 </a>
             </div>
         </div>

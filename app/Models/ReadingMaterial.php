@@ -14,8 +14,6 @@ class ReadingMaterial extends Model
     // Language constants
     const LANG_ENGLISH = 'en';
     const LANG_FILIPINO = 'fil';
-    const LANG_HILIGAYNON = 'hil';
-
     // Difficulty levels
     const DIFFICULTY_EASY = 'easy';
     const DIFFICULTY_MEDIUM = 'medium';
@@ -106,7 +104,6 @@ class ReadingMaterial extends Model
         return match ($this->language) {
             'en' => 'English',
             'fil' => 'Filipino',
-            'hil' => 'Hiligaynon',
             default => 'Unknown',
         };
     }

@@ -97,6 +97,9 @@ Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Notifications (bell icon)
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
+    
     // ----------------------------------------
     // Learner Management (admin, teacher)
     // ----------------------------------------
@@ -194,6 +197,7 @@ Route::middleware('auth')->group(function () {
         // User management
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::post('/users', [AdminController::class, 'createUser'])->name('users.create');
+        Route::put('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
         Route::post('/users/{user}/role', [AdminController::class, 'updateUserRole'])->name('users.role');
         Route::post('/users/{user}/activate', [AdminController::class, 'activateUser'])->name('users.activate');
         Route::post('/users/{user}/deactivate', [AdminController::class, 'deactivateUser'])->name('users.deactivate');
@@ -204,6 +208,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/schools', [AdminController::class, 'storeSchool'])->name('schools.store');
         Route::put('/schools/{school}', [AdminController::class, 'updateSchool'])->name('schools.update');
         Route::delete('/schools/{school}', [AdminController::class, 'deleteSchool'])->name('schools.delete');
+
+        // Grade & Section (class) management
+        Route::post('/classes', [AdminController::class, 'storeClass'])->name('classes.store');
+        Route::put('/classes/{schoolClass}', [AdminController::class, 'updateClass'])->name('classes.update');
+        Route::delete('/classes/{schoolClass}', [AdminController::class, 'deleteClass'])->name('classes.delete');
 
         // Classes Overview & Activity Logs
         Route::get('/classes', [AdminController::class, 'classesOverview'])->name('classes');
@@ -225,6 +234,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/badges', [AdminController::class, 'storeBadge'])->name('badges.store');
         Route::put('/badges/{badge}', [AdminController::class, 'updateBadge'])->name('badges.update');
         Route::post('/badges/{badge}/toggle', [AdminController::class, 'toggleBadge'])->name('badges.toggle');
+
+        // Phil-IRI Reading Profile (Form 4 matrix + Form 3A detail)
+        Route::get('/phil-iri', [AdminController::class, 'philIri'])->name('phil-iri');
 
         // Learner portal oversight
         Route::get('/learner-portal', [AdminController::class, 'learnerPortal'])->name('learner-portal');

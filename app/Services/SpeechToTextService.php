@@ -118,8 +118,7 @@ class SpeechToTextService
         return [
             'en' => ['code' => 'en', 'name' => 'English', 'whisper_code' => 'en'],
             'fil' => ['code' => 'fil', 'name' => 'Filipino (Tagalog)', 'whisper_code' => 'tl'],
-            'hil' => ['code' => 'hil', 'name' => 'Hiligaynon', 'whisper_code' => 'tl'],
-        ];
+            ];
     }
 
     public function validateAudioFile(string $audioPath): array

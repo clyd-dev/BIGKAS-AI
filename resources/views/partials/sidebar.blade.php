@@ -51,6 +51,18 @@
             </a>
         @endif
 
+        @if(in_array($role, ['admin', 'teacher']))
+            {{-- Messages --}}
+            <a href="{{ route('messages.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('messages.*') ? 'active' : '' }}">
+                <i class="bi bi-envelope me-2"></i> Messages
+                @php $teacherUnreadMsgCount = \App\Models\Message::where('receiver_id', auth()->id())->whereNull('read_at')->count(); @endphp
+                @if($teacherUnreadMsgCount > 0)
+                    <span class="badge bg-danger rounded-pill float-end">{{ $teacherUnreadMsgCount }}</span>
+                @endif
+            </a>
+        @endif
+
         @if($role === 'student')
             <hr class="my-1">
             <small class="text-muted px-3">MY LEARNING</small>
@@ -108,6 +120,10 @@
             <a href="{{ route('admin.index') }}"
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.index') ? 'active' : '' }}">
                 <i class="bi bi-gear me-2"></i> Admin Panel
+            </a>
+            <a href="{{ route('admin.phil-iri') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.phil-iri') ? 'active' : '' }}">
+                <i class="bi bi-journal-bookmark-fill me-2"></i> Phil-IRI Profile
             </a>
             <a href="{{ route('admin.classes') }}"
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.classes') ? 'active' : '' }}">

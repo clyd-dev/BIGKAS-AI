@@ -61,7 +61,7 @@ BIGKAS automates the oral reading assessment process. A teacher records a studen
 
 ### Key Differentiators
 
-- **Multilingual** — English, Filipino, and Hiligaynon (aligned with DepEd's MTB-MLE program)
+- **Multilingual** — English, Filipino, (aligned with DepEd's MTB-MLE program)
 - **Phil-IRI Aligned** — Three reading levels: Frustration, Instructional, Independent
 - **ML-Powered Classification** — Four weakness categories: Phonemic Awareness, Decoding Accuracy, Oral Reading Fluency, Reading Comprehension
 - **Gamified Student Portal** — XP points, streaks, badges, and class leaderboard
@@ -928,7 +928,7 @@ When the Flask service is unavailable, `ReadingAnalyzerService::ruleBasedClassif
 | Limitation | Details |
 |---|---|
 | **Synthetic ML training data** | Model trained on generated data, not real student readings. Accuracy will improve significantly as real assessments accumulate. |
-| **Hiligaynon STT fallback** | OpenAI Whisper has limited Hiligaynon support; the system uses the Filipino (Tagalog) model as a fallback, which may reduce accuracy. |
+| **Filipino STT fallback** | OpenAI Whisper has limited Filipino support; the system uses the Filipino (Tagalog) model as a fallback, which may reduce accuracy. |
 | **No offline mode** | Requires internet for OpenAI Whisper API calls. Assessment without an API key uses mock transcription. |
 | **Polling-based live sessions** | Live teacher↔student sessions use HTTP polling every 3 seconds instead of WebSockets, introducing minor latency. |
 | **Comprehension scoring is inferred** | Comprehension weakness is detected from reading behavior patterns (omissions, prosody), not direct comprehension testing. |
@@ -948,7 +948,7 @@ When the Flask service is unavailable, `ReadingAnalyzerService::ruleBasedClassif
 
 - [ ] **WebSocket-based live sessions** — Replace HTTP polling with Laravel Echo + Pusher for true real-time teacher↔student communication
 - [ ] **Retrain ML with real data** — Build a retraining pipeline that uses accumulated `/api/training-data` submissions
-- [ ] **Dedicated Hiligaynon STT model** — Fine-tune or partner with local language AI initiatives
+- [ ] **Dedicated Filipino STT model** — Fine-tune or partner with local language AI initiatives
 - [ ] **Mobile app** — Flutter or React Native app using the existing Sanctum REST API
 - [ ] **Digital parental consent** — In-app consent workflow before linking a learner to a parent account
 - [ ] **PDF export** — Generate printable Phil-IRI-style reports (already has a print view at `/reports/learner/{id}/print`)

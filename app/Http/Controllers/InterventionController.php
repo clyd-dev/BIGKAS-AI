@@ -6,6 +6,7 @@ use App\Models\Intervention;
 use App\Models\InterventionLog;
 use App\Models\Learner;
 use App\Models\ActivityLog;
+use App\Notifications\NewInterventionAssigned;
 use Illuminate\Http\Request;
 use App\Traits\AuthorizesLearnerAccess;
 
@@ -64,6 +65,13 @@ class InterventionController extends Controller
         ]);
 
         ActivityLog::log('assign_intervention', "Assigned intervention to learner #{$request->learner_id}", 'intervention_log', $log->id);
+
+        // Notify linked parent(s)
+        $log->load('learner.users', 'intervention');
+        $parents = $log->learner->users->filter(fn ($u) => $u->pivot->relationship === 'parent');
+        foreach ($parents as $parent) {
+            $parent->notify(new NewInterventionAssigned($log));
+        }
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Intervention assigned.']);

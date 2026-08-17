@@ -25,8 +25,7 @@
                             <select class="form-select" name="settings[default_language]">
                                 <option value="english" {{ ($settings['default_language'] ?? '') === 'english' ? 'selected' : '' }}>English</option>
                                 <option value="filipino" {{ ($settings['default_language'] ?? '') === 'filipino' ? 'selected' : '' }}>Filipino</option>
-                                <option value="hiligaynon" {{ ($settings['default_language'] ?? '') === 'hiligaynon' ? 'selected' : '' }}>Hiligaynon</option>
-                            </select>
+                                </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Max Audio File Size (MB)</label>

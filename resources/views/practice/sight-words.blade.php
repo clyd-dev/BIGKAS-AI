@@ -13,13 +13,16 @@
         <div class="card-body">
             <form id="practiceForm" class="row g-2 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label small">Learner</label>
-                    <select id="learnerSelect" class="form-select form-select-sm">
-                        <option value="">Select learner...</option>
-                        @foreach($learners ?? [] as $learner)
-                            <option value="{{ $learner->id }}">{{ $learner->full_name }} (Grade {{ $learner->grade_level }})</option>
+                    <label for="learner_id" class="form-label">Learner <span class="text-danger">*</span></label>
+                    <select class="form-select @error('learner_id') is-invalid @enderror" id="learner_id" name="learner_id" required>
+                        <option value="">Choose a learner...</option>
+                        @foreach($learners as $learner)
+                            <option value="{{ $learner->id }}" {{ old('learner_id') == $learner->id ? 'selected' : '' }}>
+                                {{ $learner->full_name }} (Grade {{ $learner->grade_level }})
+                            </option>
                         @endforeach
                     </select>
+                    @error('learner_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Level</label>

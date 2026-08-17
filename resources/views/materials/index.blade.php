@@ -24,8 +24,7 @@
                         <option value="">All</option>
                         <option value="en" {{ request('language') === 'en' ? 'selected' : '' }}>English</option>
                         <option value="fil" {{ request('language') === 'fil' ? 'selected' : '' }}>Filipino</option>
-                        <option value="hil" {{ request('language') === 'hil' ? 'selected' : '' }}>Hiligaynon</option>
-                    </select>
+                        </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small">Grade</label>

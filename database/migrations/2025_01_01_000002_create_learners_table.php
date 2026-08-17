@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('school_id')->nullable()->constrained('schools')->nullOnDelete();
             $table->tinyInteger('grade_level')->unsigned()->default(1);
             $table->enum('reading_level', ['frustration', 'instructional', 'independent'])->nullable();
-            $table->string('mother_tongue', 50)->nullable()->default('Hiligaynon');
+            $table->string('mother_tongue', 50)->nullable()->default('Filipino');
             $table->text('notes')->nullable();
             $table->string('avatar')->nullable();
             $table->boolean('is_active')->default(true);

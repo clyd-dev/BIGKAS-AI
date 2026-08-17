@@ -75,37 +75,44 @@
         </div>
     </div>
 
-    {{-- Charts --}}
+    {{-- Charts + Skill Breakdown side by side --}}
     <div class="row g-3 mb-4">
+        {{-- Charts --}}
         <div class="col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white"><h6 class="mb-0">Accuracy Trend</h6></div>
-                <div class="card-body"><canvas id="accuracyTrend" height="250"></canvas></div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white"><h6 class="mb-0">WPM Trend</h6></div>
-                <div class="card-body"><canvas id="wpmTrend" height="250"></canvas></div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Skill Breakdown --}}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white"><h6 class="mb-0">Skill Breakdown</h6></div>
-        <div class="card-body">
             <div class="row g-3">
-                @foreach(['phonemic' => 'Phonemic Awareness', 'decoding' => 'Decoding Accuracy', 'fluency' => 'Oral Reading Fluency', 'comprehension' => 'Reading Comprehension'] as $key => $label)
-                    <div class="col-md-3">
-                        <h6 class="small text-muted text-center">{{ $label }}</h6>
-                        <div class="progress mb-1" style="height: 10px;">
-                            <div class="progress-bar {{ ($skillScores[$key] ?? 0) >= 80 ? 'bg-success' : (($skillScores[$key] ?? 0) >= 60 ? 'bg-warning' : 'bg-danger') }}"
-                                 style="width: {{ $skillScores[$key] ?? 0 }}%"></div>
-                        </div>
-                        <p class="text-center fw-bold small mb-0">{{ number_format($skillScores[$key] ?? 0, 1) }}%</p>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white"><h6 class="mb-0">Accuracy Trend</h6></div>
+                        <div class="card-body"><canvas id="accuracyTrend" height="250"></canvas></div>
                     </div>
-                @endforeach
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white"><h6 class="mb-0">WPM Trend</h6></div>
+                        <div class="card-body"><canvas id="wpmTrend" height="250"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Skill Breakdown --}}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white"><h6 class="mb-0">Skill Breakdown</h6></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        @foreach(['phonemic' => 'Phonemic Awareness', 'decoding' => 'Decoding Accuracy', 'fluency' => 'Oral Reading Fluency', 'comprehension' => 'Reading Comprehension'] as $key => $label)
+                            <div class="col-md-6">
+                                <h6 class="small text-muted text-center">{{ $label }}</h6>
+                                <div class="progress mb-1" style="height: 10px;">
+                                    <div class="progress-bar {{ ($skillScores[$key] ?? 0) >= 80 ? 'bg-success' : (($skillScores[$key] ?? 0) >= 60 ? 'bg-warning' : 'bg-danger') }}"
+                                        style="width: {{ $skillScores[$key] ?? 0 }}%"></div>
+                                </div>
+                                <p class="text-center fw-bold small mb-0">{{ number_format($skillScores[$key] ?? 0, 1) }}%</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
     </div>

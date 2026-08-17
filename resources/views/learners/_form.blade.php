@@ -49,36 +49,39 @@
                value="{{ old('lrn', $learner->lrn ?? '') }}" placeholder="12-digit LRN">
     </div>
 
-    <div class="col-md-4">
-        <label for="mother_tongue" class="form-label">Mother Tongue</label>
-        <select class="form-select" id="mother_tongue" name="mother_tongue">
-            <option value="">Select</option>
-            <option value="hiligaynon" {{ old('mother_tongue', $learner->mother_tongue ?? '') === 'hiligaynon' ? 'selected' : '' }}>Hiligaynon</option>
-            <option value="filipino" {{ old('mother_tongue', $learner->mother_tongue ?? '') === 'filipino' ? 'selected' : '' }}>Filipino</option>
-            <option value="english" {{ old('mother_tongue', $learner->mother_tongue ?? '') === 'english' ? 'selected' : '' }}>English</option>
-            <option value="cebuano" {{ old('mother_tongue', $learner->mother_tongue ?? '') === 'cebuano' ? 'selected' : '' }}>Cebuano</option>
-        </select>
+    <div class="col-md-6">
+        <label class="form-label">School</label>
+        <input type="text" class="form-control bg-light" value="{{ $schoolName ?? 'Old Sagay Elementary School' }}" readonly>
     </div>
-    <div class="col-md-4">
-        <label for="school_id" class="form-label">School</label>
-        <select class="form-select" id="school_id" name="school_id">
-            <option value="">Select school</option>
-            @foreach($schools ?? [] as $school)
-                <option value="{{ $school->id }}" {{ old('school_id', $learner->school_id ?? Auth::user()->school_id) == $school->id ? 'selected' : '' }}>
-                    {{ $school->name }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-    <div class="col-md-4">
+    <div class="col-md-6">
         <label for="class_id" class="form-label">Class / Section</label>
         <select class="form-select" id="class_id" name="class_id">
             <option value="">Select class</option>
-            @foreach($classes ?? [] as $class)
-                <option value="{{ $class->id }}" {{ old('class_id', $learner->class_id ?? '') == $class->id ? 'selected' : '' }}>
-                    {{ $class->name }} (Grade {{ $class->grade_level }})
+            @foreach(($allClasses ?? collect())->groupBy('grade_level') as $grade => $classes)
+                <optgroup label="Grade {{ $grade }}">
+                    @foreach($classes as $class)
+                        <option value="{{ $class->id }}" {{ old('class_id', $learner->class_id ?? '') == $class->id ? 'selected' : '' }}>
+                            {{ $class->section }}
+                        </option>
+                    @endforeach
+                </optgroup>
+            @endforeach
+        </select>
+        <div class="form-text">Selecting a class will automatically set the grade level.</div>
+    </div>
+    
+    <div class="col-md-12">
+        <label for="parent_ids" class="form-label">Linked Parents</label>
+        @php
+            $selectedParents = isset($learner) ? $learner->users->where('role', 'parent')->pluck('id')->toArray() : [];
+        @endphp
+        <select class="form-select" id="parent_ids" name="parent_ids[]" multiple>
+            @foreach($parents as $parent)
+                <option value="{{ $parent->id }}" {{ in_array($parent->id, old('parent_ids', $selectedParents)) ? 'selected' : '' }}>
+                    {{ $parent->name }} ({{ $parent->email }})
                 </option>
             @endforeach
         </select>
+        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple parents. You must create parent accounts in the Users panel first.</div>
     </div>
 </div>

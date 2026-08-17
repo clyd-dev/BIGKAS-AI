@@ -27,8 +27,8 @@ class ParentDashboardController extends Controller
         $totalAssessments = $learnerIds->isEmpty() ? 0 : Assessment::whereIn('learner_id', $learnerIds)->count();
         $pendingInterventions = $learnerIds->isEmpty() ? 0 :
             InterventionLog::whereIn('learner_id', $learnerIds)->where('status', 'pending')->count();
-        $unreadMessages = Message::where('receiver_id', $user->id)->whereNull('read_at')->whereNull('parent_message_id')->count();
-
+        $unreadMessages = Message::where('receiver_id', $user->id)->whereNull('read_at')->count();
+        
         $stats = [
             'total_children'       => $learners->count(),
             'total_assessments'    => $totalAssessments,

@@ -22,7 +22,7 @@ class AssessmentController extends Controller
 
         $assessments = $user->isAdmin()
             ? Assessment::with(['learner', 'material', 'result', 'assessor'])->latest()->paginate(20)
-            : Assessment::forUser($user->id)->with(['learner', 'material', 'result'])->latest()->paginate(20);
+            : Assessment::forUser($user)->with(['learner', 'material', 'result'])->latest()->paginate(20);
 
         return view('assessments.index', compact('assessments'));
     }
@@ -30,9 +30,7 @@ class AssessmentController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $learners = $user->isAdmin()
-            ? Learner::active()->orderBy('last_name')->get()
-            : $user->learners()->orderBy('last_name')->get();
+        $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
 
         $materials = ReadingMaterial::active()->orderBy('grade_level')->orderBy('title')->get();
 
@@ -52,7 +50,7 @@ class AssessmentController extends Controller
             ->orderBy('title')
             ->get();
 
-        $languages = ['en' => 'English', 'fil' => 'Filipino', 'hil' => 'Hiligaynon'];
+        $languages = ['en' => 'English', 'fil' => 'Filipino'];
 
         return view('assessments.start', compact('learner', 'materials', 'easierMaterials', 'languages'));
     }

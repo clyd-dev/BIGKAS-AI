@@ -11,7 +11,7 @@ class SchoolSeeder extends Seeder
     {
         $schools = [
             [
-                'name' => 'Sagay Central Elementary School',
+                'name' => 'Old Sagay Elementary School',
                 'school_id_number' => 'SCH-001',
                 'address' => 'Brgy. Poblacion, Sagay City',
                 'district' => 'Sagay City',

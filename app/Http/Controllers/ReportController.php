@@ -20,7 +20,7 @@ class ReportController extends Controller
             $learners = Learner::all();
             $classes  = SchoolClass::with(['school', 'teacher'])->withCount('learners')->get();
         } else {
-            $learners = $user->learners;
+            $learners = $user->accessibleLearnersQuery()->get();
             $classes  = SchoolClass::where('teacher_id', $user->id)
                 ->with('school')
                 ->withCount('learners')

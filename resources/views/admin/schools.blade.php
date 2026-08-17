@@ -1,115 +1,195 @@
 @extends('layouts.app')
 
-@section('title', 'Manage Schools')
+@section('title', 'Manage School')
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-building me-2"></i>Manage Schools</h4>
+        <div>
+            <h4 class="mb-0"><i class="bi bi-building me-2"></i>Manage School</h4>
+            <small class="text-muted">{{ $school->name ?? 'Old Sagay Elementary School' }}</small>
+        </div>
         <a href="{{ route('admin.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Admin Panel</a>
     </div>
 
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="row g-3">
-        {{-- Add School Form --}}
+        {{-- Left: Add Grade & Section --}}
         <div class="col-md-4">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white"><h6 class="mb-0">Add School</h6></div>
+                <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-plus-circle me-1 text-primary"></i>Add Grade &amp; Section</h6></div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('admin.schools.store') }}">
+                    <form method="POST" action="{{ route('admin.classes.store') }}">
                         @csrf
                         <div class="mb-3">
-                            <label for="name" class="form-label">School Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
-                            @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <label class="form-label">Grade Level <span class="text-danger">*</span></label>
+                            <select name="grade_level" class="form-select @error('grade_level') is-invalid @enderror" required>
+                                <option value="">Select grade...</option>
+                                @foreach(range(1, 6) as $g)
+                                    <option value="{{ $g }}" {{ old('grade_level') == $g ? 'selected' : '' }}>Grade {{ $g }}</option>
+                                @endforeach
+                            </select>
+                            @error('grade_level')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
-                            <label for="address" class="form-label">Address</label>
-                            <input type="text" class="form-control" id="address" name="address" value="{{ old('address') }}">
+                            <label class="form-label">Section Name <span class="text-danger">*</span></label>
+                            <input type="text" name="section" class="form-control @error('section') is-invalid @enderror"
+                                   placeholder="e.g. Sampaguita" value="{{ old('section') }}" required>
+                            @error('section')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
-                            <label for="district" class="form-label">District</label>
-                            <input type="text" class="form-control" id="district" name="district" value="{{ old('district') }}">
+                            <label class="form-label">Adviser / Teacher</label>
+                            <select name="teacher_id" class="form-select">
+                                <option value="">— Unassigned —</option>
+                                @foreach($teachers as $teacher)
+                                    <option value="{{ $teacher->id }}" {{ old('teacher_id') == $teacher->id ? 'selected' : '' }}>
+                                        {{ $teacher->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="mb-3">
-                            <label for="school_id_number" class="form-label">School ID Number</label>
-                            <input type="text" class="form-control" id="school_id_number" name="school_id_number" value="{{ old('school_id_number') }}">
+                            <label class="form-label">School Year</label>
+                            <input type="text" name="school_year" class="form-control"
+                                   placeholder="e.g. 2024-2025" value="{{ old('school_year', date('Y') . '-' . (date('Y')+1)) }}">
                         </div>
-                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-circle me-1"></i> Add School</button>
+                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-circle me-1"></i> Add Section</button>
                     </form>
                 </div>
             </div>
         </div>
 
-        {{-- Schools List --}}
+        {{-- Right: Grades & Sections List --}}
         <div class="col-md-8">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white"><h6 class="mb-0">Schools ({{ count($schools ?? []) }})</h6></div>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-list-ul me-1"></i>Grades &amp; Sections ({{ $classes->count() }} total)</h6>
+                </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr><th>Name</th><th>District</th><th>ID Number</th><th>Teachers</th><th>Learners</th><th class="text-end">Actions</th></tr>
-                            </thead>
-                            <tbody>
-                                @forelse($schools ?? [] as $school)
-                                    <tr>
-                                        <td><strong>{{ $school->name }}</strong><br><small class="text-muted">{{ $school->address ?? '' }}</small></td>
-                                        <td>{{ $school->district ?? '-' }}</td>
-                                        <td><code>{{ $school->school_id_number ?? '-' }}</code></td>
-                                        <td>{{ $school->users_count ?? 0 }}</td>
-                                        <td>{{ $school->learners_count ?? 0 }}</td>
-                                        <td class="text-end">
-                                            <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editSchool{{ $school->id }}">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <form method="POST" action="{{ route('admin.schools.delete', $school) }}" class="d-inline" onsubmit="return confirm('Delete this school?')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="6" class="text-center text-muted py-4">No schools registered</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    @php
+                        $grouped = $classes->groupBy('grade_level')->sortKeys();
+                    @endphp
+
+                    @forelse($grouped as $grade => $sections)
+                        <div class="border-bottom">
+                            <div class="px-3 py-2 bg-light d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold"><i class="bi bi-mortarboard me-2 text-primary"></i>Grade {{ $grade }}</span>
+                                <span class="badge bg-primary rounded-pill">{{ $sections->count() }} section{{ $sections->count() > 1 ? 's' : '' }}</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0 align-middle">
+                                    <thead class="table-light" style="font-size: 0.8rem;">
+                                        <tr>
+                                            <th class="ps-4">Section</th>
+                                            <th>Adviser / Teacher</th>
+                                            <th>School Year</th>
+                                            <th>Learners</th>
+                                            <th class="text-end pe-3">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($sections as $class)
+                                            <tr>
+                                                <td class="ps-4 fw-semibold">{{ $class->section }}</td>
+                                                <td>
+                                                    @if($class->teacher)
+                                                        <span class="text-dark">{{ $class->teacher->name }}</span>
+                                                    @else
+                                                        <span class="text-muted fst-italic">Unassigned</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-muted small">{{ $class->school_year ?? '—' }}</td>
+                                                <td>
+                                                    <span class="badge bg-secondary rounded-pill">{{ $class->learners_count }}</span>
+                                                </td>
+                                                <td class="text-end pe-3">
+                                                    <button type="button" class="btn btn-sm btn-outline-warning"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#editClass{{ $class->id }}"
+                                                            title="Edit">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <form method="POST" action="{{ route('admin.classes.delete', $class) }}"
+                                                          class="d-inline"
+                                                          onsubmit="return confirm('Delete Grade {{ $grade }} – {{ $class->section }}? This cannot be undone.')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-diagram-3 display-5 d-block mb-2"></i>
+                            No grades or sections added yet.<br>
+                            <small>Use the form on the left to add Grade 3–6 sections.</small>
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
     </div>
 
     {{-- Edit Modals --}}
-    @foreach($schools ?? [] as $school)
-        <div class="modal fade" id="editSchool{{ $school->id }}" tabindex="-1">
+    @foreach($classes as $class)
+        <div class="modal fade" id="editClass{{ $class->id }}" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <form method="POST" action="{{ route('admin.schools.update', $school) }}">
+                    <form method="POST" action="{{ route('admin.classes.update', $class) }}">
                         @csrf @method('PUT')
                         <div class="modal-header">
-                            <h5 class="modal-title">Edit School</h5>
+                            <h5 class="modal-title"><i class="bi bi-pencil me-1"></i>Edit Section</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label class="form-label">School Name</label>
-                                <input type="text" class="form-control" name="name" value="{{ $school->name }}" required>
+                                <label class="form-label">Grade Level <span class="text-danger">*</span></label>
+                                <select name="grade_level" class="form-select" required>
+                                    @foreach(range(1, 6) as $g)
+                                        <option value="{{ $g }}" {{ $class->grade_level == $g ? 'selected' : '' }}>Grade {{ $g }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Address</label>
-                                <input type="text" class="form-control" name="address" value="{{ $school->address }}">
+                                <label class="form-label">Section Name <span class="text-danger">*</span></label>
+                                <input type="text" name="section" class="form-control" value="{{ $class->section }}" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">District</label>
-                                <input type="text" class="form-control" name="district" value="{{ $school->district }}">
+                                <label class="form-label">Adviser / Teacher</label>
+                                <select name="teacher_id" class="form-select">
+                                    <option value="">— Unassigned —</option>
+                                    @foreach($teachers as $teacher)
+                                        <option value="{{ $teacher->id }}" {{ $class->teacher_id == $teacher->id ? 'selected' : '' }}>
+                                            {{ $teacher->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">School ID Number</label>
-                                <input type="text" class="form-control" name="school_id_number" value="{{ $school->school_id_number }}">
+                                <label class="form-label">School Year</label>
+                                <input type="text" name="school_year" class="form-control" value="{{ $class->school_year }}">
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Update</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
                     </form>
                 </div>

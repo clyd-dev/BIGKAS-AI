@@ -55,8 +55,8 @@
         <div class="col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
-                    <h4 class="mb-0">{{ ucfirst($learner->mother_tongue ?? 'N/A') }}</h4>
-                    <div class="small text-muted mt-1">Mother Tongue</div>
+                    <h4 class="mb-0">{{ $learner->schoolClass?->section ?? 'Unassigned' }}</h4>
+                    <div class="small text-muted mt-1">Section</div>
                 </div>
             </div>
         </div>
@@ -73,7 +73,23 @@
                         <tr><th class="text-muted">Gender</th><td>{{ ucfirst($learner->gender ?? 'N/A') }}</td></tr>
                         <tr><th class="text-muted">Birth Date</th><td>{{ $learner->birth_date ? \Carbon\Carbon::parse($learner->birth_date)->format('M d, Y') : 'N/A' }}</td></tr>
                         <tr><th class="text-muted">School</th><td>{{ $learner->school?->name ?? 'N/A' }}</td></tr>
-                        <tr><th class="text-muted">Class</th><td>{{ $learner->schoolClass?->name ?? 'N/A' }}</td></tr>
+                        <tr><th class="text-muted">Class</th><td>{{ $learner->schoolClass?->section ?? 'N/A' }}</td></tr>
+                        <tr><th class="text-muted">Parents</th>
+                            <td>
+                                @php
+                                    $parents = $learner->users->where('role', 'parent');
+                                @endphp
+                                @if($parents->count() > 0)
+                                    <ul class="list-unstyled mb-0">
+                                    @foreach($parents as $parent)
+                                        <li>{{ $parent->name }}</li>
+                                    @endforeach
+                                    </ul>
+                                @else
+                                    <span class="text-muted">None</span>
+                                @endif
+                            </td>
+                        </tr>
                         <tr><th class="text-muted">Added</th><td>{{ $learner->created_at?->format('M d, Y') }}</td></tr>
                     </table>
                 </div>

@@ -45,8 +45,7 @@
                         <select class="form-select" id="language" name="language">
                             <option value="english" {{ old('language') === 'english' ? 'selected' : '' }}>English</option>
                             <option value="filipino" {{ old('language') === 'filipino' ? 'selected' : '' }}>Filipino</option>
-                            <option value="hiligaynon" {{ old('language') === 'hiligaynon' ? 'selected' : '' }}>Hiligaynon</option>
-                        </select>
+                            </select>
                     </div>
 
                     <div class="col-md-4">

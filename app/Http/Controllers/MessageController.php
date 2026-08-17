@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Learner;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\NewMessageReceived;
 use Illuminate\Http\Request;
 
 class MessageController extends Controller
@@ -69,16 +70,34 @@ class MessageController extends Controller
     {
         $user = auth()->user();
 
-        // Teachers can message parents of their learners
-        $learnerIds = $user->learners()->pluck('learners.id');
-        $parents = User::where('role', 'parent')
-            ->whereHas('learners', fn($q) => $q->whereIn('learners.id', $learnerIds))
-            ->orderBy('name')
-            ->get();
+        if ($user->isAdmin()) {
+            // Admin (principal) can message any teacher or parent, school-wide
+            $recipients = User::whereIn('role', ['teacher', 'parent'])
+                ->where('id', '!=', $user->id)
+                ->with('learners:id')
+                ->orderBy('role')
+                ->orderBy('name')
+                ->get()
+                ->groupBy('role');
 
-        $learners = $user->learners()->orderBy('last_name')->get();
+            $learners = Learner::orderBy('last_name')->get();
+        } else {
+            // Teacher can message parents of their accessible learners + any admin
+            $learnerIds = $user->accessibleLearnersQuery()->pluck('learners.id');
+            $parents = User::where('role', 'parent')
+                ->whereHas('learners', fn ($q) => $q->whereIn('learners.id', $learnerIds))
+                ->with('learners:id')
+                ->orderBy('name')
+                ->get();
+            $admins = User::where('role', 'admin')->with('learners:id')->orderBy('name')->get();
 
-        return view('messages.compose', compact('parents', 'learners'));
+            $recipients = collect(['parent' => $parents, 'admin' => $admins])
+                ->filter(fn ($group) => $group->isNotEmpty());
+
+            $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
+        }
+
+        return view('messages.compose', compact('recipients', 'learners'));
     }
 
     /**
@@ -95,6 +114,10 @@ class MessageController extends Controller
 
         $user = auth()->user();
 
+        // Restrict messaging to school staff/parents only (never students)
+        $receiverRole = User::where('id', $request->receiver_id)->value('role');
+        abort_if(!in_array($receiverRole, ['admin', 'teacher', 'parent']), 403, 'Invalid recipient.');
+
         $message = Message::create([
             'sender_id'   => $user->id,
             'receiver_id' => $request->receiver_id,
@@ -104,6 +127,8 @@ class MessageController extends Controller
         ]);
 
         ActivityLog::log('send_message', "Sent message to user #{$message->receiver_id}", 'message', $message->id);
+
+        $message->receiver->notify(new NewMessageReceived($message));
 
         return redirect()->route('messages.show', $message)->with('success', 'Message sent.');
     }
@@ -136,6 +161,8 @@ class MessageController extends Controller
         ]);
 
         ActivityLog::log('reply_message', "Replied to message thread #{$reply->parent_message_id}", 'message', $reply->id);
+
+        $reply->receiver->notify(new NewMessageReceived($reply));
 
         return redirect()->route('messages.show', $thread)->with('success', 'Reply sent.');
     }

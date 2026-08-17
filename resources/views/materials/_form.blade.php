@@ -12,7 +12,6 @@
             <option value="">Select</option>
             <option value="en" {{ old('language', $material->language ?? '') === 'english' ? 'selected' : '' }}>English</option>
             <option value="fil" {{ old('language', $material->language ?? '') === 'filipino' ? 'selected' : '' }}>Filipino</option>
-            <option value="hil" {{ old('language', $material->language ?? '') === 'hiligaynon' ? 'selected' : '' }}>Hiligaynon</option>
         </select>
         @error('language') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>

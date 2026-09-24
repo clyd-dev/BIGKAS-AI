@@ -124,6 +124,31 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Pass the CSRF token to our JS file
         window.BIGKAS_CSRF = '{{ csrf_token() }}';
+
+        const assessmentId = document.getElementById('assessmentId').value;
+        let currentStatus = '{{ $assessment->status }}';
+
+        if (currentStatus === 'pending' || currentStatus === 'recording') {
+            let checkInterval = setInterval(() => {
+                fetch(`/assessments/${assessmentId}/status`, {
+                    headers: { 'Accept': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== currentStatus) {
+                        currentStatus = data.status;
+                        if (currentStatus === 'recording') {
+                            // Remote student started recording
+                            document.getElementById('btnStartRecording').classList.add('d-none');
+                            document.getElementById('btnStartRecording').insertAdjacentHTML('afterend', '<div class="alert alert-info">Student is currently recording remotely...</div>');
+                        } else if (currentStatus === 'audio_uploaded') {
+                            clearInterval(checkInterval);
+                            window.location.reload(); // Reload to show Analyze button and audio playback
+                        }
+                    }
+                });
+            }, 3000);
+        }
     });
 </script>
 @endpush

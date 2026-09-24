@@ -52,7 +52,6 @@
     });
 
     document.getElementById('btnFinishLearner').addEventListener('click', () => {
-        mediaRecorder.stop();
         document.getElementById('recording-section').classList.add('d-none');
         document.getElementById('uploading-section').classList.remove('d-none');
 
@@ -61,18 +60,34 @@
             const formData = new FormData();
             formData.append('audio', audioBlob, 'recording.webm');
 
-            await fetch(`{{ route('student.assessment.upload-audio', $assessment->id) }}`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: formData
-            });
-
-            alert('Great job! Your reading was sent to your teacher.');
-            window.location.href = '{{ route("student.dashboard") }}';
+            try {
+                let response = await fetch(`{{ route('student.assessment.upload-audio', $assessment->id) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+                
+                let data = await response.json();
+                
+                if (response.ok) {
+                    alert('Great job! Your reading was sent to your teacher.');
+                    window.location.href = '{{ route("student.dashboard") }}';
+                } else {
+                    alert('Error uploading: ' + (data.message || 'Unknown error'));
+                    document.getElementById('uploading-section').classList.add('d-none');
+                    document.getElementById('setup-section').classList.remove('d-none'); // allow retry maybe?
+                }
+            } catch (err) {
+                alert('Upload failed: ' + err.message);
+                document.getElementById('uploading-section').classList.add('d-none');
+                document.getElementById('setup-section').classList.remove('d-none');
+            }
         };
+        
+        mediaRecorder.stop();
     });
 </script>
 @endsection

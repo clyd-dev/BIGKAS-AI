@@ -48,7 +48,11 @@
                             <canvas id="audioVisualizer" width="300" height="60" class="mt-2 bg-light rounded"></canvas>
                             
                             <div class="mt-3">
-                                <audio id="audioPlayback" controls class="w-100 d-none mb-2"></audio>
+                                @if($assessment->audio_file)
+                                    <audio id="audioPlayback" controls class="w-100 mb-2" src="{{ Storage::url($assessment->audio_file) }}"></audio>
+                                @else
+                                    <audio id="audioPlayback" controls class="w-100 d-none mb-2"></audio>
+                                @endif
                                 <button id="btnRetry" class="btn btn-outline-secondary btn-sm d-none">Retry</button>
                                 <button id="btnAnalyze" class="btn btn-success btn-sm d-none">
                                     <i class="bi bi-cpu me-1"></i> Analyze Reading

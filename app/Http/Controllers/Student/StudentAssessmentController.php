@@ -57,10 +57,10 @@ class StudentAssessmentController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $request->validate(['audio' => 'required|file|mimes:mp3,wav,webm,ogg|max:25600']);
+        $request->validate(['audio' => 'required|file|max:25600']); // Relaxed mimes for browser-recorded blobs
 
         $file = $request->file('audio');
-        $filename = "assessment_{$assessment->id}_student_{$learner->id}." . $file->getClientOriginalExtension();
+        $filename = "assessment_{$assessment->id}_student_{$learner->id}." . ($file->getClientOriginalExtension() ?: 'webm');
         $path = $file->storeAs('assessments/audio', $filename, 'public');
 
         $assessment->update([

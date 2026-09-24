@@ -112,7 +112,7 @@ class AssessmentController extends Controller
     {
         $this->authorizeLearnerAccess($assessment->learner);
         $request->validate([
-            'audio' => 'required|file|mimes:mp3,wav,webm,ogg|max:25600',
+            'audio' => 'required|file|max:25600',
         ]);
 
         $file = $request->file('audio');

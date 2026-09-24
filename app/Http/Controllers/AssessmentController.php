@@ -102,6 +102,12 @@ class AssessmentController extends Controller
         ]);
     }
 
+    public function status(Assessment $assessment)
+    {
+        $this->authorizeLearnerAccess($assessment->learner);
+        return response()->json(['status' => $assessment->status]);
+    }
+
     public function uploadAudio(Request $request, Assessment $assessment)
     {
         $this->authorizeLearnerAccess($assessment->learner);

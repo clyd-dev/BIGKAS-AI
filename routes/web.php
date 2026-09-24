@@ -125,6 +125,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/assessments/start/{learner}', [AssessmentController::class, 'start'])->name('assessments.start');
         Route::post('/assessments', [AssessmentController::class, 'store'])->name('assessments.store');
         Route::get('/assessments/{assessment}', [AssessmentController::class, 'show'])->name('assessments.show');
+        Route::get('/assessments/{assessment}/status', [AssessmentController::class, 'status'])->name('assessments.status');
         Route::post('/assessments/{assessment}/upload-audio', [AssessmentController::class, 'uploadAudio'])->name('assessments.upload-audio');
         Route::post('/assessments/{assessment}/analyze', [AssessmentController::class, 'analyze'])->name('assessments.analyze');
         Route::get('/assessments/{assessment}/results', [AssessmentController::class, 'results'])->name('assessments.results');

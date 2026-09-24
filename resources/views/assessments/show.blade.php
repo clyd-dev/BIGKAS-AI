@@ -20,7 +20,7 @@
                         <tr><th class="text-muted">Language</th><td>{{ ucfirst($assessment->language) }}</td></tr>
                         <tr><th class="text-muted">Type</th><td>{{ ucfirst(str_replace('_', ' ', $assessment->assessment_type)) }}</td></tr>
                         <tr><th class="text-muted">Status</th><td>
-                            <span class="badge {{ $assessment->status === 'completed' ? 'bg-success' : ($assessment->status === 'audio_uploaded' ? 'bg-info' : 'bg-secondary') }}">
+                            <span class="badge {{ $assessment->status === 'completed' ? 'bg-success' : ($assessment->status === 'processing' ? 'bg-info' : 'bg-secondary') }}">
                                 {{ ucfirst(str_replace('_', ' ', $assessment->status)) }}
                             </span>
                         </td></tr>
@@ -29,7 +29,7 @@
             </div>
 
             {{-- Audio Upload --}}
-            @if($assessment->status === 'pending' || $assessment->status === 'audio_uploaded')
+            @if($assessment->status === 'pending' || $assessment->status === 'processing')
                 <div class="card border-0 shadow-sm mt-3">
                     <div class="card-header bg-white"><h6 class="mb-0">Audio Recording</h6></div>
                     <div class="card-body">
@@ -92,7 +92,7 @@
                             </button>
                         </form>
 
-                        @if($assessment->status === 'audio_uploaded')
+                        @if($assessment->status === 'processing')
                             <hr>
                             <form method="POST" action="{{ route('assessments.analyze', $assessment) }}">
                                 @csrf
@@ -145,7 +145,7 @@
                             // Remote student started recording
                             document.getElementById('btnStartRecording').classList.add('d-none');
                             document.getElementById('btnStartRecording').insertAdjacentHTML('afterend', '<div class="alert alert-info">Student is currently recording remotely...</div>');
-                        } else if (currentStatus === 'audio_uploaded') {
+                        } else if (currentStatus === 'processing') {
                             clearInterval(checkInterval);
                             window.location.reload(); // Reload to show Analyze button and audio playback
                         }

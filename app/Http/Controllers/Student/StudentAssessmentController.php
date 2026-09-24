@@ -65,7 +65,7 @@ class StudentAssessmentController extends Controller
 
         $assessment->update([
             'audio_file' => $path,
-            'status' => 'audio_uploaded'
+            'status' => \App\Models\Assessment::STATUS_PROCESSING
         ]);
 
         return response()->json(['success' => true, 'message' => 'Audio uploaded successfully.']);

@@ -123,7 +123,7 @@ class AssessmentController extends Controller
 
         $assessment->update([
             'audio_file' => $filename,
-            'status' => Assessment::STATUS_RECORDING,
+            'status' => Assessment::STATUS_PROCESSING,
         ]);
 
         ActivityLog::log('upload_audio', "Uploaded audio for assessment #{$assessment->id}", 'assessment', $assessment->id);

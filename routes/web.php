@@ -65,11 +65,10 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
 
         // Live assessment reading
-        Route::get('/assessment/{session}', [StudentAssessmentController::class, 'show'])->name('assessment.show');
-        Route::post('/assessment/{session}/poll', [StudentAssessmentController::class, 'poll'])->name('assessment.poll');
-        Route::post('/assessment/{session}/start-reading', [StudentAssessmentController::class, 'startReading'])->name('assessment.start-reading');
-        Route::post('/assessment/{session}/finish', [StudentAssessmentController::class, 'finishReading'])->name('assessment.finish');
-        Route::post('/assessment/{session}/upload-audio', [StudentAssessmentController::class, 'uploadAudio'])->name('assessment.upload-audio');
+        Route::get('/assessment/pending', [StudentAssessmentController::class, 'pending'])->name('assessment.pending');
+        Route::get('/assessment/{assessment}/read', [StudentAssessmentController::class, 'read'])->name('assessment.read');
+        Route::post('/assessment/{assessment}/start', [StudentAssessmentController::class, 'start'])->name('assessment.start');
+        Route::post('/assessment/{assessment}/upload-audio', [StudentAssessmentController::class, 'uploadAudio'])->name('assessment.upload-audio');
 
         // Activities
         Route::get('/activities', [StudentActivityController::class, 'index'])->name('activities');

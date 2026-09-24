@@ -11,155 +11,63 @@ use Illuminate\Http\Request;
 
 class StudentAssessmentController extends Controller
 {
-    /**
-     * Show the student's reading view for a live assessment session.
-     */
-    public function show(Request $request, AssessmentSession $session)
+    public function pending(Request $request)
     {
         $learner = $request->attributes->get('learner');
-
-        if ($session->learner_id !== $learner->id) {
-            abort(403, 'This assessment is not for you.');
-        }
-
-        if ($session->isCompleted()) {
-            return redirect()->route('student.dashboard')
-                ->with('info', 'This assessment has already been completed.');
-        }
-
-        $material = $session->material;
-
-        // Mark student as joined if still waiting
-        if ($session->isWaiting()) {
-            $session->markStudentJoined();
-        }
-
-        return view('student.assessment.reading', compact('session', 'material', 'learner'));
-    }
-
-    /**
-     * Poll endpoint: student sends progress updates, receives session status.
-     */
-    public function poll(Request $request, AssessmentSession $session)
-    {
-        $learner = $request->attributes->get('learner');
-
-        if ($session->learner_id !== $learner->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        // Update student progress if sent
-        if ($request->has('progress')) {
-            $session->updateStudentProgress($request->input('progress'));
-        }
+        $assessment = \App\Models\Assessment::where('learner_id', $learner->id)
+            ->where('status', \App\Models\Assessment::STATUS_PENDING)
+            ->latest()
+            ->first();
 
         return response()->json([
-            'status' => $session->fresh()->status,
-            'elapsed' => $session->reading_started_at
-                ? now()->diffInSeconds($session->reading_started_at)
-                : 0,
+            'has_pending' => (bool)$assessment,
+            'assessment_id' => $assessment ? $assessment->id : null,
+            'material_title' => $assessment && $assessment->material ? $assessment->material->title : null,
         ]);
     }
 
-    /**
-     * Student starts reading (called when student clicks "I'm Ready").
-     */
-    public function startReading(Request $request, AssessmentSession $session)
+    public function read(Request $request, \App\Models\Assessment $assessment)
     {
         $learner = $request->attributes->get('learner');
-
-        if ($session->learner_id !== $learner->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        if ($assessment->learner_id !== $learner->id || $assessment->status !== \App\Models\Assessment::STATUS_PENDING) {
+            return redirect()->route('student.dashboard')->with('error', 'No pending assessment found.');
         }
-
-        if ($session->status === 'ready') {
-            $session->startReading();
-        }
-
-        ActivityLog::create([
-            'user_id' => null,
-            'action' => 'learner_start_reading',
-            'description' => "Learner {$learner->first_name} {$learner->last_name} started reading for assessment session #{$session->id}",
-            'subject_type' => 'learner',
-            'subject_id' => $learner->id,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'created_at' => now(),
-        ]);
-
-        return response()->json(['status' => 'reading']);
+        
+        $material = $assessment->material;
+        return view('student.assessment.reading', compact('assessment', 'material', 'learner'));
     }
 
-    /**
-     * Student signals they finished reading.
-     */
-    public function finishReading(Request $request, AssessmentSession $session)
+    public function start(Request $request, \App\Models\Assessment $assessment)
     {
         $learner = $request->attributes->get('learner');
-
-        if ($session->learner_id !== $learner->id) {
+        if ($assessment->learner_id !== $learner->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $session->complete();
-
-        // Record activity & check badges
-        $learner->recordActivity();
-        app(BadgeService::class)->checkAndAward($learner);
-
-        ActivityLog::create([
-            'user_id' => null,
-            'action' => 'learner_finish_reading',
-            'description' => "Learner {$learner->first_name} {$learner->last_name} finished reading for assessment session #{$session->id}",
-            'subject_type' => 'learner',
-            'subject_id' => $learner->id,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'created_at' => now(),
-        ]);
-
-        return response()->json([
-            'status' => 'completed',
-            'message' => 'Great job! You finished reading!',
-        ]);
+        if ($assessment->status === \App\Models\Assessment::STATUS_PENDING) {
+            $assessment->update(['status' => \App\Models\Assessment::STATUS_RECORDING]);
+        }
+        return response()->json(['success' => true]);
     }
 
-    /**
-     * Upload audio from student device.
-     */
-    public function uploadAudio(Request $request, AssessmentSession $session)
+    public function uploadAudio(Request $request, \App\Models\Assessment $assessment)
     {
         $learner = $request->attributes->get('learner');
-
-        if ($session->learner_id !== $learner->id) {
+        if ($assessment->learner_id !== $learner->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
-            'audio' => 'required|file|max:25600', // 25MB
-        ]);
+        $request->validate(['audio' => 'required|file|mimes:mp3,wav,webm,ogg|max:25600']);
 
         $file = $request->file('audio');
-        $filename = "assessment_{$session->assessment_id}_student_{$learner->id}." . $file->getClientOriginalExtension();
+        $filename = "assessment_{$assessment->id}_student_{$learner->id}." . $file->getClientOriginalExtension();
         $path = $file->storeAs('assessments/audio', $filename, 'public');
 
-        // Update assessment with audio path
-        $session->assessment->update(['audio_file_path' => $path]);
-
-        ActivityLog::create([
-            'user_id' => null,
-            'action' => 'learner_upload_audio',
-            'description' => "Learner {$learner->first_name} {$learner->last_name} uploaded audio for assessment session #{$session->id}",
-            'subject_type' => 'learner',
-            'subject_id' => $learner->id,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'created_at' => now(),
+        $assessment->update([
+            'audio_file' => $path,
+            'status' => 'audio_uploaded'
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Audio uploaded successfully.',
-        ]);
+        return response()->json(['success' => true, 'message' => 'Audio uploaded successfully.']);
     }
 }

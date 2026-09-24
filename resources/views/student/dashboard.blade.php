@@ -145,3 +145,26 @@
     @endif
 
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let checkInterval = setInterval(checkPendingAssessment, 3000);
+
+    function checkPendingAssessment() {
+        fetch('{{ route("student.assessment.pending") }}', {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.has_pending) {
+                clearInterval(checkInterval); // Stop polling once found
+                if (confirm('Your teacher has an assessment ready for you: ' + data.material_title + '\n\nClick OK to start!')) {
+                    window.location.href = '/student/assessment/' + data.assessment_id + '/read';
+                }
+            }
+        });
+    }
+});
+</script>
+@endpush

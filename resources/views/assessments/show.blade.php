@@ -37,26 +37,39 @@
                         <div id="audioRecorder" class="text-center mb-3">
                             <input type="hidden" id="assessmentId" value="{{ $assessment->id }}">
                             
-                            <button id="btnStartRecording" class="btn btn-danger btn-lg rounded-pill px-4">
-                                <i class="bi bi-mic-fill me-2"></i> Start Reading
-                            </button>
-                            <button id="btnStopRecording" class="btn btn-secondary btn-lg rounded-pill px-4 d-none">
-                                <i class="bi bi-stop-fill me-2"></i> Stop Recording
-                            </button>
-                            
-                            <div id="recordingTimer" class="mt-3 fw-bold text-danger">00:00</div>
-                            <canvas id="audioVisualizer" width="300" height="60" class="mt-2 bg-light rounded"></canvas>
+                            @if($assessment->status === 'pending')
+                                <button id="btnStartRecording" class="btn btn-danger btn-lg rounded-pill px-4">
+                                    <i class="bi bi-mic-fill me-2"></i> Start Reading
+                                </button>
+                                <button id="btnStopRecording" class="btn btn-secondary btn-lg rounded-pill px-4 d-none">
+                                    <i class="bi bi-stop-fill me-2"></i> Stop Recording
+                                </button>
+                                
+                                <div id="recordingTimer" class="mt-3 fw-bold text-danger">00:00</div>
+                                <canvas id="audioVisualizer" width="300" height="60" class="mt-2 bg-light rounded"></canvas>
+                            @endif
                             
                             <div class="mt-3">
                                 @if($assessment->audio_file)
-                                    <audio id="audioPlayback" controls class="w-100 mb-2" src="{{ Storage::url($assessment->audio_file) }}"></audio>
+                                    <audio id="audioPlayback" controls class="w-100 mb-2" src="{{ $assessment->getAudioUrl() }}"></audio>
                                 @else
                                     <audio id="audioPlayback" controls class="w-100 d-none mb-2"></audio>
                                 @endif
-                                <button id="btnRetry" class="btn btn-outline-secondary btn-sm d-none">Retry</button>
-                                <button id="btnAnalyze" class="btn btn-success btn-sm d-none">
-                                    <i class="bi bi-cpu me-1"></i> Analyze Reading
-                                </button>
+                                
+                                @if($assessment->status === 'processing')
+                                    <form method="POST" action="{{ route('assessments.retry', $assessment) }}" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm" onclick="return confirm('Are you sure you want to discard this recording and retry?')">Retry</button>
+                                    </form>
+                                    <button id="btnAnalyze" class="btn btn-success btn-sm">
+                                        <i class="bi bi-cpu me-1"></i> Analyze Reading
+                                    </button>
+                                @else
+                                    <button id="btnRetry" class="btn btn-outline-secondary btn-sm d-none">Retry</button>
+                                    <button id="btnAnalyze" class="btn btn-success btn-sm d-none">
+                                        <i class="bi bi-cpu me-1"></i> Analyze Reading
+                                    </button>
+                                @endif
                             </div>
                         </div>
 
@@ -81,23 +94,15 @@
                         <hr>
 
                         {{-- Manual Upload --}}
-                        <form method="POST" action="{{ route('assessments.upload-audio', $assessment) }}" enctype="multipart/form-data">
-                            @csrf
-                            <div class="mb-3">
-                                <label class="form-label small">Or upload an audio file:</label>
-                                <input type="file" class="form-control form-control-sm" name="audio" accept="audio/*" required>
-                            </div>
-                            <button type="submit" class="btn btn-sm btn-primary w-100">
-                                <i class="bi bi-upload me-1"></i> Upload Audio
-                            </button>
-                        </form>
-
-                        @if($assessment->status === 'processing')
-                            <hr>
-                            <form method="POST" action="{{ route('assessments.analyze', $assessment) }}">
+                        @if($assessment->status === 'pending')
+                            <form method="POST" action="{{ route('assessments.upload-audio', $assessment) }}" enctype="multipart/form-data">
                                 @csrf
-                                <button type="submit" class="btn btn-success w-100">
-                                    <i class="bi bi-cpu me-1"></i> Analyze Reading
+                                <div class="mb-3">
+                                    <label class="form-label small">Or upload an audio file:</label>
+                                    <input type="file" class="form-control form-control-sm" name="audio" accept="audio/*" required>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-primary w-100">
+                                    <i class="bi bi-upload me-1"></i> Upload Audio
                                 </button>
                             </form>
                         @endif

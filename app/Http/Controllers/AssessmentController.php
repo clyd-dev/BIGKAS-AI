@@ -119,10 +119,10 @@ class AssessmentController extends Controller
         $extension = $file->getClientOriginalExtension() ?: 'webm';
         $filename = "assessment_{$assessment->id}_" . time() . ".{$extension}";
 
-        $file->storeAs('audio', $filename);
+        $path = $file->storeAs('assessments/audio', $filename, 'public');
 
         $assessment->update([
-            'audio_file' => $filename,
+            'audio_file' => $path,
             'status' => Assessment::STATUS_PROCESSING,
         ]);
 
@@ -133,6 +133,23 @@ class AssessmentController extends Controller
             'audio_file' => $filename,
             'message' => 'Audio uploaded successfully.',
         ]);
+    }
+
+    public function retry(Assessment $assessment)
+    {
+        $this->authorizeLearnerAccess($assessment->learner);
+
+        // Delete the existing audio file if it exists
+        if ($assessment->audio_file && Storage::disk('public')->exists($assessment->audio_file)) {
+            Storage::disk('public')->delete($assessment->audio_file);
+        }
+
+        $assessment->update([
+            'audio_file' => null,
+            'status' => Assessment::STATUS_PENDING,
+        ]);
+
+        return redirect()->route('assessments.show', $assessment);
     }
 
     public function analyze(Request $request, Assessment $assessment, \App\Services\MLClassificationService $mlService)
@@ -149,7 +166,11 @@ class AssessmentController extends Controller
             // ==========================================
             // REAL: SPEECH TO TEXT (Whisper API)
             // ==========================================
-            $audioPath = $request->file('audio')->getRealPath();
+            if ($request->hasFile('audio')) {
+                $audioPath = $request->file('audio')->getRealPath();
+            } else {
+                $audioPath = $assessment->getAudioPath();
+            }
             $sttService = app(SpeechToTextService::class);
             // Uses your OpenAI key in .env, or falls back to mock if not configured
             $transcription = $sttService->transcribe($audioPath, $assessment->language ?? 'en');

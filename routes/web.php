@@ -126,6 +126,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/assessments/{assessment}', [AssessmentController::class, 'show'])->name('assessments.show');
         Route::get('/assessments/{assessment}/status', [AssessmentController::class, 'status'])->name('assessments.status');
         Route::post('/assessments/{assessment}/upload-audio', [AssessmentController::class, 'uploadAudio'])->name('assessments.upload-audio');
+        Route::post('/assessments/{assessment}/retry', [AssessmentController::class, 'retry'])->name('assessments.retry');
         Route::post('/assessments/{assessment}/analyze', [AssessmentController::class, 'analyze'])->name('assessments.analyze');
         Route::get('/assessments/{assessment}/results', [AssessmentController::class, 'results'])->name('assessments.results');
 

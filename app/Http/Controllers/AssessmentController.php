@@ -11,6 +11,7 @@ use App\Services\SpeechToTextService;
 use App\Services\ReadingAnalyzerService;
 use App\Services\InterventionRecommenderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Traits\AuthorizesLearnerAccess;
 
 class AssessmentController extends Controller

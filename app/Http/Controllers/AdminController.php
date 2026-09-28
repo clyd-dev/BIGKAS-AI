@@ -126,7 +126,9 @@ class AdminController extends Controller
     {
         $request->validate(['role' => 'required|in:admin,teacher,parent,student']);
         $oldRole = $user->role;
-        $user->update(['role' => $request->role]);
+        // role is guarded — explicit assignment only.
+        $user->role = $request->role;
+        $user->save();
 
         ActivityLog::log('admin_update_role', "Changed role of {$user->name} from {$oldRole} to {$request->role}", 'user', $user->id);
 
@@ -135,14 +137,18 @@ class AdminController extends Controller
 
     public function activateUser(User $user)
     {
-        $user->update(['is_active' => true]);
+        // is_active is guarded — explicit assignment only.
+        $user->is_active = true;
+        $user->save();
         ActivityLog::log('admin_activate_user', "Activated user {$user->name} ({$user->role})", 'user', $user->id);
         return back()->with('success', "{$user->name} has been activated.");
     }
 
     public function deactivateUser(User $user)
     {
-        $user->update(['is_active' => false]);
+        // is_active is guarded — explicit assignment only.
+        $user->is_active = false;
+        $user->save();
         ActivityLog::log('admin_deactivate_user', "Deactivated user {$user->name} ({$user->role})", 'user', $user->id);
         return back()->with('success', "{$user->name} has been deactivated.");
     }
@@ -171,11 +177,14 @@ class AdminController extends Controller
         $user = User::create([
             'name'      => $request->name,
             'email'     => $request->email,
-            'role'      => $request->role,
             'password'  => Hash::make($request->password),
             'school_id' => $school?->id,
-            'is_active' => true,
         ]);
+
+        // role and is_active are guarded — explicit assignment only.
+        $user->role = $request->role;
+        $user->is_active = true;
+        $user->save();
 
         // If a class was chosen, assign this user as its teacher
         if ($request->filled('class_id')) {
@@ -198,7 +207,9 @@ class AdminController extends Controller
 
         $oldRole = $user->role;
 
-        $user->update(['role' => $request->role]);
+        // role is guarded — explicit assignment only.
+        $user->role = $request->role;
+        $user->save();
 
         // Remove this user from any class they were previously assigned as teacher
         SchoolClass::where('teacher_id', $user->id)->update(['teacher_id' => null]);
@@ -526,7 +537,9 @@ class AdminController extends Controller
     public function generateLearnerPin(Learner $learner)
     {
         $pin = Learner::generatePin();
-        $learner->update(['pin' => $pin]);
+        // pin is guarded — explicit assignment only (hashed cast still applies).
+        $learner->pin = $pin;
+        $learner->save();
 
         ActivityLog::log('admin_generate_pin', "Generated new PIN for learner: {$learner->getFullName()}", 'learner', $learner->id);
 
@@ -535,12 +548,12 @@ class AdminController extends Controller
 
     public function resetLearnerXp(Learner $learner)
     {
-        $learner->update([
-            'total_xp'        => 0,
-            'current_streak'  => 0,
-            'longest_streak'  => 0,
-            'last_activity_date' => null,
-        ]);
+        // total_xp / streaks are guarded — explicit assignment only.
+        $learner->total_xp = 0;
+        $learner->current_streak = 0;
+        $learner->longest_streak = 0;
+        $learner->last_activity_date = null;
+        $learner->save();
 
         ActivityLog::log('admin_reset_learner_xp', "Reset XP and streak for learner: {$learner->getFullName()}", 'learner', $learner->id);
 

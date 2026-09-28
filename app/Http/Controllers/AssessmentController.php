@@ -379,7 +379,9 @@ class AssessmentController extends Controller
     {
         $this->authorizeLearnerAccess($learner);
         $pin = Learner::generatePin();
-        $learner->update(['pin' => $pin]);
+        // pin is guarded ΓÇö explicit assignment only (hashed cast still applies).
+        $learner->pin = $pin;
+        $learner->save();
 
         ActivityLog::log('generate_pin', "Generated PIN for learner: {$learner->first_name} {$learner->last_name}", 'learner', $learner->id);
 

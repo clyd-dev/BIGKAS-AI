@@ -30,16 +30,23 @@ class Learner extends Model
         'grade_level',
         'reading_level',
         'mother_tongue',
-        'pin',
         'notes',
         'avatar',
-        'is_active',
         'failed_login_attempts',
         'locked_at',
+        'last_activity_date',
+    ];
+
+    /**
+     * Sensitive fields — never mass-assignable. Set via explicit
+     * attribute assignment only (e.g. $learner->pin = ...; $learner->save()).
+     */
+    protected $guarded = [
+        'pin',
+        'is_active',
+        'total_xp',
         'current_streak',
         'longest_streak',
-        'total_xp',
-        'last_activity_date',
     ];
 
     protected function casts(): array
@@ -277,20 +284,18 @@ class Learner extends Model
         $yesterday = now()->subDay()->toDateString();
 
         if ($lastDate === $yesterday) {
-            // Continue streak
+            // Continue streak (streak fields are guarded — explicit assignment only).
             $newStreak = $this->current_streak + 1;
-            $this->update([
-                'current_streak' => $newStreak,
-                'longest_streak' => max($this->longest_streak, $newStreak),
-                'last_activity_date' => $today,
-            ]);
+            $this->current_streak = $newStreak;
+            $this->longest_streak = max($this->longest_streak, $newStreak);
+            $this->last_activity_date = $today;
+            $this->save();
         } else {
             // Reset streak (or first activity)
-            $this->update([
-                'current_streak' => 1,
-                'longest_streak' => max($this->longest_streak, 1),
-                'last_activity_date' => $today,
-            ]);
+            $this->current_streak = 1;
+            $this->longest_streak = max($this->longest_streak, 1);
+            $this->last_activity_date = $today;
+            $this->save();
         }
 
         // Log to unified activity logs for Admin overview

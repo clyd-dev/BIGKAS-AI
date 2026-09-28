@@ -105,10 +105,13 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => $request->password, // Auto-hashed via cast
-            'role' => $request->role,
             'school_id' => $request->school_id,
             'phone' => $request->phone,
         ]);
+
+        // role is guarded — set via explicit assignment, never mass assignment.
+        $user->role = $request->role;
+        $user->save();
 
         $user->sendEmailVerificationNotification();
 

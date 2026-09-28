@@ -54,8 +54,11 @@ class LearnerApiController extends Controller
 
         $learner = Learner::create(array_merge($validated, [
             'school_id' => $validated['school_id'] ?? $user->school_id,
-            'is_active' => true,
         ]));
+
+        // is_active is guarded — explicit assignment only.
+        $learner->is_active = true;
+        $learner->save();
 
         // Attach the creating user to the learner
         $learner->users()->attach($user->id, [
@@ -109,7 +112,9 @@ class LearnerApiController extends Controller
      */
     public function destroy(Learner $learner): JsonResponse
     {
-        $learner->update(['is_active' => false]);
+        // is_active is guarded — explicit assignment only.
+        $learner->is_active = false;
+        $learner->save();
 
         return $this->success([], 'Learner deactivated successfully');
     }

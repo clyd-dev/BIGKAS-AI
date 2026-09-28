@@ -30,7 +30,9 @@ return new class extends Migration
 
                 if ($raw !== null && ! str_starts_with($raw, '$2y$')) {
                     // The 'hashed' cast on Learner::pin hashes this on save.
-                    $learner->update(['pin' => $raw]);
+                    // pin is guarded — explicit assignment only.
+                    $learner->pin = $raw;
+                    $learner->save();
                 }
             }
         });

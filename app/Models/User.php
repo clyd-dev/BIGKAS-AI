@@ -25,15 +25,22 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'role',
         'school_id',
         'phone',
         'avatar',
-        'email_verified_at',
         'last_login_at',
-        'is_active',
         'failed_login_attempts',
         'locked_at',
+    ];
+
+    /**
+     * Sensitive fields — never mass-assignable. Set via explicit
+     * attribute assignment only (e.g. $user->role = ...; $user->save()).
+     */
+    protected $guarded = [
+        'role',
+        'is_active',
+        'email_verified_at',
     ];
 
     protected $hidden = [

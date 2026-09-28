@@ -64,11 +64,14 @@ class AuthApiController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'school_id' => $validated['school_id'] ?? null,
-            'is_active' => true,
         ]);
+
+        // role and is_active are guarded — set via explicit assignment.
+        $user->role = $validated['role'];
+        $user->is_active = true;
+        $user->save();
 
         $token = $user->createToken('api-token', $this->tokenAbilities($user->role))->plainTextToken;
 

@@ -40,7 +40,17 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as $user) {
-            User::create($user);
+            // role and is_active are guarded — set via explicit assignment.
+            $model = User::create([
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'password' => $user['password'],
+                'school_id' => $user['school_id'],
+                'phone' => $user['phone'],
+            ]);
+            $model->role = $user['role'];
+            $model->is_active = $user['is_active'];
+            $model->save();
         }
     }
 }

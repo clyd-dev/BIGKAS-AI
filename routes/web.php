@@ -59,12 +59,20 @@ Route::get('/email/verify', function () {
 })->middleware('auth')->name('verification.notice');
 
 Route::get('/email/verify/{id}/{hash}', function (\Illuminate\Foundation\Auth\EmailVerificationRequest $request) {
+    if ($request->user()->hasVerifiedEmail()) {
+        return redirect()->route('dashboard');
+    }
+
     $request->fulfill();
 
     return redirect()->route('dashboard')->with('success', 'Your email has been verified.');
 })->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
 
 Route::post('/email/verify/resend', function (\Illuminate\Http\Request $request) {
+    if ($request->user()->hasVerifiedEmail()) {
+        return redirect()->route('dashboard');
+    }
+
     $request->user()->sendEmailVerificationNotification();
 
     return back()->with('success', 'A fresh verification link has been sent to your email address.');

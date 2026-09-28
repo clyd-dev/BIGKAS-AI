@@ -110,6 +110,8 @@ class AuthController extends Controller
             'phone' => $request->phone,
         ]);
 
+        $user->sendEmailVerificationNotification();
+
         ActivityLog::log('register', 'New user registered', 'user', $user->id);
 
         return redirect()->route('login')

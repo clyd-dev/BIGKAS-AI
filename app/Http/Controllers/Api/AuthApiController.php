@@ -31,8 +31,8 @@ class AuthApiController extends Controller
             return $this->error('Account is deactivated', 403);
         }
 
-        // Create Sanctum token
-        $token = $user->createToken('api-token')->plainTextToken;
+        // Create Sanctum token scoped to the user's role abilities
+        $token = $user->createToken('api-token', $this->tokenAbilities($user->role))->plainTextToken;
 
         return $this->success([
             'token' => $token,
@@ -70,7 +70,7 @@ class AuthApiController extends Controller
             'is_active' => true,
         ]);
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $token = $user->createToken('api-token', $this->tokenAbilities($user->role))->plainTextToken;
 
         return $this->success([
             'token' => $token,
@@ -153,6 +153,27 @@ class AuthApiController extends Controller
         }
 
         return $this->success([], 'Your password has been reset.');
+    }
+
+    // ----- Token ability mapping -----
+
+    /**
+     * Map a user role to Sanctum token abilities.
+     *
+     * Note: abilities are recorded on the token only; no route or
+     * controller enforces them yet, so this changes nothing at runtime
+     * today. Enforcement can be added later via tokenCan() checks.
+     *
+     * @return string[]
+     */
+    protected function tokenAbilities(?string $role): array
+    {
+        return match ($role) {
+            'admin' => ['*'],
+            'teacher' => ['assessment', 'learner', 'intervention', 'material', 'report', 'message'],
+            'parent' => ['learner', 'message'],
+            default => [],
+        };
     }
 
     // ----- JSON helper methods -----

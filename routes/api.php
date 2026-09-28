@@ -22,8 +22,10 @@ use Illuminate\Support\Facades\Route;
 // PUBLIC API ROUTES
 // ============================================
 
-Route::post('/auth/login', [AuthApiController::class, 'login']);
-Route::post('/auth/register', [AuthApiController::class, 'register']);
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/auth/login', [AuthApiController::class, 'login']);
+    Route::post('/auth/register', [AuthApiController::class, 'register']);
+});
 
 // ML health check (public for monitoring)
 Route::get('/ml/health', [MLApiController::class, 'health']);

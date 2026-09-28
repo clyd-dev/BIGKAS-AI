@@ -38,13 +38,13 @@ Route::get('/', function () {
 // Authentication Routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:3,1');
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email')->middleware('throttle:3,1');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update')->middleware('throttle:3,1');
 });
 
 // Logout (must be authenticated)
@@ -57,7 +57,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 Route::prefix('student')->name('student.')->group(function () {
     // Student login (public)
     Route::get('/login', [StudentAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [StudentAuthController::class, 'login'])->name('login.submit');
+    Route::post('/login', [StudentAuthController::class, 'login'])->name('login.submit')->middleware('throttle:10,1');
     Route::post('/logout', [StudentAuthController::class, 'logout'])->name('logout');
 
     // Authenticated student routes
@@ -112,6 +112,7 @@ Route::middleware('auth')->group(function () {
     // Reading Materials (admin, teacher)
     // ----------------------------------------
     Route::middleware('role:admin,teacher')->group(function () {
+        Route::get('/materials/options', [MaterialController::class, 'options'])->name('materials.options');
         Route::resource('materials', MaterialController::class);
     });
 

@@ -180,6 +180,8 @@ class AuthController extends Controller
             return back()->with('error', __($status));
         }
 
+        ActivityLog::log('reset_password', "Password reset completed for: {$request->email}", 'user', null);
+
         return redirect()->route('login')->with('success', 'Your password has been reset.');
     }
 }

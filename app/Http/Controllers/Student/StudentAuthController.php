@@ -50,6 +50,7 @@ class StudentAuthController extends Controller
         $learner->update(['failed_login_attempts' => 0, 'locked_at' => null]);
 
         session(['student_learner_id' => $learner->id]);
+        $request->session()->regenerate();
 
         // Record daily activity for streak
         $learner->recordActivity();

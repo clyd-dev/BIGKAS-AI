@@ -12,7 +12,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust TLS-terminating proxies (nginx, Cloudflare) so
+        // $request->secure() honors X-Forwarded-Proto. Without this,
+        // HttpsEnforcementMiddleware would redirect-loop behind a proxy.
+        // Set TRUSTED_PROXIES=* (all) or a comma-separated list of proxy IPs.
+        $trustedProxies = array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', ''))));
+
+        if ($trustedProxies !== []) {
+            $middleware->trustProxies(at: $trustedProxies);
+        }
+
         $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
+        $middleware->append(\App\Http\Middleware\HttpsEnforcementMiddleware::class);
 
         // Register custom middleware aliases
         $middleware->alias([

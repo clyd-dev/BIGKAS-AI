@@ -539,6 +539,9 @@ class AdminController extends Controller
         $pin = Learner::generatePin();
         // pin is guarded — explicit assignment only (hashed cast still applies).
         $learner->pin = $pin;
+        // pin_created_at is a non-sensitive timestamp — stamp explicitly
+        // alongside every new PIN issuance.
+        $learner->pin_created_at = now();
         $learner->save();
 
         ActivityLog::log('admin_generate_pin', "Generated new PIN for learner: {$learner->getFullName()}", 'learner', $learner->id);

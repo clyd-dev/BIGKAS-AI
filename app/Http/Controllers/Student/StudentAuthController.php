@@ -40,14 +40,43 @@ class StudentAuthController extends Controller
             }
             $learner->update($lockout);
 
+            // Log the failed attempt (learner id + IP + user agent only —
+            // NEVER the attempted PIN value).
+            ActivityLog::log(
+                'student_login_failed',
+                "Failed student login attempt for learner #{$learner->id}.",
+                'learner',
+                $learner->id
+            );
+
             return back()->with('error', 'Invalid PIN. Please try again or ask your teacher.');
         }
 
         if (!$learner) {
+            // No row matched: nothing to increment (Task 1 throttle bounds
+            // blind guessing). Log without any PIN value or learner id.
+            ActivityLog::log(
+                'student_login_failed',
+                'Failed student login attempt with an unrecognized PIN.',
+                'learner',
+                null
+            );
+
             return back()->with('error', 'Invalid PIN. Please try again or ask your teacher.');
         }
 
         $learner->update(['failed_login_attempts' => 0, 'locked_at' => null]);
+
+        // Expiry is DETECTION ONLY — never block login here (no rotation UX
+        // yet). Log distinctly so teachers/admins can act.
+        if ($learner->isPinExpired()) {
+            ActivityLog::log(
+                'student_login_expired_pin',
+                "Learner #{$learner->id} logged in with an expired PIN.",
+                'learner',
+                $learner->id
+            );
+        }
 
         session(['student_learner_id' => $learner->id]);
         $request->session()->regenerate();

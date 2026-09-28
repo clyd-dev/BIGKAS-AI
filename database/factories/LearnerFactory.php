@@ -25,6 +25,7 @@ class LearnerFactory extends Factory
             'grade_level' => 1,
             'is_active' => true,
             'pin' => fake()->unique()->numerify('######'),
+            'pin_created_at' => now(),
         ];
     }
 }

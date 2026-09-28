@@ -381,6 +381,9 @@ class AssessmentController extends Controller
         $pin = Learner::generatePin();
         // pin is guarded ΓÇö explicit assignment only (hashed cast still applies).
         $learner->pin = $pin;
+        // pin_created_at is a non-sensitive timestamp — stamp explicitly
+        // alongside every new PIN issuance.
+        $learner->pin_created_at = now();
         $learner->save();
 
         ActivityLog::log('generate_pin', "Generated PIN for learner: {$learner->first_name} {$learner->last_name}", 'learner', $learner->id);

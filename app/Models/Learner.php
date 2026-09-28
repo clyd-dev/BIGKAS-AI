@@ -35,6 +35,7 @@ class Learner extends Model
         'failed_login_attempts',
         'locked_at',
         'last_activity_date',
+        'pin_created_at',
     ];
 
     /**
@@ -60,6 +61,7 @@ class Learner extends Model
             'longest_streak' => 'integer',
             'total_xp' => 'integer',
             'last_activity_date' => 'date',
+            'pin_created_at' => 'datetime',
             'pin' => 'hashed',
         ];
     }
@@ -243,6 +245,22 @@ class Learner extends Model
     public function checkPin(string $pin): bool
     {
         return Hash::check($pin, $this->attributes['pin']);
+    }
+
+    /**
+     * Detection ONLY — callers must NOT block login on expiry (no
+     * rotation UX exists yet; rotation is a follow-up task).
+     *
+     * A PIN older than 6 months is expired. Null pin_created_at means
+     * the PIN predates expiry tracking (legacy row) → NOT expired.
+     */
+    public function isPinExpired(): bool
+    {
+        if ($this->pin_created_at === null) {
+            return false;
+        }
+
+        return $this->pin_created_at->lte(now()->subMonths(6));
     }
 
     public function isLocked(): bool

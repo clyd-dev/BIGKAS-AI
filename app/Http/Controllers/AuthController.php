@@ -8,7 +8,7 @@ use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
@@ -135,21 +135,10 @@ class AuthController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        $user = User::where('email', $request->email)->first();
+        $status = Password::sendResetLink($request->only('email'));
 
-        if ($user) {
-            $token = bin2hex(random_bytes(32));
-
-            DB::table('password_reset_tokens')->where('email', $user->email)->delete();
-            DB::table('password_reset_tokens')->insert([
-                'email' => $user->email,
-                'token' => Hash::make($token),
-                'created_at' => now(),
-            ]);
-
-            // TODO: Send actual email with reset link
-            $resetLink = url('/reset-password/' . $token . '?email=' . urlencode($user->email));
-            logger()->info("Password reset link for {$user->email}: {$resetLink}");
+        if ($status !== Password::RESET_LINK_SENT) {
+            return back()->with('error', __($status));
         }
 
         ActivityLog::log('forgot_password', "Password reset requested for: {$request->email}", 'user', null);
@@ -180,26 +169,17 @@ class AuthController extends Controller
             'password' => 'required|min:6|confirmed',
         ]);
 
-        $record = DB::table('password_reset_tokens')
-            ->where('email', $request->email)
-            ->where('created_at', '>', now()->subHour())
-            ->first();
+        $status = Password::reset(
+            $request->only('email', 'token', 'password', 'password_confirmation'),
+            function ($user, $password) {
+                $user->forceFill(['password' => Hash::make($password)])->save();
+            }
+        );
 
-        if (!$record || !Hash::check($request->token, $record->token)) {
-            return redirect()->route('forgot-password')
-                ->with('error', 'Invalid or expired password reset link.');
+        if ($status !== Password::PASSWORD_RESET) {
+            return back()->with('error', __($status));
         }
 
-        $user = User::where('email', $request->email)->first();
-
-        if ($user) {
-            $user->update(['password' => $request->password]);
-            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-        }
-
-        ActivityLog::log('reset_password', "Password reset completed for: {$request->email}", 'user', null);
-
-        return redirect()->route('login')
-            ->with('success', 'Your password has been reset. Please login with your new password.');
+        return redirect()->route('login')->with('success', 'Your password has been reset.');
     }
 }

@@ -51,6 +51,26 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 // ============================================
+// EMAIL VERIFICATION
+// ============================================
+
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (\Illuminate\Foundation\Auth\EmailVerificationRequest $request) {
+    $request->fulfill();
+
+    return redirect()->route('dashboard')->with('success', 'Your email has been verified.');
+})->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
+
+Route::post('/email/verify/resend', function (\Illuminate\Http\Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+
+    return back()->with('success', 'A fresh verification link has been sent to your email address.');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+// ============================================
 // STUDENT PORTAL (PIN-based auth, separate from main auth)
 // ============================================
 
@@ -91,7 +111,7 @@ Route::prefix('student')->name('student.')->group(function () {
 // AUTHENTICATED ROUTES (Teacher/Admin/Parent)
 // ============================================
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

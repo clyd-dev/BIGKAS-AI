@@ -110,12 +110,10 @@ class AuthController extends Controller
             'phone' => $request->phone,
         ]);
 
-        Auth::login($user);
-
         ActivityLog::log('register', 'New user registered', 'user', $user->id);
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Registration successful! Welcome to BIGKAS-AI.');
+        return redirect()->route('login')
+            ->with('success', 'Registration successful! Please verify your email address before logging in.');
     }
 
     /**

@@ -161,7 +161,7 @@ class AdminController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'role'     => 'required|in:admin,teacher,parent,student',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
             'class_id' => 'nullable|exists:classes,id',
         ]);
 

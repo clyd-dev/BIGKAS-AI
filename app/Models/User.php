@@ -31,6 +31,8 @@ class User extends Authenticatable
         'email_verified_at',
         'last_login_at',
         'is_active',
+        'failed_login_attempts',
+        'locked_at',
     ];
 
     protected $hidden = [
@@ -43,6 +45,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'locked_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
         ];
@@ -130,6 +133,18 @@ class User extends Authenticatable
     public function hasRole(string ...$roles): bool
     {
         return in_array($this->role, $roles);
+    }
+
+    public function isLocked(): bool
+    {
+        if ($this->locked_at && $this->locked_at->gt(now())) {
+            return true;
+        }
+        if ($this->locked_at && $this->locked_at->lte(now())) {
+            $this->update(['failed_login_attempts' => 0, 'locked_at' => null]);
+            return false;
+        }
+        return false;
     }
 
     // ── Helpers ──

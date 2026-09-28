@@ -24,14 +24,30 @@ class StudentAuthController extends Controller
             'pin' => 'required|string|size:6',
         ]);
 
-        $learner = Learner::where('is_active', true)
-            ->whereNotNull('pin')
+        // Scan all PIN holders (not just active ones) so a matched but
+        // locked/inactive row can have its failure counter incremented.
+        // A wrong PIN matches no row, so there is nothing to increment —
+        // the Task 1 throttle already bounds blind guessing.
+        $learner = Learner::whereNotNull('pin')
             ->get()
             ->first(fn (Learner $candidate) => $candidate->checkPin($request->pin));
+
+        if ($learner && ($learner->isLocked() || !$learner->is_active)) {
+            $attempts = $learner->failed_login_attempts + 1;
+            $lockout = ['failed_login_attempts' => $attempts];
+            if ($attempts >= 10) {
+                $lockout['locked_at'] = now()->addMinutes(15);
+            }
+            $learner->update($lockout);
+
+            return back()->with('error', 'Invalid PIN. Please try again or ask your teacher.');
+        }
 
         if (!$learner) {
             return back()->with('error', 'Invalid PIN. Please try again or ask your teacher.');
         }
+
+        $learner->update(['failed_login_attempts' => 0, 'locked_at' => null]);
 
         session(['student_learner_id' => $learner->id]);
 

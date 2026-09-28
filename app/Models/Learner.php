@@ -34,6 +34,8 @@ class Learner extends Model
         'notes',
         'avatar',
         'is_active',
+        'failed_login_attempts',
+        'locked_at',
         'current_streak',
         'longest_streak',
         'total_xp',
@@ -46,6 +48,7 @@ class Learner extends Model
             'birth_date' => 'date',
             'grade_level' => 'integer',
             'is_active' => 'boolean',
+            'locked_at' => 'datetime',
             'current_streak' => 'integer',
             'longest_streak' => 'integer',
             'total_xp' => 'integer',
@@ -231,6 +234,18 @@ class Learner extends Model
     public function checkPin(string $pin): bool
     {
         return Hash::check($pin, $this->attributes['pin']);
+    }
+
+    public function isLocked(): bool
+    {
+        if ($this->locked_at && $this->locked_at->gt(now())) {
+            return true;
+        }
+        if ($this->locked_at && $this->locked_at->lte(now())) {
+            $this->update(['failed_login_attempts' => 0, 'locked_at' => null]);
+            return false;
+        }
+        return false;
     }
 
     public function hasBadge(string $slug): bool

@@ -44,17 +44,30 @@ class AuthController extends Controller
             return back()->with('error', 'Your account has been deactivated. Please contact the administrator.');
         }
 
+        if ($user && $user->isLocked()) {
+            return back()->with('error', 'Your account is temporarily locked due to too many failed login attempts. Please try again later.');
+        }
+
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
-            // Update last login
+            // Update last login and reset lockout counters
             $user = Auth::user();
-            $user->update(['last_login_at' => now()]);
+            $user->update(['last_login_at' => now(), 'failed_login_attempts' => 0, 'locked_at' => null]);
 
             ActivityLog::log('login', 'User logged in');
 
             return redirect()->intended(route('dashboard'))
                 ->with('success', 'Welcome back, ' . $user->name . '!');
+        }
+
+        if ($user) {
+            $attempts = $user->failed_login_attempts + 1;
+            $lockout = ['failed_login_attempts' => $attempts];
+            if ($attempts >= 5) {
+                $lockout['locked_at'] = now()->addMinutes(15);
+            }
+            $user->update($lockout);
         }
 
         return back()->with('error', 'Invalid email or password.');

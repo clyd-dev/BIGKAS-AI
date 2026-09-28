@@ -27,6 +27,11 @@ Route::middleware('throttle:5,1')->group(function () {
     Route::post('/auth/register', [AuthApiController::class, 'register']);
 });
 
+Route::middleware('throttle:3,1')->group(function () {
+    Route::post('/auth/forgot-password', [AuthApiController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password', [AuthApiController::class, 'resetPassword']);
+});
+
 // ML health check (public for monitoring)
 Route::get('/ml/health', [MLApiController::class, 'health']);
 

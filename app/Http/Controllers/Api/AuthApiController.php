@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 
 class AuthApiController extends Controller
 {
@@ -114,6 +115,44 @@ class AuthApiController extends Controller
                 'created_at' => $user->created_at,
             ],
         ]);
+    }
+
+    /**
+     * Request a password reset link via API.
+     * Always returns a generic message to avoid user enumeration.
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        Password::sendResetLink($request->only('email'));
+
+        return $this->success([], 'If an account with that email exists, we have sent a password reset link.');
+    }
+
+    /**
+     * Reset password via API.
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'token', 'password', 'password_confirmation'),
+            function ($user, $password) {
+                $user->forceFill(['password' => Hash::make($password)])->save();
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            return $this->error('Unable to reset password. Please try again.', 422);
+        }
+
+        return $this->success([], 'Your password has been reset.');
     }
 
     // ----- JSON helper methods -----

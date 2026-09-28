@@ -112,7 +112,6 @@ Route::middleware('auth')->group(function () {
     // Reading Materials (admin, teacher)
     // ----------------------------------------
     Route::middleware('role:admin,teacher')->group(function () {
-        Route::get('/materials/options', [MaterialController::class, 'options'])->name('materials.options');
         Route::resource('materials', MaterialController::class);
     });
 

@@ -1,5 +1,37 @@
 <?php
 
+/*
+|--------------------------------------------------------------------------
+| CORS allowed origin derivation
+|--------------------------------------------------------------------------
+|
+| CORS origins must be origin-only (scheme://host[:port]) — never a URL
+| with a path. HandleCors exact-matches the request Origin header, so a
+| path-carrying APP_URL (e.g. http://localhost/bigkas-ai) would never
+| match. Derive the bare origin here; an explicit CORS_ALLOWED_ORIGIN
+| env value takes precedence when set.
+|
+*/
+
+$appOrigin = (function (): string {
+    $raw = env('CORS_ALLOWED_ORIGIN') ?: env('APP_URL', 'http://localhost');
+    $raw = (string) $raw;
+
+    $parts = parse_url($raw);
+
+    if (! is_array($parts) || empty($parts['host'])) {
+        return rtrim($raw, '/');
+    }
+
+    $origin = ($parts['scheme'] ?? 'http') . '://' . $parts['host'];
+
+    if (isset($parts['port'])) {
+        $origin .= ':' . $parts['port'];
+    }
+
+    return $origin;
+})();
+
 return [
 
     /*
@@ -13,9 +45,10 @@ return [
     |
     | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
     |
-    | Security: origins are restricted to the application URL (APP_URL).
-    | Never use a wildcard here; the API is consumed same-origin by
-    | first-party Blade/JS, and native mobile clients ignore CORS.
+    | Security: origins are restricted to the bare application origin derived
+    | from APP_URL (or CORS_ALLOWED_ORIGIN when set). Never use a wildcard
+    | here; the API is consumed same-origin by first-party Blade/JS, and
+    | native mobile clients ignore CORS.
     |
     */
 
@@ -23,7 +56,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_filter([env('APP_URL', 'http://localhost')]),
+    'allowed_origins' => array_filter([$appOrigin]),
 
     'allowed_origins_patterns' => [],
 

@@ -11,5 +11,6 @@ class SecurityHeadersTest extends TestCase
         $response = $this->get('/');
         $response->assertHeader('X-Frame-Options', 'DENY');
         $response->assertHeader('X-Content-Type-Options', 'nosniff');
+        $response->assertHeader('Permissions-Policy', 'microphone=(self), camera=(), geolocation=()');
     }
 }

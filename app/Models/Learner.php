@@ -224,9 +224,11 @@ class Learner extends Model
 
     public static function generatePin(): string
     {
+        $commonPins = ['000000', '123456', '111111', '222222', '654321', '987654'];
+
         do {
             $pin = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        } while (self::where('pin', $pin)->exists());
+        } while (in_array($pin, $commonPins, true) || self::where('pin', $pin)->exists());
 
         return $pin;
     }

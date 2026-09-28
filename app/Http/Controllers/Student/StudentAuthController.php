@@ -21,7 +21,7 @@ class StudentAuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'pin' => 'required|string|size:6',
+            'pin' => 'required|string|size:6|regex:/^[0-9]+$/',
         ]);
 
         // Scan all PIN holders (not just active ones) so a matched but

@@ -95,7 +95,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|min:2|max:100',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
             'role' => 'required|in:teacher,parent,student',
             'school_id' => 'nullable|exists:schools,id',
             'phone' => 'nullable|string|max:20',
@@ -179,7 +179,7 @@ class AuthController extends Controller
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
         ]);
 
         $status = Password::reset(

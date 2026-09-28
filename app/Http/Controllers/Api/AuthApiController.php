@@ -54,7 +54,7 @@ class AuthApiController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|min:2|max:100',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
             'role' => 'required|in:teacher,parent,student',
             'phone' => 'nullable|string',
             'school_id' => 'nullable|exists:schools,id',
@@ -138,7 +138,7 @@ class AuthApiController extends Controller
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
         ]);
 
         $status = Password::reset(

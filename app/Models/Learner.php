@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Hash;
 
 class Learner extends Model
 {
@@ -49,6 +50,7 @@ class Learner extends Model
             'longest_streak' => 'integer',
             'total_xp' => 'integer',
             'last_activity_date' => 'date',
+            'pin' => 'hashed',
         ];
     }
 
@@ -220,10 +222,15 @@ class Learner extends Model
     public static function generatePin(): string
     {
         do {
-            $pin = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            $pin = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         } while (self::where('pin', $pin)->exists());
 
         return $pin;
+    }
+
+    public function checkPin(string $pin): bool
+    {
+        return Hash::check($pin, $this->attributes['pin']);
     }
 
     public function hasBadge(string $slug): bool

@@ -24,9 +24,10 @@ class StudentAuthController extends Controller
             'pin' => 'required|string|size:6',
         ]);
 
-        $learner = Learner::where('pin', $request->pin)
-            ->where('is_active', true)
-            ->first();
+        $learner = Learner::where('is_active', true)
+            ->whereNotNull('pin')
+            ->get()
+            ->first(fn (Learner $candidate) => $candidate->checkPin($request->pin));
 
         if (!$learner) {
             return back()->with('error', 'Invalid PIN. Please try again or ask your teacher.');

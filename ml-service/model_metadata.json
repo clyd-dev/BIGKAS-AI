@@ -1,0 +1,28 @@
+{
+  "model_type": "Random Forest",
+  "accuracy": 0.99,
+  "feature_columns": [
+    "accuracy_rate",
+    "words_per_minute",
+    "fluency_score",
+    "substitution_rate",
+    "omission_rate",
+    "insertion_rate",
+    "phonetic_error_rate",
+    "vowel_error_rate",
+    "blend_error_rate",
+    "self_correction_rate",
+    "pause_frequency",
+    "prosody_score"
+  ],
+  "weakness_labels": {
+    "1": "Phonemic Awareness",
+    "2": "Decoding Accuracy",
+    "3": "Oral Reading Fluency",
+    "4": "Reading Comprehension"
+  },
+  "training_samples": 1600,
+  "test_samples": 400,
+  "version": "1.0.0",
+  "trained_with": "synthetic_data"
+}

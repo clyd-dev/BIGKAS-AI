@@ -115,6 +115,14 @@ enough. Set both:
 # /etc/php/8.3/fpm/php.ini
 upload_max_filesize = 20M
 post_max_size = 25M
+# Transcription runs synchronously inside web requests (Flask allows up
+# to 120s per call) — PHP's 30s default would kill the worker mid-wait:
+max_execution_time = 180
+```
+
+```ini
+# /etc/php/8.3/fpm/pool.d/www.conf (add at the end)
+request_terminate_timeout = 180s
 ```
 
 ```bash
@@ -139,6 +147,8 @@ server {
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        # Match PHP: transcription API calls allow up to 120s
+        fastcgi_read_timeout 180s;
     }
 
     location ~ /\.ht { deny all; }
@@ -227,6 +237,13 @@ systemctl daemon-reload && systemctl enable --now bigkas-ml
 # then in .env: ML_API_ENABLED=true, ML_API_URL=http://127.0.0.1:5000
 php artisan config:cache
 ```
+
+Model files: `ml-service/bigkas_rf_model.pkl` ships with git and Flask
+loads it automatically as its fallback model. (The newer
+`weakness_classifier.joblib` + `feature_scaler.joblib` are NOT in the
+repo — if you want them served, copy both files into `ml-service/` on
+the server before starting the service; otherwise the `.pkl` serves.)
+Verify with: `curl -s http://127.0.0.1:5000/api/health`.
 
 RAM guidance: 2 GB is fine with `ML_API_ENABLED=false`; run local
 Whisper on 4 GB, or keep 2 GB with the OpenAI fallback

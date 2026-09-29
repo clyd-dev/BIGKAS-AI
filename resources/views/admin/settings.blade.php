@@ -21,13 +21,6 @@
                             <input type="text" class="form-control" name="settings[app_name]" value="{{ $settings['app_name'] ?? 'BIGKAS-AI' }}">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Default Language</label>
-                            <select class="form-select" name="settings[default_language]">
-                                <option value="english" {{ ($settings['default_language'] ?? '') === 'english' ? 'selected' : '' }}>English</option>
-                                <option value="filipino" {{ ($settings['default_language'] ?? '') === 'filipino' ? 'selected' : '' }}>Filipino</option>
-                                </select>
-                        </div>
-                        <div class="mb-3">
                             <label class="form-label">Max Audio File Size (MB)</label>
                             <input type="number" class="form-control" name="settings[max_audio_mb]" value="{{ $settings['max_audio_mb'] ?? 20 }}" min="1" max="100">
                         </div>
@@ -42,10 +35,16 @@
                         <div class="mb-3">
                             <label class="form-label">Independent Level Threshold (%)</label>
                             <input type="number" class="form-control" name="settings[independent_threshold]" value="{{ $settings['independent_threshold'] ?? 97 }}" min="90" max="100">
+                            @error('settings.independent_threshold')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Instructional Level Threshold (%)</label>
                             <input type="number" class="form-control" name="settings[instructional_threshold]" value="{{ $settings['instructional_threshold'] ?? 90 }}" min="80" max="100">
+                            @error('settings.instructional_threshold')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" name="settings[ml_enabled]" value="1" id="mlEnabled"

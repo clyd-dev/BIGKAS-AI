@@ -425,16 +425,50 @@ class AdminController extends Controller
 
     public function settings()
     {
-        $settings = SystemSetting::all()->keyBy('setting_key');
+        $settings = [
+            'app_name' => SystemSetting::getValue('app_name', 'BIGKAS-AI'),
+            'max_audio_mb' => SystemSetting::getValue('max_audio_mb', 20),
+            'independent_threshold' => SystemSetting::getValue('independent_threshold', 97),
+            'instructional_threshold' => SystemSetting::getValue('instructional_threshold', 90),
+            'ml_enabled' => SystemSetting::getValue('ml_enabled', true),
+            'auto_recommend' => SystemSetting::getValue('auto_recommend', true),
+        ];
+
         return view('admin.settings', compact('settings'));
     }
 
     public function saveSettings(Request $request)
     {
+        $validated = $request->validate([
+            'settings.app_name' => 'required|string|max:100',
+            'settings.max_audio_mb' => 'required|integer|min:1|max:100',
+            'settings.independent_threshold' => 'required|integer|min:90|max:100',
+            'settings.instructional_threshold' => 'required|integer|min:80|max:100|lt:settings.independent_threshold',
+            'settings.ml_enabled' => 'sometimes|boolean',
+            'settings.auto_recommend' => 'sometimes|boolean',
+        ]);
+
+        $types = [
+            'app_name' => 'string',
+            'max_audio_mb' => 'number',
+            'independent_threshold' => 'number',
+            'instructional_threshold' => 'number',
+            'ml_enabled' => 'boolean',
+            'auto_recommend' => 'boolean',
+        ];
+
         $changedKeys = [];
-        foreach ($request->except('_token') as $key => $value) {
-            SystemSetting::setValue($key, $value);
+        foreach ($validated['settings'] as $key => $value) {
+            SystemSetting::setValue($key, $value, $types[$key]);
             $changedKeys[] = $key;
+        }
+
+        // Unchecked boxes submit nothing — store explicit false, never stale.
+        foreach (['ml_enabled', 'auto_recommend'] as $key) {
+            if (! array_key_exists($key, $validated['settings'])) {
+                SystemSetting::setValue($key, '0', 'boolean');
+                $changedKeys[] = $key;
+            }
         }
 
         ActivityLog::log('admin_update_settings', 'Updated system settings: ' . implode(', ', $changedKeys), 'system_setting', null);

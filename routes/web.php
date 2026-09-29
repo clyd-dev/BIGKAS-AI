@@ -18,7 +18,8 @@ use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\VerificationCodeController;
-use App\Http\Controllers\Student\StudentAuthController;use App\Http\Controllers\Student\StudentDashboardController;
+use App\Http\Controllers\Student\StudentAuthController;
+use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Student\StudentAssessmentController;
 use App\Http\Controllers\Student\StudentActivityController;
 use App\Http\Controllers\Student\StudentBadgeController;
@@ -131,7 +132,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Reading Materials (admin, teacher)
     // ----------------------------------------
     Route::middleware('role:admin,teacher')->group(function () {
-        Route::get('/materials/options', [MaterialController::class, 'options'])->name('materials.options');
         Route::resource('materials', MaterialController::class);
     });
 

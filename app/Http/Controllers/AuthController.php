@@ -49,7 +49,7 @@ class AuthController extends Controller
         }
 
         if ($user && !$user->hasVerifiedEmail()) {
-            return back()->with('error', 'Please verify your email address before logging in.');
+            return back()->with('error', 'Invalid email or password.');
         }
 
         if (Auth::attempt($credentials, $remember)) {

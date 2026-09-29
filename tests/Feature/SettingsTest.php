@@ -88,4 +88,18 @@ class SettingsTest extends TestCase
             ->assertRedirect();
         $this->assertDatabaseMissing('system_settings', ['setting_key' => 'evil']);
     }
+
+    public function test_seeder_is_idempotent_and_clears_stale_keys(): void
+    {
+        SystemSetting::create(['setting_key' => 'max_audio_size_mb', 'setting_value' => '25', 'setting_type' => 'number', 'description' => 'stale']);
+
+        $this->seed(\Database\Seeders\SystemSettingSeeder::class);
+        $this->seed(\Database\Seeders\SystemSettingSeeder::class);
+
+        $this->assertSame(1, SystemSetting::where('setting_key', 'max_audio_mb')->count());
+        $this->assertDatabaseMissing('system_settings', ['setting_key' => 'max_audio_size_mb']);
+        $this->assertDatabaseMissing('system_settings', ['setting_key' => 'ml_service_enabled']);
+        $this->assertDatabaseMissing('system_settings', ['setting_key' => 'default_language']);
+        $this->assertSame('20', SystemSetting::where('setting_key', 'max_audio_mb')->first()->setting_value);
+    }
 }

@@ -1,0 +1,116 @@
+file_name,click_to_play,assigned_to,status,prompt_text,annotated_transcript,grade_level,language,Unnamed: 8,_missing_fields,_is_complete
+data/std005_g3_en_chunk_01.wav,▶ PLAY AUDIO,ELLEN,,,,3,en,,"prompt_text, annotated_transcript",False
+data/std005_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,,,3,en,,"prompt_text, annotated_transcript",False
+data/std005_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,,,3,en,,"prompt_text, annotated_transcript",False
+data/std008_g3_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,,,3,en,,"prompt_text, annotated_transcript",False
+data/std008_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,,,3,en,,"prompt_text, annotated_transcript",False
+data/std008_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,,,3,en,,"prompt_text, annotated_transcript",False
+data/std008_g3_en_chunk_04.wav,▶ PLAY AUDIO,,,,,3,en,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_26.wav,▶ PLAY AUDIO,Fred,,"nakararami ay desk na sulatan, o kaya'y",,3,fil,,annotated_transcript,False
+data/std008_g3_fil_chunk_27.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_28.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_29.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_30.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_31.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_32.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_33.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_34.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_35.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_36.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_37.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_38.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std008_g3_fil_chunk_39.wav,▶ PLAY AUDIO,,,,,3,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std011_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std017_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std020_g4_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std020_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std020_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std020_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std020_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std021_g4_en_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,""  yelled Mom. And yet 
+Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still laid",,4,en,,annotated_transcript,False
+data/std021_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"snug on the bed. Suddenly a rooster crowed out loud and sat on the window sill. Jacky get up and said with cheer.
+""I will get up now. I will"".",,4,en,,annotated_transcript,False
+data/std021_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad? 
+No. It is on the mat.",,4,en,,annotated_transcript,False
+data/std021_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. Let's swim in the 
+river,"" says Lina. ""Let's get some star apples from the tree,"" says 
+Leo. ""Let's pick flowers,""",,4,en,,annotated_transcript,False
+data/std021_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"says Lina. ""That is so much fun!"" says Mama. But can you help me dust the shelves too?"" Yes, we can Mama,"" 
+they say. ""Helping can be fun too!""  ",,4,en,,annotated_transcript,False
+data/std027_g4_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std027_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std027_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std027_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std027_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std028_g4_en_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet 
+Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus.",,4,en,,annotated_transcript,False
+data/std028_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"Jacky still laid snug on the bed. Suddenly, a rooster crowed out loud and sat on the window sill. Jacky got up and 
+said with cheer. ""I will get up now. I will!""",,4,en,,annotated_transcript,False
+data/std028_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"Pam's cat. Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh ",,4,en,,annotated_transcript,False
+data/std028_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad? No. It is on the mat.",,4,en,,annotated_transcript,False
+data/std028_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some star apples from 
+the tree,"" says Leo. ""Let's pick flowers,"" says Lina.",,4,en,,annotated_transcript,False
+data/std028_g4_en_chunk_06.wav,▶ PLAY AUDIO,,,"Lina. ""That is so much fun!"" says Mama. ""But can you help me  dust the shelves too?"" ""Yes, we can Mama,"" they 
+say. ""Helping can be fun too!"" ",,4,en,,annotated_transcript,False
+data/std031_g4_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std031_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std031_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std031_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_01.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_06.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_07.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_08.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_09.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_10.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_11.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std032_g4_en_chunk_12.wav,▶ PLAY AUDIO,,,,,4,en,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Ellen,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std039_g4_fil_chunk_18.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False
+data/std040_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,,,4,fil,,"prompt_text, annotated_transcript",False

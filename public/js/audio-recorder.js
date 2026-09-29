@@ -152,7 +152,9 @@ function retryRecording() {
 // ============================================================
 
 async function analyzeRecording() {
-    if (!audioBlob) {
+    const hasExistingAudio = document.getElementById('audioPlayback') && document.getElementById('audioPlayback').src && document.getElementById('audioPlayback').src !== window.location.href;
+    
+    if (!audioBlob && !hasExistingAudio) {
         alert('No recording found. Please record first.');
         return;
     }
@@ -169,8 +171,10 @@ async function analyzeRecording() {
 
     try {
         const formData = new FormData();
-        const extension = getExtensionFromMime(audioBlob.type);
-        formData.append('audio', audioBlob, `recording.${extension}`);
+        if (audioBlob) {
+            const extension = getExtensionFromMime(audioBlob.type);
+            formData.append('audio', audioBlob, `recording.${extension}`);
+        }
         formData.append('_token', csrfToken);
         
         // We will send BOTH the audio and trigger analysis in a single step for this prototype

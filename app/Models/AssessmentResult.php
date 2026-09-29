@@ -72,7 +72,7 @@ class AssessmentResult extends Model
 
     public function getPrimaryWeaknessInfo(): ?array
     {
-        if (!$this->primary_weakness) {
+        if ($this->primary_weakness === null) {
             return null;
         }
         $categories = config('bigkas.weakness_categories', []);

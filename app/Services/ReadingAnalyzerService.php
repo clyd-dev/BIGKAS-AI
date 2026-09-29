@@ -75,6 +75,37 @@ class ReadingAnalyzerService
             $errorAnalysis
         );
 
+        // ── Compute the 3 new metrics from word-level timestamps ──
+        $longPauseCount = $this->detectLongPauses($transcribedWords);
+        $repetitionCount = $this->detectRepetitions($spokenWords);
+        $prosodyScore = $this->estimateProsody($transcribedWords, $fluencyScore);
+
+        // ── Build the 12-feature vector for ML classification ──
+        // Column names MUST match the training script (parse_annotations.py)
+        // and Flask /api/classify endpoint EXACTLY.
+        $totalPatternErrors = max(
+            ($errorAnalysis['patterns']['phonetic_confusion'] ?? 0) +
+            ($errorAnalysis['patterns']['vowel_confusion'] ?? 0) +
+            ($errorAnalysis['patterns']['consonant_blend_error'] ?? 0) +
+            ($errorAnalysis['patterns']['other'] ?? 0),
+            1 // Prevent division by zero
+        );
+
+        $mlFeatures = [
+            'accuracy_rate'        => $accuracyRate,
+            'words_per_minute'     => $wordsPerMinute,
+            'fluency_score'        => $fluencyScore,
+            'substitution_rate'    => $totalWords > 0 ? round($errorAnalysis['substitutions'] / $totalWords, 3) : 0,
+            'omission_rate'        => $totalWords > 0 ? round($errorAnalysis['omissions'] / $totalWords, 3) : 0,
+            'insertion_rate'       => $totalWords > 0 ? round($errorAnalysis['insertions'] / $totalWords, 3) : 0,
+            'phonetic_error_rate'  => round(($errorAnalysis['patterns']['phonetic_confusion'] ?? 0) / $totalPatternErrors, 3),
+            'vowel_error_rate'     => round(($errorAnalysis['patterns']['vowel_confusion'] ?? 0) / $totalPatternErrors, 3),
+            'blend_error_rate'     => round(($errorAnalysis['patterns']['consonant_blend_error'] ?? 0) / $totalPatternErrors, 3),
+            'self_correction_rate' => $totalWords > 0 ? round($repetitionCount / $totalWords, 3) : 0,
+            'pause_frequency'      => $totalWords > 0 ? round($longPauseCount / $totalWords, 3) : 0,
+            'prosody_score'        => $prosodyScore,
+        ];
+
         return [
             // Basic metrics
             'accuracy_rate' => $accuracyRate,
@@ -87,13 +118,16 @@ class ReadingAnalyzerService
             'substitutions' => $errorAnalysis['substitutions'],
             'omissions' => $errorAnalysis['omissions'],
             'insertions' => $errorAnalysis['insertions'],
-            'repetitions' => $errorAnalysis['repetitions'],
+            'repetitions' => $repetitionCount,
             'self_corrections' => $errorAnalysis['self_corrections'],
 
-            // Weakness classification
+            // Weakness classification (rule-based fallback)
             'primary_weakness' => $weaknessClassification['primary'],
             'secondary_weakness' => $weaknessClassification['secondary'],
             'confidence_score' => $weaknessClassification['confidence'],
+
+            // ML-ready feature vector (12 features, sent to Flask /api/classify)
+            'ml_features' => $mlFeatures,
 
             // Additional data
             'skill_scores' => $this->calculateSkillScores($accuracyRate, $fluencyScore, $errorAnalysis),
@@ -104,7 +138,150 @@ class ReadingAnalyzerService
             'total_words' => $totalWords,
             'correct_words' => $correctWords,
             'duration_seconds' => $durationSeconds,
+            'long_pause_count' => $longPauseCount,
+            'prosody_score' => $prosodyScore,
         ];
+    }
+
+    /**
+     * Detect long pauses (>1 second gaps) from word-level timestamps.
+     *
+     * Uses the same threshold as the training script's [pause] tag (>1s),
+     * which maps to pause_frequency in the 12-feature vector.
+     * Whisper's word timestamps provide start/end times for each word,
+     * so we measure the gap between consecutive words.
+     */
+    protected function detectLongPauses(array $words): int
+    {
+        if (count($words) < 2) {
+            return 0;
+        }
+
+        $longPauses = 0;
+        for ($i = 1; $i < count($words); $i++) {
+            if (isset($words[$i]['start']) && isset($words[$i - 1]['end'])) {
+                $gap = $words[$i]['start'] - $words[$i - 1]['end'];
+                if ($gap > 1.0) {
+                    $longPauses++;
+                }
+            }
+        }
+
+        return $longPauses;
+    }
+
+    /**
+     * Detect word repetitions/stutters from the spoken word list.
+     *
+     * Counts consecutive identical or near-identical words as repetitions.
+     * This maps to self_correction_rate in the 12-feature vector.
+     *
+     * Example: ["ang", "ang", "aso"] → 1 repetition
+     * Example: ["ma", "mabilis"] → checked via prefix match (stutter pattern)
+     *
+     * NOTE: This is a documented approximation. The training script uses
+     * hyphenated stutter patterns (e.g., "ma-mabilis") from annotated text,
+     * while this live version detects consecutive duplicates from Whisper output.
+     * Both approaches measure the same underlying behavior (child repeating words).
+     */
+    protected function detectRepetitions(array $spokenWords): int
+    {
+        if (count($spokenWords) < 2) {
+            return 0;
+        }
+
+        $repetitions = 0;
+        for ($i = 1; $i < count($spokenWords); $i++) {
+            $prev = $spokenWords[$i - 1];
+            $curr = $spokenWords[$i];
+
+            // Exact repetition: "aso aso"
+            if ($prev === $curr) {
+                $repetitions++;
+                continue;
+            }
+
+            // Stutter/false-start: short word is a prefix of the next word
+            // e.g., "ma" followed by "mabilis", or "pa" followed by "paaralan"
+            if (mb_strlen($prev) <= 3 && mb_strlen($curr) > 3 && str_starts_with($curr, $prev)) {
+                $repetitions++;
+            }
+        }
+
+        return $repetitions;
+    }
+
+    /**
+     * Estimate prosody score (0-10 scale) from word-level data.
+     *
+     * Prosody = intonation, stress, rhythm, expression while reading.
+     * No single acoustic feature captures this perfectly, so we use a
+     * heuristic combining:
+     * - Confidence variance (monotone reading = low variance in Whisper confidence)
+     * - Fluency score (already accounts for pause rhythm)
+     * - Speech rate consistency (standard deviation of inter-word timing)
+     *
+     * This is a DOCUMENTED APPROXIMATION. The training script's prosody_score
+     * column is either NULL (filled by teacher) or computed similarly.
+     * State this explicitly in your capstone methodology section.
+     */
+    protected function estimateProsody(array $words, float $fluencyScore): float
+    {
+        if (count($words) < 3) {
+            return round($fluencyScore * 0.7, 1); // Minimal data, scale down fluency
+        }
+
+        $score = 10.0;
+
+        // Factor 1: Confidence variance — monotone/uncertain reading shows
+        // low or erratic confidence from Whisper
+        $confidences = array_filter(array_column($words, 'confidence'), fn($c) => $c !== null);
+        if (count($confidences) >= 3) {
+            $mean = array_sum($confidences) / count($confidences);
+            $variance = array_sum(array_map(fn($c) => pow($c - $mean, 2), $confidences)) / count($confidences);
+
+            // Very low mean confidence = struggling reader
+            if ($mean < 0.6) {
+                $score -= 3;
+            } elseif ($mean < 0.75) {
+                $score -= 1.5;
+            }
+
+            // Extremely low variance = possibly monotone/robotic reading
+            // (natural reading has SOME confidence variation)
+            if ($variance < 0.005 && $mean > 0.8) {
+                $score -= 1;
+            }
+        }
+
+        // Factor 2: Inter-word timing consistency
+        // Natural prosody has varied pacing; robotic reading is metronomic
+        $gaps = [];
+        for ($i = 1; $i < count($words); $i++) {
+            if (isset($words[$i]['start']) && isset($words[$i - 1]['end'])) {
+                $gaps[] = $words[$i]['start'] - $words[$i - 1]['end'];
+            }
+        }
+
+        if (count($gaps) >= 3) {
+            $meanGap = array_sum($gaps) / count($gaps);
+            $gapVariance = array_sum(array_map(fn($g) => pow($g - $meanGap, 2), $gaps)) / count($gaps);
+            $gapStdDev = sqrt($gapVariance);
+
+            // Very high std dev = erratic pausing (struggling)
+            if ($gapStdDev > 1.5) {
+                $score -= 2;
+            }
+            // Very low std dev with fast pace = possibly rushing without expression
+            if ($gapStdDev < 0.05 && $meanGap < 0.15) {
+                $score -= 1;
+            }
+        }
+
+        // Factor 3: Blend with fluency (prosody and fluency are correlated)
+        $score = ($score * 0.6) + ($fluencyScore * 0.4);
+
+        return max(0, min(10, round($score, 1)));
     }
 
     /**
@@ -465,10 +642,18 @@ class ReadingAnalyzerService
     }
 
     /**
-     * Classify primary and secondary weaknesses
+     * Classify primary and secondary weaknesses (rule-based only).
      *
-     * Attempts ML classification first (via MLClassificationService),
-     * falls back to rule-based classification if ML is unavailable or fails.
+     * NOTE: This method intentionally uses ONLY rule-based classification.
+     * The actual ML classification (Flask /api/classify) is called by the
+     * AssessmentController::analyze() method, which then overrides the
+     * rule-based result with the ML prediction. This avoids calling
+     * Flask twice per assessment.
+     *
+     * The rule-based result here serves as a fallback in case:
+     * - The Flask microservice is down
+     * - The RF model is not loaded
+     * - The controller's ML call fails for any reason
      */
     protected function classifyWeakness(
         float $accuracy,
@@ -476,24 +661,6 @@ class ReadingAnalyzerService
         float $fluency,
         array $errorAnalysis
     ): array {
-        // Try ML classification first
-        if ($this->mlService) {
-            try {
-                return $this->mlService->classify([
-                    'accuracy_rate' => $accuracy,
-                    'words_per_minute' => $wpm,
-                    'fluency_score' => $fluency,
-                    'substitutions' => $errorAnalysis['substitutions'],
-                    'omissions' => $errorAnalysis['omissions'],
-                    'insertions' => $errorAnalysis['insertions'],
-                    'patterns' => $errorAnalysis['patterns'],
-                ]);
-            } catch (\Exception $e) {
-                report($e); // Log the error via Laravel's error handler
-            }
-        }
-
-        // Rule-based classification fallback
         return $this->ruleBasedClassification($accuracy, $wpm, $fluency, $errorAnalysis);
     }
 

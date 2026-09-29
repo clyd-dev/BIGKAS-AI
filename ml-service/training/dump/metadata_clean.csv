@@ -1,0 +1,1028 @@
+file_name,click_to_play,assigned_to,status,prompt_text,annotated_transcript,grade_level,language,Unnamed: 8
+data/std001_g3_en_chunk_01.wav,▶ PLAY AUDIO,ELLEN,,"My friend. Tony is my friend. We are playmates. We like to ride our bikes. We also play hide and seek.
+It is fun to play with my friend. Red ball on the Floor.","my friend tony is my [om_friend] we are playmates we like to [mis: ride > red] our bikes we [ins: ah] also play [mis: hide > hed] and 
+[sub: seek > sicks] [mis: it > et] is [mis: fun > pun] to play [sub: with > which] my friend red ball on the [mis: floor > ploor]",3,en,
+data/std001_g3_en_chunk_02.wav,▶ PLAY AUDIO,, ,"The ball is on the floor. It is a red ball. It is a rubber ball. The baby looks at the ball. The cat looks at the
+ball. The cat is black. The cat walks over","the ball [mis: is > es] on the [mis: floor > ploor] [mis: it > et] [mis: is > es] a red ball [om_it] [om_is] [om_a] [mis: rubber > arber] ball the 
+[mis: baby > bibi] looks at the ball the cat looks at the ball the cat is black the cat [mis: walks > waks] [mis: over > ober]",3,en,
+data/std001_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,"to the ball. The cat hits the ball with its paw. The ball rolls on the floor. The baby smiles. Parents save 
+babies. The house is on fire. Flames come out of the windows.","to the ball the cat [sub: hits > this] the ball [sub: with > which] its [sub: paw > tow] the ball rolls on the [mis: floor > ploor] the baby 
+[mis: smiles > milis] [mis: parents > pirints] [mis: save > seb] [sub: babies > baby] the house [om_is] on [sub: fire > pry] [sub: flames > plan] 
+come [om_out] [mis: of > off] the windows",3,en,
+data/std001_g3_en_chunk_04.wav,▶ PLAY AUDIO,,,"Smoke comes out of the windows. A man runs out of the house. He carries a baby in his arms. A woman
+runs out of the house. She carries a baby in her arms. A fire truck arrives at the house.","smoke comes out of the windows  a man runs out of the house he carries a baby in his arms a woman
+runs out of the house she carries a baby in her arms a fire truck arrives at the house",3,en,
+data/std001_g3_en_chunk_05.wav,▶ PLAY AUDIO,,,"A backpack and a bus. It is time to go to school. He puts his books into his backpack. He puts his arms 
+through the straps. He puts his backpack on his back. He walks outside. He goes to the bus stop.","a backpack and a bus it is time to go [mis: to > t] school he [sub: puts > pass] his books [mis: into > to] [om_his]
+[sub: backpack > backs] [om_he] [om_puts] his [mis: arms > arm]  [om_through] [om_the] [om_straps] [ins:the] 
+he [sub: puts > pass] his backpack on [mis: his > this] back he walks [om_outside] he [mis: goes > goats] to the [ins:back] ",3,en,
+data/std001_g3_en_chunk_06.wav,▶ PLAY AUDIO,,,He stands at the bus stop. He waits for the bus. He sees the bus.,[om_he] [om_stands] at he bus [om_stop] he [mis: waits > wes] [mis: for > por] the [mis: bus > ba] [ins:ay] ,3,en,
+data/std001_g3_fil_chunk_01.wav,▶ PLAY AUDIO,JEREMY,,"Bandila. Tatlo ang bituin, na lagi kong taglay. Tatlo rin ang",[pause] bandila tatlo ang bi-bituin na lagi [mis: kong > rong] [mis: taglay > talay] tatlo rin ang,3,fil,
+data/std001_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,"kulay, pula, puti, bughaw. At may taglay parin, akong isang araw","[mis: kulay > rulay] pula puti [ins:pu] [mis: bughaw > buhaw]  at may [mis:taglay >talay] [mis:parin > pagin] [om_akong] [ins: araw] isang 
+araw-araw",3,fil,
+data/std001_g3_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Ako ang bandila ng bayan kong mahal. Ako'y isang lapis,",[om_ako] ang bandila [sub: ng > nag] bayan [mis: kong > rong> mahal [ins: roy] [mis: akoy >aroy] [om_isang] lapis,3,fil,
+data/std001_g3_fil_chunk_04.wav,▶ PLAY AUDIO,,,"Ako'y isang lapis, dulo ko'y matulis. Naiguguhit ko, ang bawat maisip. Nabubura",[mis: akoy > aroy] isang lapis dulo [mis: koy > roy] matulis [sub: naiguguhit > naiduduhiru] ko ang bawat maisip nabubura ,3,fil,
+data/std001_g3_fil_chunk_05.wav,▶ PLAY AUDIO,,,"ko rin, ang bawat sulatin. Ako'y baligtarin, ulo ko'y gamitin.",[mis: ko > ro] rin ang bawat sulatin [om_ akoy] [ins: ay] [ins: ay] baligtarin ulo [sub: koy > ron] [mis: gamitin > gamit gamit],3,fil,
+data/std001_g3_fil_chunk_06.wav,▶ PLAY AUDIO,,,Maganda ang bahay ni Ella. Dalawa ang palapag ng bahay niya. Berde ang kulay ng bahay. Pula ang,maganda ang bahay ni ella dalwa ang [sub: palapag > balaga] ng bahay ni-niya berde ang kulay ng bahay pula ang,3,fil,
+data/std001_g3_fil_chunk_07.wav,▶ PLAY AUDIO,,,pinta ng bubong. Maganda ang bahay ni Ella.,pinta ng [sub: bubong > buhok] maganda ang bahay ni ella,3,fil,
+data/std001_g3_fil_chunk_08.wav,▶ PLAY AUDIO,,,"Pupitre. Ang tawag sa akin, ng nakararami ay desk na sulatan, o kaya'y pupitre. ","[mis: pupitre > pupitren] ang [mis: tawag > tawa] sa [mis: akin > arin] ng [mis: nakakarami > nanararaming] ay [sub: desk > res] na 
+sulatan o [mis: kayay > rayan] [sub: pupitre > pupu]",3,fil,
+data/std001_g3_fil_chunk_09.wav,▶ PLAY AUDIO,,,"Pupitre. Batang nag-aaral, ako ang upuan Kami ay marami, sa silid-aralan.",[sub: pupitre > perit] batang nag aaral [om_ako] ang [ins: ng]  [ins: ng] upuan kami ay ma-marami [om_sa] [sub: silid > sisili] aralan,3,fil,
+data/std001_g3_fil_chunk_10.wav,▶ PLAY AUDIO,,, Ang Kubo ni KIko. Ito ay kubo ni kiko. Malaki ang kubo. May buko at biko sa loob ng kubo. May,[pause] ang-ang kubo ni kiko ito ang kubo ni kiko malaki ang kubo may buko at biko ang loob ng kubo may,3,fil,
+data/std001_g3_fil_chunk_11.wav,▶ PLAY AUDIO,,,may baka at piko sa tabi ng kubo ina iisa ang ina sa balat ng lupa siya ang,may baka at piko sa tabi ng kubo [pause] ina [sub: iisa > lisa] ang ina sa balat ng [sub: lupa > loob] siya ang,3,fil,
+data/std001_g3_fil_chunk_12.wav,▶ PLAY AUDIO,,,Sa atin ay mag-aalaga. Mahalin ang ina dakila sa lahat. Ating kaibigang pinakamatapat.,"sa atin ay [mis: nag aalaga > mag aalaga] ma-mahalin ang [sub: ina > ine] [mis: dakila > darila] sa [mis: lahat > lamat] [mis: ating > ati] 
+[om_kaibigang] [ins: ruli] [ins: bigay] [mis: pinakamatapat > pinarumatapat]",3,fil,
+data/std001_g3_fil_chunk_13.wav,▶ PLAY AUDIO,,," Silid Aralan. Sa unang araw mo, Sa'yong paaralan. Ako'y makikita",[pause] silid [mis: aralan > aralin] sa [om_unang] [ins: loom] araw mo sa yong paaralan akoy [sub: makikita > mariri],3,fil,
+data/std001_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,, makikita kita'y hinihintay.  Ako ay tawagin ay silid-aralan . Babae't lalaki,"[sub: makikita > ta] [mis: kitay > ritay] [ins: hindi] [ins: hin] [mis: hinihintay > hinihinday] [mis: ako > ko] [om_ay] [ins: kung] tawagin 
+[mis: silid > silin] aralan [mis: babaet > babae] [mis: lalaki > lalari]",3,fil,
+data/std001_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,dito nag-aaral. Simbahan. Marami sa ating baryo lungsod  ,dito [mis: nag aaral > naaaral] [pause] simbahan ma-marami sa [mis: ating > atin] [ins: ro] [mis: baryo > baroy] [sub: lungsod > luso] ,3,fil,
+data/std001_g3_fil_chunk_16.wav,▶ PLAY AUDIO,,,"o bayan ang may tsapel, o kaya'ay simbahan. Dito dumadalaw dito nagdarasal ","o bayan ang may [mis: tsapel > sapel] o [mis: kayay > rayan] simbahan [pause] dito dumadalaw [mis: dito > ito] 
+[mis: nagdarsal > naggarasal]",3,fil,
+data/std001_g3_fil_chunk_17.wav,▶ PLAY AUDIO,,,Ang nais tumawag sa Poong maykapal. Mesa. Ang mesa ng guro ay matatagpuan ,"ang [sub: nais > da] tumawag sa poong [mis: maykapal > mayrupal] [pause] mesa ang mesa ng guro ay 
+[mis: matatagpuan > matatangpu] ",3,fil,
+data/std001_g3_fil_chunk_18.wav,▶ PLAY AUDIO,,,"matatagpuan nasa isang panig, ng silid-aralan. Ang mga gamit ng guro, dito nakalagay. Ito ang ","[sub: matatagpuan > puan] [sub: nasa > ng] [ins: sa] isang panig ng silid aralan ang [om_mga] gamit ng guro [mis: dito > ito] [ins: na] 
+[ins: at] [mis: nakalagay > naralagay] ito [sub: ang > na] ",3,fil,
+data/std001_g3_fil_chunk_19.wav,▶ PLAY AUDIO,,,"patungan. Ito ang sulatan. Tahanan. Sari-saring anyo, ang","[mis: patungan > patugan] ito [sub: ang > nag] sulatan [pause] tahanan [mis: sari saring > sari sari] [sub: anyo > alay] ang 
+[sub: mga > mag]",3,fil,
+data/std001_g3_fil_chunk_20.wav,▶ PLAY AUDIO,,,"mga tahanan. May malaki, may maliit lamang. Dito nakatira aking ama't","mga tahanan may [ins: maha] [mis: malaki > malari] may maliit [ins: mala] [sub: malamang] [sub: dito > ito] [sub: nakatira > narutira]
+[sub: aking > ari] [ins: ang] [mis: amat > ama]",3,fil,
+data/std001_g3_fil_chunk_21.wav,▶ PLAY AUDIO,,,"ina. Pati na rin ako, si ate't si kuya. Iskul boy ikaw",[ins: ma] [ins: ay] ina pati na rina [mis: ako > akoy] si [mis: atet > ate] [ins: is] si [mis: kuya > ruya] [pause] iskul boy [sub: ikaw > ee],3,fil,
+data/std001_g3_fil_chunk_22.wav,▶ PLAY AUDIO,,,"ay lalaki, alam ko na ngayon. Ikaw  kung tawagin ay isang iskul boy. Huwag maglaro.","[ins: kung] ay [mis: lalaki > lalabi] [mis: alam > ala] [mis: ko > kong] na  [mis: ngayon > ngayong] [mis: ikaw > iraw] kung tawagin ay 
+isang [sub: iskul > sigol] boy [mis: huwag > huwing] [sub: maglaro > maguro]",3,fil,
+data/std001_g3_fil_chunk_23.wav,▶ PLAY AUDIO,,,"habang nag-aaral. Upang ang aralin, agad matutunan. Ang kalabasa. Isang kalabasa",habang nag aaral upang [ins: ma] [om_ang] aralin aga-agad [mis: matutunan > matutuhan] [pause] ang kalabasa isang kalabasa,3,fil,
+data/std001_g3_fil_chunk_24.wav,▶ PLAY AUDIO,,,ang dala ni Sisa. Pinaluto niya ito kay lisa. Malaki ang kalabasa. Masarap ang kalabasa.,[ins: mga] ang dala ni sisa [mis: pinaluto > pinatuto] niya ito kay lisa malaki ang [ins: kulay] [pause] kalabasa masarap ang kalabasa,3,fil,
+data/std001_g3_fil_chunk_25.wav,▶ PLAY AUDIO,,,Mabuti ito para sa mata. Ama. Ang ama ay haligi ng ating tahanan. Sa buong mag-anak.,"[mis: mabuti > matulti] ito para sa mata [pause] ama ang ama ay haligi [sub: ng > ang] [mis: ating > atit] taha-hanan sa buong 
+[sub: mag anak > nama]",3,fil,
+data/std001_g3_fil_chunk_26.wav,▶ PLAY AUDIO,,,"mag-anak, siya'y bumubuhay.Ang ama at ina ay lagi magkatuwang.","[mis: mag anak > anak] [mis: siyang > siya] [mis: bumubuhay > burubuhuhay] ang ama  at ina laging 
+[mis: magkatuwang > magratuwang] sa [mis: pag aalaga > pag aagan]",3,fil,
+data/std001_g3_fil_chunk_27.wav,▶ PLAY AUDIO,,,sa anak na mahal,[sub: sa > pa] [sub: anak > ara] na mahal,3,fil,
+data/std002_g3_en_chunk_01.wav,▶ PLAY AUDIO,ELLEN,,"This is my car. My name is Joy. Hello everyone. That is my toy. She sing a love song. He is a boy. Look at
+that. When I see you. Where are you? I love you. Baby goes to sleep. The baby crawls on the floor. It stops","this is my car my name is joy hello everyone that is my toy she sings a love song he is a boy look at tha when i see you
+where are you [ins:la] i  love you a baby [mis: goes > guys] to seep te baby crawls on the floor [ins:in] it stops",3,en,
+data/std002_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,"Then it crawls some more. Then it stops again. Mama looks at the baby. She picks up the baby. She carries
+the baby to the crib. She puts the baby in the crib. She puts a blanket on","then it crawls some more [sub: then > than] it stops again mama looks at the baby she picks up th baby she carries the baby 
+to the crib she  puts the baby in th crib she puts on",3,en,
+data/std002_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,"The baby. The baby falls asleep. Mommy is big. Daddy is humble. So who are you? I buy a cake. I want to
+dance. All I have to say is yes. Be my lady. Pretty girl. Well enjoy. The school is","the baby the baby falls asleep mommy is big daddy is humble so who are you i buy a cake i want to dance all i have to say 
+is yes be my lady pretty girls [sub: well > wer] enjoy the school is",3,en,
+data/std002_g3_en_chunk_04.wav,▶ PLAY AUDIO,,,"big. My friend. Toni is my friend. We are playmates. We like to ride our bikes. We also play hide and seek.
+It is fun to play with my friend. Vic has a pig.","big my friend toni is my friend we are playmates we like to ride our bikes we also play hide and seek it is fun to play with
+my friend vic has a [sub: pig > big]",3,en,
+data/std002_g3_en_chunk_05.wav,▶ PLAY AUDIO,,,"It is big and fat. It lives in the pen. The pig has six piglets. Vic feeds them everyday. Richard has a kite. 
+Its color is","it is big and fat it [mis: lives > lives] in the pen the [sub: pig > big] as six piglets vic feeds them everyday riririchard has a kikikite
+its color is ",3,en,
+data/std002_g3_en_chunk_06.wav,▶ PLAY AUDIO,,,"White. He hides it under the pine tree. He gets dressed, sees his friends. The boy puts on his socks. He 
+puts on his shoes. He ties his shoelaces. He walks to ","white he hides it under the pine tree he gets dressed [mis: sees > see] his friend th boy puts on his socks he pus on his gloves
+he ties his [mis: shoelaces > shoelays] he walks to ",3,en,
+data/std002_g3_en_chunk_07.wav,▶ PLAY AUDIO,,,"the front door. He turns the doorknob. He pulls the door open. He steps outside. He closes the door behind 
+him. He walks to the corner. He sees his friend. He waves to his friend. Sammy the singing","the front door he turns the [mis: doorknob > doornub] he pulls the door open he steps outside he close the door behind him 
+he walks to the corner he sees his friend he waves to his friend sammy th singing ",3,en,
+data/std002_g3_en_chunk_08.wav,▶ PLAY AUDIO,,,"Sparrow. Sammy was a shy sparrow who loved to sing but was too afraid to perform in front of others. 
+One day, a storm damaged the nest of some baby birds, and they wouldn't ","sparrow sammy was a shy sparrow who loved to sing but was too afraid to per-performin front [mis: of > off] others one day a
+storm [mis: damaged > dumbmage] the nest [mis: of > off] some [ins:buy] [ins:ay] baby birds and they [mis: wouldn't > wondt]",3,en,
+data/std002_g3_en_chunk_09.wav,▶ PLAY AUDIO,,,"wouldn't stop crying. Sammy started singing to comfort them. His sweet voice calmed the babies and 
+brought joy to everyone who heard him. From then on, Sammy sang proudly, knowing his music could","[mis: wouldn't > wondt] stop crying sammy [mis: started > start] singing to comfort them his sweet voice calmed the babies and
+bro-brought joy to eveyone who eard him from then on sammy sang proudly knowing [mis: his > hes] music [mis: could > col]",3,en,
+data/std002_g3_en_chunk_10.wav,▶ PLAY AUDIO,,,"make others happy. Cookie on the floor. She takes a cookie out of the package. She drops the cookie. It 
+falls on the floor. The cookie breaks. It breaks into four pieces. Four pieces are on the floor. She picks up 
+the pieces.","make others happy cookie on the floor she takes a cookie out of the package she [mis: drops > drafts] th cookie it falls on the 
+floor the cookie breaks it breaks into four [mis: pieces > piece] four [mis: pieces > piece] are on the floor she picks up the 
+[mis: pieces > piece]",3,en,
+data/std002_g3_en_chunk_11.wav,▶ PLAY AUDIO,,,"She takes them to the kitchen. She throws them into the trashcan. She takes another cookie out of the 
+package. He eats a candy bar. He picks up the candy bar. He reads the label. The label","she takes them to the kitchen she [mis: throws > trows] them into the trashcan she ta-takes another cookie out of the package
+he eats a candy bar he picks up the candy bar he reads the label the label",3,en,
+data/std002_g3_en_chunk_12.wav,▶ PLAY AUDIO,,,"says Baby Ruth. He unwraps the candy bar. He throws the wrapper into the trashcan. He bites into the 
+candy bar. He chews it. He swallows it. He bites","says baby ruth he [mis: unwraps > onraps] the candy bar he [mis: throws > trows] the [mis: wrapper > ropper] into the trashcan
+he bites into the candy bar he [mis: chews > shews] it  he sslswallows it he bites",3,en,
+data/std002_g3_en_chunk_13.wav,▶ PLAY AUDIO,,,"Into the candy bar again. It is delicious. He loves candy bars. A backpack and a bus. It is time to go to 
+school. He puts his books into his backpack. He puts his arms through the straps. He","into the candy bar again it is delicious he loves candy bars a backpack and a bus it is time to go to school he puts [om_on] 
+his books into his backpack he puts [sub: his > hers] arms [mis: through > truth] the straps he",3,en,
+data/std002_g3_en_chunk_14.wav,▶ PLAY AUDIO,,,"puts his backpack on his back. He walks outside. He goes to the bus stop. He stands at the bus stop. He 
+waits for the bus. He sees the bus. Parents Save babies from fire. The house is on fire.","puts his backpack on his back he [mis: walks > walk] outside he [mis: goes > gays] to the bus stop he [mis: stands > stand] at t he bus stop
+he waits for the bus parents save babies from fire the house is on fire",3,en,
+data/std002_g3_en_chunk_15.wav,▶ PLAY AUDIO,,,"Flames come out of the windows. Smoke comes out of the windows. A man runs out of the house. He 
+carries a baby in his arms. A woman runs out of the house. She carries a baby in her arms. A fire truck
+arrives at the house.","flames come out of the windows smoke [mis: comes > come] out of the windows a 
+man runs out [mis: of > off] the house he carries a baby in his arms a woman runs out of the house she carries a baby in 
+[sub: her > hair] arms a fire truck arrives at the house",3,en,
+data/std002_g3_en_chunk_16.wav,▶ PLAY AUDIO,,,"Red ball on the floor. The ball is on the floor. It is a red ball. It is a rubber ball. The baby looks at the ball.
+The cat looks at the ball. The cat is black. The cat","red ball on the floor the ball is on the floor it is a red ball it is a [mis: rubber > ruver] ball [sub: the > thee] baby looks at the ball the cat is black
+the cat",3,en,
+data/std002_g3_en_chunk_17.wav,▶ PLAY AUDIO,,,walks over to the ball. The cat hits the ball with its paw. The ball rolls on the floor. The baby smiles.,walks over to the ball the cat [sub: hits > its] the ball with its [mis: paws > pows] the ball rolls on the floor the baby smiles,3,en,
+data/std002_g3_fil_chunk_01.wav,▶ PLAY AUDIO,FRED,,"Pupitre. Ang tawag sa akin, ng nakararami ay desk na sulatan, O kaya'y pupitre. Batang nag-aaral,","[sub: pupitre > pupot] ang tawag sa akin ng nara-nakararami ay [mis: desk > dek] na sulatan o kayay [mis: pupitre > pupotre] 
+batang [mis: nag-aaral > nang-aaral]",3,fil,
+data/std002_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,"ako ang upuan kami ay marami, sa silid-aralan.",ako ang upuan kami ay marami sa silid-aralan,3,fil,
+data/std002_g3_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Ang bahay ni Ella. Maganda ang bahay ni Ella. Dalawa ang palapag ng bahay niya. 
+Berde ang kulay ng bahay. Pula ang pinta ng bubong. Maganda ang bahay ni Ella.","ang bahay ni ella maganda ang bahay ni ella dalawa-dalawa ang [ins: da] palapag ng bahay niya ber-berde ang kulay ng 
+bahay pula ang pinta ng [sub: buong] maganda ang bahay ni ella",3,fil,
+data/std002_g3_fil_chunk_04.wav,▶ PLAY AUDIO,,,"Ina. Iisa ang ina, sa balat ng lupa. Siya ang sa atin, ay nag-aalaga. Mahalin ang ina, dakila sa lahat. 
+Ating kaibigang pinakamatapat. Lapis.","ina [sub: iisa > lisa] ang ina sa balat ng lupa siya ang sa [sub: ating > atin] ay nag-aalaga mahalin ang ina da-dakila sa lahat a-ating 
+kaibigang pinakamatapat lapis",3,fil,
+data/std002_g3_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Ako'y isang lapis, dulo ko'y matulis. Naiguguhit ko, ang bawat maisip. Nabubura ko rin, ang bawat 
+sulatin. Ako'y baligtarin, ulo ko'y gamitin. Simbahan.","akoy isang lapis dulo koy matulis naiguguhit ko ang bawat maisip nabubura ko rin ang bawat 
+sulatin akoy baligtarin ulo koy gamitin simbahan",3,fil,
+data/std002_g3_fil_chunk_06.wav,▶ PLAY AUDIO,,,"Marami sa ating baryo, lungsod o bayan ang may tsapel, o kaya'y simbahan. Dito dumadalaw, dito nagdarasal
+ang nais tumawag, sa Poong maykapal.","marami sa ating baryo lung-lungsod o bayan ang may [mis: tsapel > tsrapel] [ins: a] o kayay simbahan di-dito dumadalaw dito nagdarasal
+ang nais tumawag sa poong [sub: maykapal > may]",3,fil,
+data/std002_g3_fil_chunk_07.wav,▶ PLAY AUDIO,,,"maykapal. Ang Kubo ni Kiko. Ito ay kubo ni Kiko. Malaki ang kubo. May buko at biko sa loob ng kubo. May baka
+ at piko sa tabi ng kubo.","[sub: maykapal > kapal] ang ang kubo ni kiko [ins: diri] [ins: lang] [ins: o] ito ay [ins: bu] kubo ni kiko malaki ang kubo may 
+[sub: buko > kubo] at biko sa loob ng kubo may baka at piko sa tabi ng kubo",3,fil,
+data/std002_g3_fil_chunk_08.wav,▶ PLAY AUDIO,,,"Silid Aralan. Sa unang araw mo, sa 'yong paaralan ako'y makikita, kita'y hinihintay. Ako kung tawagin ay silid-aralan",silid aralan sa unang a-a-araw mo sa sa yong paaralan akoy ma-makikita kitay hinihintay ako kung tawagin ay silid-aralan,3,fil,
+data/std002_g3_fil_chunk_09.wav,▶ PLAY AUDIO,,,"Babae't lalaki dito nag-aaral. Iskul Boy. Ikaw ay lalaki, alam ko na ngayon. Ikaw kung tawagin ay isang iskul boy.",babaet babaet lalaki dito nag-aaral iskul boy ikaw ay lalaki alam alam ko na ngayon ikaw kung tawagin ay isang [ins: isa] iskul boy,3,fil,
+data/std002_g3_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Huwag maglaro, habang nag-aaral. Upang ang aralin, agad matutunan. Mesa. Ang mesa ng guro, ay matatagpuan
+nasa isang panig, ng silid-aralan.","huwag maglaro-laro habang nag-aaral upang ang aralin agad matutunan mesa ang mesa ng guro ay m-matatagpuan
+nasa isang panig ng silid-aralan [ins: a]",3,fil,
+data/std002_g3_fil_chunk_11.wav,▶ PLAY AUDIO,,,"Ang gamit ng guro, dito nakalagay ito ang patungan, ito ang sulatan. Tahanan. Sari-saring anyo, ang mga tahanan.
+May malaki, may maliit lamang. Dito nakatira, aking ama't","ang gamit ng guro dito [ins: nakaragay] nakalagay ito ang patungan ito ang sulatan tahanan sari-saring anyo ang mga tahanan
+may malaki may maliit lamang dito nakatira [mis: aking > aring] amat",3,fil,
+data/std002_g3_fil_chunk_12.wav,▶ PLAY AUDIO,,,"ina pati na rin ako, si ate't si kuya. Ang kalabasa. Isang kalabasa ang dala ni Sisa. Pinaluto niya ito kay Lisa. 
+Malaki ang kalabasa. Masarap ang kalabasa.","ina pati na rin ako si atet [ins: si] [ins: ate] si [ins: ro] kuya ang kalabasa isang kalabasa ang dala ni sisa pinaluto niya ito 
+kay [mis: lisa > liza] malaki ang kalabasa masarap ang [sub: kalabasa > kalapa]",3,fil,
+data/std002_g3_fil_chunk_13.wav,▶ PLAY AUDIO,,,"kalabasa. Mabuti ito para sa mata. Ama. Ang ama ay haligi, ng ating tahanan. Sa buong mag-anak, siyang 
+bumubuhay. Ang Ama at ina, laging magkatuwang sa pag-aalaga,","[sub: kalabasa > basa] mabuti ito para sa mata ama ang ama ay haligi ng ating tahanan sa buong mag-anak siya-siyang 
+bumubuhay ang ama at ina laging magkatuwang sa pag-aalaga",3,fil,
+data/std002_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,,"sa anak na mahal. Bandila. Tatlo ang bituin, na lagi kong taglay. Tatlo rin ang kulay, pula, puti,",sa anak na mahal bandila tatlo ang bituin na [ins: laga] lagi kong taglay tatlo rin ang kulay pula puti [ins:bungbog],3,fil,
+data/std002_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,"bughaw. At may taglay parin, akong isang araw. Ako ang bandila ng bayan kong mahal.",[sub: bughaw > haw] at may taglay parin akong isang araw ako ang bandila ng bayan kong mahal,3,fil,
+data/std003_g3_en_chunk_01.wav,▶ PLAY AUDIO,DHESIRY,,"My friend. Tony is my friend. We are playmates. We like to ride our bikes. We also play hide and seek.
+It is fun to play with my friend.",[unintelligible],3,en,
+data/std003_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,"The baby. Time to go to school. He puts his backpack on his back. Red Ball. The ball is on the floor. It is a red ball.
+The cat is black. This is my car. My name is Joy.",[unintelligible] my name is joy,3,en,
+data/std003_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,"Hello everyone. That is my toy. She sing a love song. He is a boy. Look at that. Red Ball. The ball is on the floor. It is a
+red ball.","he-hello [mis: everyone > every] [sub: that > toy] [sub: is > has] my toy [sub: she > hes] 
+[sub: sing > is] a love song he [om_is] a boy [mis: look > loo] at [unintelligible]",3,en,
+data/std003_g3_en_chunk_04.wav,▶ PLAY AUDIO,,,The baby crawls on the floor. It stops. Then it crawls some more. Then it stops again.,[unintelligible],3,en,
+data/std003_g3_fil_chunk_01.wav,▶ PLAY AUDIO,FRED,,"Silid Aralan. Sa unang araw mo, sa 'yong paaralan ako'y makikita, kita'y hinihintay. Ako kung tawagin ay 
+silid-aralan","silid aralan sa unang araw mo sa yong paaralan akoy-akoy [ins: mariri] makikita [mis: kitay > kita] [sub: hinihintay > hihintay] 
+ako [ins: rong] kung tawagin ay silid-aralan",3,fil,
+data/std003_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Babae't lalaki dito nag-aaral. Ang Kubo ni Kiko. Ito ay kubo ni Kiko. Malaki ang kubo. May buko at biko 
+sa loob ng kubo. May baka at piko sa tabi ng kubo.","[sub: babaet > babae] lalaki dito nag-aaral [ins: duar] ang kubo ni kiko ito ay kubo ni kiko malaki ang kubo may buko at biko 
+sa loob ng kubo may baka at piko sa tabi ng kubo",3,fil,
+data/std003_g3_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Simbahan. Marami sa ating baryo, lungsod o bayan ang may tsapel, o kaya'y simbahan. Dito dumadalaw
+dito nagdarasal ang nais tumawag","[pause] simbahan marami sa ating baryo lungsod o bayan ang may tsapel o [mis: kayay > kaya] simbahan dito dumadalaw
+dito nagdarasal ang nais [sub: tumawag > tumawa]",3,fil,
+data/std003_g3_fil_chunk_04.wav,▶ PLAY AUDIO,,,"sa Poong may kapal. Lapis. Ako'y isang lapis, dulo ko'y matulis. Naiguguhit ko, ang bawat maisip.
+Nabubura ko rin, ang bawat","sa poong may kapal [pause] lapis [sub: akoy > ako] isang lapis dulo [sub: koy > ako] matulis naiguguhit ko ang bawat maisip
+nabubura ko rin ang bawat",3,fil,
+data/std003_g3_fil_chunk_05.wav,▶ PLAY AUDIO,,,"bawat sulatin. Ako'y baligtarin, ulo ko'y gamitin. Ina. Iisa ang ina sa balat ng lupa. Siya ang",[om_bawat] sulatin [sub: akoy > ako] baligtarin ulo [sub: koy > ko] gamitin [pause] ina iisa ang ina sa balat ng lupa siya [sub: ang > ay],3,fil,
+data/std003_g3_fil_chunk_06.wav,▶ PLAY AUDIO,,,"sa atin, ay nag-aalaga. Mahalin ang ina, dakila sa lahat. Ating kaibigang pinakamatapat. Ang bahay ni Ella.",sa atin ay nag-aalaga mahalin ang ina dakila sa lahat ating [ins: kaka] [ins: ay] kaibigang pinakamatapat ang bahay ni ella,3,fil,
+data/std003_g3_fil_chunk_07.wav,▶ PLAY AUDIO,,,"Maganda ang bahay ni Ella. Dalawa ang palapag ng bahay niya. Berde ang kulay ng bahay. Pula ang 
+pinta ng bubong. Maganda ang bahay ni Ella.","maganda ang bahay ni ella dalawa ang pala-palapag ng bahay niya berde ang kulay ng bahay pula ang 
+pinta ng bubong maganda ang bahay ni ella",3,fil,
+data/std003_g3_fil_chunk_08.wav,▶ PLAY AUDIO,,,"Pupitre. Ang tawag sa akin, ng nakararami ay desk na sulatan, o kaya'y pupitre. Batang","[mis: pupitre > purpitre] ang tawag sa akin ng nakararami ay [mis: desk > des] [mis: desk > deks] na sulatan o [mis: kayay > kaya] 
+pupo-pupitre batang [ins: nag]",3,fil,
+data/std003_g3_fil_chunk_09.wav,▶ PLAY AUDIO,,,"nag-aaral, ako ay upuan kami ay marami, sa silid-aralan. Bandila. Tatlo ang bituin, na lagi kong taglay
+Tatlo rin","aaral nag-aaral ako [sub: ay > ang] upuan kami ay marami sa silid-aralan bandila tatlo ang bituin [ins: tatlo] [ins: ay] na lagi kong taglay
+tatlo rin [ins: a]",3,fil,
+data/std003_g3_fil_chunk_10.wav,▶ PLAY AUDIO,,,"ang kulay, pula, puti, bughaw. At may taglay parin, akong isang araw. Ako ang bandila ng bayan kong 
+mahal. Ama. Ang ama ay","[om_ang] kulay pula puti bughaw at may taglay parin akong isang araw ako ang bandila ng bayan kong 
+mahal [pause] ama ang ama ay",3,fil,
+data/std003_g3_fil_chunk_11.wav,▶ PLAY AUDIO,,,"haligi ng ating tahanan. Sa buong mag-anak, siyang bumubuhay. Ang ama at ina, laging magkatuwang 
+sa pag-aalaga sa anak na mahal.","haligi ng ating tahanan sa buong mag-anak siyang bumubuhay ang ama at ina laging magkatuwang 
+sa pag-aalaga sa anak na mahal",3,fil,
+data/std003_g3_fil_chunk_12.wav,▶ PLAY AUDIO,,,"Ang Kalabasa. Isang kalabasa ang dala ni Sisa. Pinaluto niya ito kay Lisa. Malaki ang kalabasa. 
+Masarap ang kalabasa. Mabuti ito para sa mata. Tahanan.","ang kalabasa isang kalabasa ang dala ni sisa [mis: pinaluto > pinapa-pinaluto] niya ito kay lisa malaki ang kalabasa 
+masarap ang kalabasa mabuti ito para sa mata [pause] [mis: tahanan > taha]",3,fil,
+data/std003_g3_fil_chunk_13.wav,▶ PLAY AUDIO,,,"Tahanan. sari-saring anyo, ang mga tahanan. May malaki, may maliit lamang. Dito nakatira, aking ama't ina. Pati 
+na rin ako, si ate't si kuya.","[mis: tahanan > hanan] [mis: sari-saring > saring-saring] anyo ang mga tahanan may malaki may maliit [ins: dam] lamang dito 
+naka-nakatira aking [ins: ama] amat ina pati na rin ako si [mis: atet > ate] si kuya",3,fil,
+data/std003_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,,"Mesa. Ang mesa ng guro, ay matatagpuan nasa isang panig, ng silid-aralan. Ang gamit ng guro, dito nakalagay
+Ito ang patungan, ito ang sulatan.","mesa ang mesa ng guro ay matatagpuan nasa isang panig ng silid-aralan ang gamit ng guro dito nakalagay
+ito ang patungan ito ang sulatan",3,fil,
+data/std003_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,"Iskul Boy. Ikaw ay lalaki, alam ko na ngayon. Ikaw kung tawagin ay isang iskul boy. Huwag maglaro, 
+habang nag-aaral. Upang ang aralin, agad","iskul boy ikaw ay lalaki alam ko na ngayon ikaw kung tawagin ay isang iskul boy [mis: huwag > wag] maglaro 
+habang nag-aaral upang ang aralin agad [ins: ay]",3,fil,
+data/std003_g3_fil_chunk_16.wav,▶ PLAY AUDIO,,,matutunan.,matutunan,3,fil,
+data/std004b_g3_fil_chunk_01.wav,▶ PLAY AUDIO,DHESIRY,,"Iskul Boy. Ikaw ay lalaki, alam ko na ngayon. Ikaw kung tawagin ay isang iskul boy.","iskul boy [pause] [ins: ay] [mis: ikaw > kaw] ay lalaki alam ko na na ngayon ikaw kung [mis: tawagin > tawaging] ay 
+[sub: isang > is] [om_iskul] [om_boy]",3,fil,
+data/std004b_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,"iskul boy. Huwag maglaro, habang nag-aaral. Upang ang aralin, agad matutunan.",iskul boy [mis: huwag > hu-wang] maglaro habang nag-aaral upang ang aralin agad [mis: matutunan > ma],3,fil,
+data/std004b_g3_fil_chunk_03.wav,▶ PLAY AUDIO,,,"matutunan. Mesa. Ang mesa ng guro, ay matatagpuan Nasa isang panig, ng silid-aralan.","[mis: matutunan > atutuhanan] [pause] mesa ang mesa [sub: ng > na] guro ay [mis: matatagpuan > matatapon] nasa isang [mis: panig > pa] 
+om_ng] [om_silid-aralan]",3,fil,
+data/std004b_g3_fil_chunk_04.wav,▶ PLAY AUDIO,,,"panig, ng silid-aralan. Ang gamit ng guro, dito nakalagay Ito ang patungan, ito ang sulatan",panig ng silid-aralan ang gamit ng guro dito [mis: nakalagay > naralagay] ito ang [mis: patungan > patughan] ito ang [mis: sulatan > su],3,fil,
+data/std004b_g3_fil_chunk_05.wav,▶ PLAY AUDIO,,,"sulatan. Tahanan. Sari-saring anyo, ang mga tahanan. May malaki, may maliit lamang.",sulatan tahanan sari-saring anyo ang [mis: mga > mag] tahanan may [om_malaki] [om_may] [om_maliit] [om_lamang],3,fil,
+data/std004b_g3_fil_chunk_06.wav,▶ PLAY AUDIO,,,"May malaki, may maliit lamang. Dito nakatira, aking ama't ina. Pati na rin ako, si ate't si kuya.","[om_may] malaki may maliit lamang dito nakatira [mis: aking > atim] [mis: amat > mamat] ina pati [om_na] [om_rin] [om_ako] [om_si]
+ [om_atet] [om_si] [om_kuya]",3,fil,
+data/std004b_g3_fil_chunk_07.wav,▶ PLAY AUDIO,,,"Pati na rin ako, si ate't si kuya. Ang kalabasa. Isang kalabasa ang dala ni Sisa.","[om_pati] na rin ako si [mis: atet > ate] si [ins: atet] [ins: isa] kuya [pause] ang [ins: kala] [ins: ang] kalabasa isang kalabasa [om_ang] dala ni
+[mis: sisa > sis]",3,fil,
+data/std004b_g3_fil_chunk_08.wav,▶ PLAY AUDIO,,,Pinaluto niya ito kay Lisa. Malaki ang kalabasa. Masarap ang kalabasa. Mabuti ito para sa mata.,pinaluto niya ito kay lisa malaki ang kalabasa masarap ang kalabasa mabuti ito para sa mata,3,fil,
+data/std004b_g3_fil_chunk_09.wav,▶ PLAY AUDIO,,,"Ama. Ang ama ay haligi, ng ating tahanan. Sa buong mag-anak, siyang bumubuhay.",ama ang ama ay haligi ng ating tahanan sa buong mag-anak siyang [mis: bumubuhay > bumubu-ahay],3,fil,
+data/std004b_g3_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Ang ama at ina, laging magkatuwang sa pag-aalaga, sa anak na mahal.","[om_ang] ama at ina laging [mis: magkatuwang > mag-kakatuwang] sa pag-aalaga sa [ins: kanyang] [mis: anak > ak] 
+[om_na] [sub: mahal > lahanan]",3,fil,
+data/std004b_g3_fil_chunk_11.wav,▶ PLAY AUDIO,,,Bandila. Tatlo ang bituin.,[mis: bandila > bandela-la] tatlo ang bituin,3,fil,
+data/std004b_g3_fil_chunk_12.wav,▶ PLAY AUDIO,,,"na lagi kong taglay. Tatlo rin ang kulay, pula, puti, bughaw.",na lagi kong taglay tatlo rin ang [mis: kulay > rulay] pula [ins: bu] puti bughaw,3,fil,
+data/std004b_g3_fil_chunk_13.wav,▶ PLAY AUDIO,,,"At may taglay parin, akong isang araw. Ako ang bandila ng bayan kong mahal.",ins: ay] at may taglay parin akong isang [sub: araw > aral] ako [ins: ag] ang bandila ng bayan [om_kong] [om_mahal],3,fil,
+data/std004b_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,,"kong mahal. Lapis. Ako'y isang lapis, dulo ko'y matulis.",kong mahal lapis [ins: ako] akoy isang lapis [mis: dulo > bulo] koy [sub: matulis > mata],3,fil,
+data/std004b_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,"matulis. Naiguguhit ko, ang bawat maisip. Nabubura ko rin, ang bawat sulatin.","[mis: matulis > tulis] [mis: naiguguhit > naigugumit] [ins: gamit] ko ang [ins: da] bawat maisip nabubura ko rin ang [mis: bawat > dalat] 
+[mis: sulatin > sulat]",3,fil,
+data/std004b_g3_fil_chunk_16.wav,▶ PLAY AUDIO,,,"Ako'y baligtarin, ulo koy gamitin. Ang Bahay ni Ella.",akoy baligtarin ulo koy gamitin ang bahay ni ella,3,fil,
+data/std004b_g3_fil_chunk_17.wav,▶ PLAY AUDIO,,,Maganda ang bahay ni Ella. Dalawa ang palapag ng bahay niya.,mag-maganda ang bahay ni ella dala-dalawa ang [mis: palapag > balapag] ng bahay [om_niya],3,fil,
+data/std004b_g3_fil_chunk_18.wav,▶ PLAY AUDIO,,,niya. Berde ang kulay ng bahay. Pula ang pinta ng bubong. Maganda ang bahay ni Ella.,niya perde-berde ang kulay ng bahay pula ang pinta ng [ins: pin] [mis: bubong > bubog] maganda ang bahay ni ella,3,fil,
+data/std004b_g3_fil_chunk_19.wav,▶ PLAY AUDIO,,,"Ina. Iisa ang ina, sa balat ng lupa. Siya ang sa atin, ay nag-aalaga.",ina [mis: iisa > lisa] ang ina [ins: sang] [ins: isa] sa balat ng lupa siya ang sa [om_atin] [om_ay] [om_nag-aalaga],3,fil,
+data/std004b_g3_fil_chunk_20.wav,▶ PLAY AUDIO,,,"sa atin, ay nag-aalaga. Mahalin ang ina, dakila sa lahat. Ating kaibigang pinakamatapat.",[om_sa] atin ay nag-aalaga mahalin ang ina [mis: dakila > dokila] sa lahat ating [mis: kaibigang > kaibi] [om_pinakamatapat],3,fil,
+data/std004b_g3_fil_chunk_21.wav,▶ PLAY AUDIO,,,kaibigang pinakamatapat. Pupitre. Ang tawag sa akin.,[mis: kaibigang > gang] [ins: pinako] [mis: pinakamatapat > kamatapat] pupitre ang [om_tawag] [om_sa] [om_akin],3,fil,
+data/std004b_g3_fil_chunk_22.wav,▶ PLAY AUDIO,,,"Ang tawag sa akin, ng nakararami ay desk na sulatan.",[om_ang] [mis: tawag > taman] sa akin [mis: ng > nag] [mis: nakararami > na ba kararami] ay desk [ins: sa] na [mis: sulatan > susulatan],3,fil,
+data/std004b_g3_fil_chunk_23.wav,▶ PLAY AUDIO,,,"O kaya'y pupitre. Batang nag-aaral, ako ang upuan. Kami ay marami, sa silid-aralan.",o kayay [mis: pupitre > puterde] batang nag-aaral ako ang upuan kami [om_ay] [om_marami] [om_sa] [om_silid-aralan],3,fil,
+data/std004b_g3_fil_chunk_24.wav,▶ PLAY AUDIO,,,"Kami ay marami, sa silid-aralan. Silid aralan. Sa unang araw mo.",[om_kami] [om_ay] marami sa [mis: silid-aralan > sibi-silib-aralan] silid aralan sa unang [om_araw] [om_mo],3,fil,
+data/std004b_g3_fil_chunk_25.wav,▶ PLAY AUDIO,,,"Sa unang araw mo, Sa 'yong paaralan ako'y makikita, kita'y hinihintay. Ako kung tawagin.","[om_sa] [om_unang] araw mo sa yong [mis: paaralan > paraaran] akoy [mis: makikita > maririta] kitay hinihintay ako [om_kung]
+ [om_tawagin]",3,fil,
+data/std004b_g3_fil_chunk_26.wav,▶ PLAY AUDIO,,,Ako kung tawagin ay silid-aralan. Babae't lalaki dito nag-aaral.,[om_ako] kung [mis: tawagin > tamagin] ay silid-aralan [mis: babaet > babae-et] lalare-lalaki dito [sub: nag-aaral > lang],3,fil,
+data/std004b_g3_fil_chunk_27.wav,▶ PLAY AUDIO,,,aralan. Ang kubo ni Kiko. Ito ay kubo ni Kiko. Malaki ang kubo. May buko at biko sa loob ng kubo.,aralan ang kubo ni kiko ito [sub: ay > ang] kubo ni kiko malaki ang kubo [ins: ni] [ins: kik] may buko at biko sa loob [om_ng] [om_kubo],3,fil,
+data/std004b_g3_fil_chunk_28.wav,▶ PLAY AUDIO,,,"loob ng kubo. May baka at piko sa tabi ng kubo. Simbahan. Marami sa ating baryo,",loob ng kubo may baka at [ins: be] piko sa tabi ng kubo simbahan [mis: marami > maraming] sa [mis: ating > atin] [om_baryo],3,fil,
+data/std004b_g3_fil_chunk_29.wav,▶ PLAY AUDIO,,,"ating baryo, lungsod o bayan. Ang tsapel, o kaya'y simbahan.",[mis: ating > ting] baryo [mis: lungsod > nag-sund] o [mis: bayan > dayan] ang [ins: may] [mis: tsapel > teps] o kayay simbahan,3,fil,
+data/std004b_g3_fil_chunk_30.wav,▶ PLAY AUDIO,,,"Dito dumadalaw, dito nagdarasal ang nais tumawag, sa Poong maykapal.","dito [pause] [mis: dumadalaw > dumadaaw] dito [mis: nagdarasal > nagbarasal] [om_ang] [mis: nais > anis-nais] tumawag sa poong
+[om_maykapal]",3,fil,
+data/std004b_g3_fil_chunk_31.wav,▶ PLAY AUDIO,,,maykapal,[mis: maykapal > malkakapal],3,fil,
+data/std004_g3_fil_chunk_01.wav,▶ PLAY AUDIO,JEREMY,,"Simbahan. Marami sa ating baryo lungsod o bayan ang may tsapel, o kaya'y simbahan. Dito dumadalaw, 
+dito nagdarasal ang nais tumawag sa Poong maykapal. Ang kuno ni Kiko. Ito ay kubo ni kiko. Malaki ang ","simbahan [mis: marami > mara] [om_sa] [om_ating] baryo [mis: lungsod > lung] o [mis: bayan > bartel] [om_ang] [om_may] [om_tsapel] 
+o [mis: kayay > rayay] simbahan dito dumadalaw dito [mis: nagdarasal > nagra] ang [om_nais] [mis: tumawag > tumawa] [om_sa] 
+[om_poong] [mis: maykapal > marapal] ang kubo ni kiko ito ang kubo [om_ni] [om_kiko] malaki ang",3,fil,
+data/std004_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,"ang kubo. May buko at biko sa loob ng kubo. May baka at piko sa tabi ng kubo. Sa unang araw mo sa 
+paaralan ako'y makikita kita'y hinihintay. Ako ","[om_ang] kubo may buko at [mis: biko > bi] [om_sa] loob ng kubo may baka at piko sa tabi ng [om_kubo] sa [om_unang] araw mo 
+sayong [mis: paaralan > paaral] [mis: akoy > aroy] [om_makikita] [om_kitay] [om_hinihintay] ako iskul boy",3,fil,
+data/std004_g3_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Huwag maglaro habang nag-aaral. Upang ang aralin agad matutunan. Ang mesa ng guro ay matatagpuan
+ nasa isang panig, ng silid-aralan. Ang gamit ng guro , dito  ","huwag [om_malaro] habang [mis: nag aaral > pag] [om_upang] [om-ang] aralin agad matutunan ang [om_mesa] [om_ng] guro ay 
+matatagpuan nasa isang panig ng silid aralan ang gamit ng guro  dito",3,fil,
+data/std004_g3_fil_chunk_04.wav,▶ PLAY AUDIO,,,"nakalagay ito ang patungan, ito ay sulatan. Tahanan sari-saring anyo ang mga tahanan",[mis: nakalagay > naralagay] ito ang pa-patungan ito ang sulatan tahanan sari saring anyo ang mga tahanan,3,fil,
+data/std004_g3_fil_chunk_05.wav,▶ PLAY AUDIO,,,"May malaki, may maliit lamang. Dito nakatira aking ama't ina. Pati na rin si ate't si kuya.","may [mis: malaki > malari] may maliit lamang dito [mis: nakatira > naratira] [mis: aking > aring] amat ina pa-pati na rin [mis: ako > aro] 
+si atet si [mis: kuya > ruya] ",3,fil,
+data/std004_g3_fil_chunk_06.wav,▶ PLAY AUDIO,,,"Ang  kalabasa isang kalabasa ang dala ni Sisa. Pinaluto niya ito kay Lisa. Malaki ang kalabasa. Masarap 
+ang kalabasa",ang kalabasa isang kalabasa ang dala ni sisa pinaluti niya ito kay lisa malaki ang kalabasa masarap ang kalabasa,3,fil,
+data/std004_g3_fil_chunk_07.wav,▶ PLAY AUDIO,,,Mabuti ito para sa mata. Ama. Ang ama ay haligi ng ating tahanan sa buong mag-anak. Siya'y,mabuti ito sa mata ama ang ama ay haligi ng ating tahanan sa buong [mis: mag anak > mag arar] siyang,3,fil,
+data/std004_g3_fil_chunk_08.wav,▶ PLAY AUDIO,,,bumubuhay. Ang ama at ina laging magkatuwang sa pag-aalaga sa anak na mahal. Bandila tatlo ang bituin.,"bumubuhay ang ama at ina laging [mis: magkatuwang > magratuwang] sa [ins: pag aaral] pag aalaga sa anak na mahal bandila 
+[mis: tatlo > tanlo ang bituin",3,fil,
+data/std004_g3_fil_chunk_09.wav,▶ PLAY AUDIO,,,"na lagi kong taglay tatlo rin ang kulay. Pula, puti, bughaw. At may taglay parin akong isang araw Ako 
+ang bandila","na lagi [mis: kong > rong] taglay [ins: tan] tatlo rin ang [mis:kulay > rulay] pula puti [mis: bughaw > haw] at may taglay pa rin 
+ [mis: akong . arong] isang araw [ins: an] ako ang bandila",3,fil,
+data/std004_g3_fil_chunk_10.wav,▶ PLAY AUDIO,,,ng bayan kong mahal. Lapis Ako'y isang lapis duko ko'y matulis naiguguhit ko ang bawat maisip,"[mis: ng > nag]  ba-bayan kung mahal lapis [mis: akoy > roy] isang lapis [ins: du] [ins: ay]  [mis: koy > roy] matulis 
+[mis: naiguguhit > naiguguhi [mis: ko > ro] ang bawat maisip",3,fil,
+data/std004_g3_fil_chunk_11.wav,▶ PLAY AUDIO,,,Nabubura ko ang rin ang bawat sulatin ,"nabubura [om_ko] rin ang bawat [mis:sulatin > sulat] [mis: akoy > aroy] baligtarin ulo [mis: koy > roy] gamitin ina iisa ang [om_ina] sa 
+[mis: balat > ba] ng lupa siya ang sa atin",3,fil,
+data/std004_g3_fil_chunk_12.wav,▶ PLAY AUDIO,,,ay nag-aalaga mahlin ang ina dakila sa lahat. Ating kaibigang pinakamatapat. Ang bahay ni Ella.,"ay nag aalaga mahalin ang ina [mis: dakila > darila] sa lahat ating [mis: kaibigang > raibigang] [mis: pinakamatapat > pinaramatpat] 
+ang bahay ni ella [ins: dal] [ins: ay] [ins: ella]",3,fil,
+data/std004_g3_fil_chunk_13.wav,▶ PLAY AUDIO,,,"Dalawa ang palapag ng bahay niya. Berde ang kulay ng bahay. Pula ang pinta ng bubong. Maganda ang 
+bahay ni Ella. Pupitre","dalawa ang [mis: palapag > palap] ng bahay ni [mis: berde > perde] ang kulay ng bahay pula ang [mis: pinta > ta] ng 
+[mis: bubong > bubog] [ins: ay] [ins: bog] maganda ang bahay ni ella pupitre",3,fil,
+data/std004_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,,"ang tawag sa akin, ng nakararami ay desk na sulatan o kaya'y pupitre. Batang nag-aaral","ang tawag sa [mis: akin > arin] ng [mis: nakararami > marararami] ay de-desk na sulatan o [mis: kayay > rayay] [mis: pupitre > pupinre] 
+batang  nag aaral",3,fil,
+data/std004_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,ako ay upuan kami ay marami sa silid-aralan.,[mis: ako > aro] ang upuan kami ay marami sa silid aralan ,3,fil,
+data/std005_g3_fil_chunk_01.wav,▶ PLAY AUDIO,FRED,,"Ang ama ay haligi, ng ating tahanan. Sa buong mag-anak, siyang bumubuhay. Ang ama at ina, laging magkatuwang
+sa pag-aalaga, sa anak na mahal.","ang ama ay haligi ng ating tahanan sa buong [mis: mag-anak > mga-anak] siyang bumubuhay ang ama at ina laging 
+[mis: magkatuwang > magkakatuwang] sa [mis: pag-aalaga > pag-alalaga] sa anak na mahal",3,fil,
+data/std005_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Ang Kalabasa. Isang kalabasa ang dala ni Sisa. Pinaluto niya ito kay Lisa. Malaki ang kalabasa. Masarap ang 
+kalabasa. Mabuti ito para sa mata.","ang kalabasa isang kalabasa ang dala ni sisa pinaluto niya ito kay lisa malaki ang kalabasa masarap ang 
+kalabasa mabuti ito para sa mata",3,fil,
+data/std005_g3_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Iskul Boy. Ikaw ay lalaki, alam ko na ngayon. Ikaw kung tawagin ay isang iskul boy. Huwag maglaro habang nag",[pause] iskul boy ikaw ay lalaki alam ko na ngayon ikaw kung tawagin ay isang iskul boy huwag maglaro habang nag,3,fil,
+data/std005_g3_fil_chunk_04.wav,▶ PLAY AUDIO,,,"aaral upang ang aralin, agad matutunan. Tahanan. Sari-saring anyo, ang mga tahanan. May malaki, may maliit","[mis: aaral > aral] upang ang aralin agad matutunan [pause] tahanan sari-saring anyo ang mga tahanan may [mis: malaki > manaki] may 
+[sub: maliit > man]",3,fil,
+data/std005_g3_fil_chunk_05.wav,▶ PLAY AUDIO,,,"maliit lamang. Dito nakatira, aking ama't ina. Pati na rin ako, si ate't si kuya. Mesa. Ang mesa ng",maliit lamang dito naka-nakatira aking amat ina pati na rin ako si atet si kuya [pause] mesa ang mesa ng,3,fil,
+data/std005_g3_fil_chunk_06.wav,▶ PLAY AUDIO,,,"guro ay matatagpuan nasa isang panig, ng silid-aralan. Ang gamit ng guro, dito nakalagay ito ang patungan, ito 
+ang sulatan. ","guro ay matatagpuan nasa isang panig ng silid-aralan ang gamit ng guro dito nakalagay ito ang patungan ito 
+ang sulatan",3,fil,
+data/std005_g3_fil_chunk_07.wav,▶ PLAY AUDIO,,,"Simbahan. Marami sa ating baryo, lungsod o bayan ang may tsapel, o kaya'y simbahan. Dito dumadalaw, dito 
+nagdarasal ang nais tumawag, sa Poong maykapal.","simbahan marami sa [mis: ating > atin] baryo lungsod o bayan ang may tsapel o kayay simbahan dito dumadalaw dito 
+nagdarasal ang nais tumawag sa Poong [mis: maykapal > maykap]",3,fil,
+data/std005_g3_fil_chunk_08.wav,▶ PLAY AUDIO,,,"Silid Aralan. Sa unang araw mo, sa 'yong paaralan ako'y makikita, kita'y hinihintay. Ako kung tawagin ay silid-aralan
+babae't","[ins: pal] silid aralan sa unang araw mo sa yong paaralan akoy makikita kitay hi-hinihintay ako kung tawagin ay silid-aralan
+babaet",3,fil,
+data/std005_g3_fil_chunk_09.wav,▶ PLAY AUDIO,,,lalaki dito nag-aaral. Ina.,lalaki dito nag-aaral ina,3,fil,
+data/std005_g3_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Iisa ang Ina, sa balat ng lupa. Siya ang sa atin, ay nag-aalaga. Mahalin ang ina, dakila sa lahat. Ating kaibigang
+pinakamatapat. Ang Kubo ni Kiko.","[mis: iisa > lisa] ang ina sa balat ng lupa siya ang sa atin ay nag-aalaga mahalin ang ina dakila sa lahat ating kaibigang
+pinakamatapat ang kubo ni kiko [ins: it]",3,fil,
+data/std005_g3_fil_chunk_11.wav,▶ PLAY AUDIO,,,"Ito ay kubo ni Kiko. Malaki ang kubo. May buko at biko sa loob ng kubo. May baka at piko sa tabi ng kubo. Pupitre. 
+Ang tawag sa akin ng","ito ay kubo ni kiko malaki ang kubo may buko at biko sa loob ng kubo may baka at [ins: bik] piko sa tabi ng kubo pupitre 
+ang tawag sa akin ng",3,fil,
+data/std005_g3_fil_chunk_12.wav,▶ PLAY AUDIO,,,"nakararami ay desk sa sulatan, o kaya'y pupitre. Batang nag-aaral, ako ang upuan kami ay marami sa silid-aralan.",nakararami ay dek-desk sa sulatan o kayay pupitre batang nag-aaral ako ang upuan kami ay marami sa sa silid-aralan,3,fil,
+data/std005_g3_fil_chunk_13.wav,▶ PLAY AUDIO,,,"Ang bahay ni Ella. Maganda ang bahay ni Ella. Dalawa ang palapag ng bahay niya. Berde ang kulay ng bahay
+Pula ang pinta ng bubong. Maganda ang bahay ni Ella.","ang bahay ni ella maganda ang bahay ni ella dalawa ang palapag ng bahay niya berde ang kulay ng bahay
+pula ang pinta ng bubong maganda ang bahay ni le-ella",3,fil,
+data/std005_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,,"Lapis. Ako'y isang lapis, dulo ko'y matulis. Naiguguhit ko, ang bawat maisip. Nabubura ko rin ang bawat sulatin
+Ako'y baligtarin, ulo ko'y gamitin.","lapis akoy isang lapis dulo koy matulis naiguguhit ko ang bawat maisip nabubura-ra ko rin ang bawat sulatin
+ako'y [mis: baligtarin > maligtarin] ulo koy gamitin",3,fil,
+data/std005_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,"Bandila. Tatlo ang bituin, na lagi kong taglay Tatlo rin ang kulay, Pula, puti, bughaw. At may taglay parin, akong isang",bandila tatlo ang bituin na lagi kong taglay tatlo rin ang kulay pula put-puti bughaw at may taglay parin akong isang,3,fil,
+data/std005_g3_fil_chunk_16.wav,▶ PLAY AUDIO,,,araw. Ako ang bandila ng bayan kong mahal.,araw ako ang bandila ng bayan kong mahal,3,fil,
+data/std006_g3_en_chunk_01.wav,▶ PLAY AUDIO,ELLEN,,I can read. Richard has a kite. Its color is white. He hides it under the pine tree.,i can [mis: read > rid] richard has a [mis: kite > kit] its color is white he hides it under the [mis: pine > pane] tree,3,en,
+data/std006_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,Vic has a pig. It is big and fat. It lives in the pen. The pig has six piglets. Vic,[mis: vic > bic] has a pig it is big and [mis: fat > pat] it lives in the pen the pig has six piglets [mis: vic > bic],3,en,
+data/std006_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,feeds them everyday. My friend. Toni is my friend we are playmates we like to ride our,feeds them everyday [pause] my friend toni is my friend we are playmates we like to ride our [ins:we] [ins:ay],3,en,
+data/std006_g3_en_chunk_04.wav,▶ PLAY AUDIO,,,bikes. We also play hide and seek. It is fun to play with my friend. Mommy is big,bikes we also play hide and seek it is fun to play with my friend [pause] mommy is big,3,en,
+data/std006_g3_en_chunk_05.wav,▶ PLAY AUDIO,,,Daddy is humble so who are you I buy a cakeIi want to dancce all I have to say is yes,daddy is humble so [sub: who > wo] are you i buy a cake i want to dancce all i have to say is yes,3,en,
+data/std006_g3_en_chunk_06.wav,▶ PLAY AUDIO,,,"Ang guro ay matatagpuan na sa isang panig ng silidaralan ang gamit ng guro dito nakalagay ito ang patungan ito ang 
+sulatan [pause]","ang guro ay matatagpuan na sa isang panig ng silidaralan ang gamit ng guro dito nakalagay ito ang patungan ito ang sulatan [pause]
+",3,en,
+data/std006_g3_en_chunk_07.wav,▶ PLAY AUDIO,,,baby crawls on the floor its stops then it crawls some more then its stop again mama looks at the baby,"baby [mis: crawls > calls] on the floor [sub: its > is] stops then it [mis: crawls > calls] some more then [sub: its > is] stop again mama looks
+at the baby",3,en,
+data/std006_g3_en_chunk_08.wav,▶ PLAY AUDIO,,,she pick up the baby she carries the baby to the crib put the baby in the crib she put a blanket on the,she pick up the baby she carries the baby to the crib she [sub: put > pat] the baby in the crib she [sub: put > pat] a blanket on the,3,en,
+data/std006_g3_en_chunk_09.wav,▶ PLAY AUDIO,,,baby the baby falls asleep this is my car my name is joy hello everyone that is my toy she,baby the baby falls asleep [pause] this is my car my name is joy hello everyone that is my toy she,3,en,
+data/std006_g3_en_chunk_10.wav,▶ PLAY AUDIO,,,she sing a lovesong He is a boy look at that when I see you there are you I love you,she sing a lovesong he is a boy look at that when i see you [sub: there > where] [ins: ay] are you i love you,3,en,
+data/std006_g3_en_chunk_11.wav,▶ PLAY AUDIO,,,red ball on the floor the ball is on the floor it is a red ball it is a rubber ball the  baby, red ball on the [mis: floor > ploor] the ball is on the [mis: floor > ploor] it is a red ball it is a [mis: rubber > raber] ball the  baby,3,en,
+data/std006_g3_en_chunk_12.wav,▶ PLAY AUDIO,,,baby looks at the ball cat look at the ball the cat is black the cat walks over the ball the,baby looks at the ball cat [ins: ey] look at the ball the cat is black the cat [mis: walks > waks] over the ball the,3,en,
+data/std006_g3_en_chunk_13.wav,▶ PLAY AUDIO,,,cat hits the ball its the ball rolls on the the baby smile parents save baby,cat hits the ball [sub: with > which] its [mis: paw > pow] the ball rolls on the [mis: floor > ploor] the baby smile parents save baby,3,en,
+data/std006_g3_en_chunk_14.wav,▶ PLAY AUDIO,,,babies from fire the house is on fire flames come out of the windows smoke comes,[mis: babies > babes] from [mis: fire > pire] the house is on [mis: fire > pire] [mis: flames > fames] come out of the windows smoke comes,3,en,
+data/std006_g3_en_chunk_15.wav,▶ PLAY AUDIO,,,out of the windows a man runs out of the house he carries a baby in his arms a woman runs,out oof the windows a man runs oout [mis: of > ot] the house he carries a baby in his arms a woman runs,3,en,
+data/std006_g3_en_chunk_16.wav,▶ PLAY AUDIO,,,runs out of the house she carries a baby in her arm a fire truck arrives at the house,runs [sub: out > at] of the house she carries a baby in [sub: her > the] arm a [mis: fire > pire] truck [mis: arrives > aribs] at the house,3,en,
+data/std006_g3_en_chunk_17.wav,▶ PLAY AUDIO,,,a backpack and a bus it is time to go to school he put his book in-into his backpack he put it his arms,a backpack and a bus it is time to go to school he [mis:put > fut] his book in-into his [mis: backpack > backfack] he put it [om_in] his arms,3,en,
+data/std006_g3_en_chunk_18.wav,▶ PLAY AUDIO,,,through the strap he put his backpack on his back he walks outside,[pause] [mis: through > rou] the strap he put his backpack on his back he [mis: walks > waks] outside,3,en,
+data/std006_g3_en_chunk_19.wav,▶ PLAY AUDIO,DHESIRY,,He goes to the bus stop. He stands at the bus stop. He waits for the bus. He sees the bus.,he goes to the bus stop he [mis: stands > stand] at the bus stop he waits for the bus he sees the bus,3,en,
+data/std006_g3_en_chunk_20.wav,▶ PLAY AUDIO,,,"He Gets Dressed, Sees His Friend. The boy puts on his socks. He puts on his shoes.",he [mis: gets > ges] [mis: dressed > drets] [mis: sees > shes] his friend the boy puts on his socks he puts on [om_his] [om_shoes],3,en,
+data/std006_g3_en_chunk_21.wav,▶ PLAY AUDIO,,,his shoes. He ties his shoelaces. He walks to the  front door. ,his shoes he [mis: ties > tis] his [mis: shoelaces > shoelice] [pause] he [mis: walks > walks] to the [mis: front > frot] door,3,en,
+data/std006_g3_en_chunk_22.wav,▶ PLAY AUDIO,,,"He turns the doorknob. He pulls the door open. He steps outside. He closes the door behind him.
+He walks to the corner.","he [mis: turns > torn] the doorknob he pulls the door open he [mis: steps > step] outside he closes the door behind him he 
+[om_walks] [om_to] [om_the] [om_corner]",3,en,
+data/std006_g3_en_chunk_23.wav,▶ PLAY AUDIO,,,He walks to the corner. Hes sees his friend. He waves to his friend. He Eats a Candy Bar,"[om_he] walks to the corner [mis: hes > he] sees [ins: the] [ins: this] his friend he waves to his friend he [mis: eats > eat] 
+a [mis: candy > cendy] bar",3,en,
+data/std006_g3_en_chunk_24.wav,▶ PLAY AUDIO,,,He picks up the candy bar. He reads the label. The label says Baby Ruth. He unwraps the candy bar. ,"he picks up the [mis: candy > cendy] bar he [mis: reads > reds] the label the label [mis: says > say] baby [mis: ruth > raf]
+ he [om_unwraps] [om_the] [om_candy] [om_bar]",3,en,
+data/std006_g3_en_chunk_25.wav,▶ PLAY AUDIO,,,He unwraps the candy bar. He throws the wrapper into the trashcan.,[om_he] [mis: unwraps > wraps] the candy bar he throws the cra- [mis: wrapper > crappers] into the [om_trashcan],3,en,
+data/std006_g3_en_chunk_26.wav,▶ PLAY AUDIO,,,trashcan. He bites into the candy bar. He chews it. He swallows it. He bites,trashcan he [mis: bites > bats] into [om_the] candy bar he chews it he [mis: swallows > shallow] it he [om_bites],3,en,
+data/std006_g3_en_chunk_27.wav,▶ PLAY AUDIO,,,"bites into  the candy bar again. It is delicious. He loves candy bars. Cookie on the floor. She takes a cookie
+out of the package. ","[om_bites] into the candy bar again it is delicious he [mis: loves > love] candy [mis: bars > bar] cookie on the [mis: floor > ploor] 
+she takes a cookie [om_out] [om_of] [om_the] [om_package]",3,en,
+data/std006_g3_en_chunk_28.wav,▶ PLAY AUDIO,,,out of the package. She drops the cookie. It falls on the floor. The cookie breaks. It breaks into four pieces. ,"out of the package she drops the cookie it [mis: falls > pulls] on the [mis: floor > ploor] the cookie [mis: breaks > breks] 
+it [mis: breaks > breks] into [mis: four > pour] pieces",3,en,
+data/std006_g3_en_chunk_29.wav,▶ PLAY AUDIO,,,Four pieces are on the floor. She picks up the pieces. She takes them to the kitchen. She throws,"[mis: four > pour] pieces are on the [mis: floor > ploor] she picks up the pieces she takes [mis: them > then] to the kitchen 
+she [pause] throws",3,en,
+data/std006_g3_en_chunk_30.wav,▶ PLAY AUDIO,,,them into the trashcan. She takes another cookie out of the package.,[mis: them > then] into the trashcan she [mis: takes > take] another cookie out [mis: of > off] the package,3,en,
+data/std006_g3_en_chunk_31.wav,▶ PLAY AUDIO,,,Sammy the Singing Sparrow. Sammy was a shy sparrow who loved to sing but was too ,"[mis: sammy > amy] the [mis: singing > singin] [mis: sparrow > sharrow] [mis: sammy > samme] [mis: was > wash]
+ a [mis: shy > she] [mis: sparrow > sharow] who [mis: loved > love] to sing but [mis: was > weysh] [om_too]",3,en,
+data/std006_g3_en_chunk_32.wav,▶ PLAY AUDIO,,,"too afraid to perform in front of others. One day, a storm damaged","[mis: too > to] [mis: afraid > aperd] to perform in [mis: front > ro] [mis: of > off] others one day a [mis: storm > strom] 
+[mis: damaged > demage]",3,en,
+data/std006_g3_en_chunk_33.wav,▶ PLAY AUDIO,,,"the nest of some baby birds, and they wouldn't stop crying. Sammy started singing to comfort","the [mis: nest > nets] [mis: of > off] some baby birds and they [mis: wouldnt > would] stop [mis: crying > cry]
+ [mis: sammy > samme] [mis: started > start] singing to comfort",3,en,
+data/std006_g3_en_chunk_34.wav,▶ PLAY AUDIO,,,them . His sweet voice calmed the babies and brought joy to everyone who heard him. From ,[mis: them > then] his sweet [mis: voice > boice] [mis: calmed > cold] the babies and brought joy to everyone who heard him from,3,en,
+data/std006_g3_en_chunk_35.wav,▶ PLAY AUDIO,,,"then on, Sammy sang proudly, knowing his music could make others happy.","then on [mis: sammy > sammes] sa- [mis: sang > sing] pra- [mis: proudly > prodle] [mis: knowing > kowing] 
+his mo- music [mis: could > cold] make others happy",3,en,
+data/std006_g3_fil_chunk_01.wav,▶ PLAY AUDIO,FRED,,"Ang Kalabasa. Isang kalabasa ang dala ni Sisa. Pinaluto niya ito kay Lisa. Malaki ang kalabasa. 
+Masarap ang kalabasa. Mabuti ito para sa mata.","ang kalabasa isang kalabasa ang dala ni sisa pinaluto niya ito kay lisa malaki ang kalabasa 
+masarap ang kalabasa mabuti i-ito para sa mata [pause]",3,fil,
+data/std006_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Bandila. Tatlo ang bituin, na lagi kong taglay Tatlo rin ang kulay, pula, puti, bughaw. At may taglay parin, 
+akong isang araw","bandila [mis: tatlo > tatlong] ang [mis: bituin > bin-bituin] [sub: na > ang] lagi kong taglay [mis: tatlo > tatlong] rin ang kulay pula puti 
+bughaw at may taglay parin akong isa-isang araw",3,fil,
+data/std006_g3_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Ako ang bandila ng bayan kong mahal. Lapis. Ako'y isang lapis, dulo ko'y",ako ang bandila ng bayan kong mahal [pause] lapis akoy isang lapis-lapis dulo [mis: koy > ko],3,fil,
+data/std006_g3_fil_chunk_04.wav,▶ PLAY AUDIO,,,"matulis naiguguhit ko ang bawat maisip. Nabubura ko rin ang bawat sulatin. Ako'y baligtarin,",matulis naiguguhit ko ang bawat maisip. Nabubura ko rin ang bawat sulatin. akoy baligtarin,3,fil,
+data/std006_g3_fil_chunk_05.wav,▶ PLAY AUDIO,,,ulo ko'y gamitin. Ang Bahay ni Ella.,ulo [mis: koy > ko] gamitin [pause] ang bahay ni ella,3,fil,
+data/std006_g3_fil_chunk_06.wav,▶ PLAY AUDIO,,,"Maganda ang bahay ni Ella. Dalawa ang palapag ng bahay niya. Berde ang kulay ng bahay. 
+Pula ang pinta ng bubong. Maganda","maganda ang bahay ni ella dalawa ang palapag ng bahay ni-niya berde ang kulay ng [ins: bubong] bahay 
+pula ang [sub: pinta > binta] [ins: ay] pinta ng bubong maganda",3,fil,
+data/std006_g3_fil_chunk_07.wav,▶ PLAY AUDIO,,,"ang bahay ni Ella. Pupitre. Ang tawag sa akin, ng nakararami ay",ang bahay ni ella [pause] [ins: ang] [ins:tawag] pupitre ang tawag sa akin ng [mis:nakararami > nakakararami] ay,3,fil,
+data/std006_g3_fil_chunk_08.wav,▶ PLAY AUDIO,,,"desk na sulatan, o kaya'y pupitre. Batang nag-aaral, ako ang upuan kami ay marami, sa silid-aralan","desk na susutan-sulatan o kayay [mis: pupitre > putit-putitre] batang nag-aaral [mis: ako > akoy] ang upuan kami 
+ay marami sa silid-aralan",3,fil,
+data/std006_g3_fil_chunk_09.wav,▶ PLAY AUDIO,,,Ang Kubo ni Kiko. Ito ay kubo ni Kiko. Malaki ang kubo. May buko at biko sa loob ng kubo.,"[pause] [sub: ang > ito] kubo ni kiko ito [sub: ay > ang] kubo ni kiko malaki ang kubo may [sub: buko > kubo] [ins: ay] 
+buko at biko sa loob ng kubo.",3,fil,
+data/std006_g3_fil_chunk_10.wav,▶ PLAY AUDIO,,,"May baka at piko sa tabi ng kubo. Ina. Iisa ang ina, sa balat ng lupa. Siya ang sa",may baka at piko sa tabi ng kubo [pause] ina [mis: iisa > lisa] ang ina sa balat ng lupa siya ang sa,3,fil,
+data/std006_g3_fil_chunk_11.wav,▶ PLAY AUDIO,JEREMY,,atin ay nag-aalaga. mahalin ang ina dakila sa lahat. Ating kaibigang pinakamatapat,atin ay nag aalaga ma-mahalin ang ina dakila sa lahat [ins:ating] kaibigang pinakamatapat [pause],3,fil,
+data/std006_g3_fil_chunk_12.wav,▶ PLAY AUDIO,,,"Silid aralan sa unag araw mo sa'yong paaralan ako'y makikita kita'y hinihintay. Ako kung tawagin ay sili-aralan 
+babae't lalaki dito ng-aaral","silid aralan sa unang araw mo sayong paaralan akoy maakikita [mis: kitay > kita] hinihintay ako-ako kung [sub: tawagin > tumanggin]
+ay silid aralan [mis: babaet > babae] [ins: at] lalaki [sub: dito > ito] nag aaral",3,fil,
+data/std006_g3_fil_chunk_13.wav,▶ PLAY AUDIO,,,Simbahan marami sa ating baryo lungsod o bayan ang may tsapel o kaya'ay simabahan,[pause] Simbahan marami sa ating baryo lungsod [ins: sa] o bayan ang-ang may-may [mis: tsapel > sapel] o kayay simbahan,3,fil,
+data/std006_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,,simbahan dito dumadalaw dito nagdarasal ang nais tumatawag sa poong maykapal,"[mis: simbahan > bahan] [mis: dito > ito] dumadalaw [mis: dito > ito] nagdarasal ang nais 
+[mis: tumatawag > tumutuwang sa poong mayka-kapal",3,fil,
+data/std006_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,mesa ang mesa ng guro ay matatagpuan nasa isang panig ng silid aralan ang gamit,[pause] mesa ang mesa ng guro ay matatagpuan nasa isang panig [ins: sa] ng silid aralan ang gamit,3,fil,
+data/std006_g3_fil_chunk_16.wav,▶ PLAY AUDIO,,,ng guro dito nakalagay ito ang patungan ito ang sulatan tahanan,ng guro dito nakalagay ito ang [ins: ay] [ins: ang] [mis: patungan > katungan] ito ang sulatan [pause] tahanan ,3,fil,
+data/std006_g3_fil_chunk_17.wav,▶ PLAY AUDIO,,,sari saring anyo ang mag tahanan may malaki may maliit lamang dito nakatira aking amat ina pati,sa-sari saring anyo ang mga tahana may malaki may maliit lamang di-dito nakatira aking amat ina pati,3,fil,
+data/std006_g3_fil_chunk_18.wav,▶ PLAY AUDIO,,,na rin ako si atet si kuya iskul boy ikaw ay lalaki alam ko na ngayon,na rin ako si [mis: atet > ate] si kuya [pause] iskul boy ikaw ay [ins: malak] [sub: lalaki > malaki] [mis: alam > alan] ko na ngayon,3,fil,
+data/std006_g3_fil_chunk_19.wav,▶ PLAY AUDIO,,,ngayon ikaw kung tawagin ay isang iskul boy huwag maglaro habang nag aaral upang aralin agad matutunan,"[sub: ngayong > on] ikaw kung [mis: tawagin > tawangin] ay isang iskul boy huwag maglaro habang nag aaral upang [ins: mag] a-a-aralin 
+agad matutunan",3,fil,
+data/std006_g3_fil_chunk_20.wav,▶ PLAY AUDIO,,,ama ang ama ay haligi ng ating tahanansa buong mag anak siyang bumubuhay ang ama,"[pause] ama ang ama ay [ins: mahilig] [ins: maligi] haligi ng ating tahanan sa buong mag anak siyang bumubuhay ang [sub: ama > mga] 
+[ins: ay] [ins: ang]",3,fil,
+data/std006_g3_fil_chunk_21.wav,▶ PLAY AUDIO,,,ama at ina lahing magkatuwang sa pag aalaga sa anak na mahal,ama at ina laging [ins: ang] [mis: magkatuwang > magkatawang] sa pag aalaga sa anak na mahal,3,fil,
+data/std007_g3_en_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"My Friend.Toni is my friend. We are playmates. We like to ride our bikes. We also play hide and seek. It is
+fun to play with my friend. Red Ball on the Floor. The ball is on the floor.","my friend toni is [ins: is] my friend we are [mis: playmates > playmetes] we like to [mis: ride > rid] our [mis: bikes > bike bikes] we
+ [sub: also > all] play [mis: hide > hid] [mis: and > end] seek [ins: end] it is fun to play with my [sub: friend > friends] red ball 
+[mis: on > wan] [om_the] [om_floor] the ball is [mis: on > wan] the [om_floor]",3,en,
+data/std007_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,floor. It is a red ball. It is a rubber ball. The baby looks at the ball. The cat looks at the ball. Fire. The house is on fire.,[unintelligible],3,en,
+data/std007_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,fire. Flame come out of the windows. A fire truck arrives at the house. ,[unintelligible],3,en,
+data/std007_g3_en_chunk_04.wav,▶ PLAY AUDIO,,,"a Candy Bar. He picks up the candy bar. He reads the label. The label says Baby Ruth. He unwraps the candy bar.
+He throws the wrapper into the trashcan.",[unintelligible],3,en,
+data/std007_g3_en_chunk_05.wav,▶ PLAY AUDIO,,,"the candy bar again. It is delicious. He loves candy bars. Cookie on the Floor. She takes a cookie out of the package.
+She drops the cookie. It falls on the floor. The cookie breaks.",[unintelligible],3,en,
+data/std007_g3_en_chunk_06.wav,▶ PLAY AUDIO,,,"It breaks into four pieces. Four pieces are on the floor. She picks up the pieces. Sammy the Singing Sparrow.
+Sammy was a ",[unintelligible],3,en,
+data/std007_g3_en_chunk_07.wav,▶ PLAY AUDIO,,,"was too afraid to perform in front of others.One day, a storm damaged the nest of some baby birds,and they wouldn't 
+stop crying  ",[unintelligible],3,en,
+data/std007_g3_en_chunk_08.wav,▶ PLAY AUDIO,,,"brought joy to everyone who heard him. From then on, Sammy sang proudly, knowing his music could make others 
+happy. A Baby Goes to Sleep. The baby crawls on the floor. It stops. Then it",[unintelligible],3,en,
+data/std007_g3_en_chunk_09.wav,▶ PLAY AUDIO,,,"Then it crawls some more. Then it stops again. Mama looks at the baby. She picks up the baby. She carries the 
+baby to the crib. She puts the baby on the crib. She puts a blanket on the baby. The baby falls asleep.","then it [mis: crawls > craws] some more then it stops again mama [mis: looks > look] [om_at] the baby [om_she] [om_picks] up the baby 
+[om_she] [sub: carries > cries] the baby to the crib [om_she] [om_puts] [om_the] [om_baby] [om_on] [om_the] [om_crib] she [om_puts]
+[om_a] [om_blanket] on the baby the baby [sub: falls > flies] asleep",3,en,
+data/std007_g3_fil_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,pupitre ang tawag sa akin ng nakararami ay desk na sulatan o kayay,pupitre ang tawag sa akin ng [ins: ma] nakararami ay [mis: desk > deks] na sulatan o [mis: kayay > kaya],3,fil,
+data/std007_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,pupitre batang nag aaral ako ang upuan kami ay marami sa silid aralan,[mis: pupitre > papitre] batang nag aaral ako ang upuan kami ay marami sa silid [mis: aralan > ara],3,fil,
+data/std007_g3_fil_chunk_03.wav,▶ PLAY AUDIO,,,aralan ina iisa ang ina sa balat ng lupa siya ang sa atin ay nag aalaga,aralan [pause] ina [mis: iisa > lisa] ang ina sa balat ng lupa siya ang sa atin ay [mis: nag aalaga > nag],3,fil,
+data/std007_g3_fil_chunk_04.wav,▶ PLAY AUDIO,,,nag aalaga mahalin ang ina dakila sa lahat ating kaibigang pinakamatapat,nag aalaga mahalin ang ina dakila [om_sa] [ins: ang] lahat ating [mis: kaibigang > kaibigan] pinakamatapat,3,fil,
+data/std007_g3_fil_chunk_05.wav,▶ PLAY AUDIO,,,ang bahay ni ella maganda ang bahay ni ella dalawa ang palapag,[pause] ang bahay ni ella maganda ang bahay ni ella dalawa ang [mis: palapag > pala],3,fil,
+data/std007_g3_fil_chunk_06.wav,▶ PLAY AUDIO,,,palapag ng bahay niya berde ang kulay ng bahay pula ang pinta ng bubong maganda ang bahay ni ella,palapag ng bahay niya berde ang kulay ng bahay pula ang pinta ng bubong maganda ang bahay ni ella,3,fil,
+data/std007_g3_fil_chunk_07.wav,▶ PLAY AUDIO,,,lapis akoy isang lapis dulo koy matulis naiguguhit ko,[pause] lapis akoy isang lapis dulo koy [ins: mata] [ins: ay] matulis naiguguhit ko,3,fil,
+data/std007_g3_fil_chunk_08.wav,▶ PLAY AUDIO,,,ang bawat maisip nabubura ko rin ang bawat sulatin akoy baligtarin ulo koy gamitin,ang bawat maisip nabubura ko rin ang bawat sulatin akoy baligtarin ulo koy gamitin,3,fil,
+data/std007_g3_fil_chunk_09.wav,▶ PLAY AUDIO,,,bandila tatlo ang bituin na lagi kong taglay tatlo rin ang kulay pula,[pause] bandila tatlo ang bituin na lagi kong taglay tatlo rina ang kulay [mis: pula > pul],3,fil,
+data/std007_g3_fil_chunk_10.wav,▶ PLAY AUDIO,,,pula puti bughaw at may taglay parin akong isang araw ako ang bandila ng bayan,[mis: pula > la] puti bughaw  at ma-may taglay parin akong isang araw ako ang bandila ng bayan,3,fil,
+data/std007_g3_fil_chunk_11.wav,▶ PLAY AUDIO,,,kung mahal ama ang ama ay haligi ng tahanan sa buong mag anak siyang,kung mahal [pause] ama ang ama ay haligi ng ating tahanan sa buong mag anak [mis: siyang > siya],3,fil,
+data/std007_g3_fil_chunk_12.wav,▶ PLAY AUDIO,,,siyang bumubuhay ang ama at ina laging magkatuwang sa pag aalaga sa anak na mahal,[sub: siyang > a ] bumubuhay ang ama at ina laging magkatuwang sa pag aalaga sa anak na mahal [pause],3,fil,
+data/std007_g3_fil_chunk_13.wav,▶ PLAY AUDIO,,,ang kalabasa isang kalabasa ang dala ni sisa  pinaluto niya ito kay lisa malaki ang kalabasa,ang kalabasa isang kalabasa ang dala ni [mis: sisa > sita] pinaluto niya to kay lisa malaki ang [mis: kalabasa > kalaba],3,fil,
+data/std007_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,,kalabsa masarap ang kalabasa mabuti ito para sa mata tahanan sari saring anyo ang mga,[mis: kalabasa > basa] masarap ang kalabasa mabuti ito para sa mata [pause]  tahanan sari saring anyo ang mga ,3,fil,
+data/std007_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,tahanan may malaki may maliit lamang dito nakatira aking amat ina pati na rin aako,tahanan may malaki may maliit lamang dito nakatira  aking amat [ins: na] [ins: ay] ina pati na rin ako,3,fil,
+data/std007_g3_fil_chunk_16.wav,▶ PLAY AUDIO,,,si atet si kuya mesa ang mesa ng guro ay matatagpuan nasa isang,si [mis: atet > ate] [ins: at] [om_si] kuya [pause] mesa ang mesa [sub: ng > ay] guro ay matatagpuan nasa isang,3,fil,
+data/std007_g3_fil_chunk_17.wav,▶ PLAY AUDIO,,,panig ng silid aralan ang gamit ng guro dito nakalagay ito ang patungan ito ang sulatan,[mis: panig > patnig]ng silid aralan ang gamit ng guro dito nakalagay ito anf patungan ito ang sulatan ,3,fil,
+data/std007_g3_fil_chunk_18.wav,▶ PLAY AUDIO,,,"iskul boy ikaw ay lalaki alam ko na ngayon ikaw kung tawagin ay isang iskul boy huwag  maglaro habang nag aaral 
+upang","iskul boy ikaw [sub: ay > ang] lalaki alam ko na ngayon ikaw kung tawagin ay isang iskul boy huwag maglaro habang nag aaral 
+[mis: upang > u]",3,fil,
+data/std007_g3_fil_chunk_19.wav,▶ PLAY AUDIO,,,upang aralin agad matutunan silid aralan sa unang araw mo sayong paaralan,upang ang aralin agad [ins: ay] matutunan [pause] silid aralan sa unang araw mo sayong [mis: paaralan > pag aa],3,fil,
+data/std007_g3_fil_chunk_20.wav,▶ PLAY AUDIO,,,paaralan akong makikita kitay hinihintay ako kong tawagin ay silid aralan babaet lalaki,"[sub: paaralan > aaral] akoy makikita [mis: kitay > kita] [mis: hinihintay >hinahintay ako kung tawagin ay silid aralan [mis: babaet > babae] 
+[mis: lalaki > lalak]",3,fil,
+data/std007_g3_fil_chunk_21.wav,▶ PLAY AUDIO,,,lalaki dito nag aaral ang kubo ni kiko ito ay kubo ni kiko malaki ang kubo may buko,[mis: lalaki > laki] dito nag aaral [pause] ang kubo ni kiko ito [sub: ay > ang] kubo ni kiko malaki ang kubo may [ins: ku] buko,3,fil,
+data/std007_g3_fil_chunk_22.wav,▶ PLAY AUDIO,,,buko at biko sa loob ng kubo may baka at piko sa tabi ng kubo simbahan marami,[mis: buko > ko] at biko sa loob ng kubo may baka at piko sa tabi ng kubo [pause] simbahahan marami,3,fil,
+data/std007_g3_fil_chunk_23.wav,▶ PLAY AUDIO,,,sa ating bayan lungsod o bayan ang may tsapel o kayay simbahan dito dumadalaw dito nagdarasal,"sa ating baryo lungsod o bayan ang [sub: may > mga] [mis: tsapel > tachpel] o [mis: kayay > kaya] simbahan dito dumadalaw dito 
+[mis: nagdarasal > nagdara]",3,fil,
+data/std007_g3_fil_chunk_24.wav,▶ PLAY AUDIO,,,nagdarasal ang nais tumawag sa poong maykapal,[mis: nagdarasal > darasal] ang nais tumawag sa poong [mis: maykapal > maykapa],3,fil,
+data/std008_g3_fil_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,Iskul Boy. Ikaw ay lalaki,"[pause] [mis: iskul > las kal] boy [pause] [mis: ikaw > lakaw] ay lalaki [ins: ni] [ins: hu] [ins: ki]",3,fil,
+data/std008_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,alam ko na ngayon. Ikaw kung tawagin. ,"alam [mis: ko > ka] [ins: ay] [ins: ko] [ins: ay] [ins:ka] [ins: ko] [ins: ay] [ins:ka] na
+[mis: ngayon > nang] [ins: ay] [ins: on] [mis: ikaw > laray] [ins: ay] [ins: laraw] [mis: kung > ro nang] tawagin",3,fil,
+data/std008_g3_fil_chunk_03.wav,▶ PLAY AUDIO,,,"ay isang iskul boy. Huwag maglaro, habang nag-aaral. ",ay [mis: isang > isa ng] iskul boy [ins: so] huwag maglaro habang nag [om_aaral],3,fil,
+data/std008_g3_fil_chunk_04.wav,▶ PLAY AUDIO,,,"habang nag-aaral. Upang ang aralin, agad matutunan.",[mis: habang > bang] nag-aaral upang [mis: ang > na ng] [mis: aralin > ar alin ay alin] [mis: agad > a ad] ma [om_tutunan],3,fil,
+data/std008_g3_fil_chunk_05.wav,▶ PLAY AUDIO,,,"matutunan. Mesa. Ang mesa ng guro, ay matatagpuan","[mis: matutunan > tutunan] [pause] [ins: ang] [ins: aw] [mis: mesa > misa] ang [mis: mesa > misa] [mis: ng > ang] [ins: ay] [ins: ang] guro ay
+ma [om_tatagpuan]",3,fil,
+data/std008_g3_fil_chunk_06.wav,▶ PLAY AUDIO,,,"matatagpuan. Nasa isang panig, ng silid-aralan.",[mis: matatagpuan > tatag puan] nasa [mis: isang > is sa ng] [mis: panig > pa nag] ng silid aralan,3,fil,
+data/std008_g3_fil_chunk_07.wav,▶ PLAY AUDIO,,,"Ang gamit ng guro, dito nakalagay. Ito ang patungan.",[sub: ang > ng] gamit ng guro dito [mis: nakalagay > nakalag-ay] [mis: ito > lato] [sub: ang > ng] [ins: ta] [om_patungan],3,fil,
+data/std008_g3_fil_chunk_08.wav,▶ PLAY AUDIO,,,"patungan, ito ang sulatan. Tahanan. Sari-saring anyo",[mis: patungan > tu [pause] gan] ito [mis: ang > an ang] sulatan tahanan [mis: sari-saring > sari sa] [om_anyo],3,fil,
+data/std008_g3_fil_chunk_09.wav,▶ PLAY AUDIO,,,"anyo, ang mga tahanan. May malaki, may maliit",[ins: penang] anyo [sub: ang > ng] mga [ins: tao] [ins: ay] [mis: tahanan > tanan] may [mis: malaki > nalaki] [mis: may > nay] [ins: ma] [om_maliit],3,fil,
+data/std008_g3_fil_chunk_10.wav,▶ PLAY AUDIO,,,maliit lamang. Dito nakatira aking,maliit [ins: na] [ins: ay] [mis: lamang > lama ng] [mis: dito > dato] nakatira [ins: aka]  [ins: ay] [mis: aking > aki ng],3,fil,
+data/std008_g3_fil_chunk_11.wav,▶ PLAY AUDIO,,,ama't ina. Pati na rin ako.,[mis: amat > ama amat] [mis: ina > in ay ina] pati na rin [mis: ako > aro ay ko ko],3,fil,
+data/std008_g3_fil_chunk_12.wav,▶ PLAY AUDIO,,,si ate't si kuya. Ang Kalabasa. Isang kalabasa,si [mis: atet > ate] si kuya ang kalabasa [ins: lasan] [ins: ay] [ins: lasang] isang ka [om_labasa],3,fil,
+data/std008_g3_fil_chunk_13.wav,▶ PLAY AUDIO,,,kalabasa ang dala ni Sisa. Pinaluto niya ito,[mis: kalabasa > labasa] ang [mis: dala > dali ay la] ni sisa pinaluto niya ito,3,fil,
+data/std008_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,,kay Lisa. Malaki ang kalabasa. Masarap ang kalabasa. Mabuti,kay lisa malaki ang kalabasa masarap ang kalabasa mabuti,3,fil,
+data/std008_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,ito para sa mata. Ama,ito [mis: para > tapar] sa mata [pause] [mis: ama > ima ay a],3,fil,
+data/std008_g3_fil_chunk_16.wav,▶ PLAY AUDIO,,,"Ang ama ay haligi, ng ating tahanan. Sa buong",ang ama ay [mis: haligi > halagi] ng [mis: ating > ati ng] tahanan sa [mis: buong > buon],3,fil,
+data/std008_g3_fil_chunk_17.wav,▶ PLAY AUDIO,,,"buong mag-anak, siyang bumubuhay.",[mis: buong > ng ay bong ong] [mis: mag-anak > mga ay mag-anar ay mag-anak] [mis: siyang > siya ng] [mis: bumubuhay > bumubu],3,fil,
+data/std008_g3_fil_chunk_18.wav,▶ PLAY AUDIO,,,"hay. Ang ama at ina, laging magkatuwang",[mis: hay > hey] ang ama at ina [ins: ay] [mis: laging > lagi ng ay laging] [mis: magkatuwang > magkarton],3,fil,
+data/std008_g3_fil_chunk_19.wav,▶ PLAY AUDIO,,,"magkatuwang sa pag-aalaga, sa anak na mahal",[mis: magkatuwang > ay karto wa ng] sa [mis: pag-aalaga > pag-aaral ga] sa anak na [mis: mahal > mahil],3,fil,
+data/std008_g3_fil_chunk_20.wav,▶ PLAY AUDIO,,,Bandila. Tatlo ang bituin,bandila [mis: tatlo > tad ay tad talu] [ins: ng] [ins: ay] [ins: gang] [ins: ay] [ins: ng] [ins: ditu] [om_ang] [om_bandila],3,fil,
+data/std008_g3_fil_chunk_21.wav,▶ PLAY AUDIO,,,"bituin na lagi kong taglay, Tatlo rin ang kulay",[mis: bituin > tuin] na lagi [mis: kong > ko ng] [mis: taglay > tagla lay] tatlo rin ang [mis: kulay > rulay],3,fil,
+data/std008_g3_fil_chunk_22.wav,▶ PLAY AUDIO,,,"kulay, pula, puti, bughaw. At may",[ins: ay] kulay [mis: pula > pala] puti [ins: ay] [ins: pati] [mis: bughaw > ba baghaw] at [mis: may > ma],3,fil,
+data/std008_g3_fil_chunk_23.wav,▶ PLAY AUDIO,,,"may taglay parin, akong isang araw",may taglay parin akong [mis: isang > isa] [mis: araw > ag ay ari ay],3,fil,
+data/std008_g3_fil_chunk_24.wav,▶ PLAY AUDIO,,,Ako ang bandila ng bayan kong mahal.,[mis: ako > ar aw arko] ang [mis: bandila > bandil la] [mis: ng > nag] [mis: bayan > bay ay nag yan] [om_kong] [om_mahal],3,fil,
+data/std008_g3_fil_chunk_25.wav,▶ PLAY AUDIO,,,Ng bayan kong mahal. Ang tawag sa akin ng nakararami ,[mis: ng > ko ng] [om_bayan] [om_kong] mahal ang tawag sa akin ng [mis: nakararami > raka ar ar],3,fil,
+data/std009_g3_en_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,My friend  toni is my friend we,"[mis: my > moy] [sub: friend > furi] [ins: furo] [ins: an] [ins: ay] [mis: toni > to] [ins: ay] [ins: ta] [ins: no] [sub:is > osh] [mis: my > moy]
+[ins: for] [ins: ay] [sub: friend > furo] [ins: e] [ins: ay] [ins: on] [ins: ond] we",3,en,
+data/std009_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,are playmates we like to ride our bikes we also play hide and,"are [ins: ay] [ins: ari] [mis: playmates > palaymates] [mis: we > wo] [ins: le] [ins: ay] [mis: like > loke] [sub: to > ta] [sub: ride > ro] [ins: o] 
+[sub: our > are] [sub: bikes > do] [ins: this] [mis: we > wa] [mis: also > a-also] [sub: play > supply] [sub: hide > hodi] and",3,en,
+data/std009_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,seek it is fun to play with my friend,"[mis: seek > se-ek] [sub: it > ot] [sub: is > os] [ins: fast] [ins: ay] fun to [mis: play > flay] [sub: with > wot] my [mis: friend > fa] [ins: diin] 
+[ins: na] [ins: ta] [ins: faro] [ins: and]",3,en,
+data/std009_g3_fil_chunk_01.wav,▶ PLAY AUDIO,,,simbahan marami sa ating baryo lungsod o ,[ins: go] si-simbahan [mis: marami > mami] [sub: sa > saan] [om_ating] [ins: ma] [sub: baryo > bayo] [mis: lungsod > lungsog] o,3,fil,
+data/std009_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,bayan ang may tsapel o kayay simabhan dito dumadalaw ,"[sub: bayan > baynon] ang [om_may] [ins: ba] [mis: tsapel > sapel] o [sub: kayay > ralya] [sub: simabahan > mabahat] dito 
+[sub: dumadalaw > dumadalawa]",3,fil,
+data/std009_g3_fil_chunk_03.wav,▶ PLAY AUDIO,,,dito nagdarasal ang nais tumawag sa poong ,dito [mis: nagdarasal > nagbarasal]ang  [mis: nais > is] [mis: tumawag > tumuwag sa poong,3,fil,
+data/std009_g3_fil_chunk_04.wav,▶ PLAY AUDIO,,,maykapal ang kubo ni kiko ,[mis: maykapal > magrapal] [pause] [sub: kubo > bol] ni [mis: kiko > iko],3,fil,
+data/std009_g3_fil_chunk_05.wav,▶ PLAY AUDIO,,,ito ay kubo ni kiko malaki ang kubo ,[sub: ito > at] [mis: ay > ya] kubo ni [ins: ku] malaki ang kubo,3,fil,
+data/std009_g3_fil_chunk_06.wav,▶ PLAY AUDIO,,,may buko at biko sa loob ng kubo may baka ,may buko at biko [sub: sa > si] [sub: loob > lobo] ng kubo may baka,3,fil,
+data/std009_g3_fil_chunk_07.wav,▶ PLAY AUDIO,,,baka at piko sa tabi ng kubo,baka at piko sa tabi ng kubo [pause],3,fil,
+data/std009_g3_fil_chunk_08.wav,▶ PLAY AUDIO,,,silid aralan sa unang araw mo sayong paaralan,[sub: silid > skul] [mis: aralan > a-aral an] sa [sub: unang > ura] [om_araw] mo [mis: sayong > sayang] [sub: paaralan > para],3,fil,
+data/std009_g3_fil_chunk_09.wav,▶ PLAY AUDIO,,,paaralan akoy makikita kitay hinihintay ako,[mis: paaralan > lan] [mis: akoy > aroya] [mis: makikita > ta] [mis: kitay > ritay] [mis: hinihintay > hinihitar] [mis: ako > aro] [ins: arong],3,fil,
+data/std009_g3_fil_chunk_10.wav,▶ PLAY AUDIO,,,ako kung tawagin ay silid aralan babaet lalaki,[mis: ako > arong] [om_kung] tawagin ay-ay silid aralan [sub: babaet > babekti] [mis: lalaki > lala],3,fil,
+data/std009_g3_fil_chunk_11.wav,▶ PLAY AUDIO,,,lalaki dito nag aaral pupitre,[sub: lalaki > ari] dito [ins: ang] nag [sub: aaral > aral] [pause] [sub: pupitre > bolter],3,fil,
+data/std009_g3_fil_chunk_12.wav,▶ PLAY AUDIO,,,ang tawag sa akin ng nakararami ay desk ,ang [mis: tawag > tawal] sa [mis: akin > arin] mg [mis: nakararami > narararami] ay [mis: desk > de-derk] na,3,fil,
+data/std009_g3_fil_chunk_13.wav,▶ PLAY AUDIO,,,sulatan o kayay pupitre batang nag aaral,[mis: sulatan > sulogtan] o [mis: kayay > kaya] [mis: pupitre > bapitre] [mis: batang > batong] nag aaral,3,fil,
+data/std009_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,,ako ang upuan kami ay marami sa silid aralan,"ako [sub: ang > ng] [mis: upuan > ubuan] [om_kami] [om_ay] [om_marami] [om_sa] [om_silid] [om_aralan] [ins: aro [ins: ng] [ins: upuan]
+[ins: koya]",3,fil,
+data/std009_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,marami sa silid aralan,[mis: marami > maru] [ins: ay] [ins: ra] [ins: ma] [ins: ay] sa [mis: silid > lilid] aralan,3,fil,
+data/std009_g3_fil_chunk_16.wav,▶ PLAY AUDIO,,,ina iisa ang ina sa balat ng lupa,[sub: ina > lina] [ins: lina] [ins: si] [ins: li] [ins: si] [ins: sisa] ang ina sa [mis: balat > bal at] ng [ins: lobo] ng lupa,3,fil,
+data/std009_g3_fil_chunk_17.wav,▶ PLAY AUDIO,,,siya ang sa atin ay nag aalaga mahalin ang ina dakila,siya ang sa atin ay [mis: nag aalaga > nag alaga] mahalin ang ina [mis: dakila > da],3,fil,
+data/std009_g3_fil_chunk_18.wav,▶ PLAY AUDIO,,,dakila sa lahat ating kaibigang ,[ins: la] dakila sa-sa [mis: lahat > hat] ating [mis: kaibigang > ra rak big biga],3,fil,
+data/std009_g3_fil_chunk_19.wav,▶ PLAY AUDIO,,,kaibigang pinakamatapat ang bahay ni ella maganda,[mis: kaibigang > gan] [mis: pinakamatapat > pinarakamatapat] ang [mis: bahay > balay] ni [mis: ella > el] [mis: maganda > mag an],3,fil,
+data/std009_g3_fil_chunk_20.wav,▶ PLAY AUDIO,,,maganda ang bahay ni ella dalawa ang palapag ng bahay niya,[mis: maganda > da] ang bahay ni ella dalawa ang [ins: ba] [ins: ay] palapag  ,3,fil,
+data/std009_g3_fil_chunk_21.wav,▶ PLAY AUDIO,,,niya berde ang kulay ng bahay pula ang pinta ng bubong,[mis: niya > ya] [mis: berde > berte] [sub: ang > ng] kulay ng bahay pula ang [mis: pinta > pita] ng [mis: bubong > bu],3,fil,
+data/std009_g3_fil_chunk_22.wav,▶ PLAY AUDIO,,,bubong maganda ang bahay ni ella lapis akoy,"bubong [sub: maganda > bang an] [sub: ang > ng] ba-bahay [om_ni] [mis: ella > elli] [pause] lapis [pause] [ins: ang] [mis: akoy > ro] 
+[ins: ang]",3,fil,
+data/std009_g3_fil_chunk_23.wav,▶ PLAY AUDIO,,,isang lapis dulo koy matulis naiguguhit,[ins: ang] [ins: kulay] isang lapis dulo [mis: koy > koya] matulis [mis: naiguguhit > na-nai],3,fil,
+data/std009_g3_fil_chunk_24.wav,▶ PLAY AUDIO,,,naiguguhit ko ang bawat maisip nabubura ko,[mis: naiguguhit > guguhit] ko ang [mis: bawat > bowat] ma-maisip [mis: nabubura > nabubu-nabuburo],3,fil,
+data/std009_g3_fil_chunk_25.wav,▶ PLAY AUDIO,,,rin ang bawat sulatin akoy baligtarin,rin [om_ang] [ins: o] [ins: bo] [pause] [mis: bawat > bat ay wat] sulatin [mis: akoy > akoya] [mis: baligtarin > balik lig],3,fil,
+data/std009_g3_fil_chunk_26.wav,▶ PLAY AUDIO,Ellen,,baligtarin ulo ko'y gamitin. Badila,[mis: baligtarin > tarin] ulo [sub: koy > kuya] gamitin [mis: bandila > babandala],3,fil,
+data/std009_g3_fil_chunk_27.wav,▶ PLAY AUDIO,,,"Tatlo ang bituin, na lagi kong taglay. Tatlo rin",tatlo ang bituin na lagi kong [mis: taglay > tagralay] [mis: tatlo > talo] rin,3,fil,
+data/std009_g3_fil_chunk_28.wav,▶ PLAY AUDIO,,,"ang kulay pula, puti, bughaw. At",[sub: ang > ng] [mis: kulay > rulong] pula [mis: puti > puli] [ins: ulit] [mis: bughaw > dughaw] at-at,3,fil,
+data/std009_g3_fil_chunk_29.wav,▶ PLAY AUDIO,,,"may taglay parin, akong ",may [ins: dug] [mis: taglay > tuglay] [ins: bu] pa rin [mis: akong > ako-ako] [ins: e],3,fil,
+data/std009_g3_fil_chunk_30.wav,▶ PLAY AUDIO,,,isang araw ako ang bandila ng bayan kong,isang araw [sub: ako > akoy] ang ba-bandila [sub: ng > nag] [mis: bayan > bayon] [mis: kong > rong] [ins: ay],3,fil,
+data/std009_g3_fil_chunk_31.wav,▶ PLAY AUDIO,,,kong mahal. Ama ang ama ay haligi ng ating,kong [mis: mahal > bahal] ama ang ama ay haligi ng [mis: ating > alin] ,3,fil,
+data/std009_g3_fil_chunk_32.wav,▶ PLAY AUDIO,,,tahanan. Sa buong ,[mis: tahanan > tuhonan] [ins: ay] sa [mis: buong > burong] [ins: bag] [ins: ay],3,fil,
+data/std009_g3_fil_chunk_33.wav,▶ PLAY AUDIO,,,"mag-anak, siyang bumubuhay. Ang ama",[mis: mag anak > mag ana] siyang [mis: bumubuhay > bumubuya] ang ama,3,fil,
+data/std009_g3_fil_chunk_34.wav,▶ PLAY AUDIO,,,at ina laging magkatuwang sa  pag-aalaga,at ina [mis: laging > lagay] magkatuwang sa pag aalaga,3,fil,
+data/std009_g3_fil_chunk_35.wav,▶ PLAY AUDIO,,,sa anak na mahal. Ang kalabasa isang,sa [mis: anak > atak] na mahal ang [mis: kalabasa > kalabas] [mis: isang > sang],3,fil,
+data/std009_g3_fil_chunk_36.wav,▶ PLAY AUDIO,,,kalabasa ang dala ni Sisa.,kalabasa ang [mis: dala > bala] ni [mis: sisa > siya] [ins: ay],3,fil,
+data/std009_g3_fil_chunk_37.wav,▶ PLAY AUDIO,,,Pinaluto niya ito kay Lisa. Malaki ang kalabasa,[mis: pinaluto > pinalulupinaluto] niya ito kay Lisa malaki ang [mis: kalabasa >kalabas],3,fil,
+data/std009_g3_fil_chunk_38.wav,▶ PLAY AUDIO,,,kalabasa masarap ang kalabasa. Mabuti,kalabasa masarap ang ka-kalabasa [mis: mabuti > mabu],3,fil,
+data/std009_g3_fil_chunk_39.wav,▶ PLAY AUDIO,,,Mabuti ito sa mata. Iskul boy,mabuti [ins: sa] ito para sa mata [mis: iskul > isaku] boy,3,fil,
+data/std009_g3_fil_chunk_40.wav,▶ PLAY AUDIO,,,"Ikaw ay lalaki, alam ko na",[om_ikaw] ay [ins: ku] [ins: ay] [mis: lalaki > lalari] [mis: alam > alamana] ko na,3,fil,
+data/std009_g3_fil_chunk_41.wav,▶ PLAY AUDIO,,,ngayon. Ikaw kung tawagin,[sub: ngayon > nag-ayos] ikaw kung tawagin [ins: at],3,fil,
+data/std009_g3_fil_chunk_42.wav,▶ PLAY AUDIO,,,"ay isang iskul boy. Huwag maglaro,",ay-ay isang [mis: iskul > isrul] boy huwag maglaro,3,fil,
+data/std009_g3_fil_chunk_43.wav,▶ PLAY AUDIO,,,habang nag-aaral. Upang ang aralin agad matutunan.,habang nag aaral upang ang aralin [mis: agad > agan] matutunan,3,fil,
+data/std009_g3_fil_chunk_44.wav,▶ PLAY AUDIO,,,waay na duwa na lang. Tahanan sari-saring anyo ang mga,waay na ay duwa na lang tahanan  sari-saring [mis: anyo > anya] ang [mis: mga > mag],3,fil,
+data/std009_g3_fil_chunk_45.wav,▶ PLAY AUDIO,,,"tahanan. May malaki, may maliit lamang.",tahanan may malaki may maliit lamang,3,fil,
+data/std009_g3_fil_chunk_46.wav,▶ PLAY AUDIO,,,"Dito nakatira, aking ama't ina.",dito nakatira [mis: aking > anag] ama [ins: ay] [ins: ito] [ins: ay] ina,3,fil,
+data/std009_g3_fil_chunk_47.wav,▶ PLAY AUDIO,,,"Pati na rin ako, si ate't si kuya.",[sub: pati > pait] na rin ako si atet si kuya,3,fil,
+data/std009_g3_fil_chunk_48.wav,▶ PLAY AUDIO,,,Mesa ang mesa ng guro ay matatagpuan,mesa ang mesa [sub: ng > ang] guro ay [mis: matatagpuan > matatag,3,fil,
+data/std009_g3_fil_chunk_49.wav,▶ PLAY AUDIO,,,matatagpuan nasa isang panig ng silid-aralan.,[mis: matatagpuan > puan] nasa isang [mis: panig > paning] ng silid aralan,3,fil,
+data/std009_g3_fil_chunk_50.wav,▶ PLAY AUDIO,,,"Ang gamit ng guro, dito nakalagay. Ito ang",ang gamit ng guro dito nakalagay ito ang,3,fil,
+data/std009_g3_fil_chunk_51.wav,▶ PLAY AUDIO,,,patungan ito ang sulatan.,patungan ito ang sulatan.,3,fil,
+data/std010_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"Ang Aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, 
+ibinubulong niya sa sarili na kailangan niyang makakita ng isang","ang aso sa [mis: lungga > lunga] may isang asong gutom na gutom na [mis: naglalakad > naglala naglalakad] sa kalsada 
+habang naglalakad ibinubulong niya [sub: sa > ang] sarili na kailangan niyang makakita ng isang",4,fil,
+data/std010_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"lunggang puno ng pagkain. Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok. Inubos ang 
+lahat ng pagkain sa loob ng lungga.","[mis: lunggang > lungan] puno ng pagkain nang [mis: makakita > mgakakita] [mis: siya > siyang] [ins: na] [om_ng] [mis: lungga > lunga]
+sa dulo [sub: ng > at] kalsada agad siyang pumasok inubos ang lahat ng pagkain sa loob ng [mis: lungga > lunga] [ins: sa]",4,fil,fil
+data/std010_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Sa kanyang kabusugan, halos pumutok ang malaki niyang tiyan. Nang lalabas na lamang siya, napansin niyang 
+hindi na siya magkasya.","sa kanyang [sub: kabusugan > kabukasan] halos [ins: ma] pumutok ang malaki niyang tiyan nang lalabas na lamang siya napansin
+niyang hindi na siya [mis: magkasya > makas]",4,fil,
+data/std010_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"magkasya sa labasan. Sumigaw siya upang humingi ng tulong. Dumating ang isa pang aso ""Hintayin mo na lang
+umimpis ang tiyan mo"".","[mis: magkasya > makasya] sa labasan sumigaw siya upang humingi ng tulong dumating ang [om_isa] [om_pang] aso hintayin mo na 
+lang [mis: umimpis > umaumimpis] ang tiyan mo",4,fil,
+data/std010_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Si Muning! Muning! Muning! Hanap ng hanap si Susan kay Muning. Dala ni Susan ang lalagyan ng pagkain ni
+Muning. May laman","si muning muning muning hanap ng hanap [mis: si > sim] susan kay muning dala [sub: ni > si] susan ang lalagyan ng pagkain ni ni 
+muning may [om_laman]",4,fil,
+data/std010_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,"May laman na ang lalagyan, pero wala si Muning. Wala siya sa kusina. Wala rin siya sa silid. Nasaan kaya si Muning?","[ins: lang] [ins: alam] may laman na ang [mis: lalagyan > lagyan] pero wala si muning wala siya sa kusina wala rin siya sa silid nasaan
+kaya si muning",4,fil,
+data/std010_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,"Bumaba ng bahay si Susan. Hinanap niya kung naroon si Muning. Ikot na siya nang ikot, pero hindi pa rin niya
+nakita. Baka lumabas ito ng bahay. Ngiyaw! Ngiyaw!","bumaba ng bahay si [sub: susan > muning] hinanap niya kung naroon si muning ikot na siya nang ikot pero hindi pa rin niya nakita baka
+lumabas ito ng bahay ngiyaw ngiyaw",4,fil,
+data/std010_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"Hayun si Muning! Ngiyaw siya ng ngiyaw. Nasa loob siya ng kahon. May mga kasama si Muning sa loob ng kahon.
+Nakita ni Susan ang kasama ni Muning. Mga kuting ","[mis: hayun > yun] si muning ngiyaw siya ng ngiyaw nasa loob siya ng kahon may mga kasama si muning sa loob ng kahon nakita
+[ins: si] ni susan ang kasama ni muning mga [mis: kuting > ku]",4,fil,
+data/std010_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,"Mga kuting ang kasama ni Muning sa kahon! May puti, itim at magkahalong puti at itim na kulay ng kuting.
+Tuwang-tuwa si Susan!","[mis: mga kuting > ting] ang kasama ni muning sa kahon may puti itim at [mis: magkahalong > mgakahalong] puti at itim
+[sub: na > ng] kulay [ins: at] ng kuting tuwang-tuwa si susan",4,fil,
+data/std010_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Si Brownie. Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na
+malaking manok sa aming bakuran. Kaagad niya itong tinahulan.","si brownie si brownie ay aking [mis: alagang > alaga] aso ang aking aso ay masamang magalit [ins: si] mi-minsan [ins: at] ay may
+pumasok na malaking manok sa [ins: aking] aming bakuran kaagad [mis: niya > niyang] itong tinahulan",4,fil,
+data/std010_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,"Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito. Nagulat ang manok at tumakbo ito
+nang mabilis palabas ng bakuran.","kung hindi [sub: lamang > alam] siya nakatali nang mahigpit [mis: malamang > mamalamang] na [mis: habulin > mabulan]
+[sub: niya > nito] ito [ins: laang] nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran",4,fil,
+data/std010_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,Kagabi ay hindi ko naitali si Brownie. Panay ang ungol niya. Maya-maya ay may tinahulan siya nang malakas.,"[mis: kagabi > kagab kagabi] ay hindi ko naitali si brownie [sub: panay > patay] [ins: ang] [mis: ungol > tungol] niya [ins: may]
+maya-maya ay may tinahulan siya nang [mis: malakas > malaka]",4,fil,
+data/std010_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,kas. Biglang lumukso si Brownie sa kanyang tulugan at may hinabol. Dali-dali kong sinilip ang aking alaga.,"kas biglang [mis: lumukso > lulumukso] si brownie sa kanyang [mis: tulugan > tulu tulugan] at may [mis: hinabol > hinabo] [ins: na]
+dali-dali kong sinilip ang aking alaga",4,fil,
+data/std010_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,May napatay siyang daga! Bahagya pa niyang ginalaw ang kanyang buntot nang makita ako. Kaagad kong binitbit sa,"may napatay siyang daga [mis: bahagya > ha mahagya] [sub: pa > na] niyang [sub: ginalaw > ginagawa] ang kanyang buntot nang makita
+ako [ins: a] [ins: a] kaagad kong binitbit sa",4,fil,
+data/std010_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,"buntot ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie. ""Talagang maaasahan ang asong ito,""
+sabi niya.","buntot ang daga at [mis: ipinakita > pinakita] kay tatay [mis: masayang > sayang] hinimas ni tatay si brownie talagang
+[mis: maaasahan > maasahan] ang asong ito sabi niya",4,fil,
+data/std010_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,"Balat ng Saging. ""Lito! Lito!"" Si Mina ang sumisigaw. Kay lakas ng kanyang sigaw. ""Bakit, Ate? Ano iyon?"" Ito naman
+ang tanong ni Lito. Lumapit siya kay Mina. Ayaw niyang sumigaw pa ang kanyang ate. ""Balat ng saging ito, hindi ba?
+Sino ang nagtapon nito?"" Galit","balat ng saging [ins: i] [mis: lito > tito] lito si [mis: mina > mana] ang [mis: sumisigaw > sumigaw] kay lakas ng kanyang sigaw bakit ate ano
+[mis: iyon > yong] ito [sub: naman > laman] ang tanong ni lito lumapit [mis: siya > siyang] kay mina [ins: ay] ayaw niyang
+[mis: sumigaw > gumigaw] [ins: na] pa ang kanyang ate balat ng saging ito hindi ba sino ang nagtapon nito galit",4,fil,
+data/std010_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,"si Mina. Galit siya sa nagtapon ng balat ng saging.""Ako, Ate,"" sagot ni Lito. Mahina ang kanyang sagot. Mahina ang
+kanyang tinig. ""Sabi ko na nga ba. Huwag ka nang magtatapon dito, ha! Sa basurahan ka magtatapon. Hayan ang
+basurahan natin. Hayan, natapakan ko ang balat ng saging. Nadulas ako.""","si mina galit siya [pause] [mis: sa > ta] [om_nagtapon] [om_ng] [om_balat] [om_ng] [om_saging] ako ate sagot ni lito mahina ang
+[mis: kanyang > kayong] sagot mahina ang kanyang tinig sabi ko [mis: na > nay] nga ba [mis: huwag > wag] ka nang
+[mis: magtatapon > magtapon] dito ha sa [mis: basurahan > basura] ka [mis: magtatapon > magtapon] hayan ang
+[mis: basurahan > basura] natin hayan natapakan ko ang balat ng saging nadulas ako",4,fil,
+data/std010_g4_fil_chunk_18.wav,▶ PLAY AUDIO,,,"""E... hindi ko sinasadya, Ate. Talaga, hindi ko sinasadya. Hindi na ako magtatapon ng balat ng saging kahit saan.
+Sa basurahan na ako magtatapon."" ""Mabuti. Mabuti kung gayon,"" sabi ni Mina.","[om_e] [mis: hindi > di] ko sinasadya ate talaga hindi ko sinasadya hindi na ako magtatapon ng balat ng saging kahit saan sa basurahan
+na ako [mis: magtatapon > magtapon] mabuti mabuti kung [sub: gayon > ngayon] sabi ni mina",4,fil,
+data/std011_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Fred,,"Ang Aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong",ang aso sa lungga may isang asong gutom na gutom na naglalakad sa kalsada habang naglalakad [mis: ibinubulong > ibinubu],4,fil,
+data/std011_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain. Nang makakita,"[ins: long] [sub: niya > siya] sa sarili na [mis: kailangan > kailanggan] niyang [sub: makakita > makita] [sub: ng > ang] isang 
+[mis: lunggang > lunggan] puno ng [pause] pagkain nang [mis: makakita > mak]",4,fil,
+data/std012_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Ellen,,Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit minsan ay may,si brownie ay aking alagang aso ang aking aso ay masamang magalit mi-minsan ay may,4,fil,
+data/std012_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,may pumasok na malaking manok sa aming bakuran,may pumasok na [ins: malaki] malaking manok sa [ins: iming] aming bakuran,4,fil,
+data/std012_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,kaagad niya itong tinahulan kung hindi lamang siya nakatali,kaagad niya itong-itong tinahulan kung hi-hindi lamang siya nakatali,4,fil,
+data/std012_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,ng mahigpit malamang na habulin niya ito.,ng [mis: mahigpit > kahihigpin] [ins: ay] [ins: pit] [ins: na] ma-malamang na [mis: habulin > habulan] [ins: ay] [ins: lin] niya ito,4,fil,
+data/std012_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran.,[mis: nagulat > gulat] ang manok at tumak-tumakbo ito [ins: ma] nang mabilis pa-palabas [mis: ng > nga] bakuran ,4,fil,
+data/std012_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,kagabi ay hindi ko naitali si Brownie,[ins: ha] [ins: ba] kagabi ay hindi ko [ins: na] [ins: ay] [ins: ko] naitali si brownie,4,fil,
+data/std012_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,panay ang ungol niya maya-maya ay may tinahulan siya ng malakas biglang,panay ang [ins: ungul] ungol niya maya-maya ay may [ins: ka] [ins: ay] tinahulan siya ng malakas [mis: biglang > bigla],4,fil,
+data/std012_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,biglang lumukso si Brownie sa kanyang tulugan at may hinabol,biglang [ins: lumak] lumukso si brownie sa kanyang tulugan at may hi-hinabol,4,fil,
+data/std012_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,dali-dali kong sinilip ang aking alaga may napatay siyang daga. Bahagya,dali-dali kong sinilip ang aking alaga may [ins: naka] [ins: may] napatay siyang da-daga [ins: sa] bahagya,4,fil,
+data/std012_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,pa niyang ginalaw ang kaniyang buntot ng makita ako,pa niyang ginalaw ang kaniyang buntot ng makita [ins: ko] ako,4,fil,
+data/std012_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,kaagad kong binitbit sa buntot and daga at pinakita kay tatay,kaagad kong [mis: binitbit > binibitbit] sa [ins: bu] [ins: sa] buntot ang daga at pinakita kay tatay,4,fil,
+data/std012_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,"Masayang hinimas ni Tatay si brownie. Talagang maaasahan ang ason ito, sabi niya.",masayang [ins: hinisam] hinimas ni tatay si-si brownie talagang maaasahan ang [mis: asong > aso] ito sa-sabi niya,4,fil,
+data/std013_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad ibinubulong niya sa sarili,"may isang [mis: asong > aso] gutom [mis: na > nat] gutom na nalala-naglalakad sa kalsada habang naglalakad ibinubulo-bulong 
+niya sa sarili",4,fil,
+data/std013_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain. Nang,"[mis: sarili > li] na kailangan [mis: niya > niyang] makakita ng isang [mis: lunggang > lunga-lung-lunggang]  puno ng pagakain 
+[mis: nang > na]",4,fil,
+data/std013_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"makakita siya ng lungga sa dulo ng kalsada, agad siynag pumasok dito. Kumain siya hanggang","[mis: nang > dang] [mis: makakita > makita] siya ng lungga sa dulo ng kalsada agad siyang pumasok dito kuma-kumain siya 
+[mis: hanggang > hang]",4,fil,
+data/std013_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"hanggang mabusog. Pero kahit busog na siya, kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga.",hanggang mabusog pero kahit [om_na] busog na siya kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga,4,fil,
+data/std013_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Sa kanyang kabusugan, halos pumutok ang malaki niyang tiyan. Nang lalabas na lamang siya, napansin niyang 
+hindi","sa kanyang kabusugan halos pumutok ang malaki niyang tiyan nang la-lalabas na lamang siya 
+[mis: napansin > nagpapa-nagpansin] niyang hindi",4,fil,
+data/std013_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,"na siya magkasya sa labasan. Sumigaw siya upang humingi ng tulong.Dumating ang isa pang aso at nalaman ang 
+nangyari.","na siya mak-magkasya sa labasan sumigaw siya upang humingi ng tulong du-dumating ang [sub: isa > isang] pang aso at nalaman 
+ang nanyari",4,fil,
+data/std013_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,"dumating ang isa pang aso at nalaman ang nangyari. Bago ito umalis, nagwika",dumating ang [sub: isa > isang] pang [ins: a] [ins: is] aso at nalaman ang nangyari bago ito umalis nagwika,4,fil,
+data/std013_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"siya sa kasamang aso, ""Hintayin mo na lang umimpis ang tiyan mo.""",siya sa kasamang aso hintayin mo na lang [mis: umimpis > uma-um-umipis] ang tiyan mo,4,fil,
+data/std013_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,"Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na malaking 
+manok sa aming bakuran. Kaagad niya itong tinahulan.","si brownie ay aking alagang aso ang aking aso ay masamang magal-magalit minsan ay may pumasok na malaking manok sa aming
+bakuran kaagad [mis: niya > niyang] itong tinahulan  ",4,fil,
+data/std013_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito. Nagulat ang manok at tumakbo 
+ito nang mabilis palabas ng bakuran.","kung hindi-kung hindi lamang siya nakatali nang mahigpit malamang na habulin niya ito nagulat ang manok at tumakbo ito nang 
+mabilis palabas ng bakuran",4,fil,
+data/std013_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,Kagabi ay hindi  ko naitali si Brownie. Panay ang ungol niya. Maya-maya ay may tinahulan siya nang malakas.,kagabi ay hindi ko naitali si brownie panay ang [mis: ungol > ug-unggo-unggol] niya mayamaya ay may tinahulan siya nang malakas,4,fil,
+data/std013_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,"Biglang lumukso si Brownie sa kanyang tulugan at may hinabol. Dali-dali kong sinilip ang akin alaga. May 
+napatay siyang daga!","biglang lumukso si brownie sa kanyang tulugan at may hino-hinabol  dali dali kong sinilip ang aking [mis: alaga > alagang] 
+may-may napatay siyang da-daga ",4,fil,
+data/std013_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,"Bahagya pa niyang ginalaw ang kanyang bunto nang makita ako. Kaagad kong binitbit sa bunto ang daga at ipinakita
+ kay Tatay.","bahag-bahagya pa niyang ginalaw ang kanyang buntot nang makita ako kaagad kong binitbit sa buntot ang daga at pi-ipinakita kay 
+tata-tatay",4,fil,
+data/std013_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,"Masayang hinimas ni Tatay si brownie. Talagang maaasahan ang ason ito, sabi niya.",masayang hinima-hinimas ni tatay si brownie talagang [mis: maaasahan > maasahan] ang asong ito sabi niya [ins: okay],4,fil,
+data/std014_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"Ang Aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ","ang aso [sub: sa > na] [mis: lungga > lunga] may isang [mis: asong > aso] may isang aso gutom na gutom na naglalakad sa kalsada habang 
+[mis: naglalakad > naglalaka]",4,fil,
+data/std014_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,ibinubulong niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain.,ibinubulong niya sa sarili [ins: niya] kailangan niyang [mis: makakita > makita] ng isang [mis: lunggang > lungang] puno ng pagkain,4,fil,
+data/std014_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang mabusog.","nang [mis: makakita > makita] siya ng [mis: lungga > lunga] sa dulo ng kalsada agad siyang pumasok dito kumain siya hanggang
+[mis: mabusog > mabu]",4,fil,
+data/std014_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"Pero kahit busog na siya, kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga. Sa kanyang kabusugan,
+halos pumutok ang malaki niyang tiyan.","pero kahit busog na siya kumain pa rin at inubos ang lahat ng pagkain sa loob ng [mis: lungga > lunga] sa kanyang kabusugan halos 
+pumutok ang malaki niyang tiyan",4,fil,
+data/std014_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Nang lalabas na lamang siya, napansin niyang hindi na siya magkasya sa labasan. Sumigaw siya upang humingi ng
+tulong. Dumating ang isa pang aso at nalaman ang nangyari. Bago ito umalis, nagwika siya sa kasamang aso,
+""Hintayin mo na lang umimpis ang tiyan mo.""","nang [mis: lalabas > labas] na lamang siya napansin niyang hindi na siya magkasya sa labasan sumigaw siya upang humingi ng tulong
+dumating ang isa pang aso [sub: at > ng] nalaman ang nangyari bago ito umalis nagwika siya [sub: sa > ng] kasamang aso hintayin mo
+na lang [mis: umimpis > umipis] ang tiyan mo",4,fil,
+data/std014_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,"Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na
+malaking manok sa aming bakuran. Kaagad niya itong tinahulan. Kung hindi lamang siya nakatali nang mahigpit,
+malamang na habulin niya ito. Nagulat ","si brownie ay aking alagang aso ang ang aking aso ay masamang magalit minsan ay may pumasok na malaking manok sa aming bakuran
+kaagad niyang itong [mis: tinahulan > tinuhulan] kung hindi lamang siya nakatali [sub: nang > ang] mahigpit [mis: malamang > malaman]
+na habulin niya ito nagulat",4,fil,
+data/std014_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,"Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran. Kagabi ay hindi ko naitali si Brownie. Panay 
+ang ungol niya. Maya-maya ay may tinahulan siya nang malakas. Biglang lumukso si Brownie sa kanyang tulugan at
+may hinabol.","[mis: nagulat > gulat] ang manok at tumakbo ito nang mabilis palabas ng bakuran kagabi [ins: ang] ay hindi ko
+[mis: naitali > natal naitali] si brownie panay ang [mis: ungol > unggol] niya maya-maya ay may tinahulan siya nang malakas biglang 
+lumukso si brownie sa kanyang tulugan at may hinabol",4,fil,
+data/std014_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"Dali-dali kong sinilip ang aking alaga. May napatay siyang daga! Bahagya pa niyang ginalaw ang kanyang buntot nang
+makita ako. Kaagad kong binitbit","dali-dali kong sinilip ang aking alaga may napatay siyang daga bahagya pa niyang ginalaw ang kanyang buntot nang makita ako kaagad
+kong [mis: binitbit > binit]",4,fil,
+data/std014_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,"bit sa buntot ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie. ""Talagang maaasahan ang
+asong ito,"" sabi niya.",bit sa buntot ang daga at ipinakita kay tatay masayang hinimas ni tatay si brownie talagang maaasahan ang asong ito sabi niya,4,fil,
+data/std014_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Muning! Muning! Hanap nang hanap si Susan kay Muning. Dala ni Susan ang lalagyan ng pagkain ni Muning. May
+laman na ang lalagyan, pero wala si Muning. Wala siya sa kusina. Wala rin siya sa silid. Nasaan kaya si Muning?
+Bumaba ng bahay si Susan. Hinanap niya kung naroon si Muning. Ikot","muning muning hanap nang hanap si susan kay muning dala ni susan ang lalagyan ng pagkain ni muning may laman na ang lalagyan
+pero wala si muning wala siya [om_sa] kusina wala rin siya sa silid nasaan kaya si muning bumaba ng bahay si susan hinanap niya
+kung naroon si muning ikot",4,fil,
+data/std014_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,"Ikot na siya nang ikot, pero hindi pa rin niya nakita. Baka lumabas ito ng bahay. Ngiyaw! Ngiyaw! Hayun si Muning!
+Ngiyaw siya nang ngiyaw. Nasa loob siya ng kahon. May mga kasama si Muning sa loob","ikot [sub: na > ni] siya nang ikot pero hindi pa rin niya nakita baka lumabas ito ng bahay [ins: ikot] [ins: ay] ngiyaw ngiyaw hayun si
+muning ngiyaw siya nang ngiyaw nasa loob [mis: siya > sa] ng kahon may mga kasama si muning [sub: sa > ng] loob",4,fil,
+data/std014_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,"ng kahon. Nakita ni Susan ang kasama ni Muning. Mga kuting ang kasama ni Muning sa kahon! May puti, itim at
+magkahalong puti at itim na kulay ng kuting. Tuwang-tuwa si Susan!","ng kahon nakita ni susan ang kasama ni muning mga kuting ang kasama ni muning [ins: ni] sa kahon may puti itim at [ins: may]
+magkahalong puti at itim na kulay ng kuting [mis: tuwang-tuwa > tuwa-tuwa] si susan",4,fil,
+data/std015_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Fred,,"Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na malaking manok sa 
+aming bakuran. Kaagad niya itong tinahulan.","si brownie ay aking [ins: alaga] alagang aso ang aking aso ay masamang magalit [mis: minsan > m-minsan] ay may pumasok na malaking 
+manok sa aming bakuran [mis: kaagad > kaa-kaagad] niya itong [sub: tinahulan > tinulungan]",4,fil,
+data/std015_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito.",kung hindi lamang siya [ins: naka] nakatali nang mahigpit malamang na habulin niya ito [ins: na],4,fil,
+data/std015_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran.,nagulat [sub: ang > ng] manok at [mis: tumakbo > tu-ta-tumakbo] ito nang [mis: mabilis > ma-mabilis] palabas ng bakuran,4,fil,
+data/std015_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,Kagabi ay hindi ko naitali si Brownie. Panay ang ungol niya. Maya-maya ay may tinahulan siya nang malakas.,"kagabi ay hindi ko [sub: naitali > natali] si brownie pa-panay ang u-ungol niya ma-maya-maya ay may [ins: tano] tinahulan siya nang 
+malakas",4,fil,
+data/std015_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Biglang lumukso si Brownie sa kanyang tulugan at may hinabol. Dali-dali kong sinilip ang aking alaga. May napatay 
+siyang daga! ","biglang [mis: lumukso > imukso] si brownie sa kanyang [sub: tulugan > tinu-tinutulugan] at may hinabol dali-dali kong 
+[sub: sinilip > si-sinisilip] ang aking alaga may na-napatay [ins: siya] siyang [mis: daga > dagal]",4,fil,
+data/std015_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,Bahagya pa niyang ginalaw ang kanyang buntot nang makita ako. Kaagad kong binitbit,"bahagya pa niyang ginalaw ang kanyang [sub: buntot > bunot] nang makita [ins: ko] ako [ins: ng] [ins: na] [mis: kaagad > kagad] kong 
+[mis: binitbit > bin]",4,fil,
+data/std015_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,"binitbit sa buntot ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie. ""Talagang","[mis: binitbit > nitiblit] sa [sub: buntot > bunot] ang daga [om_at] i-ipinakita kay tatay masayang hinimas ni tatay si brownie 
+[mis: talagang > tala]",4,fil,
+data/std016_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Ellen,,"Ang aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong 
+niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain.
+","ang aso [sub: sa > ng] lungga may isang [mis: asong > aso] gutom na gutom na naglalakad sa kalsada habang naglalakad [ins: ino] 
+ibinubulong niy sa sarili [ins: na] [ins: kaya] na kailangan [mis: niyang > niya] makakita ng isang lungga ba puno  [om_ng] 
+[mis: pagkain > pag]",4,fil,
+data/std016_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"pagkain. Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang
+ mabusog. Pero kahit busog na siya, kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga.","[mis: pagkain > kain] nang [mis: makakita > makita] siya ng lungg sa dulo ng kalsada agad siyang pumasok dito kumain siya hanggang
+mabusog pero kahit busog na siya kumain pa rin at inubos ang lahat [sub: ng > na] pagkain sa loob ng lungga",4,fil,
+data/std016_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Sa kaniyang kabusugan, halos pumutok ang malaki niyang tiyan. Nang lalabas na lamang siya, napansin niyang
+hindi na siya magksya sa labasan. Sumigaw siya upang humingi ng tulong. Dumating ang isa pang aso at nalaman
+ang nangyari. Bago ito umalis, nagwika siya sa kasamang aso, ""Hintayin mo na lang umimpis ang tiyan mo.""","sa kaniyang kabu-kabusogan halos pumutok ang malaki niyang tiyan nang lalabas na lamang siya napansin niyang hindi na siya
+magkasiya sa labasan sumigaw siya upang humingi ng tulong dumating ang isa pang aso at nalaman ang nangyari bago ito umalis
+nagwika siya sa kasamang aso hintayin mo na lang umimpis ang tiyan mo",4,fil,
+data/std016_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na malaking
+manok sa aming bakuran. Kaagad niya itong tinahulan. Kung hindi lamang siya nakatali nang mahigpit, malamang
+na habulin niya ito. Nagulat ang manok at tumakbo ito ng mabilis palabas ng bakuran. Kagabi","si brownie ay aking alagang aso ang aking aso ay masamang magalit minsan may pumasok na malaking manok sa aming bakuran
+kaagad niya itong tinahulan kung hindi lamang siya nakatali ng mahigpit malamang [ins: na] [ins: habol] na habulin niya ito
+nagulat ang manok at [om_tumakbo] [om_ito] nang mabilis palabas ng bakuran kagabi",4,fil,
+data/std016_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Kagabi ay hindi ko naitali si Brownie. Panay ang ungol niya. Maya-maya ay may tinahula siya nang malakas. 
+Biglang lumukso si Brownie sa kanyang tulugan at may hinabol. Dali-dali kong sinilip ang aking","kagabi ay hindi ko naitali si brownie panay ang ungol niya maya-maya ay may tinahulan [mis: siya > siyang] nang malakas biglang
+lumukso si brownie sa kanyang [ins: tulungan] [ins: ay] tulugan at may hinabo dali-dali [mis: kong > akong] sinilip [mis: ang > ng]
+[mis: aking > ak]",4,fil,
+data/std016_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,"aking alaga. May napatay siyang daga! Bahagya pa niyang ginalaw ang kaniyang buntot nang makita ako.
+Kaagad kong binitbit sa buntot ang daga at ipinakita kay tatay.","[mis: aking > king] alaga may napatay siyang daga bahagya pa niyang ginalaw ang kaniyang buntot ng makita ako kaagad kong
+binitbit sa buntot ang daga at ipinakita kay tatay",4,fil,
+data/std017_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,"May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong niya sa sarili na 
+kailangan niyang makakita ng isang lunggang puno ng pagkain.","may isang asong gutom na gutom na naglalakad sa kalsada habang naglalakad ibinubulong niya sa sarili na kali-kailangan 
+niya-niyang makakita ng [ins: mga] [ins: ay] isang [ins: mangang] lunggang puno ng pagkain [ins: ay]",4,fil,
+data/std017_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang mabusog. Pero 
+kahit busog na siya kumain pa rin.","nang makakita siya ng lungga sa dulo ng kalsada agad siyang pumasok dito kumain siya hanggang mabusog pero kahit busog 
+na siya kumain pa rin",4,fil,
+data/std017_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"rin at inubos ang lahat ng pagkain sa loob ng lungga. Sa kanyang kabusugan, halos pumutok ang malaki niyang 
+tiyan. Nang","rin at [mis: inubos > inuubos] ang lahat ng pagkain sa loob ng lungga sa kanyang kabusugan halos [ins: inubos] [ins: ay] pumutok 
+ang malaki niyang tiyan nang [ins: ay]",4,fil,
+data/std017_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,Nang lalabas na lamang siya napansin niyang hindi na siya magkasya sa labasan. Sumigaw siya upang humingi,"nang lalabas na-na lamang siya napansin [mis: niyang > niya] [ins: ay] hindi na siya magkasya sa labasan sumigaw siya upang 
+[mis: humingi > huming]",4,fil,
+data/std018_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na malaking manok
+sa aming bakuran.","si brownie ay aking alagang aso ang aking aso ay masamang magalit minsan ay may pumasok na malaking manok sa aming
+[mis: bakuran > bak]",4,fil,
+data/std018_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"kuran. Kaagad niya itong tinahulan. Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito.",kuran kaagad niya itong tinahulan kung hindi lamang siya nakatali nang mahigpit malamang na habulin niya ito,4,fil,
+data/std018_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran. Kagabi ay hindi ko naitali si Brownie. Panay
+ang",nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran kagabi ay hindi ko naitali si brownie [ins: patay] panay ang,4,fil,
+data/std018_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"ungol niya. Maya-maya ay may tinahulan siya nang malakas. Biglang lumukso si Brownie sa kanyang tulugan at
+may hinabol.","[mis: ungol > un gol] niya maya-maya ay may tinahulan siya nang malakas biglang lumukso si brownie sa kanyang tulugan at may
+hinabol",4,fil,
+data/std018_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Dali-dali kong sinilip ang aking alaga. May napatay siyang daga! Bahagya pa niyang ginalaw ang kanyang buntot
+nang makita",dali-dali kong sinilip ang aking alaga may napatay siyang daga bahagya pa [mis: niyang > niya] ginalaw ang kanyang buntot nang makita,4,fil,
+data/std018_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,ako. Kaagad kong binitbit sa buntot ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie.,[mis: ako > ko] kaagad kong binitbit sa buntot ang daga at ipinakita kay tatay masayang hinimas ni tatay si brownie,4,fil,
+data/std019_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Fred,,"Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na malaking 
+manok sa aming bakuran.","si [mis: brownie > browin] ay aking alagang aso ang aking aso ay [mis: masamang > masamag] magalit [mis: minsan > minsa] ay may 
+pumasok na malaking manok sa aming bakuran",4,fil,
+data/std019_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Kaagad niya itong tinahulan. Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito.","[mis: kaagad > kagad] niya [sub: itong > ito] tinahulan kung hindi [mis: lamang > lamag] siya nakatali nang mahigpit 
+[mis: malamang > malamag] na habulin niya ito",4,fil,
+data/std019_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran. Kagabi ay hindi ko ,"[mis: nagulat > nag-gulat] ang manok at [mis: tumakbo > tumabok] ito nang mabilis palabas [sub: ng > nga] bakuran 
+[mis: kagabi > ka-kagiba] ay hindi ko",4,fil,
+data/std019_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,naitali si Brownie. Panay ang ungol niya. Maya-maya ay may tinahulan siya nang malakas.,[ins: ini] naitali si [mis: brownie > browin] panay ang [mis: ungol > un-gol] niya maya-maya ay may tinahulan siya nang malakas,4,fil,
+data/std019_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,Biglang lumukso si Brownie sa kanyang tulugan at may hinabol. Dali-dali,"biglang [sub: lumukso > lumusok] si [mis: brownie > browin] sa [mis: kanyang > kanyag] [mis: tulugan > tulug-gan] at may hin-hinabol 
+[sub: dali-dali > dahil]",4,fil,
+data/std019_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,Dali-dali kong sinilip ang aking alaga. May napatay siyang daga!,[mis: dali-dali > dahi] kong sinilip [mis: ang > ag] aking ala-alaga may napatay [ins: siya] siyang daga,4,fil,
+data/std019_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,Bahagya pa niyang ginalaw ang kanyang buntot nang makita ako. Kaagad kong binitbit,"[mis: bahagya > hagya] pa [sub: niyang > niya] ginalaw ang [mis: kanyang > kanyag] [mis: buntot > bun-bunto] [sub: nang > nag] makita 
+ako kaagad kong [mis: binitbit > binitbi]",4,fil,
+data/std019_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"sa buntot ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie. ""Talagang",sa buntot ang daga at ipinakita kay tatay masayang hinimas [om_ni] tatay [om_si] [mis: brownie > browin] talagang,4,fil,
+data/std022_g4_en_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some star apples from the
+tree,"" says Leo.","[sub: lets > yes] have some fun this summer [sub: says > yes] leo [sub: lets > yes] swim in the [mis: river > rayver] says lina
+[mis: lets > les] get some star apples from the tree [om_says] [om_leo]",4,en,
+data/std022_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"Leo. ""Let's pick flowers,"" says Lina. ""That is so much fun!"" says Mama. ""But can you help me dust the shelves too?""
+""Yes, we can Mama,"" they say. ""Helping can be fun too!""","leo [mis: lets > les] pick flowers [sub: says > say] lina that is so much [sub: fun > funny] says mama but can you help me
+[sub: dust > dutch] the [sub: shelves > self] too yes we can mama they say help can be fun too",4,en,
+data/std022_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.",pam has a cat it is on the bed it can nap it can sit oh no [sub: says > say] pam the cat fell off the bed is the cat sad no it is on the mat,4,en,
+data/std022_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet
+Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus.","ring ring rang the clock but [mis: jacky > jeyck] did not get up wake up [mis: jacky > jeyck] time for school [sub: yelled > yet] mom and yet
+[mis: jacky > jay] did not get up [mis: beep > bep] [mis: beep > bep] [mis: honked > hon] the horn [om_of] [om_the] [om_bus]",4,en,
+data/std022_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"the bus. Jacky still laid snug on the bed. Suddenly, a rooster crowed out loud and sat on the window sill. Jacky got 
+up and said with cheer, ""I will get up now. I will!""","the bus [mis: jacky > jeyck] still [mis: laid > land] [mis: snug > sno] on the bed [mis: suddenly > slowgy] a rooster crowed [sub: out > off]
+[mis: loud > load] [sub: sat > sad] on the [mis: window > widow] sill [mis: jacky > jeyck] [mis: got > gut] up the said with [mis: cheer > teer]
+i will get up now i will",4,en,
+data/std023_g4_en_chunk_01.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet  
+Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still laid","ring [om_ring] rang the clock but [mis: jacky > jack] did not get up wake up [mis: jacky > jack] time for school [mis: yelled > yell-yel-led]
+mom and yet [mis: jacky > jack] did not get up [mis: beep > bep] [mis: beep > bep] [mis: honked > han-ked] the [sub: horn > harm] of
+the bus [mis: jacky > jeck] [ins: is] [mis: still > stel] [mis: laid > led]",4,en,
+data/std023_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"snug on the bed. Suddenly, a rooster crowed out loud and sat on the window sill. Jacky got up and said with cheer,
+""I will get up now. I will!""","[om_snug] [ins: sss] [ins: goy] [ins: sing ]on the bed [mis: suddenly > sundaily] a [sub: rooster > raster] [mis: crowed > clownt] [ins: climp]
+[mis: out > ot] [sub: loud > load] and sat on the window sill [mis: jacky > jeck] [mis: got > gut] up and [sub: said > send] [sub: with > white]
+[sub: cheer > clock] i will get up now i will",4,en,
+data/std023_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat it is on the bed it can nap it can sit oh no [sub: says > say] pam the cat fell off the bed is the cat [sub: sad > said] no it is
+on the mat",4,en,
+data/std023_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat it is on the bed [ins: the] it can nap it can sit oh no [mis: says > sai] pam the cat [ins: fa] fell off the bed is the cat
+[mis: sad > sed] no it is [sub: on > in] the mat",4,en,
+data/std023_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet  
+Jacky did not get up. ""Beep! Beep!"" honked the horn","ring ring rang the clock but jacky did not get up wake up jacky time for school yelled mom and yet jacky did not get up beep beep
+honked the horn",4,en,
+data/std023_g4_en_chunk_06.wav,▶ PLAY AUDIO,,,"of the bus. Jacky still laid snug on the bed. Suddenly, a rooster crowed out loud and sat on the window sill. Jacky got
+up and said with cheer, ""I will get up now. I will!""","of the bus jacky still laid snug on the bed suddenly a rooster crowed out loud and sat on the window sill [mis: jacky > jecky] got
+up and said with cheer i will get up now i will",4,en,
+data/std024_g4_en_chunk_01.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet  
+Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus.","ring ring rang the clock but jacky did not get up wake up [ins: jeck] jacky time for [mis: school > ischool] [om_yelled] [ins: and] mom and
+yet jacky did not get up beep beep [mis: honked > hog] the horn of the [om_bus]",4,en,
+data/std024_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"Jacky still laid snug on the bed. Suddenly, a rooster crowed out loud and sat on the window sill. Jacky got
+up and said with cheer, ""I will get up now. I will!""","bus jacky [ins: is] [sub: laid > lied] snug on the bed [mis: suddenly > studly] a rooster [mis: crowed > crowed] out loud and sat on the
+window sill jacky got up and said with cheer i will get up [sub: now > no] i will",4,en,
+data/std024_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some star apples from the
+tree,"" says Leo. ""Let's pick flowers,"" says Lina.","[mis: lets > les] have some fun this summer [sub: says > say] leo [mis: lets > les] swim in the river [sub: says > say] lina [mis: lets > les]
+get some star apples from [ins: de] the tree [sub: says > say] leo [mis: lets > les] [ins: le] pick flowers [sub: says > say] [om_lina]",4,en,
+data/std024_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"Lina. ""That is so much fun!"" says Mama. ""But can you help me dust the shelves too?"" ""Yes, we can Mama,"" they say.
+""Helping can be fun too!""","lina that is so much fun [mis: says > se] mama but can you help me dust the [mis: shelves > selfes] too yes we can mama [ins: the] they
+say helping can be fun [mis: too > to]",4,en,
+data/std024_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat it is on the [mis: bed > bet] it can nap it can sit oh no [mis: says > se] pam the cat fell off the bed is the cat sad no it is on
+the mat",4,en,
+data/std025_g4_en_chunk_01.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat it is on the bed [sub: it > in] can nap [sub: it > in] can sit oh oh no [sub: says > say] pam the cat fell off the bed is the cat 
+sad no [sub: it > its] is on the mat",4,en,
+data/std025_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some star apples from the
+tree,"" says Leo. ""Let's pick flowers,"" says Lina.","[mis: lets > let] have some fun this [mis: summer > sumber] [sub: says > say] leo lets swim in the river [sub: says > say] lina
+[mis: lets > let] get some star apples from the tree [sub: says > say] leo lets [ins: flo] pick flowers [sub: says > say] lina",4,en,
+data/std025_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"""That is so much fun!"" says Mama. ""But can you help me dust the shelves too?"" ""Yes, we can Mama,"" they say.
+""Helping can be fun too!""","that is so much fun [sub: says > say] mama but can you help me dust the [mis: shelves > severes] too ye-yes we can mama they say
+helping can be fun too",4,en,
+data/std025_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet  
+Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still","ring ring rang the [sub: clock > crock] but [mis: jacky > jecky] did not get [sub: up > off] [sub: wake > week] up jacky [mis: time > tim] for school [mis: yelled > yellen] mom and yet [mis: jacky > jackly] did not get up [mis: beep > bep] [mis: beep > bep]
+[mis: honked > honked] the horn of the bus [mis: jacky > ecky] [mis: still > stell]",4,en,
+data/std025_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"Jacky still laid snug on the bed. Suddenly, a rooster crowed out loud and sat on the window sill. Jacky got
+up and said with cheer, ""I will get up now. I will!""","om_jacky] [om_still] [om_laid] [sub: snug > son] on the bed [mis: suddenly > studely] a rooster [mis: crowed > cro-wit] [sub: out > off]
+[mis: loud > lu] and [sub: sat > sent] on the window sill [mis: jacky > jecky] [sub: got > goat] [sub: up > off] [ins: ot] and [sub: said > sad]
+with [sub: cheer > clear] [mis: i > ee] will get [sub: up > off] now i will",4,en,
+data/std026_g4_en_chunk_01.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet  
+Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still laid","ring ring rang the clock but jacky did not get up wake up jacky time for school [mis: yelled > yel-led] mom and yet jacky did not get up
+beep beep honked the horn of the bus jacky still laid",4,en,
+data/std026_g4_en_chunk_02.wav,▶ PLAY AUDIO,Fred,,"on the bed. Suddenly, a rooster crowed out loud and sat on the window sill. Jacky got up and said with cheer,
+""I will get up now. I will!""","on the bed [mis: suddenly > stunduly] a rooster [mis: crowed > crow-wed] [mis: out > ot] loud and [sub: sat > sate] on the window 
+[sub: sill > sell] jacky [sub: got > gut] up and [mis: said > sai-id] with [sub: cheer > sheer] i will get up now i will",4,en,
+data/std026_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some star apples from the 
+tree,"" says Leo. ""Let's pick flowers,"" says Lina.","lets have some fun this summer [sub: says > say] leo lets swim in the [mis: river > rayver] [sub: says > say] lina lets get some star apples 
+from the tree [sub: says > say] leo lets pick flowers [sub: says > say] lina",4,en,
+data/std026_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"""That is so much fun!"" says Mama. ""But can you help me dust the shelves too?"" ""Yes, we can Mama,"" they say.
+""Helping can be fun too!""","[ins: det] that is so much fun [ins: i] [sub: says > say] mama but can you help me [sub: dust > thats] the [sub: shelves > shelve] too yes 
+we can mama they say helping can be fun too",4,en,
+data/std026_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat [ins: its] it is on the bed it can nap it can sit oh no [sub: says > say] pam the cat fell off the bed [sub: is > its] the cat 
+[sub: sad > said] no [sub: it > its] is on the mat",4,en,
+data/std029_g4_en_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!",pam has a cat [sub: it > let] is on [sub: the > they] bed [sub: it > let] can nap [sub: it > let] can sit oh no [ins: et],4,en,
+data/std029_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"says Pam. ""The cat fell off the bed!"" Is the cat sad? No. It is on the mat.","says pam [sub: the > they] cat fell off [sub: the > they] [sub: bed > be] [ins: they] [mis: is > ies] [sub: the > they] cat sad no
+[sub: it > let] is [ins: no] on [sub: the > they] mat",4,en,
+data/std029_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina.","[mis: lets > let] [ins: is] have some fun [sub: this > days] summer says leo [mis: lets > let] [ins: is] [mis: swim > iswim] in
+[sub: the > they] [sub: river > rave] says [ins: len] lina",4,en,
+data/std029_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"""Let's get some star apples from the tree,"" says Leo. ""Let's pick flowers,"" says Lina.","[mis: lets > let] [ins: is] get some [mis: star > ishar] [mis: apples > oples] from [sub: the > they] [mis: tree > tre] says [mis: leo > leown]
+[mis: lets > let] [ins: is] pick [sub: flowers > followings] s-says [sub: lina > len]",4,en,
+data/std029_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"""That is so much fun!"" says Mama. ""But can you help me  dust the shelves too?""","that is so much [sub: fun > funny] says [sub: mama > mom] but can you help me [mis: dust > dus] [sub: the > they]
+[mis: shelves > isel-ves] [sub: too > to]",4,en,
+data/std029_g4_en_chunk_06.wav,▶ PLAY AUDIO,,,"""Yes, we can Mama,"" they say. ""Helping can be fun too!"" ""Ring! Ring!"" rang the clock.","yes [mis: we > wek] can mama [mis: they > t-hey] [mis: say > s-sah-y] helping [sub: can > cat] [sub: be > they] [sub: fun > for] too
+[ins: en] ring [ins: ey] ring [ins: ring] [om_rang] [sub: the > they] [mis: clock > clowk]",4,en,
+data/std029_g4_en_chunk_07.wav,▶ PLAY AUDIO,,,"But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet Jacky did not get up.","but [mis: jacky > jeck] did not get [mis: up > op] wake [mis: up > op] [mis: jacky > jeck] [ins: hey] [mis: time > tim] for
+[mis: school > ischool] [mis: yelled > yel-led] [ins: mo] mom and yet [mis: jacky > jack] did not get [mis: up > op]",4,en,
+data/std029_g4_en_chunk_08.wav,▶ PLAY AUDIO,,,"""Beep! Beep!"" honked the horn of the bus. Jacky still laid snug on the bed.","beep beep [mis: honked > hon-k] [sub: the > they] horn of [sub: the > they] bus [ins: jack] [mis: jacky > jack] [ins: hey] [mis: still > istill]
+[mis: laid > led] [sub: snug > song] on [sub: the > they] [mis: bed > be-be]",4,en,
+data/std029_g4_en_chunk_09.wav,▶ PLAY AUDIO,,,"Suddenly, a rooster crowed out loud and sat on the window sill.","[mis: suddenly > addenly] a rooster [mis: crowed > cro-wed] [mis: out > owt] [sub: loud > load] and sat [mis: on > ow] [sub: the > they]
+[mis: window > wandow] [sub: sill > sell]",4,en,
+data/std029_g4_en_chunk_10.wav,▶ PLAY AUDIO,,,"Jacky got up and said with cheer. ""I will get up now. I will!""","[mis: jacky > jeyck] [ins: hey] got up [sub: and > they] [mis: said > sa-ed] with [mis: cheer > kaher] [om_i] [mis: will > w-wing] get 
+[mis: up > op] [sub: now > no] [mis: i > el] [mis: will > wel]",4,en,
+data/std030_g4_en_chunk_01.wav,▶ PLAY AUDIO,Fred,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom.","ring ring [sub: rang > araw] the [sub: clock > low] [sub: but > bot] [mis: jacky > jatty] [om_did] [sub: not > note] [sub: get > gate] up 
+[mis: wake > wayg] up [mis: jacky > jeck] [sub: time > tim] for [mis: school > ischool] [mis: yelled > yel-leyd] mom",4,en,
+data/std030_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"And yet Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still laid snug on the bed. Suddenly,","[sub: and > ang] [mis: yet > yed] [sub: jacky > jack] [mis: did > de] not get up [mis: beep > bep] [mis: beep > bep] [mis: honked > hon-ked] 
+the [mis: horn > hor] [sub: of > off] the bus [mis: jacky > jecky] [mis: still > istill] laid [mis: snug > snong] on the [mis: bed > beyd] 
+[mis: suddenly > sodley]",4,en,
+data/std030_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"a rooster crowed out loud and sat on the window sill. Jacky got up and said with cheer, ""I will get up now. I will!""","a [mis: rooster > rootster] [sub: crowed > crowd] [mis: out > ot] [sub: loud > load] and sat on the [mis: window > wid] sill 
+[mis: jacky > je-jey] [sub: got > gut] [mis: up > op] and said with [sub: cheer > sheer] i will get up now i will",4,en,
+data/std030_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"Pam's Cat. Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!""
+Is the cat sad? No. It is on the mat.","[om_pams] cat pam has a cat [mis: it > ey] [mis: is > di] on the [mis: bed > beyd] [sub: it > i] can nap it can sit [sub: oh > off] no 
+[mis: says > sayhs] pam the cat [sub: fell > fall] off [sub: the > him] [sub: bed > bate] is the cat sad no [sub: it > its] is [ins: the] [ins: ay] 
+on the mat",4,en,
+data/std030_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"Summer Fun. ""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some star 
+apples from the tree,"" says Leo.","summer fun [sub: lets > lakes] [mis: have > ha-ve] some fun [sub: this > days] summer [mis: says > sayhs] leo [sub: lets > let] [ins: is] 
+swim in the [mis: river > rey] [sub: says > say] lina [sub: lets > late] [sub: get > gate] some [mis: star > ister] [mis: apples > ap-plays] 
+[mis: from > fro-m] the [sub: tree > race] [mis: says > sayhs] leo",4,en,
+data/std030_g4_en_chunk_06.wav,▶ PLAY AUDIO,,,"""Let's pick flowers,"" says Lina. ""That is so much fun!"" says Mama. ""But can you help me dust the shelves too?""
+""Yes, we can Mama,"" they say. ""Helping can be fun too!""","[mis: lets > lates] [sub: pick > pigs] [mis: flowers > flow-er] says lina [mis: that > tha] is so [mis: much > moch] [mis: fun > fon] 
+[sub: says > say] mama but [sub: can > cat] you help me [mis: dust > dis] [ins: a] the [ins: is] [sub: shelves > wish] [mis: too > tu] 
+yes we [sub: can > cat] mama [sub: they > the] [mis: say > sayh] helping can be fun [mis: too > tu]",4,en,
+data/std032_g4_en_chunk_13.wav,▶ PLAY AUDIO,Jeremy,,"says Lina. ""That is so much fun!"" says Mama. ""But can you help me dust the shelves too?"" ""Yes, we can Mama,"" 
+they say. ""Helping can be fun too!""","[mis: say > ay] lina that is so much fun [mis: says > say] mama but can you help me dust the [mis: shelves > shelve] too yes we 
+can mama they [sub: say > said] helping can be fun too",4,en,
+data/std033_g4_fil_chunk_01.wav,▶ PLAY AUDIO,,,"Ang aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong","ang aso sa lung-lungga may isang asong gutom na gutom na naglalakad sa [mis: kalsada > kalasada] habang 
+[mis: naglalakad > naglalakat nalak]  [mis: ibinubulong > ibig-ibinu] [pause]",4,fil,
+data/std033_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,ibinubulong niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain.,[mis: ibinubulong > ibig ibinubulong] niya sa sarili na kailangan niyang makakita ng isang lung-gang puno ng pagkain,4,fil,
+data/std034_g4_fil_chunk_01.wav,▶ PLAY AUDIO,,,"Ang aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinibulong
+niya sa","ang aso sa lungga may isang [sub: asong > aso] gutom na gutom na naglalakad sa [mis: kalsada > kas kai kalsadahan] habang 
+naglalakad ibinu-bulong niya sa",4,fil,
+data/std034_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,ibinubulong niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain. Nang,niya sa sarili na [mis: kailangan > kailanggan] niyang makakita ng isang [mis: lunggang > lunggan] puno ng [ins: dito] pagkain nang,4,fil,
+data/std034_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang mabusog.",nang makakita siya ng lungga sa dulo ng kalsada agad siyang pumasok dito-dito  [ins: ka] kumain siya hanggang mausog,4,fil,
+data/std034_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,mabusog. Pero kahit busog na siya kumain pa rin at inubos ang lahat ng pagkain sa loob ng lunnga.,mabusog pero kahit busog na siya [ins: ka] kumain pa rin at inubos ang lahat ng pagkain sa loon ng lungga,4,fil,
+data/std034_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Sa kanyang kabusugan, halos pumutok ang malaki niyang tiyan. Nang lalabas na lamang siya,","[sub: sa > niyang] kanyang kabusugan halos [mis: pumutok > pompom puma pumutok] ang malaki niyang [mis: tiyan > tiyang] 
+nang lalabas na lamang siya",4,fil,
+data/std034_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,"siya, napansin niyang hindi na siya magkasya sa labasan.",siya [mis: napansin > nap-napasin] [sub: niyang > niya] hindi na siya [mis: magkasya > magkasaya] sa labasan,4,fil,
+data/std034_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,"Sumigaw siya upang humingi ng tulong. Dumating ang isa pang aso at nalaman ang nangyari. Bago ito umalis,","sumigaw siya upang [mis: humingi > humigi] ng [mis: tulong > ta-tulong] dumating ang [sub: isa > isang] pang aso at nalaman ang 
+[mis: nangyari > ni-nangyari] bago ito umalis",4,fil,
+data/std034_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"umalis, nagwika siya sa kasamang aso, ""Hintayin mo na lang umimpis ang tiyan mo.""","umalis [sub: nagwika > nagwawika] siya sa kasamang aso hi-hi-hintayin mo na lang [ins: muna] [mis: umimpis > muni pis] ang tiyan 
+mo",4,fil,
+data/std035_g4_fil_chunk_01.wav,▶ PLAY AUDIO,,,"Ang aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong 
+niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain.","ang aso sa lungga may isang asong gutom na gutom na naglalakad sa kalsada habang naglalakad ibinubulong niya sa sarili na 
+kailangan [sub: niyang > niya] makakita ng isang lunggang puno ng pagkain",4,fil,
+data/std035_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Inubos ang lahat ng pagkain sa loob
+ ng lungga.","nang makakita siya [sub: ng > sa] lungga sa dulo ng kalsada agad siyang pumasok [om_dito] inubos ang lahat ng pagkain a loob ng 
+[sub: lungga > lunggang]",4,fil,
+data/std035_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng ng lunnga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang mabusog",nang makakita siya  ng [sub: lungga > lunggang] sa dulo ng kalsada agad siyang pumasok dito kumain siya hanggang mabusog,4,fil,
+data/std035_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"Pero kahit busog na siya, kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga. Sa kanyang kabusugan,
+halos",pero kahit busog na siya kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga sa kanyang kabusugan halos,4,fil,
+data/std035_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"pumutok ang malaki niyang tiyan. Nang lalabas na lamang siya, napansin niyang hindi na siya magkasya sa 
+labasan","pumutok ang [sub: malaki > malaking] niyang tiyan nang lalabas na lamang siya [mis: napansin > napasin] [sub: niyang > niya] 
+hindi na siya magkasya sa labasan",4,fil,
+data/std035_g4_fil_chunk_06.wav,▶ PLAY AUDIO,Jeremy,,"Sumigaw siya upang humingi ng tulong. Dumating ang isa pang aso at nalaman ang nangyari. Bago ito umalis, 
+nagwika siya sa kasamang aso, ""Hintayin mo na lang umimpis ang tiyan mo.""","sumigaw siya upang humingi ng tulong dumating ang [mis: isa > isang] pang aso at nalaman ang nangyari bago ito umalis 
+[mis: nagwika > nangwika] siya sa kasamang aso [sub: hintayin > hinintay] mo na lang umimpis ang tiyan mo",4,fil,
+data/std036_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"Ang aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong",ang aso sa lungga may isang asong gutom na [ins: na] gutom na naglalakad sa kalsada habang naglalakad [mis: ibinubulong > ib-ib-ibi],4,fil,
+data/std036_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,ibinubulong niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain.,"[mis: ibinubulong > nubulong] [sub: niya > siya] sa sarili na kailangan [sub: niyang > siyang] maka-makakita ng isang
+[mis: lunggang > la-lagu-la-lagungang] puno ng pagkain",4,fil,
+data/std036_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang mabusog.
+Pero kahit busog na siya, kumain pa rin at","nang makakita siya ng lungga sa dulo ng kalsada agad siyang pumasok dito kumain siya hanggang [mis: mabusog > bu-bumusog]
+pero kahit busog na siya kumain pa rin at",4,fil,
+data/std036_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"inubos ang lahat ng pagkain sa loob ng lungga. Sa kanyang kabusugan, halos pumutok ang malaki niyang tiyan.",inubos ang lahat ng pagkain sa loob ng [sub: lungga > laga] sa kanyang kabusugan halos pumutok ang malaki niyang tiyan,4,fil,
+data/std036_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Nang lalabas na lamang siya, napansin niyang hindi na siya magkasya sa labasan. Sumigaw siya upang humingi ng 
+tulong. Dumating ang isa pang aso at nalaman","nang la-lalabas na lamang siya napansin niyang hindi na siya magkasya sa labasan sumigaw siya upang humingi ng tulong dumating
+ang isa pang aso at [mis: nalaman > na]",4,fil,
+data/std036_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,"aso at nalaman ang nangyari. Bago ito umalis, nagwika siya sa kasamang aso, ""Hintayin mo na lang umimpis
+ang tiyan mo.""","aso at [sub: nalaman > nalalaman] ang [ins: nga] nangyari bago ito umalis nagwika siya sa kasamang aso hinta-hintayin mo na lang 
+umimpis ang tiyan mo",4,fil,
+data/std037_g4_fil_chunk_01.wav,▶ PLAY AUDIO,,,Si Muning! Muning! Muning! Hanap nang hanap si Susan kay Muning. Dala ni Susan ang lalagyan ng pagkain,"si muning muning muning [sub: hanap > nahanap] nang hanap si susan kay muning d-dala ni susan ang lalagyan [sub: ng > na]
+[mis: pagkain > paggakain]",4,fil,
+data/std037_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"pagkain ni Muning. May laman na ang lalagyan, pero wala si Muning.",[mis: pagkain > paggakain] ni muning may laman na ang lalagyan pero wala si muning,4,fil,
+data/std037_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,Wala siya sa kusina. Wala rin siya sa silid. Nasaan kaya si Muning?,wala siya sa kus-kusina wala rin siya sa silid [ins: sa] [ins: ay] nasaan kaya si muning,4,fil,
+data/std037_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,Bumaba ng bahay si Susan. Hinanap niya kung naroon si Muning.,"[ins: ito] [ins: pe] [ins: ay] bumaba [sub: ng > nga] [mis: bahay > bu-buhay] si susan [sub: hinanap > hinahanap] niya kung naroon si 
+muning",4,fil,
+data/std037_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Muning. Ikot na siya nang ikot, pero hindi pa rin niya nakita. Baka lumabas ito ng bahay.","muning [om_ikot] [ins: u] [ins: i] [om_na] siya [sub: nang > nag] [sub: ikot > ito] [ins: ay] [ins: i] [pause] pero hindi [ins: par] pa rin niya
+[ins: na] nakita ba-baka lumabas ito [sub: ng > nga] [sub: bahay > buhay]",4,fil,
+data/std037_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,Ngiyaw! Ngiyaw! Hayun si Muning! Ngiyaw siya nang ngiyaw. Nasa loob siya ng kahon.,ngiyaw ngiyaw hayun si muning ngiyaw siya nang ngiyaw nasa loob siya [om_ng] [ins: ha] [ins: nga] [ins: hap] [sub: kahon > kahapon],4,fil,
+data/std037_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,May mga kasama si Muning sa loob ng kahon. Nakita ni Susan ang kasama ni Muning.,may mga kasama si muning sa loob [sub: ng > nga] [sub: kahon > hayop] naki-nakita ni susan ang ka-kasama ni muning,4,fil,
+data/std037_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"ni Muning. Mga kuting ang kasama ni Muning sa kahon! May puti, itim",ni muning [sub: mga > nga] kuting ang ka-kasama ni muning sa [ins: hayop] [ins: ay] [ins: ka] kahon may puti [sub: itim > itong],4,fil,
+data/std037_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,at magkahalong puti at itim na kulay ng kuting.,at magkahalong [sub: puti > pito] [ins: ay] [ins: piti] at itim [ins: nga] na [ins: ka] kulay [sub: ng > nga] [mis: kuting > kitin],4,fil,
+data/std037_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Tuwang-tuwa si Susan! May puti, itim at magkahalong",[ins: tuwa] tuwang-tuwa si susan may puti [ins: ito] itim at [mis: magkahalong > magkaha],4,fil,
+data/std037_g4_fil_chunk_11.wav,▶ PLAY AUDIO,Dhesiry,,halong puti at itim na kulay ng kuting. Tuwang-tuwa si Susan!,"[mis: halong > long] puti at [mis: itim > itan] na kulay [sub: ng > nga] [pause] [om_kuting] [mis: tuwang-tuwa > tuwang-tuwang] si
+susan",4,fil,
+data/std038_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Fred,,"Si Brownie. Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na 
+malaking manok sa aming bakuran.","si [sub: brownie > wordia] si [sub: brownie > wordia] ay aking alaga-ang aso ang aking aso ay [sub: masamang > masa] [ins: mga] 
+magalit minsan ay may [sub: pumasok > pumapasok] na malaking manok [sub: sa > at] a-aming bakuran",4,fil,
+data/std038_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"sa aming bakuran. Kaagad niya itong tinahulan. Kung hindi lamang siya nakatali nang mahigpit, malamang na 
+habulin niya ito.","[om_sa] a-aming bakuran [mis: kaagad > aagad] niya [sub: itong > ito] [mis: tinahulan > tinahulon] kung [sub: hindi > di] lamang 
+[ins: lamang] siya nakatali [sub: nang > nag] [sub: mahigpit > pahigpit] [mis: malamang > nalamang] na habulin niya ito [ins: na]",4,fil,
+data/std038_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,ito. Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran.,ito nagulat ang manok at [mis: tumakbo > kinatakbo] ito nang mabilis [ins: ma] palabas ng bakuran,4,fil,
+data/std038_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"Kagabi ay hindi ko naitali si Brownie. Panay ang ungol niya. Maya-maya ay may tinahulan siya nang malakas. 
+Biglang lumukso si Brownie","kagabi ay hindi ko [mis: naitali > naitale] si [ins: brown] brown-nie panay ang [mis: ungol > uggol] niya maya-maya ay may 
+[mis: tinahulan > tinagulan] siya nang malakas biglang [mis: lumukso > lumuksok] si brown-nie",4,fil,
+data/std038_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,sa kanyang tulugan at may hinabol. Dali-dali kong sinilip ang aking alaga. May napatay siyang daga!,sa kanyang tulugan at may hinabol da-dali-dali [sub: kong > ko] sinilip ang aking alaga may napatay [sub: siyang > siya] daga [ins: pa],4,fil,
+data/std038_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,Bahagya pa niyang ginalaw ang kanyang buntot nang makita ako. Kaagad kong binitbit sa buntot,"bahagya pa [mis: niyang > niyag] ginalaw ang kanyang buntot [sub: nang > nag] makita ako [sub: kaagad > agad] [sub: kong > ko] 
+[sub: binitbit > pinipilit] sa buntot",4,fil,
+data/std038_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,"ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie. ""Talagang maaasahan ang asong ito,"" sabi niya.","ang da-daga at [mis: ipinakita > inikita] kay tatay masayang hinimas ni tatay si brown-nie talagang maaasahan ang asong ito 
+[sub: sabi > sabihin] niya",4,fil,
+data/std038_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"Ang Aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad,","ang aso sa [mis: lungga > lunga] may isang asong gutom na gutom na [sub: naglalakad > naglakad] sa [mis: kalsada > isida] 
+[sub: habang > halang] [mis: naglalakad > nagla]",4,fil,
+data/std038_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,"naglalakad, ibinubulong niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain.","[sub: naglalakad > lakad] [mis: ibinubulong > inibubulang] niya sa sarili na kailangan niyang [sub: makakita > makita] [sub: ng > ang] 
+isang lunggang puno ng [sub: pagkain > pangkain]",4,fil,
+data/std038_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang mabusog. 
+Pero kahit busog na siya, kumain pa rin at","[sub: nang > nag] [ins: na] [sub: makakita > makikita] siya [sub: ng > nag] [mis: lungga > lunga] sa dulo ng kalsada agad siyang pumasok 
+[mis: dito > i-ito] kumain siya [sub: hanggang > halagang] mabusog pero kahit busog na siya kumain pa [sub: rin > din] at",4,fil,
+data/std038_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,inubos ang lahat ng pagkain sa loob ng lungga.,inubos ang lahat ng pagkain sa loob ng [mis: lungga > lunga],4,fil,
+data/std038_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,"Sa kanyang kabusugan, halos pumutok ang malaki niyang tiyan. Nang lalabas na lamang siya, napansin","sa kanyang [sub: kabusugan > kabukasang] halos [sub: pumutok > pumasok] ang [sub: malaki > malaking] niyang [sub: tiyan > tiya] 
+nang [mis: lalabas > abas] na lamang siya [sub: napansin > napapansin]",4,fil,
+data/std038_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,niyang hindi na siya magkasya sa labasan. Sumigaw siya upang humingi ng tulong.,"[sub: niyang > niya] hindi [om_na] [om_siya] [om_magkasya] sa [om_labasan] [ins: pang] [ins: aso] [ins: at] [ins: halaman] [ins: ang] 
+[ins: nangyari] [pause] sumigaw siya upang humingi ng tulong",4,fil,
+data/std038_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,"Dumating ang isa pang aso at nalaman ang nangyari. Bago ito umalis, nagwika siya sa kasamang aso, ""Hintayin mo 
+na lang umimpis ang tiyan mo.""","[ins: niya] [ins: hin] dumating ang [om_isa] [om_pang] aso [sub: at > hinintay] [sub: nalaman > laman] ang nangyari bago ito umalis 
+[mis: nagwika > nag-iwuka] siya sa [mis: kasamang > kasamaha] aso [sub: hintayin > hintayan] mo na lang [mis: umimpis > umipis] 
+ang [mis: tiyan > yang] mo",4,fil,
+data/std038_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,"Balat ng Saging ""Lito! Lito!"" Si Mina ang sumisigaw. Kay lakas ng kanyang sigaw. ""Bakit, Ate? Ano iyon?"" Ito naman 
+ang tanong ni Lito. Lumapit siya kay Mina. Ayaw niyang sumigaw pa ang kanyang ate.","balat ng [sub: saging > singsing] lito lito si [sub: mina > mani] ang [sub: sumisigaw > sumigaw] kay lakas ng kanyang sigaw bakit ate ano 
+iyon ito naman ang tanong ni lito lumapit siya kay [sub: mina > manya] ayaw niyang [sub: sumigaw > gumising] pa ang kanyang ate",4,fil,
+data/std038_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,"""Balat ng saging ito, hindi ba? Sino ang nagtapon nito?"" Galit si Mina. Galit siya sa nagtapon ng balat ng saging.","balat ng [mis: saging > sang] ito hindi [sub: ba > pa] [sub: sino > siya] ang nagtapon [sub: nito > ito] galit si mina galit [sub: siya > niyang] 
+sa nagtapon ng balat ng saging",4,fil,
+data/std038_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,"""Ako, Ate,"" sagot ni Lito. Mahina ang kanyang sagot. Mahina ang kanyang tinig. ""Sabi ko na nga ba. Huwag ka 
+nang magtatapon dito, ha!","ako ate sagot ni lito mahina ang kanyang sagot mahina ang kanyang tinig sabi ko na nga [sub: ba > pa] huwag ka nang 
+[sub: magtatapon > magtapon] dito ha [ins: sa]",4,fil,
+data/std038_g4_fil_chunk_18.wav,▶ PLAY AUDIO,,,"Sa basurahan ka magtatapon. Hayan ang basurahan natin. Hayan, natapakan ko ang balat ng saging. Nadulas ako.""","[ins: ha] sa basurahan ka [sub: magtatapon > magtapon] hayan ang basurahan natin hayan nata-natapakan ko ang balat ng saging 
+nadulas ako",4,fil,
+data/std038_g4_fil_chunk_19.wav,▶ PLAY AUDIO,,,"""E... hindi ko sinasadya, Ate. Talaga, hindi ko sinasadya. Hindi na ako magtatapon. ""Mabuti. Mabuti kung gayon,"" 
+sabi ni Mina.","e hindi ko sinasadya ate talaga hindi ko sinasadya hindi na [sub: ako > ko] magtatapon [ins: ng] mabuti mabuti kung [sub: gayon > ganon] 
+[sub: sabi > sinabi] ni mina",4,fil,
+data/std040_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,"Ang aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong 
+niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain","ang aso sa [mis: lungga > lunga] may isang [sub: asong > aso] gutom na gutom na naglalakad sa kalsada habang naglalakad 
+ibinubulong niya sa sarili na kailangan niyang [sub: makakita > makita] ng isang [mis: lunggang > lugang] puno ng pagkain",4,fil,
+data/std040_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang mabusog. Pero 
+kahit busog na siya, kumain pa rin at inubos ang lahat ng pagkain sa loon ng lungga","nang [sub: makakita > makita] siya ng lungga sa dulo ng kalsada agad siyang pumasok [ins: in] dito kumain siya hanggang 
+mabusog pero kahit busog na siya kumain pa rin at inubos ang lahat ng pagkain sa loob ng [mis: lungga > lungas]",4,fil,
+data/std041_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"Ang Aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong niya
+sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain.","ang aso sa lungga may isang [mis: asong > aso] gutom na gutom na naglalakad sa kalsada habang naglalakad ibinubulong niya sa 
+sarili na kailangan niyang makakita ng isang [mis: lunggang > lungga] puno ng pagkain",4,fil,
+data/std041_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya","nang [sub: makakita > makita] siya [sub: ng > sa] lungga sa dulo ng kalsada agad siyang pumasok dito [mis: kumain > kumainan]
+[om_siya]",4,fil,
+data/std041_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"hanggang mabusog. Pero kahit busog na siya, kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga.",hanggang mabusog pero kahit busog na siya kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga,4,fil,
+data/std041_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"Sa kanyang kabusugan, halos pumutok ang malaki niyang tiyan. Nang lalabas na lamang siya, napansin niyang
+hindi na siya magkasya sa labasan.","sa kanyang [sub: kabusugan > nabusugan] halos pumutok ang malaki niyang tiyan nang lalabas na lamang siya napansin niyang
+hindi na siya [mis: magkasya > ma-ma-kasya] sa [ins: da] labasan",4,fil,
+data/std041_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,Sumigaw siya upang humingi ng tulong. Dumating ang isa pang aso at nalaman ang nangyari.,sumigaw siya upang humingi ng tulong dumating ang [ins: iya] isa pang aso at [ins: halama] nalaman ang [mis: nangyari > nangya],4,fil,
+data/std041_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,"Bago ito umalis, nagwika siya sa kasamang aso, ""Hintayin mo na lang umimpis ang tiyan mo.""",[ins: ri] bago ito umalis nagwi-nagwika siya sa kasamang aso hintayin mo na lang [ins: lu] [mis: umimpis > umipis] ang tiyan mo,4,fil,
+data/std041_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,Si Muning! Muning! Muning! Hanap nang hanap si Susan kay Muning. Dala ni Susan,si muning muning muning hanap nang hanap si [mis: susan > su-su-an] kay muning dala ni [mis: susan > sa],4,fil,
+data/std041_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"Susan ang lalagyan ng pagkain ni Muning. May laman na ang lalagyan, pero wala si Muning.",[mis: susan > su-an] ang lalagyan ng pagkain ni muning may lama-laman na a-ang lalagyan pero wala si muning,4,fil,
+data/std041_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,Wala siya sa kusina. Wala rin siya sa silid. Nasaan kaya si Muning? Bumaba ng bahay si Susan.,"[om_wala] siya sa [ins: kun] kusina wala rin siya sa silid [sub: nasaan > saan] kaya si muning bumaba ng bahay si [ins: sa] 
+[mis: susan > su-an]",4,fil,
+data/std041_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Hinanap niya kung naroon si Muning. Ikot na siya nang ikot, pero hindi pa rin niya nakita. Baka lumabas ito ng
+bahay. Ngiyaw! Ngiyaw!","hinanap niya kung naroon si muning ikot na siya nang ikot pero hindi pa rin niya nakita ba-baka lumabas ito ng bahay 
+[sub: ngiyaw > ingay] [sub: ngiyaw > ingay]",4,fil,
+data/std041_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,Hayun si Muning! Ngiyaw siya nang ngiyaw. Nasa loob siya ng kahon. May mga kasama si Muning sa loob ng kahon.,"hayun si muning [sub: ngiyaw > ingay] siya nang [sub: ngiyaw > ingay] nasa loob siya ng kahon may mga kasama si muning sa loob
+ng kahon",4,fil,
+data/std041_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,"Nakita ni Susan ang kasama ni Muning. Mga kuting ang kasama ni Muning sa kahon! May puti, itim","nakita ni [mis: susan > su-an] ang [sub: kasama > kasamang] ni muning [sub: mga > ang] kuting ang kasama ni muning sa kahon may 
+puti [mis: itim > iti]",4,fil,
+data/std041_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,at magkahalong puti at itim na kulay ng kuting. Tuwang-tuwa si Susan!,at [mis: magkahalong > magkakahalog] puti at itim na kulay ng kuting tuwang-tuwa si [mis: susan > su-an],4,fil,
+data/std041_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,"Si Brownie. Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na 
+malaking manok sa aming bakuran.","si brownie si brownie ay aking alagang aso ang aking aso ay masamang ga-magalit minsan ay may pumasok na malaking manok 
+[sub: sa > ay] aming [ins: bak] [ins: aming] bakuran",4,fil,
+data/std041_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,"Kaagad niya itong tinahulan. Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito. 
+Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran.","kaagad niya [sub: itong > ito] [mis: tinahulan > tinahul] kung hindi lamang siya nakatali nang mahigpit malamang na [ins: na] habulin 
+niya ito nag-nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran",4,fil,
+data/std041_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,Kagabi ay hindi ko naitali si Brownie. Panay ang ungol niya. Maya-maya,kagabi ay hindi ko naitali si brownie panay ang [mis: ungol > unggol] niya [ins: pa] maya-maya,4,fil,
+data/std041_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,ay may tinahulan siya nang malakas. Biglang lumukso si Brownie sa kanyang tulugan at may hinabol.,ay may tinahulan siya [ins: nag] nang mala-malakas biglang lumukso si brownie sa kanyang tulugan at may hinabol [ins: dal],4,fil,
+data/std041_g4_fil_chunk_18.wav,▶ PLAY AUDIO,,,"Dali-dali kong sinilip ang aking alaga. May napatay siyang daga! Bahagya pa niyang ginalaw ang kanyang buntot 
+nang makita ako.","dali-dali kong sinilip ang aking alaga may napatay siyang daga bahag-bahagya [ins: sa] [ins: ay] pa niyang ginalaw ang kanyang buntot
+[ins: nag] [ins: ng] [ins: mala] nang makita ako",4,fil,
+data/std041_g4_fil_chunk_19.wav,▶ PLAY AUDIO,,,"Kaagad kong binitbit sa buntot ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie. ""Talagang
+maaasahan ang asong ito,"" sabi niya.","kaagad kong binitbit [sub: sa > ang] buntot a-ang daga at ipinakita [ins: ko] kay tatay masayang hinimas ni tatay si brownie talagang
+[mis: maaasahan > maasahan] ang asong ito sabi niya",4,fil,
+data/std041_g4_fil_chunk_20.wav,▶ PLAY AUDIO,,,"Balat ng Saging ""Lito! Lito!"" Si Mina ang sumisigaw. Kay lakas ng kanyang sigaw. ""Bakit, Ate? Ano iyon?"" Ito naman 
+ang tanong ni Lito.","balat ng saging lito lito si [mis: mina > nama] ang sumi-sumigaw [sub: kay > ng] [sub: lakas > malakas] ng kanyang sigaw bakit ate ano
+iyon ito naman ang tanong ni lito",4,fil,
+data/std041_g4_fil_chunk_21.wav,▶ PLAY AUDIO,,,"Lumapit siya kay Mina. Ayaw niyang sumigaw pa ang kanyang ate. ""Balat ng saging ito, hindi ba? Sino ang 
+nagtapon nito?""","lumapit siya [ins: sa] kay mina [sub: ayaw > ay] niyang sumigaw pa ang kanyang ate balat [ins: na] ng saging ito [ins: ay] [ins: hin]
+[ins: ito] hindi ba sino ang nagtapon [ins: it] nito",4,fil,
+data/std041_g4_fil_chunk_22.wav,▶ PLAY AUDIO,,,"Galit si Mina. Galit siya sa nagtapon ng balat ng saging. ""Ako, Ate,"" sagot ni Lito. Mahina ang kanyang sagot.",galit si mina galit siya sa nagtapon ng balat [sub: ng > sa] saging ako ate sagot ni lito mahina [sub: ang > na] kanyang sagot,4,fil,
+data/std041_g4_fil_chunk_23.wav,▶ PLAY AUDIO,,,"Mahina ang kanyang tinig. ""Sabi ko na nga ba. Huwag ka nang magtatapon dito, ha! Sa basurahan ka magtatapon.","mahina ang kanyang tinig sabi ko na [ins: ang] [ins: ay] [ins: nga] [ins: na] nga ba huwag ka nang magtatapon dito [ins: sa] ha sa
+[ins: basura] basurahan ka magtatapon",4,fil,
+data/std041_g4_fil_chunk_24.wav,▶ PLAY AUDIO,,,"Hayan ang basurahan natin. Hayan, natapakan ko ang balat ng saging. Nadulas ako."" ""E... hindi ko sinasadya, Ate.","hayan ang basurahan natin hayan [mis: natapakan > nakapakan] ko ang balat ng saging nadulas ako e hindi ko 
+[mis: sinasadya > nisasadya] a-ate",4,fil,
+data/std041_g4_fil_chunk_25.wav,▶ PLAY AUDIO,,,"Talaga, hindi ko sinasadya. Hindi na ako magtatapon ng balat ng saging kahit saan.",talaga hindi ko sinasadya hindi [sub: na > ko] ako magtatapon ng balat ng saging kahit saan,4,fil,
+data/std041_g4_fil_chunk_26.wav,▶ PLAY AUDIO,,,"Sa basurahan na ako magtatapon."" ""Mabuti. Mabuti kung gayon,"" sabi ni Mina.",sa basurahan na ako magtatapon mabuti mabuti kung [sub: gayon > ngayon] sabi ni mina,4,fil,
+data/std042_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Fred,,"Ang Aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad,",ang aso sa [sub: lungga > lingga] may isang asong gutom na gutom na naglalakad sa kalsada habang naglalakad,4,fil,
+data/std042_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,ibinubulong niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain.,"ibinubulong niya sa sarili na [mis: kailangan > kalinggan] niyang makakita ng isang lunggang [ins: unong] [sub: puno > punong] ng 
+[ins: punong] [om_pagkain]",4,fil,
+data/std042_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Kumain siya hanggang mabusog. Pero kahit busog na siya,",kumain siya [ins: hang] [ins: kuma-kumain] [ins: siya] [mis: hanggang > hangga-gang] mabusog [ins: pa] pero kahit busog na siya,4,fil,
+data/std042_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga.,kumain pa rin at [ins: pu] inubos ang lahat ng pagkain sa [mis: loob > lob] ng lungga,4,fil,
+data/std042_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Sa kanyang kabusugan, halos pumutok ang malaki niyang tiyan.",sa kanyang kabusugan halos [ins: nasi] pu-pumutok [sub: ang > ng] malaki niyang tiyan [ins: na],4,fil,
+data/std042_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,"Nang lalabas na lamang siya, napansin niyang hindi na siya magkasya sa labasan.", nang lalabas na lamang [sub: siya > siyang] napansin niyang hi-hindi na [sub: siya > siyang] magkasya sa labas-san,4,fil,
+data/std042_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,Sumigaw siya upang humingi ng tulong. Dumating,sumigaw [sub: siya > siyang] upang [mis: humingi > huminge] ng tulong dumating [ins: a],4,fil,
+data/std042_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"isa pang aso at nalaman ang nangyari. Bago ito umalis, nagwika siya sa kasamang aso, ""Hintayin mo na lang 
+umimpis ang tiyan mo.""","[sub: isa > isang] pang aso [sub: at > ang] nalaman [sub: ang > ng] nangyari bago ito [ins: imali] umalis [mis: nagwika > nangwika] 
+[sub: siya > siyang] sa [sub: kasamang > kasama] [ins: ang] aso hintayin mo na lang umi-umimpis [sub: ang > ng] tiyan mo",4,fil,
+data/std042_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,Si Muning! Muning! Muning! Hanap nang hanap si Susan kay Muning. Dala ni Susan ang lalagyan ng pagkain ni,"si muning muning muning hanap nang hanap [sub: si > sa] susan kay muning dala ni susan ang [sub: lalagyan > lagyan] ng 
+[mis: pagkain > pagakain] ni",4,fil,

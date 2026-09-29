@@ -22,3 +22,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+ml/training/audio_files/
+bigkas_ai
+ml-service/training/audio_files/

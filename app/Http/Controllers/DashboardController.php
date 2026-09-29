@@ -99,13 +99,38 @@ class DashboardController extends Controller
             'total_users' => \App\Models\User::count(),
             'total_learners' => Learner::count(),
             'total_assessments' => Assessment::count(),
+            'total_teachers' => \App\Models\User::where('role', 'teacher')->count(),
+            'total_schools' => \App\Models\School::count(),
             'frustration_learners' => Learner::where('reading_level', 'frustration')->count(),
         ];
+
+        $distributionData = Learner::select('reading_level', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('reading_level')
+            ->pluck('count', 'reading_level')
+            ->toArray();
+
+        $distribution = [
+            'independent'  => $distributionData['independent'] ?? 0,
+            'instructional' => $distributionData['instructional'] ?? 0,
+            'frustration'  => $distributionData['frustration'] ?? 0,
+            'not_assessed' => ($distributionData[''] ?? 0) + ($distributionData[null] ?? 0),
+        ];
+
+        // Monthly Data (Last 6 months)
+        $monthlyLabels = [];
+        $monthlyCounts = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $monthlyLabels[] = $date->format('M');
+            $monthlyCounts[] = Assessment::whereMonth('created_at', $date->month)
+                ->whereYear('created_at', $date->year)
+                ->count();
+        }
 
         $recentAssessments = Assessment::with(['learner', 'material', 'result', 'assessor'])
             ->latest()->limit(10)->get();
 
-        return view('dashboard.admin', compact('stats', 'recentAssessments'));
+        return view('dashboard.admin', compact('stats', 'recentAssessments', 'distribution', 'monthlyLabels', 'monthlyCounts'));
     }
 
     private function studentDashboard($user)

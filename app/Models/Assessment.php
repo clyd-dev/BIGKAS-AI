@@ -67,12 +67,12 @@ class Assessment extends Model
 
     public function getAudioPath(): string
     {
-        return storage_path('app/audio/' . $this->audio_file);
+        return Storage::disk('public')->path($this->audio_file);
     }
 
     public function getAudioUrl(): string
     {
-        return '/storage/audio/' . $this->audio_file;
+        return $this->audio_file ? Storage::url($this->audio_file) : '';
     }
 
     public function hasAudio(): bool
@@ -155,7 +155,7 @@ class Assessment extends Model
     {
         $result = $this->result;
 
-        if (!$result || !$result->primary_weakness) {
+        if (!$result || $result->primary_weakness === null || $result->primary_weakness === 0) {
             return collect();
         }
 

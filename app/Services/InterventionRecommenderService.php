@@ -17,7 +17,7 @@ class InterventionRecommenderService
         $recommendations = [];
 
         // Primary weakness interventions
-        if ($result->primary_weakness) {
+        if ($result->primary_weakness !== null && $result->primary_weakness !== 0) {
             $primary = $this->getInterventionsForWeakness($result->primary_weakness, $learner->grade_level, $userRole);
             foreach ($primary as $intervention) {
                 $recommendations[] = [
@@ -30,7 +30,7 @@ class InterventionRecommenderService
         }
 
         // Secondary weakness interventions
-        if ($result->secondary_weakness && $result->secondary_weakness !== $result->primary_weakness) {
+        if ($result->secondary_weakness !== null && $result->secondary_weakness !== $result->primary_weakness && $result->secondary_weakness !== 0) {
             $secondary = $this->getInterventionsForWeakness($result->secondary_weakness, $learner->grade_level, $userRole);
             foreach ($secondary as $intervention) {
                 $recommendations[] = [

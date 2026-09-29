@@ -43,6 +43,13 @@ return [
         'timeout' => 60,
     ],
 
+    // Whisper STT Mode Configuration
+    // Set WHISPER_USE_LOCAL=true in .env to use local faster-whisper via the Python Flask service
+    // Set WHISPER_USE_LOCAL=false to use the OpenAI cloud API (requires OPENAI_API_KEY)
+    'whisper' => [
+        'use_local' => env('WHISPER_USE_LOCAL', true),
+    ],
+
     // Google Cloud Speech-to-Text (alternative)
     'google_speech' => [
         'credentials_path' => env('GOOGLE_APPLICATION_CREDENTIALS', ''),

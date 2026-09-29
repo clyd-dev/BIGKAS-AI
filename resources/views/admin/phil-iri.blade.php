@@ -415,7 +415,7 @@
                                                             @endif
                                                         </td>
                                                         <td class="text-center small">
-                                                            @if($l['primary_weakness'])
+                                                            @if($l['primary_weakness'] !== null)
                                                                 @php
                                                                     $weaknesses = config('bigkas.weakness_categories', []);
                                                                     $wk = $weaknesses[$l['primary_weakness']] ?? null;

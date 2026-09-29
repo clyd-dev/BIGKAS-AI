@@ -154,18 +154,20 @@ class Intervention extends Model
     {
         $recommendations = [];
 
-        if ($result->primary_weakness) {
+        if ($result->primary_weakness !== null) {
+            // For independent readers (class 0), we might not have specific interventions 
+            // but we fetch them if they exist
             $primary = self::getByWeakness($result->primary_weakness, $learner->grade_level, $userRole);
             foreach ($primary->take(3) as $intervention) {
                 $recommendations[] = [
                     'intervention' => $intervention,
                     'priority' => 'high',
-                    'reason' => 'Addresses primary weakness: ' . $intervention->getWeaknessInfo()['name'],
+                    'reason' => 'Addresses primary profile: ' . $intervention->getWeaknessInfo()['name'],
                 ];
             }
         }
 
-        if ($result->secondary_weakness && $result->secondary_weakness !== $result->primary_weakness) {
+        if ($result->secondary_weakness !== null && $result->secondary_weakness !== $result->primary_weakness) {
             $secondary = self::getByWeakness($result->secondary_weakness, $learner->grade_level, $userRole);
             foreach ($secondary->take(2) as $intervention) {
                 $recommendations[] = [

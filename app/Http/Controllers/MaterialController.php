@@ -31,6 +31,88 @@ class MaterialController extends Controller
         return view('materials.index', compact('materials', 'gradeLevels'));
     }
 
+    /**
+     * JSON options for the teacher assessment wizard.
+     *
+     * Chain: grade (from learner) → language (en/fil) → assessment type →
+     * material (last). Returns exact-grade matches plus an adjacent-grade
+     * (±1) fallback group when the exact set is empty.
+     *
+     * Assessment type filters by comprehension-question availability:
+     * oral_reading = all materials; comprehension/combined = only
+     * materials that have comprehension questions.
+     */
+    public function options(Request $request)
+    {
+        $validated = $request->validate([
+            'grade_level' => 'required|integer|min:1|max:12',
+            'language' => 'required|in:en,fil',
+            'assessment_type' => 'required|in:oral_reading,comprehension,combined',
+            'with_fallback' => 'nullable|boolean',
+        ]);
+
+        $needsQuestions = in_array($validated['assessment_type'], ['comprehension', 'combined'], true);
+
+        $buildQuery = function () use ($validated, $needsQuestions) {
+            $query = ReadingMaterial::active()
+                ->where('language', $validated['language'])
+                ->withCount('comprehensionQuestions');
+
+            if ($needsQuestions) {
+                $query->whereHas('comprehensionQuestions');
+            }
+
+            return $query;
+        };
+
+        $shape = fn (ReadingMaterial $material) => [
+            'id' => $material->id,
+            'title' => $material->title,
+            'grade_level' => $material->grade_level,
+            'grade_level_name' => $material->getGradeLevelName(),
+            'language' => $material->language,
+            'language_name' => $material->getLanguageName(),
+            'word_count' => $material->word_count,
+            'category' => $material->category,
+            'difficulty' => $material->difficulty,
+            'has_questions' => ($material->comprehension_questions_count ?? 0) > 0,
+        ];
+
+        $exact = $buildQuery()
+            ->where('grade_level', $validated['grade_level'])
+            ->orderBy('title')
+            ->get()
+            ->map($shape)
+            ->values();
+
+        $fallback = [];
+        if ($request->boolean('with_fallback', true) && $exact->isEmpty()) {
+            $adjacent = array_values(array_filter(
+                [$validated['grade_level'] - 1, $validated['grade_level'] + 1],
+                fn ($grade) => $grade >= 1 && $grade <= 12
+            ));
+
+            $fallback = $buildQuery()
+                ->whereIn('grade_level', $adjacent)
+                ->orderBy('grade_level')
+                ->orderBy('title')
+                ->get()
+                ->map($shape)
+                ->values();
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'exact' => $exact,
+                'fallback' => $fallback,
+                'grade_level' => (int) $validated['grade_level'],
+                'language' => $validated['language'],
+                'assessment_type' => $validated['assessment_type'],
+            ],
+        ]);
+    }
+
     public function create()
     {
         $gradeLevels = config('bigkas.grade_levels', []);

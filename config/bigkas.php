@@ -42,6 +42,11 @@ return [
 
     // Reading weakness categories
     'weakness_categories' => [
+        0 => [
+            'name' => 'Independent Reader',
+            'code' => 'INDEPENDENT',
+            'description' => 'Reads fluently with no significant weakness',
+        ],
         1 => [
             'name' => 'Phonemic Awareness',
             'code' => 'PHONEMIC',

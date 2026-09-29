@@ -24,11 +24,46 @@ class SpeechToTextService
             throw new \Exception("Audio file not found: {$audioPath}");
         }
 
-        if (empty($this->apiKey)) {
-            return $this->mockTranscribe($audioPath, $language);
+        // Priority 1: Local Whisper via Python Flask (self-hosted, no API cost)
+        if (config('services.whisper.use_local', true)) {
+            try {
+                return $this->callLocalWhisper($audioPath, $language);
+            } catch (\Exception $e) {
+                \Log::warning('Local Whisper failed, trying fallbacks: ' . $e->getMessage());
+                // Fall through to next option
+            }
         }
 
-        return $this->callWhisperApi($audioPath, $language);
+        // Priority 2: OpenAI Cloud API (requires API key)
+        if (!empty($this->apiKey)) {
+            return $this->callWhisperApi($audioPath, $language);
+        }
+
+        // Priority 3: Mock transcription (for development/testing only)
+        \Log::info('No STT service available. Using mock transcription.');
+        return $this->mockTranscribe($audioPath, $language);
+    }
+
+    /**
+     * Call the local faster-whisper model running inside the Python Flask microservice.
+     * This sends the audio file to /api/transcribe on the same Flask server
+     * that hosts the RF classifier, keeping everything self-hosted.
+     */
+    protected function callLocalWhisper(string $audioPath, string $language): array
+    {
+        $mlApiUrl = config('services.ml_api.url', 'http://127.0.0.1:5000');
+
+        $response = Http::timeout(120) // Local CPU inference can be slow
+            ->attach('audio', file_get_contents($audioPath), basename($audioPath))
+            ->post($mlApiUrl . '/api/transcribe', [
+                'language' => $language,
+            ]);
+
+        if (!$response->successful()) {
+            throw new \Exception("Local Whisper error: HTTP {$response->status()} - {$response->body()}");
+        }
+
+        return $this->formatWhisperResponse($response->json());
     }
 
     protected function callWhisperApi(string $audioPath, string $language): array
@@ -61,7 +96,7 @@ class SpeechToTextService
                     'word' => $word['word'],
                     'start' => $word['start'],
                     'end' => $word['end'],
-                    'confidence' => 1.0,
+                    'confidence' => $word['confidence'] ?? 1.0,
                 ];
             }
         }

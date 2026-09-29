@@ -178,6 +178,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/practice/sight-words', [PracticeController::class, 'sightWords'])->name('practice.sight-words');
         Route::get('/practice/reading', [PracticeController::class, 'guidedReading'])->name('practice.reading');
         Route::post('/practice/complete', [PracticeController::class, 'complete'])->name('practice.complete');
+        Route::get('/practice/items', [PracticeController::class, 'items'])->name('practice.items');
+        Route::get('/practice/materials', [PracticeController::class, 'materials'])->name('practice.materials');
+        Route::get('/practice/recommend/{learner}', [PracticeController::class, 'recommend'])->name('practice.recommend');
+        Route::get('/practice/history/{learner}', [PracticeController::class, 'history'])->name('practice.history');
+        Route::post('/practice/analyze/{learner}/{material}', [PracticeController::class, 'analyzeGuidedReading'])->name('practice.analyze');
     });
 
     // ----------------------------------------

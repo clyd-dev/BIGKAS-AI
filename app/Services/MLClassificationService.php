@@ -44,24 +44,40 @@ class MLClassificationService
     /**
      * Rule-Based Fallback (from your capstone architecture proposal)
      * This acts as the safety net if the Python AI is offline.
+     *
+     * Updated to use the 12-feature rate-based keys that match the
+     * ml_features array from ReadingAnalyzerService::analyze().
+     * This way, classify() receives the same array whether it routes
+     * to Flask or falls back to rules — no key translation needed.
      */
     protected function fallbackClassification(array $features): array
     {
-        $wpm = $features['wpm'] ?? 0;
-        $accuracy = $features['accuracy'] ?? 0;
-        $substitutions = $features['substitutions'] ?? 0;
-        $omissions = $features['omissions'] ?? 0;
+        $accuracy = $features['accuracy_rate'] ?? 0;
+        $wpm = $features['words_per_minute'] ?? 0;
+        $fluency = $features['fluency_score'] ?? 5;
+        $subRate = $features['substitution_rate'] ?? 0;
+        $omRate = $features['omission_rate'] ?? 0;
+        $phoneticRate = $features['phonetic_error_rate'] ?? 0;
+        $vowelRate = $features['vowel_error_rate'] ?? 0;
+        $blendRate = $features['blend_error_rate'] ?? 0;
+        $pauseFreq = $features['pause_frequency'] ?? 0;
 
         $primary = 'Instructional (Mixed)';
 
-        if ($accuracy >= 95 && $wpm >= 110) {
-            $primary = 'None (Independent)';
-        } elseif ($accuracy >= 90 && $wpm < 100) {
-            $primary = 'Oral Reading Fluency';
-        } elseif ($substitutions > $omissions && $accuracy < 90) {
-            $primary = 'Decoding Accuracy';
-        } elseif ($omissions >= 3 && $accuracy < 85) {
-            $primary = 'Phonemic Awareness';
+        if ($accuracy >= 95 && $wpm >= 60 && $fluency >= 8) {
+            $primary = '0';
+        } elseif (($phoneticRate + $vowelRate + $blendRate) > 0.5 && $accuracy < 85) {
+            // More than half of all errors are phonemic in nature
+            $primary = '1';
+        } elseif ($subRate > 0.1 && $accuracy < 90) {
+            // High substitution rate + low accuracy = decoding problem
+            $primary = '2';
+        } elseif ($accuracy >= 90 && ($wpm < 80 || $fluency < 6 || $pauseFreq > 0.1)) {
+            // Can decode but reads slowly/haltingly
+            $primary = '3';
+        } elseif ($omRate > 0.1 && $accuracy >= 85) {
+            // Skipping words despite being able to decode = possible comprehension issue
+            $primary = '4';
         }
 
         return [

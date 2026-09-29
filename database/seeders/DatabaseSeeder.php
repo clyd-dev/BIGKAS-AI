@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             InterventionSeeder::class,
             SystemSettingSeeder::class,
             BadgeSeeder::class,
+            PracticeItemSeeder::class,
         ]);
     }
 }

@@ -88,7 +88,7 @@
                             $weaknessLabels = config('bigkas.weakness_categories', []);
                         @endphp
 
-                        @if($result->primary_weakness)
+                        @if($result->primary_weakness !== null)
                             <div class="alert alert-warning mb-3">
                                 <strong>Primary:</strong> {{ $weaknessLabels[$result->primary_weakness]['name'] ?? 'Unknown' }}
                                 @if($result->weakness_confidence)

@@ -44,12 +44,12 @@
     <ul class="nav nav-pills nav-justified mb-4" style="background-color: #f8f9fa; border-radius: 50rem; padding: 0.3rem;">
         <li class="nav-item">
             <a class="nav-link text-muted" href="{{ route('login') }}" style="border-radius: 50rem; font-weight: 600;">
-                <i class="bi bi-person-badge me-1"></i> Staff & Parents
+                <i class="bi bi-person-badge me-1"></i> Login
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link active shadow-sm" href="{{ route('student.login') }}" style="border-radius: 50rem; font-weight: 600; background-color: var(--kid-primary);">
-                <i class="bi bi-emoji-smile me-1"></i> Learners (PIN)
+                <i class="bi bi-emoji-smile me-1"></i> Learners
             </a>
         </li>
     </ul>
@@ -87,14 +87,35 @@
 
 @push('scripts')
 <script>
-    // Auto-submit when all 6 digits are entered
-    document.querySelectorAll('.pin-digit').forEach((input, index, all) => {
-        input.addEventListener('input', () => {
-            const filled = Array.from(all).every(d => d.value.length === 1);
+    const pinInput = document.getElementById('pinInput');
+    const digits = document.querySelectorAll('.pin-digit');
+
+    // Make sure pin is set before form submit
+    document.getElementById('pinForm').addEventListener('submit', () => {
+        pinInput.value = Array.from(digits).map(d => d.value).join('');
+    });
+
+    digits.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            // Auto advance
+            if (input.value && index < digits.length - 1) {
+                digits[index + 1].focus();
+            }
+
+            // Auto-submit when all 6 digits are entered
+            const filled = Array.from(digits).every(d => d.value.length === 1);
             if (filled) {
+                pinInput.value = Array.from(digits).map(d => d.value).join('');
                 setTimeout(() => {
                     document.getElementById('pinForm').submit();
                 }, 200);
+            }
+        });
+
+        // Handle backspace to go to previous input
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !input.value && index > 0) {
+                digits[index - 1].focus();
             }
         });
     });

@@ -172,7 +172,7 @@
         @endif
 
         {{-- Recommendations for Parents --}}
-        @if($result->primary_weakness)
+        @if($result->primary_weakness !== null)
             @php $weaknessLabels = config('bigkas.weakness_categories', []); @endphp
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-house-heart me-1"></i>How You Can Help at Home</h6></div>

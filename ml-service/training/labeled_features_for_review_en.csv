@@ -1,0 +1,585 @@
+file_name,grade_level,language,accuracy_rate,words_per_minute,fluency_score,substitution_rate,omission_rate,insertion_rate,phonetic_error_rate,vowel_error_rate,blend_error_rate,self_correction_rate,pause_frequency,prosody_score,total_words,correct_words,total_errors,duration_sec,flagged_hyphenated_tokens,provisional_weakness_label,teacher_confirmed_label,prosody_score_teacher,reduplication_review,click_to_play,prompt_text,annotated_transcript,annotation_issue,teacher_notes
+data/std001_g3_en_chunk_01.wav,3,en,76.47,69.0,9.0,0.206,0.029,0.029,0.0,0.571,0.143,0.0,0.0,,34,26,9,22.62,,1,,,,▶ PLAY AUDIO,"My friend. Tony is my friend. We are playmates. We like to
+ride our bikes. We also play hide and seek. It is fun to
+play with my friend. Red ball on the Floor.","my friend tony is my [om_friend] we are playmates we like to
+[mis: ride > red] our bikes we [ins: ah] also play [mis:
+hide > hed] and [sub: seek > sicks] [mis: it > et] is [mis:
+fun > pun] to play [sub: with > which] my friend red ball on
+the [mis: floor > ploor]",,
+data/std001_g3_en_chunk_02.wav,3,en,69.44,60.3,7.5,0.222,0.083,0.0,0.125,0.625,0.125,0.0,0.0,,36,25,11,24.89,,1,,,,▶ PLAY AUDIO,"The ball is on the floor. It is a red ball. It is a rubber
+ball. The baby looks at the ball. The cat looks at the ball.
+The cat is black. The cat walks over","the ball [mis: is > es] on the [mis: floor > ploor] [mis: it
+> et] [mis: is > es] a red ball [om_it] [om_is] [om_a] [mis:
+rubber > arber] ball the [mis: baby > bibi] looks at the
+ball the cat looks at the ball the cat is black the cat
+[mis: walks > waks] [mis: over > ober]",,
+data/std001_g3_en_chunk_03.wav,3,en,61.76,50.5,7.5,0.324,0.059,0.0,0.0,0.455,0.364,0.0,0.0,,34,21,13,24.93,,2,,,,▶ PLAY AUDIO,"to the ball. The cat hits the ball with its paw. The ball
+rolls on the floor. The baby smiles. Parents save babies.
+The house is on fire. Flames come out of the windows.","to the ball the cat [sub: hits > this] the ball [sub: with >
+which] its [sub: paw > tow] the ball rolls on the [mis:
+floor > ploor] the baby [mis: smiles > milis] [mis: parents
+> pirints] [mis: save > seb] [sub: babies > baby] the house
+[om_is] on [sub: fire > pry] [sub: flames > plan] come
+[om_out] [mis: of > off] the windows",,
+data/std001_g3_en_chunk_04.wav,3,en,100.0,105.5,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,41,41,0,23.31,,0,,,,▶ PLAY AUDIO,"Smoke comes out of the windows. A man runs out of the house.
+He carries a baby in his arms. A woman runs out of the
+house. She carries a baby in her arms. A fire truck arrives
+at the house.","smoke comes out of the windows a man runs out of the house
+he carries a baby in his arms a woman runs out of the house
+she carries a baby in her arms a fire truck arrives at the
+house",,
+data/std001_g3_en_chunk_05.wav,3,en,64.29,68.4,7.5,0.19,0.167,0.048,0.125,0.375,0.25,0.0,0.0,,42,27,17,23.68,,2,,,,▶ PLAY AUDIO,"A backpack and a bus. It is time to go to school. He puts
+his books into his backpack. He puts his arms through the
+straps. He puts his backpack on his back. He walks outside.
+He goes to the bus stop.","a backpack and a bus it is time to go [mis: to > t] school
+he [sub: puts > pass] his books [mis: into > to] [om_his]
+[sub: backpack > backs] [om_he] [om_puts] his [mis: arms >
+arm] [om_through] [om_the] [om_straps] [ins:the] he [sub:
+puts > pass] his backpack on [mis: his > this] back he walks
+[om_outside] he [mis: goes > goats] to the [ins:back]",,
+data/std001_g3_en_chunk_06.wav,3,en,60.0,23.1,5.0,0.2,0.2,0.067,0.0,0.333,0.333,0.0,0.0,,15,9,7,23.42,,3,,,,▶ PLAY AUDIO,"He stands at the bus stop. He waits for the bus. He sees the
+bus.","[om_he] [om_stands] at he bus [om_stop] he [mis: waits >
+wes] [mis: for > por] the [mis: bus > ba] [ins:ay]",,
+data/std002_g3_en_chunk_01.wav,3,en,97.92,141.0,10.0,0.021,0.0,0.042,0.0,1.0,0.0,0.0,0.0,,48,47,3,20.0,,0,,,,▶ PLAY AUDIO,"This is my car. My name is Joy. Hello everyone. That is my
+toy. She sing a love song. He is a boy. Look at that. When I
+see you. Where are you? I love you. Baby goes to sleep. The
+baby crawls on the floor. It stops","this is my car my name is joy hello everyone that is my toy
+she sings a love song he is a boy look at tha when i see you
+where are you [ins:la] i love you a baby [mis: goes > guys]
+to seep te baby crawls on the floor [ins:in] it stops",,
+data/std002_g3_en_chunk_02.wav,3,en,97.37,111.0,10.0,0.026,0.0,0.0,0.0,1.0,0.0,0.0,0.0,,38,37,1,20.0,,0,,,,▶ PLAY AUDIO,"Then it crawls some more. Then it stops again. Mama looks at
+the baby. She picks up the baby. She carries the baby to the
+crib. She puts the baby in the crib. She puts a blanket on","then it crawls some more [sub: then > than] it stops again
+mama looks at the baby she picks up th baby she carries the
+baby to the crib she puts the baby in th crib she puts on",,
+data/std002_g3_en_chunk_03.wav,3,en,97.56,120.0,10.0,0.024,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,41,40,1,20.0,,0,,,,▶ PLAY AUDIO,"The baby. The baby falls asleep. Mommy is big. Daddy is
+humble. So who are you? I buy a cake. I want to dance. All I
+have to say is yes. Be my lady. Pretty girl. Well enjoy. The
+school is","the baby the baby falls asleep mommy is big daddy is humble
+so who are you i buy a cake i want to dance all i have to
+say is yes be my lady pretty girls [sub: well > wer] enjoy
+the school is",,
+data/std002_g3_en_chunk_04.wav,3,en,97.06,99.0,10.0,0.029,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,34,33,1,20.0,,0,,,,▶ PLAY AUDIO,"big. My friend. Toni is my friend. We are playmates. We like
+to ride our bikes. We also play hide and seek. It is fun to
+play with my friend. Vic has a pig.","big my friend toni is my friend we are playmates we like to
+ride our bikes we also play hide and seek it is fun to play
+with my friend vic has a [sub: pig > big]",,
+data/std002_g3_en_chunk_05.wav,3,en,92.31,72.0,10.0,0.077,0.0,0.0,0.5,0.0,0.0,0.0,0.0,,26,24,2,20.0,,1,,,,▶ PLAY AUDIO,"It is big and fat. It lives in the pen. The pig has six
+piglets. Vic feeds them everyday. Richard has a kite. Its
+color is","it is big and fat it [mis: lives > lives] in the pen the
+[sub: pig > big] as six piglets vic feeds them everyday
+riririchard has a kikikite its color is",,
+data/std002_g3_en_chunk_06.wav,3,en,93.75,90.0,10.0,0.062,0.0,0.0,0.0,0.5,0.0,0.0,0.0,,32,30,2,20.0,,1,,,,▶ PLAY AUDIO,"White. He hides it under the pine tree. He gets dressed,
+sees his friends. The boy puts on his socks. He puts on his
+shoes. He ties his shoelaces. He walks to","white he hides it under the pine tree he gets dressed [mis:
+sees > see] his friend th boy puts on his socks he pus on
+his gloves he ties his [mis: shoelaces > shoelays] he walks
+to",,
+data/std002_g3_en_chunk_07.wav,3,en,97.37,111.0,10.0,0.026,0.0,0.0,0.0,1.0,0.0,0.0,0.0,,38,37,1,20.0,,0,,,,▶ PLAY AUDIO,"the front door. He turns the doorknob. He pulls the door
+open. He steps outside. He closes the door behind him. He
+walks to the corner. He sees his friend. He waves to his
+friend. Sammy the singing","the front door he turns the [mis: doorknob > doornub] he
+pulls the door open he steps outside he close the door
+behind him he walks to the corner he sees his friend he
+waves to his friend sammy th singing",,
+data/std002_g3_en_chunk_08.wav,3,en,88.24,90.0,10.0,0.118,0.0,0.059,0.0,0.5,0.0,0.0,0.0,,34,30,6,20.0,,1,,,,▶ PLAY AUDIO,"Sparrow. Sammy was a shy sparrow who loved to sing but was
+too afraid to perform in front of others. One day, a storm
+damaged the nest of some baby birds, and they wouldn't","sparrow sammy was a shy sparrow who loved to sing but was
+too afraid to per-performin front [mis: of > off] others one
+day a storm [mis: damaged > dumbmage] the nest [mis: of >
+off] some [ins:buy] [ins:ay] baby birds and they [mis:
+wouldn't > wondt]",,
+data/std002_g3_en_chunk_09.wav,3,en,87.88,87.0,9.5,0.121,0.0,0.0,0.0,1.0,0.0,0.03,0.0,,33,29,4,20.0,bro-brought,1,,,,▶ PLAY AUDIO,"wouldn't stop crying. Sammy started singing to comfort them.
+His sweet voice calmed the babies and brought joy to
+everyone who heard him. From then on, Sammy sang proudly,
+knowing his music could","[mis: wouldn't > wondt] stop crying sammy [mis: started >
+start] singing to comfort them his sweet voice calmed the
+babies and bro-brought joy to eveyone who eard him from then
+on sammy sang proudly knowing [mis: his > hes] music [mis:
+could > col]",,
+data/std002_g3_en_chunk_10.wav,3,en,90.7,117.0,10.0,0.093,0.0,0.0,0.0,0.25,0.0,0.0,0.0,,43,39,4,20.0,,1,,,,▶ PLAY AUDIO,"make others happy. Cookie on the floor. She takes a cookie
+out of the package. She drops the cookie. It falls on the
+floor. The cookie breaks. It breaks into four pieces. Four
+pieces are on the floor. She picks up the pieces.","make others happy cookie on the floor she takes a cookie out
+of the package she [mis: drops > drafts] th cookie it falls
+on the floor the cookie breaks it breaks into four [mis:
+pieces > piece] four [mis: pieces > piece] are on the floor
+she picks up the [mis: pieces > piece]",,
+data/std002_g3_en_chunk_11.wav,3,en,97.3,108.0,9.5,0.027,0.0,0.0,1.0,0.0,0.0,0.027,0.0,,37,36,1,20.0,ta-takes,0,,,,▶ PLAY AUDIO,"She takes them to the kitchen. She throws them into the
+trashcan. She takes another cookie out of the package. He
+eats a candy bar. He picks up the candy bar. He reads the
+label. The label","she takes them to the kitchen she [mis: throws > trows] them
+into the trashcan she ta-takes another cookie out of the
+package he eats a candy bar he picks up the candy bar he
+reads the label the label",,
+data/std002_g3_en_chunk_12.wav,3,en,86.21,75.0,10.0,0.138,0.0,0.0,0.25,0.25,0.25,0.0,0.0,,29,25,4,20.0,,1,,,,▶ PLAY AUDIO,"says Baby Ruth. He unwraps the candy bar. He throws the
+wrapper into the trashcan. He bites into the candy bar. He
+chews it. He swallows it. He bites","says baby ruth he [mis: unwraps > onraps] the candy bar he
+[mis: throws > trows] the [mis: wrapper > ropper] into the
+trashcan he bites into the candy bar he [mis: chews > shews]
+it he sslswallows it he bites",,
+data/std002_g3_en_chunk_13.wav,3,en,92.31,108.0,10.0,0.051,0.026,0.0,0.0,1.0,0.0,0.0,0.0,,39,36,3,20.0,,1,,,,▶ PLAY AUDIO,"Into the candy bar again. It is delicious. He loves candy
+bars. A backpack and a bus. It is time to go to school. He
+puts his books into his backpack. He puts his arms through
+the straps. He","into the candy bar again it is delicious he loves candy bars
+a backpack and a bus it is time to go to school he puts
+[om_on] his books into his backpack he puts [sub: his >
+hers] arms [mis: through > truth] the straps he",,
+data/std002_g3_en_chunk_14.wav,3,en,92.5,111.0,10.0,0.075,0.0,0.0,0.333,0.333,0.0,0.0,0.0,,40,37,3,20.0,,1,,,,▶ PLAY AUDIO,"puts his backpack on his back. He walks outside. He goes to
+the bus stop. He stands at the bus stop. He waits for the
+bus. He sees the bus. Parents Save babies from fire. The
+house is on fire.","puts his backpack on his back he [mis: walks > walk] outside
+he [mis: goes > gays] to the bus stop he [mis: stands >
+stand] at t he bus stop he waits for the bus parents save
+babies from fire the house is on fire",,
+data/std002_g3_en_chunk_15.wav,3,en,93.62,132.0,10.0,0.064,0.0,0.0,0.0,0.333,0.0,0.0,0.0,,47,44,3,20.0,,1,,,,▶ PLAY AUDIO,"Flames come out of the windows. Smoke comes out of the
+windows. A man runs out of the house. He carries a baby in
+his arms. A woman runs out of the house. She carries a baby
+in her arms. A fire truck arrives at the house.","flames come out of the windows smoke [mis: comes > come] out
+of the windows a man runs out [mis: of > off] the house he
+carries a baby in his arms a woman runs out of the house she
+carries a baby in [sub: her > hair] arms a fire truck
+arrives at the house",,
+data/std002_g3_en_chunk_16.wav,3,en,94.87,111.0,10.0,0.051,0.0,0.0,0.0,0.5,0.0,0.0,0.0,,39,37,2,20.0,,1,,,,▶ PLAY AUDIO,"Red ball on the floor. The ball is on the floor. It is a red
+ball. It is a rubber ball. The baby looks at the ball. The
+cat looks at the ball. The cat is black. The cat","red ball on the floor the ball is on the floor it is a red
+ball it is a [mis: rubber > ruver] ball [sub: the > thee]
+baby looks at the ball the cat is black the cat",,
+data/std002_g3_en_chunk_17.wav,3,en,90.91,110.3,10.0,0.091,0.0,0.0,0.0,0.5,0.0,0.0,0.0,,22,20,2,10.88,,1,,,,▶ PLAY AUDIO,"walks over to the ball. The cat hits the ball with its paw.
+The ball rolls on the floor. The baby smiles.","walks over to the ball the cat [sub: hits > its] the ball
+with its [mis: paws > pows] the ball rolls on the floor the
+baby smiles",,
+data/std003_g3_en_chunk_02.wav,3,en,100.0,100.0,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,39,39,0,23.4,,0,,,,▶ PLAY AUDIO,"The baby. Time to go to school. He puts his backpack on his
+back. Red Ball. The ball is on the floor. It is a red ball.
+The cat is black. This is my car. My name is Joy.",[unintelligible] my name is joy,,
+data/std003_g3_en_chunk_03.wav,3,en,77.42,59.2,8.5,0.194,0.032,0.0,0.167,0.333,0.0,0.032,0.0,,31,24,7,24.34,he-hello,2,,,,▶ PLAY AUDIO,"Hello everyone. That is my toy. She sing a love song. He is
+a boy. Look at that. Red Ball. The ball is on the floor. It
+is a red ball.","he-hello [mis: everyone > every] [sub: that > toy] [sub: is
+> has] my toy [sub: she > hes] [sub: sing > is] a love song
+he [om_is] a boy [mis: look > loo] at [unintelligible]",,
+data/std006_g3_en_chunk_01.wav,3,en,83.33,45.0,8.0,0.167,0.0,0.0,0.0,1.0,0.0,0.0,0.0,,18,15,3,20.0,,1,,,,▶ PLAY AUDIO,"I can read. Richard has a kite. Its color is white. He hides
+it under the pine tree.","i can [mis: read > rid] richard has a [mis: kite > kit] its
+color is white he hides it under the [mis: pine > pane] tree",,
+data/std006_g3_en_chunk_02.wav,3,en,85.0,51.0,9.0,0.15,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,20,17,3,20.0,,3,,,,▶ PLAY AUDIO,"Vic has a pig. It is big and fat. It lives in the pen. The
+pig has six piglets. Vic","[mis: vic > bic] has a pig it is big and [mis: fat > pat] it
+lives in the pen the pig has six piglets [mis: vic > bic]",,
+data/std006_g3_en_chunk_03.wav,3,en,100.0,51.0,7.5,0.0,0.0,0.118,0.0,0.0,0.0,0.0,0.059,,17,17,2,20.0,,3,,,,▶ PLAY AUDIO,"feeds them everyday. My friend. Toni is my friend we are
+playmates we like to ride our","feeds them everyday [pause] my friend toni is my friend we
+are playmates we like to ride our [ins:we] [ins:ay]",,
+data/std006_g3_en_chunk_04.wav,3,en,100.0,54.0,7.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.056,,18,18,0,20.0,,3,,,,▶ PLAY AUDIO,"bikes. We also play hide and seek. It is fun to play with my
+friend. Mommy is big","bikes we also play hide and seek it is fun to play with my
+friend [pause] mommy is big",,
+data/std006_g3_en_chunk_05.wav,3,en,95.24,60.0,9.0,0.048,0.0,0.0,1.0,0.0,0.0,0.0,0.0,,21,20,1,20.0,,0,,,,▶ PLAY AUDIO,"Daddy is humble so who are you I buy a cakeIi want to dancce
+all I have to say is yes","daddy is humble so [sub: who > wo] are you i buy a cake i
+want to dancce all i have to say is yes",,
+data/std006_g3_en_chunk_06.wav,3,en,100.0,69.0,7.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.043,,23,23,0,20.0,,3,,,,▶ PLAY AUDIO,"Ang guro ay matatagpuan na sa isang panig ng silidaralan ang
+gamit ng guro dito nakalagay ito ang patungan ito ang
+sulatan [pause]","ang guro ay matatagpuan na sa isang panig ng silidaralan ang
+gamit ng guro dito nakalagay ito ang patungan ito ang
+sulatan [pause]",,
+data/std006_g3_en_chunk_07.wav,3,en,80.95,51.0,9.0,0.19,0.0,0.0,0.0,0.0,1.0,0.0,0.0,,21,17,4,20.0,,1,,,,▶ PLAY AUDIO,"baby crawls on the floor its stops then it crawls some more
+then its stop again mama looks at the baby","baby [mis: crawls > calls] on the floor [sub: its > is]
+stops then it [mis: crawls > calls] some more then [sub: its
+> is] stop again mama looks at the baby",,
+data/std006_g3_en_chunk_08.wav,3,en,91.67,66.0,9.0,0.083,0.0,0.0,0.0,1.0,0.0,0.0,0.0,,24,22,2,20.0,,1,,,,▶ PLAY AUDIO,"she pick up the baby she carries the baby to the crib put
+the baby in the crib she put a blanket on the","she pick up the baby she carries the baby to the crib she
+[sub: put > pat] the baby in the crib she [sub: put > pat] a
+blanket on the",,
+data/std006_g3_en_chunk_09.wav,3,en,100.0,60.0,7.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.05,,20,20,0,20.0,,3,,,,▶ PLAY AUDIO,"baby the baby falls asleep this is my car my name is joy
+hello everyone that is my toy she","baby the baby falls asleep [pause] this is my car my name is
+joy hello everyone that is my toy she",,
+data/std006_g3_en_chunk_10.wav,3,en,95.24,60.0,9.0,0.048,0.0,0.048,0.0,0.0,0.0,0.0,0.0,,21,20,2,20.0,,0,,,,▶ PLAY AUDIO,"she sing a lovesong He is a boy look at that when I see you
+there are you I love you","she sing a lovesong he is a boy look at that when i see you
+[sub: there > where] [ins: ay] are you i love you",,
+data/std006_g3_en_chunk_11.wav,3,en,86.96,60.0,9.0,0.13,0.0,0.0,0.0,0.333,0.667,0.0,0.0,,23,20,3,20.0,,1,,,,▶ PLAY AUDIO,"red ball on the floor the ball is on the floor it is a red
+ball it is a rubber ball the baby","red ball on the [mis: floor > ploor] the ball is on the
+[mis: floor > ploor] it is a red ball it is a [mis: rubber >
+raber] ball the baby",,
+data/std006_g3_en_chunk_12.wav,3,en,95.24,60.0,9.0,0.048,0.0,0.048,0.0,0.0,0.0,0.0,0.0,,21,20,2,20.0,,0,,,,▶ PLAY AUDIO,"baby looks at the ball cat look at the ball the cat is black
+the cat walks over the ball the","baby looks at the ball cat [ins: ey] look at the ball the
+cat is black the cat [mis: walks > waks] over the ball the",,
+data/std006_g3_en_chunk_13.wav,3,en,81.25,39.0,8.0,0.188,0.0,0.0,0.0,0.333,0.333,0.0,0.0,,16,13,3,20.0,,3,,,,▶ PLAY AUDIO,"cat hits the ball its the ball rolls on the the baby smile
+parents save baby","cat hits the ball [sub: with > which] its [mis: paw > pow]
+the ball rolls on the [mis: floor > ploor] the baby smile
+parents save baby",,
+data/std006_g3_en_chunk_14.wav,3,en,75.0,36.0,8.0,0.25,0.0,0.0,0.0,0.25,0.25,0.0,0.0,,16,12,4,20.0,,2,,,,▶ PLAY AUDIO,"babies from fire the house is on fire flames come out of the
+windows smoke comes","[mis: babies > babes] from [mis: fire > pire] the house is
+on [mis: fire > pire] [mis: flames > fames] come out of the
+windows smoke comes",,
+data/std006_g3_en_chunk_15.wav,3,en,95.24,60.0,9.0,0.048,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,21,20,1,20.0,,0,,,,▶ PLAY AUDIO,"out of the windows a man runs out of the house he carries a
+baby in his arms a woman runs","out oof the windows a man runs oout [mis: of > ot] the house
+he carries a baby in his arms a woman runs",,
+data/std006_g3_en_chunk_16.wav,3,en,78.95,45.0,8.0,0.211,0.0,0.0,0.0,0.5,0.0,0.0,0.0,,19,15,4,20.0,,3,,,,▶ PLAY AUDIO,"runs out of the house she carries a baby in her arm a fire
+truck arrives at the house","runs [sub: out > at] of the house she carries a baby in
+[sub: her > the] arm a [mis: fire > pire] truck [mis:
+arrives > aribs] at the house",,
+data/std006_g3_en_chunk_17.wav,3,en,87.5,63.0,9.0,0.083,0.042,0.0,0.5,0.0,0.0,0.0,0.0,,24,21,3,20.0,,1,,,,▶ PLAY AUDIO,"a backpack and a bus it is time to go to school he put his
+book in-into his backpack he put it his arms","a backpack and a bus it is time to go to school he [mis:put
+> fut] his book in-into his [mis: backpack > backfack] he
+put it [om_in] his arms",,
+data/std006_g3_en_chunk_18.wav,3,en,84.62,33.0,6.5,0.154,0.0,0.0,0.5,0.0,0.0,0.0,0.077,,13,11,2,20.0,,3,,,,▶ PLAY AUDIO,"through the strap he put his backpack on his back he walks
+outside","[pause] [mis: through > rou] the strap he put his backpack
+on his back he [mis: walks > waks] outside",,
+data/std006_g3_en_chunk_19.wav,3,en,95.24,60.0,9.0,0.048,0.0,0.0,1.0,0.0,0.0,0.0,0.0,,21,20,1,20.0,,0,,,,▶ PLAY AUDIO,"He goes to the bus stop. He stands at the bus stop. He waits
+for the bus. He sees the bus.","he goes to the bus stop he [mis: stands > stand] at the bus
+stop he waits for the bus he sees the bus",,
+data/std006_g3_en_chunk_20.wav,3,en,70.59,36.0,8.0,0.176,0.118,0.0,0.0,0.667,0.333,0.0,0.0,,17,12,5,20.0,,1,,,,▶ PLAY AUDIO,"He Gets Dressed, Sees His Friend. The boy puts on his socks.
+He puts on his shoes.","he [mis: gets > ges] [mis: dressed > drets] [mis: sees >
+shes] his friend the boy puts on his socks he puts on
+[om_his] [om_shoes]",,
+data/std006_g3_en_chunk_21.wav,3,en,66.67,24.0,3.5,0.333,0.0,0.0,0.25,0.5,0.0,0.0,0.083,,12,8,4,20.0,,3,,,,▶ PLAY AUDIO,"his shoes. He ties his shoelaces. He walks to the front
+door.","his shoes he [mis: ties > tis] his [mis: shoelaces >
+shoelice] [pause] he [mis: walks > walks] to the [mis: front
+> frot] door",,
+data/std006_g3_en_chunk_22.wav,3,en,73.91,51.0,9.0,0.087,0.174,0.0,0.0,0.5,0.0,0.0,0.0,,23,17,6,20.0,,2,,,,▶ PLAY AUDIO,"He turns the doorknob. He pulls the door open. He steps
+outside. He closes the door behind him. He walks to the
+corner.","he [mis: turns > torn] the doorknob he pulls the door open
+he [mis: steps > step] outside he closes the door behind him
+he [om_walks] [om_to] [om_the] [om_corner]",,
+data/std006_g3_en_chunk_23.wav,3,en,78.95,45.0,6.5,0.158,0.053,0.105,0.0,0.333,0.333,0.0,0.0,,19,15,6,20.0,,1,,,,▶ PLAY AUDIO,"He walks to the corner. Hes sees his friend. He waves to his
+friend. He Eats a Candy Bar","[om_he] walks to the corner [mis: hes > he] sees [ins: the]
+[ins: this] his friend he waves to his friend he [mis: eats
+> eat] a [mis: candy > cendy] bar",,
+data/std006_g3_en_chunk_24.wav,3,en,60.0,36.0,6.5,0.2,0.2,0.0,0.0,0.75,0.0,0.0,0.0,,20,12,8,20.0,,2,,,,▶ PLAY AUDIO,"He picks up the candy bar. He reads the label. The label
+says Baby Ruth. He unwraps the candy bar.","he picks up the [mis: candy > cendy] bar he [mis: reads >
+reds] the label the label [mis: says > say] baby [mis: ruth
+> raf] he [om_unwraps] [om_the] [om_candy] [om_bar]",,
+data/std006_g3_en_chunk_25.wav,3,en,66.67,34.3,6.5,0.167,0.167,0.0,0.0,0.0,0.5,0.0,0.0,,12,8,4,13.99,,2,,,,▶ PLAY AUDIO,"He unwraps the candy bar. He throws the wrapper into the
+trashcan.","[om_he] [mis: unwraps > wraps] the candy bar he throws the
+cra- [mis: wrapper > crappers] into the [om_trashcan]",,
+data/std006_g3_en_chunk_26.wav,3,en,73.33,33.0,8.0,0.133,0.133,0.0,0.0,0.5,0.5,0.0,0.0,,15,11,4,20.0,,1,,,,▶ PLAY AUDIO,"trashcan. He bites into the candy bar. He chews it. He
+swallows it. He bites","trashcan he [mis: bites > bats] into [om_the] candy bar he
+chews it he [mis: swallows > shallow] it he [om_bites]",,
+data/std006_g3_en_chunk_27.wav,3,en,68.0,51.0,7.5,0.12,0.2,0.0,0.0,0.0,0.333,0.0,0.0,,25,17,8,20.0,,2,,,,▶ PLAY AUDIO,"bites into the candy bar again. It is delicious. He loves
+candy bars. Cookie on the floor. She takes a cookie out of
+the package.","[om_bites] into the candy bar again it is delicious he [mis:
+loves > love] candy [mis: bars > bar] cookie on the [mis:
+floor > ploor] she takes a cookie [om_out] [om_of] [om_the]
+[om_package]",,
+data/std006_g3_en_chunk_28.wav,3,en,76.19,48.0,8.0,0.238,0.0,0.0,0.0,0.6,0.2,0.0,0.0,,21,16,5,20.0,,1,,,,▶ PLAY AUDIO,"out of the package. She drops the cookie. It falls on the
+floor. The cookie breaks. It breaks into four pieces.","out of the package she drops the cookie it [mis: falls >
+pulls] on the [mis: floor > ploor] the cookie [mis: breaks >
+breks] it [mis: breaks > breks] into [mis: four > pour]
+pieces",,
+data/std006_g3_en_chunk_29.wav,3,en,84.21,48.0,6.5,0.158,0.0,0.0,0.333,0.0,0.333,0.0,0.053,,19,16,3,20.0,,1,,,,▶ PLAY AUDIO,"Four pieces are on the floor. She picks up the pieces. She
+takes them to the kitchen. She throws","[mis: four > pour] pieces are on the [mis: floor > ploor]
+she picks up the pieces she takes [mis: them > then] to the
+kitchen she [pause] throws",,
+data/std006_g3_en_chunk_30.wav,3,en,75.0,27.0,6.5,0.25,0.0,0.0,0.333,0.0,0.0,0.0,0.0,,12,9,3,20.0,,3,,,,▶ PLAY AUDIO,"them into the trashcan. She takes another cookie out of the
+package.","[mis: them > then] into the trashcan she [mis: takes > take]
+another cookie out [mis: of > off] the package",,
+data/std006_g3_en_chunk_31.wav,3,en,37.5,18.0,5.0,0.562,0.062,0.0,0.222,0.333,0.222,0.0,0.0,,16,6,10,20.0,,2,,,,▶ PLAY AUDIO,"Sammy the Singing Sparrow. Sammy was a shy sparrow who loved
+to sing but was too","[mis: sammy > amy] the [mis: singing > singin] [mis: sparrow
+> sharrow] [mis: sammy > samme] [mis: was > wash] a [mis:
+shy > she] [mis: sparrow > sharow] who [mis: loved > love]
+to sing but [mis: was > weysh] [om_too]",,
+data/std006_g3_en_chunk_32.wav,3,en,53.85,21.0,5.0,0.462,0.0,0.0,0.167,0.333,0.333,0.0,0.0,,13,7,6,20.0,,2,,,,▶ PLAY AUDIO,"too afraid to perform in front of others. One day, a storm
+damaged","[mis: too > to] [mis: afraid > aperd] to perform in [mis:
+front > ro] [mis: of > off] others one day a [mis: storm >
+strom] [mis: damaged > demage]",,
+data/std006_g3_en_chunk_33.wav,3,en,62.5,30.0,6.5,0.375,0.0,0.0,0.167,0.333,0.167,0.0,0.0,,16,10,6,20.0,,2,,,,▶ PLAY AUDIO,"the nest of some baby birds, and they wouldn't stop crying.
+Sammy started singing to comfort","the [mis: nest > nets] [mis: of > off] some baby birds and
+they [mis: wouldnt > would] stop [mis: crying > cry] [mis:
+sammy > samme] [mis: started > start] singing to comfort",,
+data/std006_g3_en_chunk_34.wav,3,en,82.35,42.0,8.0,0.176,0.0,0.0,0.333,0.333,0.0,0.0,0.0,,17,14,3,20.0,,1,,,,▶ PLAY AUDIO,"them . His sweet voice calmed the babies and brought joy to
+everyone who heard him. From","[mis: them > then] his sweet [mis: voice > boice] [mis:
+calmed > cold] the babies and brought joy to everyone who
+heard him from",,
+data/std006_g3_en_chunk_35.wav,3,en,58.33,21.5,5.0,0.417,0.0,0.0,0.0,0.8,0.0,0.0,0.0,,12,7,5,19.57,,2,,,,▶ PLAY AUDIO,"then on, Sammy sang proudly, knowing his music could make
+others happy.","then on [mis: sammy > sammes] sa- [mis: sang > sing] pra-
+[mis: proudly > prodle] [mis: knowing > kowing] his mo-
+music [mis: could > cold] make others happy",,
+data/std007_g3_en_chunk_01.wav,3,en,69.23,65.9,7.5,0.231,0.077,0.051,0.111,0.889,0.0,0.0,0.0,,39,27,14,24.58,,1,,,,▶ PLAY AUDIO,"My Friend.Toni is my friend. We are playmates. We like to
+ride our bikes. We also play hide and seek. It is fun to
+play with my friend. Red Ball on the Floor. The ball is on
+the floor.","my friend toni is [ins: is] my friend we are [mis: playmates
+> playmetes] we like to [mis: ride > rid] our [mis: bikes >
+bike bikes] we [sub: also > all] play [mis: hide > hid]
+[mis: and > end] seek [ins: end] it is fun to play with my
+[sub: friend > friends] red ball [mis: on > wan] [om_the]
+[om_floor] the ball is [mis: on > wan] the [om_floor]",,
+data/std007_g3_en_chunk_09.wav,3,en,59.09,63.2,7.5,0.091,0.318,0.0,0.0,0.5,0.0,0.0,0.0,,44,26,18,24.7,,2,,,,▶ PLAY AUDIO,"Then it crawls some more. Then it stops again. Mama looks at
+the baby. She picks up the baby. She carries the baby to the
+crib. She puts the baby on the crib. She puts a blanket on
+the baby. The baby falls asleep.","then it [mis: crawls > craws] some more then it stops again
+mama [mis: looks > look] [om_at] the baby [om_she]
+[om_picks] up the baby [om_she] [sub: carries > cries] the
+baby to the crib [om_she] [om_puts] [om_the] [om_baby]
+[om_on] [om_the] [om_crib] she [om_puts] [om_a] [om_blanket]
+on the baby the baby [sub: falls > flies] asleep",,
+data/std009_g3_en_chunk_01.wav,3,en,14.29,2.6,5.0,0.857,0.0,1.714,0.0,0.667,0.333,0.0,0.0,,7,1,18,22.67,,2,,,,▶ PLAY AUDIO,My friend toni is my friend we,"[mis: my > moy] [sub: friend > furi] [ins: furo] [ins: an]
+[ins: ay] [mis: toni > to] [ins: ay] [ins: ta] [ins: no]
+[sub:is > osh] [mis: my > moy] [ins: for] [ins: ay] [sub:
+friend > furo] [ins: e] [ins: ay] [ins: on] [ins: ond] we",,
+data/std009_g3_en_chunk_02.wav,3,en,15.38,4.9,5.0,0.846,0.0,0.462,0.091,0.818,0.091,0.0,0.0,,13,2,17,24.69,,2,,,,▶ PLAY AUDIO,"are playmates we like to ride our bikes we also play hide
+and","are [ins: ay] [ins: ari] [mis: playmates > palaymates] [mis:
+we > wo] [ins: le] [ins: ay] [mis: like > loke] [sub: to >
+ta] [sub: ride > ro] [ins: o] [sub: our > are] [sub: bikes >
+do] [ins: this] [mis: we > wa] [mis: also > a-also] [sub:
+play > supply] [sub: hide > hodi] and",,
+data/std009_g3_en_chunk_03.wav,3,en,33.33,10.7,5.0,0.667,0.0,0.778,0.167,0.5,0.333,0.0,0.0,,9,3,13,16.87,,2,,,,▶ PLAY AUDIO,seek it is fun to play with my friend,"[mis: seek > se-ek] [sub: it > ot] [sub: is > os] [ins:
+fast] [ins: ay] fun to [mis: play > flay] [sub: with > wot]
+my [mis: friend > fa] [ins: diin] [ins: na] [ins: ta] [ins:
+faro] [ins: and]",,
+data/std022_g4_en_chunk_01.wav,4,en,72.0,33.5,6.5,0.2,0.08,0.0,0.0,0.4,0.6,0.0,0.0,,25,18,7,32.28,,1,,,,▶ PLAY AUDIO,"""Let's have some fun this summer,"" says Leo. ""Let's swim in
+the river,"" says Lina. ""Let's get some star apples from the
+tree,"" says Leo.","[sub: lets > yes] have some fun this summer [sub: says >
+yes] leo [sub: lets > yes] swim in the [mis: river > rayver]
+says lina [mis: lets > les] get some star apples from the
+tree [om_says] [om_leo]",,
+data/std022_g4_en_chunk_02.wav,4,en,84.85,52.0,8.0,0.152,0.0,0.0,0.2,0.0,0.4,0.0,0.0,,33,28,5,32.28,,1,,,,▶ PLAY AUDIO,"Leo. ""Let's pick flowers,"" says Lina. ""That is so much fun!""
+says Mama. ""But can you help me dust the shelves too?"" ""Yes,
+we can Mama,"" they say. ""Helping can be fun too!""","leo [mis: lets > les] pick flowers [sub: says > say] lina
+that is so much [sub: fun > funny] says mama but can you
+help me [sub: dust > dutch] the [sub: shelves > self] too
+yes we can mama they say help can be fun too",,
+data/std022_g4_en_chunk_03.wav,4,en,97.14,74.6,9.0,0.029,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,35,34,1,27.36,,0,,,,▶ PLAY AUDIO,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh
+no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat it is on the bed it can nap it can sit oh no
+[sub: says > say] pam the cat fell off the bed is the cat
+sad no it is on the mat",,
+data/std022_g4_en_chunk_04.wav,4,en,70.59,49.2,8.0,0.206,0.088,0.0,0.286,0.571,0.0,0.0,0.0,,34,24,10,29.26,,1,,,,▶ PLAY AUDIO,"""Ring! Ring!"" rang the clock. But Jacky did not get up.
+""Wake up Jacky! Time for school,"" yelled Mom. And yet Jacky
+did not get up. ""Beep! Beep!"" honked the horn of the bus.","ring ring rang the clock but [mis: jacky > jeyck] did not
+get up wake up [mis: jacky > jeyck] time for school [sub:
+yelled > yet] mom and yet [mis: jacky > jay] did not get up
+[mis: beep > bep] [mis: beep > bep] [mis: honked > hon] the
+horn [om_of] [om_the] [om_bus]",,
+data/std022_g4_en_chunk_05.wav,4,en,68.57,49.2,6.5,0.314,0.0,0.0,0.091,0.727,0.0,0.0,0.0,,35,24,11,29.26,,2,,,,▶ PLAY AUDIO,"the bus. Jacky still laid snug on the bed. Suddenly, a
+rooster crowed out loud and sat on the window sill. Jacky
+got up and said with cheer, ""I will get up now. I will!""","the bus [mis: jacky > jeyck] still [mis: laid > land] [mis:
+snug > sno] on the bed [mis: suddenly > slowgy] a rooster
+crowed [sub: out > off] [mis: loud > load] [sub: sat > sad]
+on the [mis: window > widow] sill [mis: jacky > jeyck] [mis:
+got > gut] up the said with [mis: cheer > teer] i will get
+up now i will",,
+data/std023_g4_en_chunk_01.wav,4,en,67.57,46.8,6.5,0.297,0.027,0.027,0.273,0.727,0.0,0.0,0.0,,37,25,13,32.02,,1,,,,▶ PLAY AUDIO,"""Ring! Ring!"" rang the clock. But Jacky did not get up.
+""Wake up Jacky! Time for school,"" yelled Mom. And yet Jacky
+did not get up. ""Beep! Beep!"" honked the horn of the bus.
+Jacky still laid","ring [om_ring] rang the clock but [mis: jacky > jack] did
+not get up wake up [mis: jacky > jack] time for school [mis:
+yelled > yell-yel-led] mom and yet [mis: jacky > jack] did
+not get up [mis: beep > bep] [mis: beep > bep] [mis: honked
+> han-ked] the [sub: horn > harm] of the bus [mis: jacky >
+jeck] [ins: is] [mis: still > stel] [mis: laid > led]",,
+data/std023_g4_en_chunk_02.wav,4,en,63.33,35.6,5.0,0.333,0.033,0.133,0.0,0.9,0.1,0.0,0.0,,30,19,15,32.02,,2,,,,▶ PLAY AUDIO,"snug on the bed. Suddenly, a rooster crowed out loud and sat
+on the window sill. Jacky got up and said with cheer, ""I
+will get up now. I will!""","[om_snug] [ins: sss] [ins: goy] [ins: sing ]on the bed [mis:
+suddenly > sundaily] a [sub: rooster > raster] [mis: crowed
+> clownt] [ins: climp] [mis: out > ot] [sub: loud > load]
+and sat on the window sill [mis: jacky > jeck] [mis: got >
+gut] up and [sub: said > send] [sub: with > white] [sub:
+cheer > clock] i will get up now i will",,
+data/std023_g4_en_chunk_03.wav,4,en,94.29,95.9,10.0,0.057,0.0,0.0,0.0,0.5,0.0,0.0,0.0,,35,33,2,20.64,,1,,,,▶ PLAY AUDIO,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh
+no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat it is on the bed it can nap it can sit oh no
+[sub: says > say] pam the cat fell off the bed is the cat
+[sub: sad > said] no it is on the mat",,
+data/std023_g4_en_chunk_04.wav,4,en,91.43,64.7,9.0,0.086,0.0,0.057,0.0,1.0,0.0,0.0,0.0,,35,32,5,29.68,,1,,,,▶ PLAY AUDIO,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh
+no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat it is on the bed [ins: the] it can nap it can
+sit oh no [mis: says > sai] pam the cat [ins: fa] fell off
+the bed is the cat [mis: sad > sed] no it is [sub: on > in]
+the mat",,
+data/std023_g4_en_chunk_05.wav,4,en,100.0,97.3,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,31,31,0,19.12,,0,,,,▶ PLAY AUDIO,"""Ring! Ring!"" rang the clock. But Jacky did not get up.
+""Wake up Jacky! Time for school,"" yelled Mom. And yet Jacky
+did not get up. ""Beep! Beep!"" honked the horn","ring ring rang the clock but jacky did not get up wake up
+jacky time for school yelled mom and yet jacky did not get
+up beep beep honked the horn",,
+data/std023_g4_en_chunk_06.wav,4,en,97.22,109.8,10.0,0.028,0.0,0.0,0.0,1.0,0.0,0.0,0.0,,36,35,1,19.12,,0,,,,▶ PLAY AUDIO,"of the bus. Jacky still laid snug on the bed. Suddenly, a
+rooster crowed out loud and sat on the window sill. Jacky
+got up and said with cheer, ""I will get up now. I will!""","of the bus jacky still laid snug on the bed suddenly a
+rooster crowed out loud and sat on the window sill [mis:
+jacky > jecky] got up and said with cheer i will get up now
+i will",,
+data/std024_g4_en_chunk_01.wav,4,en,88.24,77.5,9.0,0.059,0.059,0.059,0.5,0.5,0.0,0.0,0.0,,34,30,6,23.24,,1,,,,▶ PLAY AUDIO,"""Ring! Ring!"" rang the clock. But Jacky did not get up.
+""Wake up Jacky! Time for school,"" yelled Mom. And yet Jacky
+did not get up. ""Beep! Beep!"" honked the horn of the bus.","ring ring rang the clock but jacky did not get up wake up
+[ins: jeck] jacky time for [mis: school > ischool]
+[om_yelled] [ins: and] mom and yet jacky did not get up beep
+beep [mis: honked > hog] the horn of the [om_bus]",,
+data/std024_g4_en_chunk_02.wav,4,en,87.88,74.9,9.0,0.121,0.0,0.03,0.5,0.5,0.0,0.0,0.0,,33,29,5,23.24,,1,,,,▶ PLAY AUDIO,"Jacky still laid snug on the bed. Suddenly, a rooster crowed
+out loud and sat on the window sill. Jacky got up and said
+with cheer, ""I will get up now. I will!""","bus jacky [ins: is] [sub: laid > lied] snug on the bed [mis:
+suddenly > studly] a rooster [mis: crowed > crowed] out loud
+and sat on the window sill jacky got up and said with cheer
+i will get up [sub: now > no] i will",,
+data/std024_g4_en_chunk_03.wav,4,en,70.0,60.7,7.5,0.267,0.033,0.067,0.0,0.0,0.5,0.0,0.0,,30,21,11,20.76,,2,,,,▶ PLAY AUDIO,"""Let's have some fun this summer,"" says Leo. ""Let's swim in
+the river,"" says Lina. ""Let's get some star apples from the
+tree,"" says Leo. ""Let's pick flowers,"" says Lina.","[mis: lets > les] have some fun this summer [sub: says >
+say] leo [mis: lets > les] swim in the river [sub: says >
+say] lina [mis: lets > les] get some star apples from [ins:
+de] the tree [sub: says > say] leo [mis: lets > les] [ins:
+le] pick flowers [sub: says > say] [om_lina]",,
+data/std024_g4_en_chunk_04.wav,4,en,89.29,72.3,9.0,0.107,0.0,0.036,0.333,0.667,0.0,0.0,0.0,,28,25,4,20.76,,1,,,,▶ PLAY AUDIO,"Lina. ""That is so much fun!"" says Mama. ""But can you help me
+dust the shelves too?"" ""Yes, we can Mama,"" they say.
+""Helping can be fun too!""","lina that is so much fun [mis: says > se] mama but can you
+help me dust the [mis: shelves > selfes] too yes we can mama
+[ins: the] they say helping can be fun [mis: too > to]",,
+data/std024_g4_en_chunk_05.wav,4,en,94.29,82.2,10.0,0.057,0.0,0.0,0.5,0.5,0.0,0.0,0.0,,35,33,2,24.08,,1,,,,▶ PLAY AUDIO,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh
+no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat it is on the [mis: bed > bet] it can nap it
+can sit oh no [mis: says > se] pam the cat fell off the bed
+is the cat sad no it is on the mat",,
+data/std025_g4_en_chunk_01.wav,4,en,88.57,88.6,10.0,0.114,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,35,31,4,21.0,,2,,,,▶ PLAY AUDIO,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh
+no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat it is on the bed [sub: it > in] can nap [sub:
+it > in] can sit oh oh no [sub: says > say] pam the cat fell
+off the bed is the cat sad no [sub: it > its] is on the mat",,
+data/std025_g4_en_chunk_02.wav,4,en,76.67,65.0,9.0,0.233,0.0,0.033,0.0,0.0,0.286,0.0,0.0,,30,23,8,21.24,,2,,,,▶ PLAY AUDIO,"""Let's have some fun this summer,"" says Leo. ""Let's swim in
+the river,"" says Lina. ""Let's get some star apples from the
+tree,"" says Leo. ""Let's pick flowers,"" says Lina.","[mis: lets > let] have some fun this [mis: summer > sumber]
+[sub: says > say] leo lets swim in the river [sub: says >
+say] lina [mis: lets > let] get some star apples from the
+tree [sub: says > say] leo lets [ins: flo] pick flowers
+[sub: says > say] lina",,
+data/std025_g4_en_chunk_03.wav,4,en,92.59,70.6,8.5,0.074,0.0,0.0,0.0,0.5,0.0,0.037,0.0,,27,25,2,21.24,ye-yes,1,,,,▶ PLAY AUDIO,"""That is so much fun!"" says Mama. ""But can you help me dust
+the shelves too?"" ""Yes, we can Mama,"" they say. ""Helping can
+be fun too!""","that is so much fun [sub: says > say] mama but can you help
+me dust the [mis: shelves > severes] too ye-yes we can mama
+they say helping can be fun too",,
+data/std025_g4_en_chunk_04.wav,4,en,66.67,62.1,7.5,0.333,0.0,0.0,0.083,0.667,0.083,0.0,0.0,,36,24,12,23.2,,2,,,,▶ PLAY AUDIO,"""Ring! Ring!"" rang the clock. But Jacky did not get up.
+""Wake up Jacky! Time for school,"" yelled Mom. And yet Jacky
+did not get up. ""Beep! Beep!"" honked the horn of the bus.
+Jacky still","ring ring rang the [sub: clock > crock] but [mis: jacky >
+jecky] did not get [sub: up > off] [sub: wake > week] up
+jacky [mis: time > tim] for school [mis: yelled > yellen]
+mom and yet [mis: jacky > jackly] did not get up [mis: beep
+> bep] [mis: beep > bep] [mis: honked > honked] the horn of
+the bus [mis: jacky > ecky] [mis: still > stell]",,
+data/std025_g4_en_chunk_05.wav,4,en,54.55,46.6,6.5,0.394,0.061,0.03,0.0,0.846,0.077,0.0,0.0,,33,18,16,23.2,,2,,,,▶ PLAY AUDIO,"Jacky still laid snug on the bed. Suddenly, a rooster crowed
+out loud and sat on the window sill. Jacky got up and said
+with cheer, ""I will get up now. I will!""","om_jacky] [om_still] [om_laid] [sub: snug > son] on the bed
+[mis: suddenly > studely] a rooster [mis: crowed > cro-wit]
+[sub: out > off] [mis: loud > lu] and [sub: sat > sent] on
+the window sill [mis: jacky > jecky] [sub: got > goat] [sub:
+up > off] [ins: ot] and [sub: said > sad] with [sub: cheer >
+clear] [mis: i > ee] will get [sub: up > off] now i will",,
+data/std026_g4_en_chunk_01.wav,4,en,97.3,113.3,10.0,0.027,0.0,0.0,1.0,0.0,0.0,0.0,0.0,,37,36,1,19.06,,0,,,,▶ PLAY AUDIO,"""Ring! Ring!"" rang the clock. But Jacky did not get up.
+""Wake up Jacky! Time for school,"" yelled Mom. And yet Jacky
+did not get up. ""Beep! Beep!"" honked the horn of the bus.
+Jacky still laid","ring ring rang the clock but jacky did not get up wake up
+jacky time for school [mis: yelled > yel-led] mom and yet
+jacky did not get up beep beep honked the horn of the bus
+jacky still laid",,
+data/std026_g4_en_chunk_02.wav,4,en,72.41,66.1,9.0,0.276,0.0,0.0,0.125,0.75,0.0,0.0,0.0,,29,21,8,19.06,,1,,,,▶ PLAY AUDIO,"on the bed. Suddenly, a rooster crowed out loud and sat on
+the window sill. Jacky got up and said with cheer, ""I will
+get up now. I will!""","on the bed [mis: suddenly > stunduly] a rooster [mis: crowed
+> crow-wed] [mis: out > ot] loud and [sub: sat > sate] on
+the window [sub: sill > sell] jacky [sub: got > gut] up and
+[mis: said > sai-id] with [sub: cheer > sheer] i will get up
+now i will",,
+data/std026_g4_en_chunk_03.wav,4,en,83.33,83.7,10.0,0.167,0.0,0.0,0.0,0.2,0.0,0.0,0.0,,30,25,5,17.92,,2,,,,▶ PLAY AUDIO,"""Let's have some fun this summer,"" says Leo. ""Let's swim in
+the river,"" says Lina. ""Let's get some star apples from the
+tree,"" says Leo. ""Let's pick flowers,"" says Lina.","lets have some fun this summer [sub: says > say] leo lets
+swim in the [mis: river > rayver] [sub: says > say] lina
+lets get some star apples from the tree [sub: says > say]
+leo lets pick flowers [sub: says > say] lina",,
+data/std026_g4_en_chunk_04.wav,4,en,88.89,80.4,10.0,0.111,0.0,0.074,0.0,0.0,0.333,0.0,0.0,,27,24,5,17.92,,1,,,,▶ PLAY AUDIO,"""That is so much fun!"" says Mama. ""But can you help me dust
+the shelves too?"" ""Yes, we can Mama,"" they say. ""Helping can
+be fun too!""","[ins: det] that is so much fun [ins: i] [sub: says > say]
+mama but can you help me [sub: dust > thats] the [sub:
+shelves > shelve] too yes we can mama they say helping can
+be fun too",,
+data/std026_g4_en_chunk_05.wav,4,en,88.57,85.6,10.0,0.114,0.0,0.029,0.0,0.25,0.0,0.0,0.0,,35,31,5,21.72,,1,,,,▶ PLAY AUDIO,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh
+no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat [ins: its] it is on the bed it can nap it can
+sit oh no [sub: says > say] pam the cat fell off the bed
+[sub: is > its] the cat [sub: sad > said] no [sub: it > its]
+is on the mat",,
+data/std029_g4_en_chunk_01.wav,4,en,76.47,49.2,8.0,0.235,0.0,0.059,0.25,0.75,0.0,0.0,0.0,,17,13,5,15.84,,1,,,,▶ PLAY AUDIO,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh
+no!","pam has a cat [sub: it > let] is on [sub: the > they] bed
+[sub: it > let] can nap [sub: it > let] can sit oh no [ins:
+et]",,
+data/std029_g4_en_chunk_02.wav,4,en,61.11,41.7,6.5,0.389,0.0,0.111,0.571,0.286,0.0,0.0,0.0,,18,11,9,15.84,,2,,,,▶ PLAY AUDIO,"says Pam. ""The cat fell off the bed!"" Is the cat sad? No. It
+is on the mat.","says pam [sub: the > they] cat fell off [sub: the > they]
+[sub: bed > be] [ins: they] [mis: is > ies] [sub: the >
+they] cat sad no [sub: it > let] is [ins: no] on [sub: the >
+they] mat",,
+data/std029_g4_en_chunk_03.wav,4,en,60.0,23.9,5.0,0.4,0.0,0.2,0.167,0.5,0.333,0.0,0.0,,15,9,9,22.56,,2,,,,▶ PLAY AUDIO,"""Let's have some fun this summer,"" says Leo. ""Let's swim in
+the river,"" says Lina.","[mis: lets > let] [ins: is] have some fun [sub: this > days]
+summer says leo [mis: lets > let] [ins: is] [mis: swim >
+iswim] in [sub: the > they] [sub: river > rave] says [ins:
+len] lina",,
+data/std029_g4_en_chunk_04.wav,4,en,40.0,16.2,4.5,0.6,0.0,0.133,0.111,0.333,0.444,0.067,0.0,,15,6,11,22.16,s-says,2,,,,▶ PLAY AUDIO,"""Let's get some star apples from the tree,"" says Leo. ""Let's
+pick flowers,"" says Lina.","[mis: lets > let] [ins: is] get some [mis: star > ishar]
+[mis: apples > oples] from [sub: the > they] [mis: tree >
+tre] says [mis: leo > leown] [mis: lets > let] [ins: is]
+pick [sub: flowers > followings] s-says [sub: lina > len]",,
+data/std029_g4_en_chunk_05.wav,4,en,62.5,28.7,5.0,0.375,0.0,0.0,0.167,0.5,0.167,0.0,0.0,,16,10,6,20.88,,2,,,,▶ PLAY AUDIO,"""That is so much fun!"" says Mama. ""But can you help me dust
+the shelves too?""","that is so much [sub: fun > funny] says [sub: mama > mom]
+but can you help me [mis: dust > dus] [sub: the > they]
+[mis: shelves > isel-ves] [sub: too > to]",,
+data/std029_g4_en_chunk_06.wav,4,en,43.75,18.4,5.0,0.5,0.062,0.188,0.25,0.125,0.0,0.0,0.0,,16,7,12,22.8,,2,,,,▶ PLAY AUDIO,"""Yes, we can Mama,"" they say. ""Helping can be fun too!""
+""Ring! Ring!"" rang the clock.","yes [mis: we > wek] can mama [mis: they > t-hey] [mis: say >
+s-sah-y] helping [sub: can > cat] [sub: be > they] [sub: fun
+> for] too [ins: en] ring [ins: ey] ring [ins: ring]
+[om_rang] [sub: the > they] [mis: clock > clowk]",,
+data/std029_g4_en_chunk_07.wav,4,en,57.14,29.6,5.0,0.429,0.0,0.095,0.222,0.778,0.0,0.0,0.0,,21,12,11,24.32,,2,,,,▶ PLAY AUDIO,"But Jacky did not get up. ""Wake up Jacky! Time for school,""
+yelled Mom. And yet Jacky did not get up.","but [mis: jacky > jeck] did not get [mis: up > op] wake
+[mis: up > op] [mis: jacky > jeck] [ins: hey] [mis: time >
+tim] for [mis: school > ischool] [mis: yelled > yel-led]
+[ins: mo] mom and yet [mis: jacky > jack] did not get [mis:
+up > op]",,
+data/std029_g4_en_chunk_08.wav,4,en,40.0,16.2,5.0,0.6,0.0,0.133,0.444,0.444,0.111,0.0,0.0,,15,6,11,22.28,,2,,,,▶ PLAY AUDIO,"""Beep! Beep!"" honked the horn of the bus. Jacky still laid
+snug on the bed.","beep beep [mis: honked > hon-k] [sub: the > they] horn of
+[sub: the > they] bus [ins: jack] [mis: jacky > jack] [ins:
+hey] [mis: still > istill] [mis: laid > led] [sub: snug >
+song] on [sub: the > they] [mis: bed > be-be]",,
+data/std029_g4_en_chunk_09.wav,4,en,33.33,15.4,5.0,0.667,0.0,0.0,0.25,0.625,0.0,0.0,0.0,,12,4,8,15.56,,2,,,,▶ PLAY AUDIO,"Suddenly, a rooster crowed out loud and sat on the window
+sill.","[mis: suddenly > addenly] a rooster [mis: crowed > cro-wed]
+[mis: out > owt] [sub: loud > load] and sat [mis: on > ow]
+[sub: the > they] [mis: window > wandow] [sub: sill > sell]",,
+data/std029_g4_en_chunk_10.wav,4,en,28.57,15.4,5.0,0.643,0.071,0.071,0.111,0.778,0.0,0.0,0.0,,14,4,11,15.56,,2,,,,▶ PLAY AUDIO,"Jacky got up and said with cheer. ""I will get up now. I
+will!""","[mis: jacky > jeyck] [ins: hey] got up [sub: and > they]
+[mis: said > sa-ed] with [mis: cheer > kaher] [om_i] [mis:
+will > w-wing] get [mis: up > op] [sub: now > no] [mis: i >
+el] [mis: will > wel]",,
+data/std030_g4_en_chunk_01.wav,4,en,36.84,19.2,5.0,0.579,0.053,0.0,0.091,0.727,0.091,0.0,0.0,,19,7,12,21.92,,2,,,,▶ PLAY AUDIO,"""Ring! Ring!"" rang the clock. But Jacky did not get up.
+""Wake up Jacky! Time for school,"" yelled Mom.","ring ring [sub: rang > araw] the [sub: clock > low] [sub:
+but > bot] [mis: jacky > jatty] [om_did] [sub: not > note]
+[sub: get > gate] up [mis: wake > wayg] up [mis: jacky >
+jeck] [sub: time > tim] for [mis: school > ischool] [mis:
+yelled > yel-leyd] mom",,
+data/std030_g4_en_chunk_02.wav,4,en,39.13,23.9,5.0,0.609,0.0,0.0,0.286,0.5,0.0,0.0,0.0,,23,9,14,22.64,,2,,,,▶ PLAY AUDIO,"And yet Jacky did not get up. ""Beep! Beep!"" honked the horn
+of the bus. Jacky still laid snug on the bed. Suddenly,","[sub: and > ang] [mis: yet > yed] [sub: jacky > jack] [mis:
+did > de] not get up [mis: beep > bep] [mis: beep > bep]
+[mis: honked > hon-ked] the [mis: horn > hor] [sub: of >
+off] the bus [mis: jacky > jecky] [mis: still > istill] laid
+[mis: snug > snong] on the [mis: bed > beyd] [mis: suddenly
+> sodley]",,
+data/std030_g4_en_chunk_03.wav,4,en,64.0,42.4,6.5,0.36,0.0,0.0,0.111,0.667,0.0,0.0,0.0,,25,16,9,22.64,,2,,,,▶ PLAY AUDIO,"a rooster crowed out loud and sat on the window sill. Jacky
+got up and said with cheer, ""I will get up now. I will!""","a [mis: rooster > rootster] [sub: crowed > crowd] [mis: out
+> ot] [sub: loud > load] and sat on the [mis: window > wid]
+sill [mis: jacky > je-jey] [sub: got > gut] [mis: up > op]
+and said with [sub: cheer > sheer] i will get up now i will",,
+data/std030_g4_en_chunk_04.wav,4,en,70.27,61.7,7.5,0.27,0.027,0.054,0.2,0.4,0.0,0.0,0.0,,37,26,13,25.28,,2,,,,▶ PLAY AUDIO,"Pam's Cat. Pam has a cat. It is on the bed. It can nap. It
+can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is
+the cat sad? No. It is on the mat.","[om_pams] cat pam has a cat [mis: it > ey] [mis: is > di] on
+the [mis: bed > beyd] [sub: it > i] can nap it can sit [sub:
+oh > off] no [mis: says > sayhs] pam the cat [sub: fell >
+fall] off [sub: the > him] [sub: bed > bate] is the cat sad
+no [sub: it > its] is [ins: the] [ins: ay] on the mat",,
+data/std030_g4_en_chunk_05.wav,4,en,48.15,31.4,5.0,0.519,0.0,0.037,0.286,0.357,0.286,0.0,0.0,,27,13,15,24.88,,2,,,,▶ PLAY AUDIO,"Summer Fun. ""Let's have some fun this summer,"" says Leo.
+""Let's swim in the river,"" says Lina. ""Let's get some star
+apples from the tree,"" says Leo.","summer fun [sub: lets > lakes] [mis: have > ha-ve] some fun
+[sub: this > days] summer [mis: says > sayhs] leo [sub: lets
+> let] [ins: is] swim in the [mis: river > rey] [sub: says >
+say] lina [sub: lets > late] [sub: get > gate] some [mis:
+star > ister] [mis: apples > ap-plays] [mis: from > fro-m]
+the [sub: tree > race] [mis: says > sayhs] leo",,
+data/std030_g4_en_chunk_06.wav,4,en,53.12,40.5,6.5,0.469,0.0,0.062,0.267,0.267,0.133,0.0,0.0,,32,17,17,25.2,,2,,,,▶ PLAY AUDIO,"""Let's pick flowers,"" says Lina. ""That is so much fun!"" says
+Mama. ""But can you help me dust the shelves too?"" ""Yes, we
+can Mama,"" they say. ""Helping can be fun too!""","[mis: lets > lates] [sub: pick > pigs] [mis: flowers > flow-
+er] says lina [mis: that > tha] is so [mis: much > moch]
+[mis: fun > fon] [sub: says > say] mama but [sub: can > cat]
+you help me [mis: dust > dis] [ins: a] the [ins: is] [sub:
+shelves > wish] [mis: too > tu] yes we [sub: can > cat] mama
+[sub: they > the] [mis: say > sayh] helping can be fun [mis:
+too > tu]",,
+data/std032_g4_en_chunk_13.wav,4,en,86.21,79.2,9.0,0.138,0.0,0.0,0.0,0.25,0.0,0.0,0.0,,29,25,4,18.94,,2,,,,▶ PLAY AUDIO,"says Lina. ""That is so much fun!"" says Mama. ""But can you
+help me dust the shelves too?"" ""Yes, we can Mama,"" they say.
+""Helping can be fun too!""","[mis: say > ay] lina that is so much fun [mis: says > say]
+mama but can you help me dust the [mis: shelves > shelve]
+too yes we can mama they [sub: say > said] helping can be
+fun too",,

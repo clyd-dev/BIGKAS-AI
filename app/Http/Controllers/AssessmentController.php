@@ -33,43 +33,69 @@ class AssessmentController extends Controller
         $user = auth()->user();
         $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
 
-        $materials = ReadingMaterial::active()->orderBy('grade_level')->orderBy('title')->get();
-
-        return view('assessments.create', compact('learners', 'materials'));
+        // Materials are loaded progressively via materials.options once the
+        // teacher picks learner → language → assessment type.
+        return view('assessments.create', compact('learners'));
     }
 
     public function start(Learner $learner)
     {
         $this->authorizeLearnerAccess($learner);
-        $materials = ReadingMaterial::active()
-            ->where('grade_level', $learner->grade_level)
-            ->orderBy('title')
-            ->get();
 
-        $easierMaterials = ReadingMaterial::active()
-            ->where('grade_level', max(1, $learner->grade_level - 1))
-            ->orderBy('title')
-            ->get();
-
-        $languages = ['en' => 'English', 'fil' => 'Filipino'];
-
-        return view('assessments.start', compact('learner', 'materials', 'easierMaterials', 'languages'));
+        // Materials are loaded progressively via materials.options once the
+        // teacher picks language → assessment type.
+        return view('assessments.start', compact('learner'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'learner_id' => 'required|exists:learners,id',
             'material_id' => 'required|exists:reading_materials,id',
+            'language' => 'required|in:en,fil',
+            'assessment_type' => 'required|in:oral_reading,comprehension,combined',
+            'allow_fallback' => 'nullable|boolean',
         ]);
 
-        $material = ReadingMaterial::findOrFail($request->material_id);
+        $learner = Learner::findOrFail($validated['learner_id']);
+        $this->authorizeLearnerAccess($learner);
+
+        $material = ReadingMaterial::active()->findOrFail($validated['material_id']);
+
+        // Language must match the chosen material.
+        if ($material->language !== $validated['language']) {
+            return back()
+                ->withErrors(['material_id' => 'The selected material is not in the chosen language.'])
+                ->withInput();
+        }
+
+        // Grade policy: exact grade first; adjacent grades (±1) only when the
+        // teacher explicitly picked a cross-grade fallback option.
+        $gradeDiff = abs($material->grade_level - $learner->grade_level);
+        if ($gradeDiff > 0 && ! $request->boolean('allow_fallback')) {
+            return back()
+                ->withErrors(['material_id' => 'This material is for a different grade level. Pick a Grade ' . $learner->grade_level . ' material or choose a cross-grade fallback option.'])
+                ->withInput();
+        }
+        if ($gradeDiff > 1) {
+            return back()
+                ->withErrors(['material_id' => 'Cross-grade fallback is limited to one grade above or below the learner\u2019s grade.'])
+                ->withInput();
+        }
+
+        // Assessment type filters by comprehension-question availability.
+        if (in_array($validated['assessment_type'], ['comprehension', 'combined'], true)
+            && ! $material->comprehensionQuestions()->exists()) {
+            return back()
+                ->withErrors(['material_id' => 'Comprehension assessments require a material with comprehension questions.'])
+                ->withInput();
+        }
 
         $assessment = Assessment::create([
-            'learner_id' => $request->learner_id,
-            'material_id' => $request->material_id,
+            'learner_id' => $validated['learner_id'],
+            'material_id' => $validated['material_id'],
             'assessor_id' => auth()->id(),
-            'language' => $material->language,
+            'language' => $validated['language'],
             'status' => Assessment::STATUS_PENDING,
         ]);
 
@@ -192,27 +218,26 @@ class AssessmentController extends Controller
             // ==========================================
             // REAL: ML CLASSIFICATION (Calling your Python API!)
             // ==========================================
-            $metrics = [
-                'wpm' => $analysis['words_per_minute'],
-                'accuracy' => $analysis['accuracy_rate'],
-                'omissions' => $analysis['omissions'],
-                'insertions' => $analysis['insertions'],
-                'substitutions' => $analysis['substitutions']
-            ];
-            
-            $classification = $mlService->classify($metrics);
+            $classification = $mlService->classify($analysis['ml_features']);
             
             // Map the String predictions from Python back to the Database Integers
             $weaknessMap = [
+                '0' => 0,
+                'Independent Reader' => 0,
+                '1' => 1,
                 'Phonemic Awareness' => 1,
+                '2' => 2,
                 'Decoding Accuracy' => 2,
+                '3' => 3,
                 'Oral Reading Fluency' => 3,
+                '4' => 4,
                 'Comprehension' => 4,
+                'Reading Comprehension' => 4,
                 'Instructional (Mixed)' => 2, // Fallback mapping
-                'None (Independent)' => null
+                'None (Independent)' => 0
             ];
             
-            $predictedString = $classification['primary'] ?? '';
+            $predictedString = (string) ($classification['primary'] ?? '');
             $primaryWeaknessId = $weaknessMap[$predictedString] ?? null;
             
             // Merge ML classification into analysis results to store properly
@@ -379,7 +404,7 @@ class AssessmentController extends Controller
     {
         $this->authorizeLearnerAccess($learner);
         $pin = Learner::generatePin();
-        // pin is guarded ΓÇö explicit assignment only (hashed cast still applies).
+        // pin is guarded — explicit assignment only (hashed cast still applies).
         $learner->pin = $pin;
         // pin_created_at is a non-sensitive timestamp — stamp explicitly
         // alongside every new PIN issuance.

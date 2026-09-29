@@ -79,6 +79,11 @@ class ReadingMaterial extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeForGrade($query, int $gradeLevel)
+    {
+        return $query->where('grade_level', $gradeLevel);
+    }
+
     public function scopeFilter($query, array $filters)
     {
         if (isset($filters['language'])) {

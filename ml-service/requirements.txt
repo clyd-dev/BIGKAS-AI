@@ -1,0 +1,12 @@
+# BIGKAS-AI ML microservice (Flask) — runtime dependencies.
+# Install on the server with:  ./venv/bin/pip install -r requirements.txt
+# Top-level deps only; pip resolves the rest (ctranslate2, onnxruntime,
+# tokenizers, av, etc.) for the server platform. Do NOT pip-freeze a
+# Windows venv here — it pins Windows-only packages that break Linux.
+Flask>=3.1,<4
+faster-whisper>=1.2
+joblib>=1.4
+pandas>=2.2
+scikit-learn>=1.5
+scipy>=1.14
+numpy>=1.26

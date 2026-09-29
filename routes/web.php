@@ -17,8 +17,8 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\Student\StudentAuthController;
-use App\Http\Controllers\Student\StudentDashboardController;
+use App\Http\Controllers\VerificationCodeController;
+use App\Http\Controllers\Student\StudentAuthController;use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\Student\StudentAssessmentController;
 use App\Http\Controllers\Student\StudentActivityController;
 use App\Http\Controllers\Student\StudentBadgeController;
@@ -51,32 +51,23 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 // ============================================
-// EMAIL VERIFICATION
+// EMAIL VERIFICATION (OTP code via PHPMailer)
 // ============================================
 
-Route::get('/email/verify', function () {
-    return view('auth.verify-email');
+Route::get('/verify-code', [VerificationCodeController::class, 'show'])->name('verification-code.show');
+Route::post('/verify-code', [VerificationCodeController::class, 'verify'])->name('verification-code.verify')->middleware('throttle:10,1');
+Route::post('/verify-code/resend', [VerificationCodeController::class, 'resend'])->name('verification-code.resend')->middleware('throttle:3,1');
+
+// Legacy alias: keeps the `verified` middleware and old tests working.
+Route::get('/email/verify', function (\Illuminate\Http\Request $request) {
+    $user = $request->user();
+    if ($user->hasVerifiedEmail()) {
+        return redirect()->route('dashboard');
+    }
+    $request->session()->put('pending_verification_user_id', $user->id);
+
+    return redirect()->route('verification-code.show');
 })->middleware('auth')->name('verification.notice');
-
-Route::get('/email/verify/{id}/{hash}', function (\Illuminate\Foundation\Auth\EmailVerificationRequest $request) {
-    if ($request->user()->hasVerifiedEmail()) {
-        return redirect()->route('dashboard');
-    }
-
-    $request->fulfill();
-
-    return redirect()->route('dashboard')->with('success', 'Your email has been verified.');
-})->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
-
-Route::post('/email/verify/resend', function (\Illuminate\Http\Request $request) {
-    if ($request->user()->hasVerifiedEmail()) {
-        return redirect()->route('dashboard');
-    }
-
-    $request->user()->sendEmailVerificationNotification();
-
-    return back()->with('success', 'A fresh verification link has been sent to your email address.');
-})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 // ============================================
 // STUDENT PORTAL (PIN-based auth, separate from main auth)
@@ -140,6 +131,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Reading Materials (admin, teacher)
     // ----------------------------------------
     Route::middleware('role:admin,teacher')->group(function () {
+        Route::get('/materials/options', [MaterialController::class, 'options'])->name('materials.options');
         Route::resource('materials', MaterialController::class);
     });
 

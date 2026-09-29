@@ -186,6 +186,10 @@ class AdminController extends Controller
         $user->is_active = true;
         $user->save();
 
+        // Admin-created accounts skip code verification — auto-verified.
+        $user->email_verified_at = now();
+        $user->save();
+
         // If a class was chosen, assign this user as its teacher
         if ($request->filled('class_id')) {
             SchoolClass::where('id', $request->class_id)

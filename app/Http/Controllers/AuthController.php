@@ -48,6 +48,10 @@ class AuthController extends Controller
             return back()->with('error', 'Your account is temporarily locked due to too many failed login attempts. Please try again later.');
         }
 
+        if ($user && !$user->hasVerifiedEmail()) {
+            return back()->with('error', 'Please verify your email address before logging in.');
+        }
+
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
@@ -113,12 +117,26 @@ class AuthController extends Controller
         $user->role = $request->role;
         $user->save();
 
-        $user->sendEmailVerificationNotification();
+        $code = \App\Models\EmailVerificationCode::issueFor($user);
+
+        $mailSent = true;
+        try {
+            app(\App\Services\OtpMailer::class)->sendCode($user->email, $user->name, $code);
+        } catch (\Throwable $e) {
+            $mailSent = false;
+        }
 
         ActivityLog::log('register', 'New user registered', 'user', $user->id);
 
-        return redirect()->route('login')
-            ->with('success', 'Registration successful! Please verify your email address before logging in.');
+        $request->session()->put('pending_verification_user_id', $user->id);
+
+        if ($mailSent) {
+            return redirect()->route('verification-code.show')
+                ->with('success', 'Registration successful! We sent a 6-digit code to your email.');
+        }
+
+        return redirect()->route('verification-code.show')
+            ->with('warning', 'Registered! We could not send the code — click Resend below.');
     }
 
     /**

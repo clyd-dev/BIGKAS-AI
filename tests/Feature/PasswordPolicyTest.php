@@ -23,6 +23,9 @@ class PasswordPolicyTest extends TestCase
 
     public function test_strong_password_accepted_on_register(): void
     {
+        $this->mock(\App\Services\OtpMailer::class, function ($mock) {
+            $mock->shouldIgnoreMissing();
+        });
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'strong@example.com',

@@ -3,9 +3,7 @@
 @section('title', 'My Profile')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-person me-2"></i>My Profile</h4>
-    </div>
+    <x-page-header title="My Profile" icon="bi-person" />
 
     <div class="row g-3">
         {{-- Profile Info --}}

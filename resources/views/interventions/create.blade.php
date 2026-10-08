@@ -3,10 +3,8 @@
 @section('title', 'Add Intervention')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Add Intervention</h4>
-        <a href="{{ route('interventions.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header title="Add Intervention" icon="bi-plus-circle"
+                   :back="route('interventions.index')" back-label="Interventions" />
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">

@@ -3,12 +3,8 @@
 @section('title', 'Teacher Reports')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-inbox me-2"></i>Teacher Reports</h4>
-        <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> School Overview
-        </a>
-    </div>
+    <x-page-header title="Teacher Reports" icon="bi-inbox"
+                   :back="route('reports.index')" back-label="Reports" />
 
     {{-- Filters --}}
     <div class="card border-0 shadow-sm mb-4">

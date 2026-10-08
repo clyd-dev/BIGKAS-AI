@@ -3,17 +3,18 @@
 @section('title', 'Notifications')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-bell me-2"></i>Notifications</h4>
-        @if(auth()->user()->unreadNotifications()->exists())
-            <form method="POST" action="{{ route('notifications.read-all') }}">
-                @csrf
-                <button type="submit" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-check2-all me-1"></i>Mark all as read
-                </button>
-            </form>
-        @endif
-    </div>
+    <x-page-header title="Notifications" icon="bi-bell">
+        <x-slot:actions>
+            @if(auth()->user()->unreadNotifications()->exists())
+                <form method="POST" action="{{ route('notifications.read-all') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-check2-all me-1"></i> Mark all as read
+                    </button>
+                </form>
+            @endif
+        </x-slot:actions>
+    </x-page-header>
 
     <div class="card border-0 shadow-sm">
         <div class="list-group list-group-flush">

@@ -2,7 +2,7 @@
 
 {{-- Stats Cards --}}
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <i class="bi bi-people display-6 text-primary"></i>
@@ -11,7 +11,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <i class="bi bi-clipboard-check display-6 text-success"></i>
@@ -20,7 +20,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <i class="bi bi-graph-up display-6 text-info"></i>
@@ -29,7 +29,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-6 col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <i class="bi bi-speedometer2 display-6 text-warning"></i>

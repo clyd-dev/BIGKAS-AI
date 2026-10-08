@@ -15,7 +15,8 @@
             </li>
 
             {{-- Page numbers --}}
-            @foreach ($elements as $element)
+            {{-- $elements is absent when this view backs a simple paginator --}}
+            @foreach ($elements ?? [] as $element)
                 @if (is_string($element))
                     <li class="d-none d-sm-block"><span class="bigkas-pager__gap">{{ $element }}</span></li>
                 @endif

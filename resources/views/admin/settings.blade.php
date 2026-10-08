@@ -3,10 +3,7 @@
 @section('title', 'System Settings')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-sliders me-2"></i>System Settings</h4>
-        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Dashboard</a>
-    </div>
+    <x-page-header title="System Settings" icon="bi-sliders" />
 
     <form method="POST" action="{{ route('admin.settings.save') }}">
         @csrf

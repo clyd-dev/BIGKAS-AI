@@ -3,10 +3,8 @@
 @section('title', $intervention->name)
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-lightbulb me-2"></i>{{ $intervention->name }}</h4>
-        <a href="{{ route('interventions.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header :title="$intervention->name" icon="bi-lightbulb"
+                   :back="route('interventions.index')" back-label="Interventions" />
 
     <div class="row g-3">
         <div class="col-md-8">

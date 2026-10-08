@@ -5,12 +5,13 @@
 @section('content')
     @php $isAdmin = auth()->user()->isAdmin(); @endphp
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>Reading Materials</h4>
-        <a href="{{ route('materials.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-1"></i> Add Material
-        </a>
-    </div>
+    <x-page-header title="Reading Materials" icon="bi-journal-text">
+        <x-slot:actions>
+            <a href="{{ route('materials.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> Add Material
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     @unless($isAdmin)
         <div class="alert alert-info">

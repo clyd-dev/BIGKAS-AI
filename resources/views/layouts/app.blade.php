@@ -2,8 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#1a73e8">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BIGKAS">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
     <title>@yield('title', 'BIGKAS') - BIGKAS-AI</title>
 
     <!-- Bootstrap 5 CSS -->
@@ -12,52 +18,69 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-    <!-- App CSS -->
+    <!-- App CSS: page content styles, then the shell shared with the parent panel, then staff-only tweaks -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/parent-shell.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/staff-shell.css') }}" rel="stylesheet">
     @stack('styles')
 </head>
-<body class="app-shell">
-    {{-- Navbar --}}
-    @include('partials.navbar')
+<body class="pp-body">
+    <a href="#pp-main" class="visually-hidden-focusable pp-skip">Skip to content</a>
 
-    <div class="d-flex" id="wrapper">
-        {{-- Sidebar --}}
-        @include('partials.sidebar')
+    @include('partials.staff-nav')
 
-        {{-- Main Content --}}
-        <div id="page-content-wrapper" class="flex-grow-1">
-            <div class="container-fluid py-4 px-4">
+    <div class="pp-shell">
+        @include('partials.staff-sidebar')
+
+        <main id="pp-main" class="pp-main">
+            <div class="pp-container pp-container-wide">
                 {{-- Flash Messages --}}
                 @include('partials.alerts')
 
                 @yield('content')
             </div>
-        </div>
+        </main>
     </div>
 
-    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
-
-    <script>
-        // Hamburger: slide the sidebar in over the page on small screens
-        (function () {
-            var btn = document.getElementById('sidebarToggle');
-            var bd = document.getElementById('sidebarBackdrop');
-            var side = document.getElementById('sidebar-wrapper');
-            if (!btn || !side) return;
-            function set(open) {
-                document.body.classList.toggle('sidebar-open', open);
-                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            }
-            btn.addEventListener('click', function () { set(!document.body.classList.contains('sidebar-open')); });
-            bd.addEventListener('click', function () { set(false); });
-            side.addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
-            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
-            window.matchMedia('(min-width: 992px)').addEventListener('change', function () { set(false); });
-        })();
-    </script>
+    @include('partials.staff-tabbar')
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Hamburger: slide-out drawer below 992px, collapsible sidebar above it.
+        (function () {
+            var btn = document.getElementById('ppMenuBtn');
+            var drawerEl = document.getElementById('ppDrawer');
+            if (!btn || !drawerEl) return;
+            var KEY = 'ppSidebarHidden';
+            var desktop = window.matchMedia('(min-width: 992px)');
+
+            function applySaved() {
+                var hidden = false;
+                try { hidden = localStorage.getItem(KEY) === '1'; } catch (e) {}
+                document.body.classList.toggle('pp-sidebar-hidden', desktop.matches && hidden);
+            }
+            btn.addEventListener('click', function () {
+                if (desktop.matches) {
+                    var hide = !document.body.classList.contains('pp-sidebar-hidden');
+                    document.body.classList.toggle('pp-sidebar-hidden', hide);
+                    try { localStorage.setItem(KEY, hide ? '1' : '0'); } catch (e) {}
+                } else {
+                    bootstrap.Offcanvas.getOrCreateInstance(drawerEl).toggle();
+                }
+            });
+            // Close the drawer after choosing a link
+            drawerEl.addEventListener('click', function (e) {
+                if (e.target.closest('a')) bootstrap.Offcanvas.getOrCreateInstance(drawerEl).hide();
+            });
+            // Crossing the breakpoint (rotating a tablet): close the drawer, restore the sidebar choice
+            desktop.addEventListener('change', function () {
+                bootstrap.Offcanvas.getOrCreateInstance(drawerEl).hide();
+                applySaved();
+            });
+            applySaved();
+        })();
+    </script>
     <!-- App JS -->
     <script src="{{ asset('js/app.js') }}"></script>
     @stack('scripts')

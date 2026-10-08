@@ -3,13 +3,14 @@
 @section('title', 'Admin - Materials')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>All Reading Materials</h4>
-        <div>
-            <a href="{{ route('materials.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i> Add Material</a>
-            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Dashboard</a>
-        </div>
-    </div>
+    <x-page-header title="All Reading Materials" icon="bi-journal-text"
+                   :back="route('dashboard')" back-label="Dashboard">
+        <x-slot:actions>
+            <a href="{{ route('materials.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> Add Material
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">

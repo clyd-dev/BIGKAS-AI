@@ -3,12 +3,8 @@
 @section('title', $message->subject)
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-chat-left-text me-2"></i>{{ $message->subject }}</h4>
-        <a href="{{ route('messages.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Back to Messages
-        </a>
-    </div>
+    <x-page-header :title="$message->subject" icon="bi-chat-left-text"
+                   :back="route('messages.index')" back-label="Messages" />
 
     @if($message->learner)
         <div class="alert alert-light border py-2 small mb-3">

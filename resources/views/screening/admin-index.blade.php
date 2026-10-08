@@ -3,9 +3,7 @@
 @section('title', 'Group Screening Test')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-ui-checks-grid me-2"></i>Group Screening Test</h4>
-    </div>
+    <x-page-header title="Group Screening Test" icon="bi-ui-checks-grid" />
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">

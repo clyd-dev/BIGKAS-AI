@@ -3,10 +3,8 @@
 @section('title', 'Interventions - ' . $learner->full_name)
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-lightbulb me-2"></i>{{ $learner->full_name }} - Interventions</h4>
-        <a href="{{ route('learners.show', $learner) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header :title="$learner->full_name" icon="bi-lightbulb" subtitle="Interventions"
+                   :back="route('learners.show', $learner)" back-label="Learner profile" />
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">

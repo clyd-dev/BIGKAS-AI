@@ -3,9 +3,9 @@
 @section('title', $learner->getFullName())
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-person me-2"></i>{{ $learner->getFullName() }}</h4>
-        <div>
+    <x-page-header :title="$learner->getFullName()" icon="bi-person"
+                   :back="route('learners.index')" back-label="Learners">
+        <x-slot:actions>
             @if(auth()->user()->isTeacher())
                 <a href="{{ route('assessments.start', $learner) }}" class="btn btn-primary btn-sm">
                     <i class="bi bi-mic me-1"></i> New Assessment
@@ -14,15 +14,12 @@
             <a href="{{ route('learners.form4', $learner) }}" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-file-earmark-person me-1"></i> Form 4
             </a>
-            <a href="{{ route('learners.index') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Back
-            </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- Info Cards --}}
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     @if($learner->reading_level === 'independent')
@@ -38,7 +35,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h4 class="text-primary mb-0">Grade {{ $learner->grade_level }}</h4>
@@ -46,7 +43,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h4 class="mb-0">{{ $assessmentCount ?? 0 }}</h4>
@@ -54,7 +51,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h4 class="mb-0">{{ $learner->schoolClass?->section ?? 'Unassigned' }}</h4>

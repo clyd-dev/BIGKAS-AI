@@ -3,12 +3,8 @@
 @section('title', 'Add Learner')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-person-plus me-2"></i>Add New Learner</h4>
-        <a href="{{ route('learners.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Back to Learners
-        </a>
-    </div>
+    <x-page-header title="Add New Learner" icon="bi-person-plus"
+                   :back="route('learners.index')" back-label="Learners" />
 
     @if(session('error'))
         <div class="alert alert-danger">{{ session('error') }}</div>

@@ -3,12 +3,8 @@
 @section('title', 'Submit Report')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-send me-2"></i>Submit Report to Principal</h4>
-        <a href="{{ route('reports.submissions.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Back
-        </a>
-    </div>
+    <x-page-header title="Submit Report to Principal" icon="bi-send"
+                   :back="route('reports.submissions.index')" back-label="My Reports" />
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">

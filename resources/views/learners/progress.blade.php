@@ -3,17 +3,14 @@
 @section('title', $learner->full_name . ' - Progress')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-graph-up me-2"></i>{{ $learner->full_name }} - Progress</h4>
-        <div>
+    <x-page-header :title="$learner->full_name" icon="bi-graph-up" subtitle="Progress"
+                   :back="route('learners.show', $learner)" back-label="Learner profile">
+        <x-slot:actions>
             <a href="{{ route('reports.learner', $learner) }}" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-file-pdf me-1"></i> Full Report
+                <i class="bi bi-file-earmark-bar-graph me-1"></i> Full Report
             </a>
-            <a href="{{ route('learners.show', $learner) }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Back
-            </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- Progress Charts --}}
     <div class="row g-3 mb-4">

@@ -13,20 +13,20 @@
         ];
     @endphp
 
-    {{-- Header --}}
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-        <div>
-            <h4 class="mb-1"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h4>
-            <p class="text-muted mb-0 small">
+    <x-page-header title="Dashboard" icon="bi-speedometer2">
+        <x-slot:meta>
+            <p class="pg-sub mb-0">
                 Welcome back, {{ auth()->user()->first_name ?? auth()->user()->name ?? 'Admin' }}.
                 @if($school) <i class="bi bi-building ms-2 me-1"></i>{{ $school->name }} @endif
                 <span class="ms-2"><i class="bi bi-calendar3 me-1"></i>{{ now()->format('l, F j, Y') }}</span>
             </p>
-        </div>
-        <a href="{{ route('admin.phil-iri') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-journal-bookmark-fill me-1"></i> Phil-IRI Forms
-        </a>
-    </div>
+        </x-slot:meta>
+        <x-slot:actions>
+            <a href="{{ route('admin.phil-iri') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-journal-bookmark-fill me-1"></i> Phil-IRI Forms
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- Key counts, each linking to where it is managed --}}
     <div class="row g-3 mb-4">

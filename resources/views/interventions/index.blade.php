@@ -3,14 +3,15 @@
 @section('title', 'Interventions')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Interventions</h4>
-        @if(auth()->user()->isTeacher())
-            <a href="{{ route('interventions.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i> Add Intervention
-            </a>
-        @endif
-    </div>
+    <x-page-header title="Interventions" icon="bi-lightbulb">
+        <x-slot:actions>
+            @if(auth()->user()->isTeacher())
+                <a href="{{ route('interventions.create') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Add Intervention
+                </a>
+            @endif
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- Filters --}}
     <div class="card border-0 shadow-sm mb-4">

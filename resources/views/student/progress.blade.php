@@ -10,7 +10,7 @@
     @if($learner ?? false)
         {{-- Summary Cards --}}
         <div class="row g-3 mb-4">
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="card border-0 shadow-sm text-center">
                     <div class="card-body">
                         @if($learner->reading_level === 'independent')
@@ -26,7 +26,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="card border-0 shadow-sm text-center">
                     <div class="card-body">
                         <h3 class="text-primary mb-0">{{ number_format($stats['latest_accuracy'] ?? 0, 1) }}%</h3>
@@ -34,7 +34,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="card border-0 shadow-sm text-center">
                     <div class="card-body">
                         <h3 class="text-success mb-0">{{ round($stats['latest_wpm'] ?? 0) }}</h3>
@@ -42,7 +42,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3">
                 <div class="card border-0 shadow-sm text-center">
                     <div class="card-body">
                         <h3 class="text-info mb-0">{{ $stats['total_assessments'] ?? 0 }}</h3>

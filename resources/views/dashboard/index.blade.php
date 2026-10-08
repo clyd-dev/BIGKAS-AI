@@ -3,10 +3,7 @@
 @section('title', 'Dashboard')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0">Dashboard</h4>
-        <span class="text-muted">Welcome back, {{ Auth::user()->name }}</span>
-    </div>
+    <x-page-header title="Dashboard" :subtitle="'Welcome back, ' . Auth::user()->name" />
 
     @if(Auth::user()->role === 'admin')
         @include('dashboard.admin')

@@ -40,28 +40,6 @@ main {
     flex: 1;
 }
 
-/* App shell (admin/teacher/parent): navbar + sidebar stay fixed,
-   only the main content area scrolls. */
-body.app-shell {
-    height: 100vh;
-    overflow: hidden;
-}
-
-body.app-shell #wrapper {
-    flex: 1 1 auto;
-    min-height: 0;
-}
-
-body.app-shell #sidebar-wrapper,
-body.app-shell #page-content-wrapper {
-    height: 100%;
-    overflow-y: auto;
-}
-
-body.app-shell #page-content-wrapper {
-    min-width: 0;
-}
-
 a {
     text-decoration: none;
 }
@@ -1056,38 +1034,4 @@ a.bigkas-pager__btn:hover {
 .bigkas-pager__gap {
     color: var(--bigkas-gray);
     padding: 0 4px;
-}
-
-/* ============================================
-   SIDEBAR HAMBURGER (below 992px the sidebar slides over the page)
-   ============================================ */
-.sidebar-backdrop { display: none; }
-@media (max-width: 991.98px) {
-    body.app-shell #sidebar-wrapper {
-        position: fixed;
-        top: 56px;
-        bottom: 0;
-        left: 0;
-        height: auto !important;
-        width: 270px !important;
-        min-width: 0 !important;
-        max-width: 85vw !important;
-        z-index: 1045;
-        transform: translateX(-100%);
-        transition: transform .25s ease-out;
-        overflow-y: auto;
-    }
-    body.sidebar-open #sidebar-wrapper { transform: translateX(0); }
-    body.sidebar-open .sidebar-backdrop {
-        display: block;
-        position: fixed;
-        inset: 56px 0 0 0;
-        background: rgba(0, 0, 0, .45);
-        z-index: 1040;
-    }
-    body.sidebar-open { overflow: hidden; }
-    .navbar form[role="search"] { display: none !important; }
-}
-@media (prefers-reduced-motion: reduce) {
-    body.app-shell #sidebar-wrapper { transition: none; }
 }

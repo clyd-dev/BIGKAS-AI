@@ -3,9 +3,8 @@
 @section('title', 'Reports')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Reports</h4>
-        <div class="d-flex gap-2">
+    <x-page-header title="Reports" icon="bi-bar-chart">
+        <x-slot:actions>
             <a href="{{ route('reports.form2.index') }}" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-file-earmark-check me-1"></i> DepEd Form 2
             </a>
@@ -15,8 +14,8 @@
                     <span class="badge bg-danger ms-1">{{ $pendingReports }} new</span>
                 @endif
             </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- School summary --}}
     <div class="row g-3 mb-4">

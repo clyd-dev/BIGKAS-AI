@@ -3,10 +3,8 @@
 @section('title', 'Add Reading Material')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Add Reading Material</h4>
-        <a href="{{ route('materials.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header title="Add Reading Material" icon="bi-plus-circle"
+                   :back="route('materials.index')" back-label="Materials" />
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">

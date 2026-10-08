@@ -3,9 +3,8 @@
 @section('title', 'System Activity Logs')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0"><i class="bi bi-clock-history me-2"></i>Unified Activity Logs</h4>
-</div>
+<x-page-header title="Activity Logs" icon="bi-clock-history"
+               subtitle="Every action by admins, teachers, parents and learners" />
 
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">

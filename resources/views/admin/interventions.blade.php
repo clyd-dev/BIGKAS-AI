@@ -3,10 +3,8 @@
 @section('title', 'Interventions')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Interventions</h4>
-        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Dashboard</a>
-    </div>
+    <x-page-header title="Interventions" icon="bi-lightbulb"
+                   :back="route('dashboard')" back-label="Dashboard" />
 
     <div class="alert alert-info">
         <i class="bi bi-info-circle me-1"></i> Read-only overview. Creating, editing, and deleting interventions is managed by teachers.

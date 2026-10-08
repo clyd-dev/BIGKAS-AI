@@ -3,14 +3,12 @@
 @section('title', 'Class Report - ' . $class->getDisplayName())
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-people me-2"></i>Class Report: {{ $class->getDisplayName() }}</h4>
-        <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header :title="$class->getDisplayName()" icon="bi-people" subtitle="Class report"
+                   :back="route('reports.index')" back-label="Reports" />
 
     {{-- Class Stats --}}
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h3 class="mb-0 text-primary">{{ $totalLearners ?? 0 }}</h3>
@@ -18,7 +16,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h3 class="mb-0 text-success">{{ $assessed ?? 0 }}</h3>
@@ -26,7 +24,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h3 class="mb-0 text-info">{{ number_format($avgAccuracy ?? 0, 1) }}%</h3>
@@ -34,7 +32,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h3 class="mb-0 text-warning">{{ round($avgWpm ?? 0) }}</h3>

@@ -5,15 +5,14 @@
 @section('content')
     @php $isAdmin = auth()->user()->isAdmin(); @endphp
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0">
-            <i class="bi bi-file-earmark-text me-2"></i>Grade {{ $report->schoolClass?->grade_level }} – {{ $report->schoolClass?->section }}
+    <x-page-header :title="'Grade ' . $report->schoolClass?->grade_level . ' – ' . $report->schoolClass?->section"
+                   icon="bi-file-earmark-text"
+                   :back="route('reports.submissions.index')"
+                   :back-label="$isAdmin ? 'Teacher Reports' : 'My Reports'">
+        <x-slot:badge>
             @include('reports.submissions._status', ['status' => $report->status])
-        </h4>
-        <a href="{{ route('reports.submissions.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Back
-        </a>
-    </div>
+        </x-slot:badge>
+    </x-page-header>
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">

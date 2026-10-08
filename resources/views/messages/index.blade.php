@@ -3,12 +3,13 @@
 @section('title', 'Messages')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-envelope me-2"></i>Messages</h4>
-        <a href="{{ route('messages.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-pencil-square me-1"></i>Compose
-        </a>
-    </div>
+    <x-page-header title="Messages" icon="bi-envelope">
+        <x-slot:actions>
+            <a href="{{ route('messages.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil-square me-1"></i> Compose
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     @if($unreadCount > 0)
         <div class="alert alert-info py-2 small">

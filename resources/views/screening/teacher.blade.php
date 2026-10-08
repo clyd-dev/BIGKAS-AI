@@ -3,10 +3,8 @@
 @section('title', 'Group Screening Test')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-ui-checks-grid me-2"></i>Group Screening Test</h4>
-        <div class="small text-muted">Grade {{ $class->grade_level }} – {{ $class->section }} · {{ $class->school_year }}</div>
-    </div>
+    <x-page-header title="Group Screening Test" icon="bi-ui-checks-grid"
+                   :subtitle="'Grade ' . $class->grade_level . ' – ' . $class->section . ' · ' . $class->school_year" />
 
     @if(!empty($info))
         <div class="alert alert-info">{{ $info }}</div>

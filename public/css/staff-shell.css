@@ -1,0 +1,66 @@
+/* =====================================================================
+   Admin / teacher / student pages (layouts/app.blade.php).
+   Loaded after parent-shell.css, which supplies the shared shell
+   (top bar, sidebar, drawer, bottom tab bar, bottom-sheet modals).
+   This file only widens the page and makes dense staff content fit a phone.
+   ===================================================================== */
+
+/* Staff pages hold tables and charts: use the room a desktop has. */
+.pp-container.pp-container-wide { max-width: 1400px; }
+.pp-sidebar { flex-basis: 250px; width: 250px; }
+
+/* The body is a flex column in app.css; keep the shell filling it. */
+.pp-shell { flex: 1 1 auto; width: 100%; }
+
+/* Page headers: title and actions stack instead of squeezing on a phone. */
+@media (max-width: 575.98px) {
+    .pp-main .d-flex.justify-content-between.align-items-center,
+    .pp-main .page-header { flex-wrap: wrap; gap: .5rem; }
+    .pp-main h3, .pp-main .h3 { font-size: 1.3rem; }
+    .pp-main h4, .pp-main .h4 { font-size: 1.15rem; }
+    .pp-main .card-body { padding: .85rem; }
+    .pp-main .card-header, .pp-main .card-footer { padding: .6rem .85rem; }
+}
+
+/* Tables: scroll sideways inside their own box, never the whole page. */
+.pp-main .table-responsive { -webkit-overflow-scrolling: touch; }
+.pp-main .table td, .pp-main .table th { vertical-align: middle; }
+@media (max-width: 767.98px) {
+    .pp-main .table-responsive { font-size: .85rem; }
+    .pp-main .table-responsive > .table { min-width: 560px; }
+}
+
+/* Button groups and filter rows wrap rather than overflow. */
+.pp-main .btn-group:not(.btn-group-vertical),
+.pp-main .btn-toolbar,
+.pp-main .nav-tabs,
+.pp-main .nav-pills { flex-wrap: wrap; }
+.pp-main .nav-tabs { overflow-x: auto; flex-wrap: nowrap; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+
+/* Small buttons stay a comfortable tap target on touch screens. */
+@media (pointer: coarse) {
+    .pp-main .btn-sm { min-height: 40px; min-width: 40px; }
+    .pp-main .form-check-input { width: 1.25em; height: 1.25em; }
+}
+
+/* Stat tiles sit two-up on a phone, so the oversized dashboard icons and
+   numbers have to come down with them or each tile overflows its card. */
+@media (max-width: 575.98px) {
+    .pp-main .card-body .display-4,
+    .pp-main .card-body .display-5,
+    .pp-main .card-body .display-6 { font-size: 1.75rem; }
+    .pp-main .card-body > h3, .pp-main .card-body > h4 { font-size: 1.25rem; }
+    .pp-main .card-body .badge.fs-6 { font-size: .8rem !important; }
+    .pp-main .card-body { word-break: break-word; }
+}
+
+/* Filter bars: the submit button goes full width under its fields. */
+@media (max-width: 767.98px) {
+    .pp-main form .row > [class*="col-"] { margin-bottom: .25rem; }
+    .pp-main form .btn-sm { min-height: 40px; }
+}
+
+/* Long unbroken text (emails, filenames, passages) wraps. */
+.pp-main { overflow-wrap: anywhere; }
+.pp-main pre { white-space: pre-wrap; }
+.pp-main iframe, .pp-main video, .pp-main audio { max-width: 100%; }

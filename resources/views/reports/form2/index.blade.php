@@ -12,12 +12,8 @@
 @endpush
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-file-earmark-check me-2"></i>DepEd Form 2 – School Reading Profile</h4>
-        <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Reports
-        </a>
-    </div>
+    <x-page-header title="DepEd Form 2" icon="bi-file-earmark-check" subtitle="School Reading Profile"
+                   :back="route('reports.index')" back-label="Reports" />
 
     {{-- Selection --}}
     <div class="card border-0 shadow-sm mb-4">
@@ -81,7 +77,9 @@
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-white"><h6 class="mb-0">{{ $lang['label'] }} (Form {{ $code === 'fil' ? '1A' : '1B' }} results)</h6></div>
                         <div class="card-body">
-                            @include('reports.form2._table', ['lang' => $lang, 'code' => $code])
+                            <div class="table-responsive">
+                                @include('reports.form2._table', ['lang' => $lang, 'code' => $code])
+                            </div>
                         </div>
                     </div>
                 </div>

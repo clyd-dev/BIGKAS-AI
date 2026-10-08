@@ -3,15 +3,11 @@
 @section('title', 'Practice Center')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="mb-1"><i class="bi bi-controller me-2"></i>Practice Center</h4>
-            <p class="text-muted mb-0">Reinforce reading skills with targeted activities</p>
-        </div>
-    </div>
+    <x-page-header title="Practice Center" icon="bi-controller"
+                   subtitle="Reinforce reading skills with targeted activities" />
 
     <div class="row g-4">
-        <div class="col-md-4">
+        <div class="col-6 col-md-4">
             <a href="{{ route('practice.phonemic') }}" class="card border-0 shadow-sm text-decoration-none h-100 practice-card">
                 <div class="card-body text-center py-5">
                     <div class="practice-icon bg-primary bg-opacity-10 text-primary">
@@ -26,7 +22,7 @@
             </a>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-6 col-md-4">
             <a href="{{ route('practice.sight-words') }}" class="card border-0 shadow-sm text-decoration-none h-100 practice-card">
                 <div class="card-body text-center py-5">
                     <div class="practice-icon bg-success bg-opacity-10 text-success">
@@ -41,7 +37,7 @@
             </a>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-6 col-md-4">
             <a href="{{ route('practice.reading') }}" class="card border-0 shadow-sm text-decoration-none h-100 practice-card">
                 <div class="card-body text-center py-5">
                     <div class="practice-icon bg-warning bg-opacity-10 text-warning">

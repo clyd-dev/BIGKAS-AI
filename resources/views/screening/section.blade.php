@@ -3,14 +3,10 @@
 @section('title', 'Screening Scores')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0">
-            <i class="bi bi-ui-checks-grid me-2"></i>Grade {{ $class->grade_level }} – {{ $class->section }}
-            <span class="fs-6 text-muted">{{ $languages[$language] }} · {{ $periods[$period] }}</span>
-        </h4>
-        <a href="{{ route('screening.index', ['period' => $period, 'language' => $language, 'school_year' => $class->school_year]) }}"
-           class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header :title="'Grade ' . $class->grade_level . ' – ' . $class->section" icon="bi-ui-checks-grid"
+                   :subtitle="$languages[$language] . ' · ' . $periods[$period]"
+                   :back="route('screening.index', ['period' => $period, 'language' => $language, 'school_year' => $class->school_year])"
+                   back-label="Screening" />
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">

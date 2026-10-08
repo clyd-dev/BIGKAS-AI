@@ -3,12 +3,8 @@
 @section('title', 'Edit Learner')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-pencil me-2"></i>Edit Learner</h4>
-        <a href="{{ route('learners.show', $learner) }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Back
-        </a>
-    </div>
+    <x-page-header title="Edit Learner" icon="bi-pencil"
+                   :back="route('learners.show', $learner)" back-label="Learner profile" />
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">

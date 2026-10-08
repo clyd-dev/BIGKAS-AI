@@ -3,10 +3,9 @@
 @section('title', 'Start Assessment')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-play-circle me-2"></i>Start Assessment for {{ $learner->getFullName() }}</h4>
-        <a href="{{ route('learners.show', $learner) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header title="Start Assessment" icon="bi-play-circle"
+                   :subtitle="$learner->getFullName()"
+                   :back="route('learners.show', $learner)" back-label="Learner profile" />
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">

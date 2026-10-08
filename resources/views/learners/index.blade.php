@@ -5,14 +5,15 @@
 @section('content')
     @php $canManage = auth()->user()->isTeacher(); @endphp
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-people me-2"></i>Learners</h4>
-        @if($canManage)
-            <a href="{{ route('learners.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i> Add Learner
-            </a>
-        @endif
-    </div>
+    <x-page-header title="Learners" icon="bi-people">
+        <x-slot:actions>
+            @if($canManage)
+                <a href="{{ route('learners.create') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Add Learner
+                </a>
+            @endif
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- Section summary (click a tile to filter) --}}
     @if($allClasses->isNotEmpty())

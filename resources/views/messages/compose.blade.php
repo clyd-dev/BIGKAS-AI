@@ -3,12 +3,8 @@
 @section('title', 'Compose Message')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Compose Message</h4>
-        <a href="{{ route('messages.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Back to Messages
-        </a>
-    </div>
+    <x-page-header title="Compose Message" icon="bi-pencil-square"
+                   :back="route('messages.index')" back-label="Messages" />
 
     <div class="row">
         <div class="col-md-8">

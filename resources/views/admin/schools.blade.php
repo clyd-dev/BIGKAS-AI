@@ -3,26 +3,9 @@
 @section('title', 'Manage School')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="mb-0"><i class="bi bi-building me-2"></i>Manage School</h4>
-            <small class="text-muted">{{ $school->name ?? 'Old Sagay Elementary School' }}</small>
-        </div>
-        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Dashboard</a>
-    </div>
+    <x-page-header title="Manage School" icon="bi-building"
+                   :subtitle="$school->name ?? 'Old Sagay Elementary School'" />
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
 
     {{-- School information (printed in the header of DepEd forms such as Phil-IRI Form 2) --}}
     @if($school)

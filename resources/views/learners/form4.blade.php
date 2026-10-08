@@ -12,20 +12,17 @@
 @endpush
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-file-earmark-person me-2"></i>Phil-IRI Form 4 – Individual Summary Record</h4>
-        <div class="d-flex gap-2">
+    <x-page-header title="Phil-IRI Form 4" icon="bi-file-earmark-person" subtitle="Individual Summary Record"
+                   :back="route('learners.show', $learner)" back-label="Learner profile">
+        <x-slot:actions>
             <a href="{{ route('learners.form4.print', $learner) }}" target="_blank" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-printer me-1"></i> Print
             </a>
             <a href="{{ route('learners.form4.pdf', $learner) }}" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
             </a>
-            <a href="{{ route('learners.show', $learner) }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Back
-            </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     @unless($form['any_data'])
         <div class="alert alert-info">

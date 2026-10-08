@@ -3,25 +3,22 @@
 @section('title', 'Report - ' . $learner->full_name)
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-file-earmark-bar-graph me-2"></i>{{ $learner->full_name }} - Report</h4>
-        <div>
+    <x-page-header :title="$learner->full_name" icon="bi-file-earmark-bar-graph" subtitle="Reading report"
+                   :back="auth()->user()->isParent() ? route('parent.children.profile', $learner) : route('learners.show', $learner)"
+                   :back-label="auth()->user()->isParent() ? $learner->first_name : 'Learner profile'">
+        <x-slot:actions>
             <a href="{{ route('reports.print', $learner) }}" class="btn btn-outline-primary btn-sm" target="_blank">
                 <i class="bi bi-printer me-1"></i> Print
             </a>
             <a href="{{ route('reports.pdf', $learner) }}" class="btn btn-outline-danger btn-sm">
                 <i class="bi bi-file-earmark-pdf me-1"></i> PDF
             </a>
-            <a href="{{ auth()->user()->isParent() ? route('parent.children.profile', $learner) : route('learners.show', $learner) }}" class="btn btn-outline-secondary btn-sm"
-               onclick="if (window.history.length > 1) { window.history.back(); return false; }">
-                <i class="bi bi-arrow-left me-1"></i> Back
-            </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- Summary --}}
     <div class="row g-3 mb-4">
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body py-3">
                     @if($learner->reading_level === 'independent')
@@ -37,7 +34,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body py-3">
                     <h4 class="mb-0">{{ number_format($stats['avg_accuracy'] ?? 0, 1) }}%</h4>
@@ -45,7 +42,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body py-3">
                     <h4 class="mb-0">{{ round($stats['avg_wpm'] ?? 0) }}</h4>
@@ -53,7 +50,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body py-3">
                     <h4 class="mb-0">{{ $stats['total_assessments'] ?? 0 }}</h4>
@@ -61,7 +58,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body py-3">
                     <h4 class="mb-0">Grade {{ $learner->grade_level }}</h4>
@@ -69,7 +66,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body py-3">
                     <h4 class="mb-0">{{ ucfirst($learner->mother_tongue ?? 'N/A') }}</h4>

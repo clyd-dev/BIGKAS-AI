@@ -3,10 +3,8 @@
 @section('title', 'Sight Words Practice')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-eye me-2"></i>Sight Words</h4>
-        <a href="{{ route('practice.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header title="Sight Words" icon="bi-eye"
+                   :back="route('practice.index')" back-label="Practice Center" />
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">

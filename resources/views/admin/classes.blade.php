@@ -3,15 +3,14 @@
 @section('title', 'Classrooms Overview')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h4 class="mb-0"><i class="bi bi-diagram-3 me-2"></i>Classrooms Overview</h4>
-        <small class="text-muted">Old Sagay Elementary School — Grades 3 to 6</small>
-    </div>
-    <a href="{{ route('admin.schools') }}" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-pencil me-1"></i>Manage Grades &amp; Sections
-    </a>
-</div>
+<x-page-header title="Classrooms Overview" icon="bi-diagram-3"
+               subtitle="Old Sagay Elementary School – Grades 3 to 6">
+    <x-slot:actions>
+        <a href="{{ route('admin.schools') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil me-1"></i> Manage Grades &amp; Sections
+        </a>
+    </x-slot:actions>
+</x-page-header>
 
 @php
     $grouped = $classes->groupBy('grade_level')->sortKeys();

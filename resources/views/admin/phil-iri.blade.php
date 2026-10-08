@@ -16,16 +16,14 @@
         ];
     @endphp
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="mb-1"><i class="bi bi-journal-bookmark-fill me-2"></i>Phil-IRI Forms</h4>
-            <p class="text-muted mb-0 small">
+    <x-page-header title="Phil-IRI Forms" icon="bi-journal-bookmark-fill">
+        <x-slot:meta>
+            <p class="pg-sub mb-0">
                 <i class="bi bi-building me-1"></i>{{ $school?->name }}
                 @if($schoolYear) <span class="ms-2"><i class="bi bi-calendar3 me-1"></i>S.Y. {{ $schoolYear }}</span> @endif
             </p>
-        </div>
-        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
-    </div>
+        </x-slot:meta>
+    </x-page-header>
 
     {{-- The official forms --}}
     <div class="card border-0 shadow-sm mb-4">

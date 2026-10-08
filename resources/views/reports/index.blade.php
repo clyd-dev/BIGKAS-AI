@@ -1,20 +1,21 @@
-@extends('layouts.app')
+@extends(auth()->user()->isParent() ? 'layouts.parent' : 'layouts.app')
 
 @section('title', 'Reports')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Reports</h4>
-        @if(auth()->user()->isTeacher())
-            <a href="{{ route('reports.submissions.index') }}" class="btn btn-primary btn-sm">
-                <i class="bi bi-send me-1"></i> Reports to Principal
-            </a>
-        @endif
-    </div>
+    <x-page-header title="Reports" icon="bi-bar-chart">
+        <x-slot:actions>
+            @if(auth()->user()->isTeacher())
+                <a href="{{ route('reports.submissions.index') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-send me-1"></i> Reports to Principal
+                </a>
+            @endif
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- Quick Stats --}}
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h3 class="text-primary mb-0">{{ $stats['total_learners'] ?? 0 }}</h3>
@@ -22,7 +23,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h3 class="text-success mb-0">{{ $stats['assessed'] ?? 0 }}</h3>
@@ -30,7 +31,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h3 class="text-info mb-0">{{ number_format($stats['avg_accuracy'] ?? 0, 1) }}%</h3>
@@ -38,7 +39,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <h3 class="text-warning mb-0">{{ round($stats['avg_wpm'] ?? 0) }}</h3>

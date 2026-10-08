@@ -3,9 +3,7 @@
 @section('title', 'Assessments')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Assessments</h4>
-    </div>
+    <x-page-header title="Assessments" icon="bi-clipboard-check" />
 
     {{-- Filters --}}
     <div class="card border-0 shadow-sm mb-4">

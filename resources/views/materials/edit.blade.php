@@ -3,10 +3,8 @@
 @section('title', 'Edit Material')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-pencil me-2"></i>Edit Material</h4>
-        <a href="{{ route('materials.show', $material) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header title="Edit Material" icon="bi-pencil"
+                   :back="route('materials.show', $material)" back-label="Material" />
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">

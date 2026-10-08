@@ -86,24 +86,21 @@
 @section('content')
     @php $result = $assessment->result; @endphp
 
-    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
-        <div>
-            <h4 class="mb-1"><i class="bi bi-bar-chart me-2"></i>Assessment Results</h4>
-            <div class="text-muted small">
+    <x-page-header title="Assessment Results" icon="bi-bar-chart"
+                   :back="route('assessments.index')" back-label="Assessments">
+        <x-slot:meta>
+            <div class="pg-sub">
                 {{ $assessment->learner?->full_name ?? 'N/A' }}
                 &middot; {{ $assessment->material?->title ?? 'N/A' }}
                 &middot; {{ $assessment->created_at?->format('M d, Y g:i A') }}
             </div>
-        </div>
-        <div>
+        </x-slot:meta>
+        <x-slot:actions>
             <a href="{{ route('reports.learner', $assessment->learner) }}" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-file-earmark-bar-graph me-1"></i> Full Report
             </a>
-            <a href="{{ route('assessments.index') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Back
-            </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
     @if($result)
         @php

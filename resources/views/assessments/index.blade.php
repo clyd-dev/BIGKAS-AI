@@ -3,12 +3,13 @@
 @section('title', 'Assessments')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Assessments</h4>
-        <a href="{{ route('assessments.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-1"></i> New Assessment
-        </a>
-    </div>
+    <x-page-header title="Assessments" icon="bi-clipboard-check">
+        <x-slot:actions>
+            <a href="{{ route('assessments.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> New Assessment
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     {{-- Filters --}}
     <div class="card border-0 shadow-sm mb-4">

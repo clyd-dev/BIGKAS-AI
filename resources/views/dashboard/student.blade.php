@@ -18,7 +18,7 @@
 @if($linkedLearner ?? false)
     {{-- Stats Cards --}}
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <i class="bi bi-star display-6 text-warning"></i>
@@ -37,7 +37,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <i class="bi bi-clipboard-check display-6 text-primary"></i>
@@ -46,7 +46,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <i class="bi bi-bullseye display-6 text-success"></i>
@@ -55,7 +55,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body">
                     <i class="bi bi-controller display-6 text-info"></i>
@@ -68,7 +68,7 @@
 
     {{-- Quick Actions --}}
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
+        <div class="col-6 col-md-4">
             <a href="{{ route('practice.index') }}" class="card border-0 shadow-sm text-decoration-none h-100">
                 <div class="card-body text-center py-4">
                     <i class="bi bi-controller display-4 text-primary"></i>
@@ -77,7 +77,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-6 col-md-4">
             <a href="{{ route('student.progress') }}" class="card border-0 shadow-sm text-decoration-none h-100">
                 <div class="card-body text-center py-4">
                     <i class="bi bi-graph-up display-4 text-success"></i>
@@ -86,7 +86,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-6 col-md-4">
             <a href="{{ route('student.assessments') }}" class="card border-0 shadow-sm text-decoration-none h-100">
                 <div class="card-body text-center py-4">
                     <i class="bi bi-clipboard-data display-4 text-warning"></i>

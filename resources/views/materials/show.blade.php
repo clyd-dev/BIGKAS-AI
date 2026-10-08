@@ -3,10 +3,8 @@
 @section('title', $material->title)
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>{{ $material->title }}</h4>
-        <a href="{{ route('materials.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header :title="$material->title" icon="bi-journal-text"
+                   :back="route('materials.index')" back-label="Materials" />
 
     <div class="row g-3">
         <div class="col-md-8">

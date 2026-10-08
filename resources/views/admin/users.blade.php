@@ -3,30 +3,14 @@
 @section('title', 'Manage Users')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-person-badge me-2"></i>Manage Users</h4>
-        <div class="d-flex gap-2">
+    <x-page-header title="Manage Users" icon="bi-person-badge">
+        <x-slot:actions>
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
                 <i class="bi bi-person-plus me-1"></i> Create User
             </button>
-            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Dashboard
-            </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-page-header>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
 
     {{-- Filters --}}
     <div class="card border-0 shadow-sm mb-4">

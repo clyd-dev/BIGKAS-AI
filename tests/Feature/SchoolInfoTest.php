@@ -41,4 +41,19 @@ class SchoolInfoTest extends TestCase
         $this->actingAs($this->admin())->put(route('admin.schools.update', $a), ['name' => 'A2', 'school_id_number' => '111111'])
             ->assertSessionHasNoErrors();
     }
+
+    public function test_fresh_install_without_seeded_school_still_shows_form_and_adds_section(): void
+    {
+        $this->assertSame(0, School::count());
+
+        $this->actingAs($this->admin())->get(route('admin.schools'))
+            ->assertOk()->assertSee('School Information');
+
+        $this->actingAs($this->admin())->post(route('admin.classes.store'), [
+            'grade_level' => 3, 'section' => 'Sampaguita', 'school_year' => '2026-2027',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $this->assertDatabaseHas('classes', ['section' => 'Sampaguita', 'grade_level' => 3]);
+        $this->assertSame(1, School::count());
+    }
 }

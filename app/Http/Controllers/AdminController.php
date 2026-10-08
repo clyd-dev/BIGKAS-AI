@@ -172,9 +172,20 @@ class AdminController extends Controller
         return back()->with('success', "{$user->name} updated successfully.");
     }
 
+    /**
+     * The app is single-school. A fresh deploy seeds content only (no SchoolSeeder),
+     * so create a blank default school on first use instead of leaving the page empty
+     * and failing classes.school_id (NOT NULL).
+     */
+    private function currentSchool(): School
+    {
+        return School::orderBy('id')->first()
+            ?? School::create(['name' => 'Old Sagay Elementary School']);
+    }
+
     public function schools()
     {
-        $school   = School::orderBy('id')->first();
+        $school   = $this->currentSchool();
         $classes  = SchoolClass::with(['teacher', 'learners'])
             ->withCount('learners')
             ->orderBy('grade_level')
@@ -194,10 +205,10 @@ class AdminController extends Controller
             'school_year' => 'nullable|string|max:20',
         ]);
 
-        $school = School::orderBy('id')->first();
+        $school = $this->currentSchool();
 
         SchoolClass::create([
-            'school_id'   => $school?->id,
+            'school_id'   => $school->id,
             'grade_level' => $request->grade_level,
             'section'     => $request->section,
             'teacher_id'  => $request->teacher_id ?: null,

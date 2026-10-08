@@ -6,7 +6,7 @@
     <x-page-header :title="$learner->getFullName()" icon="bi-person"
                    :back="route('learners.index')" back-label="Learners">
         <x-slot:actions>
-            @if(auth()->user()->isTeacher())
+            @if(auth()->user()->isTeacher() && auth()->user()->hasAssignedClass())
                 <a href="{{ route('assessments.start', $learner) }}" class="btn btn-primary btn-sm">
                     <i class="bi bi-mic me-1"></i> New Assessment
                 </a>

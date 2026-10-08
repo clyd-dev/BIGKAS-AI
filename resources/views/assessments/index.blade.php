@@ -5,11 +5,15 @@
 @section('content')
     <x-page-header title="Assessments" icon="bi-clipboard-check">
         <x-slot:actions>
-            <a href="{{ route('assessments.create') }}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-circle me-1"></i> New Assessment
-            </a>
+            @if(auth()->user()->hasAssignedClass())
+                <a href="{{ route('assessments.create') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> New Assessment
+                </a>
+            @endif
         </x-slot:actions>
     </x-page-header>
+
+    @include('partials.unassigned-teacher')
 
     {{-- Filters --}}
     <div class="card border-0 shadow-sm mb-4">

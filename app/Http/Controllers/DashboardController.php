@@ -130,11 +130,37 @@ class DashboardController extends Controller
             $weaknessData[]   = $counts[$id] ?? 0;
         }
 
+        $progress = \App\Services\SchoolReadingProgress::summary();
+        $pendingTeachers = \App\Models\User::where('role', 'teacher')->where('is_active', true)->whereDoesntHave('taughtClasses')->count();
         $pendingReports = \App\Models\ClassReport::where('status', \App\Models\ClassReport::STATUS_SUBMITTED)->count();
+
+        $sectionsNoAdviser = \App\Models\SchoolClass::where('is_active', true)->whereNull('teacher_id')->count();
+        $frustration       = Learner::where('reading_level', 'frustration')->count();
+
+        // Most urgent first. danger/warning = something is waiting on the principal; info = for awareness.
+        $attention = collect([
+            ['key' => 'teachers', 'severity' => 'danger', 'icon' => 'bi-person-exclamation',
+                'title' => 'Teachers waiting for a grade & section', 'count' => $pendingTeachers,
+                'detail' => "They can't add learners or conduct assessments until you assign one.",
+                'url' => route('admin.users', ['role' => 'teacher', 'unassigned' => 1]), 'action' => 'Assign now'],
+            ['key' => 'reports', 'severity' => 'warning', 'icon' => 'bi-inbox',
+                'title' => 'Teacher reports waiting for review', 'count' => $pendingReports,
+                'detail' => 'Submitted section reports are waiting for you to review or return.',
+                'url' => route('reports.submissions.index'), 'action' => 'Review'],
+            ['key' => 'sections', 'severity' => 'warning', 'icon' => 'bi-diagram-3',
+                'title' => 'Sections without an adviser', 'count' => $sectionsNoAdviser,
+                'detail' => 'No teacher is assigned, so nobody can add learners or assess in these sections.',
+                'url' => route('admin.classes'), 'action' => 'Open Classrooms'],
+            ['key' => 'frustration', 'severity' => 'info', 'icon' => 'bi-heart-pulse',
+                'title' => 'Learners at Frustration level', 'count' => $frustration,
+                'detail' => 'These learners need extra reading support. Check their interventions.',
+                'url' => route('learners.index', ['reading_level' => 'frustration']), 'action' => 'View learners'],
+        ])->filter(fn ($a) => $a['count'] > 0)->values();
+
         $recentActivity = \App\Models\ActivityLog::with('user')->latest()->limit(10)->get();
         $school         = \App\Models\School::orderBy('id')->first();
 
-        return view('dashboard.admin', compact('stats', 'weaknessLabels', 'weaknessData', 'pendingReports', 'recentActivity', 'school'));
+        return view('dashboard.admin', compact('stats', 'weaknessLabels', 'weaknessData', 'pendingReports', 'pendingTeachers', 'progress', 'attention', 'recentActivity', 'school'));
     }
 
     private function studentDashboard($user)

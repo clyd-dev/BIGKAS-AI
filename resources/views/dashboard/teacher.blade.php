@@ -1,4 +1,6 @@
 {{-- Teacher / Parent Dashboard Partial --}}
+@php $assigned = auth()->user()->hasAssignedClass(); @endphp
+@include('partials.unassigned-teacher')
 
 {{-- Stats Cards --}}
 <div class="row g-3 mb-4">
@@ -122,15 +124,19 @@
             </div>
             <div class="card-body d-flex flex-column justify-content-center">
                 <div class="d-grid gap-3">
+                    @if($assigned)
                     <a href="{{ route('assessments.create') }}" class="btn btn-primary py-2 shadow-sm">
                         <i class="bi bi-mic me-2"></i> Start Live Assessment
                     </a>
+                    @endif
                     <div class="row g-2">
+                        @if($assigned)
                         <div class="col-6">
                             <a href="{{ route('learners.create') }}" class="btn btn-outline-primary w-100">
                                 <i class="bi bi-person-plus me-1"></i> Add Learner
                             </a>
                         </div>
+                        @endif
                         <div class="col-6">
                             <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary w-100">
                                 <i class="bi bi-bar-chart me-1"></i> Reports
@@ -193,9 +199,11 @@
                                 @endif
                             </td>
                             <td class="text-end pe-3">
+                                @if($assigned)
                                 <a href="{{ route('assessments.start', $learner) }}" class="btn btn-sm btn-primary rounded-circle shadow-sm" title="Start Assessment" style="width: 32px; height: 32px; padding: 4px;">
                                     <i class="bi bi-mic"></i>
                                 </a>
+                                @endif
                                 <a href="{{ route('learners.show', $learner) }}" class="btn btn-sm btn-light rounded-circle shadow-sm border" title="View Profile" style="width: 32px; height: 32px; padding: 4px;">
                                     <i class="bi bi-eye"></i>
                                 </a>
@@ -207,7 +215,9 @@
                                 <div class="mb-3"><i class="bi bi-person-x fs-1"></i></div>
                                 <h6>No learners found</h6>
                                 <p class="small">Add your first student to get started.</p>
-                                <a href="{{ route('learners.create') }}" class="btn btn-sm btn-primary mt-2">Add Learner</a>
+                                @if($assigned)
+                                    <a href="{{ route('learners.create') }}" class="btn btn-sm btn-primary mt-2">Add Learner</a>
+                                @endif
                             </td>
                         </tr>
                     @endforelse

@@ -31,7 +31,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required|min:6',
+            'password' => 'required',
         ]);
 
         $credentials = $request->only('email', 'password');
@@ -86,9 +86,7 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
         }
 
-        $schools = School::active()->orderBy('name')->get();
-
-        return view('auth.register', compact('schools'));
+        return view('auth.register');
     }
 
     /**
@@ -99,23 +97,25 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|min:2|max:100',
             'email' => ['required', 'email', \App\Rules\UniqueBlindIndex::email()],
-            'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
-            'role' => 'required|in:teacher,parent,student',
-            'school_id' => 'nullable|exists:schools,id',
+            'password' => \App\Support\PasswordPolicy::rules(),
+            'role' => 'required|in:teacher,parent',
             'phone' => 'nullable|string|max:20',
-        ]);
+        ], \App\Support\PasswordPolicy::messages());
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => $request->password, // Auto-hashed via cast
-            'school_id' => $request->school_id,
+            'school_id' => School::orderBy('id')->value('id'),   // this system serves one school
             'phone' => $request->phone,
         ]);
 
         // role is guarded — set via explicit assignment, never mass assignment.
         $user->role = $request->role;
         $user->save();
+
+        // Let the admin know, so a teacher can be given a grade & section quickly.
+        \App\Notifications\NewUserRegistered::notifyAdmins($user);
 
         $code = \App\Models\EmailVerificationCode::issueFor($user);
 
@@ -197,8 +197,8 @@ class AuthController extends Controller
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
-        ]);
+            'password' => \App\Support\PasswordPolicy::rules(),
+        ], \App\Support\PasswordPolicy::messages());
 
         $status = Password::reset(
             $request->only('email', 'token', 'password', 'password_confirmation'),

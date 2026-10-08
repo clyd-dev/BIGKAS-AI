@@ -103,7 +103,12 @@ class AssessmentAdminViewTest extends TestCase
 
     public function test_teacher_list_still_renders(): void
     {
-        $this->actingAs($this->user('teacher'))->get(route('assessments.index'))
+        $teacher = $this->user('teacher');
+        $school = \App\Models\School::create(['name' => 'Old Sagay ES']);
+        \App\Models\SchoolClass::create(['school_id' => $school->id, 'teacher_id' => $teacher->id,
+            'grade_level' => 4, 'section' => 'Rizal', 'school_year' => '2026-2027', 'is_active' => true]);
+
+        $this->actingAs($teacher)->get(route('assessments.index'))
             ->assertOk()
             ->assertSee('New Assessment');
     }

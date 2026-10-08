@@ -32,38 +32,22 @@
                 <option value="">Select your role</option>
                 <option value="teacher" {{ old('role') === 'teacher' ? 'selected' : '' }}>Teacher</option>
                 <option value="parent" {{ old('role') === 'parent' ? 'selected' : '' }}>Parent / Guardian</option>
-                <option value="student" {{ old('role') === 'student' ? 'selected' : '' }}>Student / Learner</option>
             </select>
             @error('role')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
 
-        <div class="mb-3">
-            <label for="school_id" class="form-label">School (Optional)</label>
-            <select class="form-select" id="school_id" name="school_id">
-                <option value="">Select school</option>
-                @foreach($schools ?? [] as $school)
-                    <option value="{{ $school->id }}" {{ old('school_id') == $school->id ? 'selected' : '' }}>
-                        {{ $school->name }}
-                    </option>
-                @endforeach
-            </select>
+        <div class="mb-2">
+            <label for="password" class="form-label">Password</label>
+            <x-password-input name="password" placeholder="Create a password" autocomplete="new-password" />
         </div>
 
-        <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control @error('password') is-invalid @enderror"
-                   id="password" name="password" required placeholder="Minimum 6 characters">
-            @error('password')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
+        @include('auth._password-rules')
 
         <div class="mb-3">
             <label for="password_confirmation" class="form-label">Confirm Password</label>
-            <input type="password" class="form-control" id="password_confirmation"
-                   name="password_confirmation" required placeholder="Repeat password">
+            <x-password-input name="password_confirmation" placeholder="Type the same password again" autocomplete="new-password" />
         </div>
 
         <button type="submit" class="btn btn-primary w-100 mb-3">

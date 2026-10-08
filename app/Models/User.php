@@ -117,6 +117,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ActivityLog::class);
     }
 
+    /** True when the teacher has been given a grade & section (the principal assigns it). */
+    public function hasAssignedClass(): bool
+    {
+        return $this->taughtClasses()->exists();
+    }
+
     public function taughtClasses(): HasMany
     {
         return $this->hasMany(SchoolClass::class, 'teacher_id');

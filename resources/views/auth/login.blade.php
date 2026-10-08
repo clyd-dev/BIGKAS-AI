@@ -37,14 +37,7 @@
 
         <div class="mb-3">
             <label for="password" class="form-label">Password</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <input type="password" class="form-control @error('password') is-invalid @enderror"
-                       id="password" name="password" required placeholder="Enter password">
-                @error('password')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
+            <x-password-input name="password" placeholder="Enter your password" autocomplete="current-password" />
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-3">

@@ -13,10 +13,19 @@ use App\Models\ReadingMaterial;
 use App\Models\SystemSetting;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
+    /** JSON health of the ML classifier and Whisper, for the dashboard's status card. */
+    public function systemStatus(Request $request)
+    {
+        return response()->json(
+            \App\Services\SystemStatus::all($request->boolean('fresh'))
+        )->header('Cache-Control', 'no-store');
+    }
+
     /** The Admin Panel was merged into the dashboard; keep the old URL working. */
     public function index()
     {
@@ -33,13 +42,17 @@ class AdminController extends Controller
         if ($request->filled('status')) {
             $query->where('is_active', $request->status === 'active');
         }
+        if ($request->boolean('unassigned')) {
+            // Teachers who have no grade & section yet.
+            $query->where('role', 'teacher')->whereDoesntHave('taughtClasses');
+        }
 
         // Names and emails are encrypted: search and sort happen in PHP.
         $found = $query->get();
         if ($request->filled('search')) {
             $found = $found->filter(fn (User $u) => Directory::userMatches($u, $request->search));
         }
-        $users = Directory::paginate(Directory::sortUsers($found), 20);
+        $users = Directory::paginate(Directory::sortUsers($found), 10);
 
         // All classes for dropdowns
         $allClasses = SchoolClass::with('teacher')
@@ -51,12 +64,14 @@ class AdminController extends Controller
             ->get()
             ->keyBy('teacher_id');
 
-        return view('admin.users', compact('users', 'allClasses', 'teacherClasses'));
+        $pendingTeachers = User::where('role', 'teacher')->where('is_active', true)->whereDoesntHave('taughtClasses')->count();
+
+        return view('admin.users', compact('users', 'allClasses', 'teacherClasses', 'pendingTeachers'));
     }
 
     public function updateUserRole(Request $request, User $user)
     {
-        $request->validate(['role' => 'required|in:admin,teacher,parent,student']);
+        $request->validate(['role' => 'required|in:admin,teacher,parent']);
         $oldRole = $user->role;
         // role is guarded — explicit assignment only.
         $user->role = $request->role;
@@ -78,6 +93,11 @@ class AdminController extends Controller
 
     public function deactivateUser(User $user)
     {
+        // An admin must not lock themselves out.
+        if ($user->id === auth()->id()) {
+            return back()->with('error', "You can't deactivate your own account.");
+        }
+
         // is_active is guarded — explicit assignment only.
         $user->is_active = false;
         $user->save();
@@ -98,10 +118,14 @@ class AdminController extends Controller
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => ['required', 'email', \App\Rules\UniqueBlindIndex::email()],
-            'role'     => 'required|in:admin,teacher,parent,student',
-            'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
+            'role'     => 'required|in:admin,teacher,parent',
+            'password' => \App\Support\PasswordPolicy::rules(),
             'class_id' => 'nullable|exists:classes,id',
-        ]);
+        ], \App\Support\PasswordPolicy::messages());
+
+        if ($request->role === 'teacher' && ($taken = $this->classTakenMessage($request->class_id, null))) {
+            throw ValidationException::withMessages(['class_id' => $taken]);
+        }
 
         // Auto-set school_id from the chosen class
         $school = School::orderBy('id')->first();
@@ -122,8 +146,8 @@ class AdminController extends Controller
         $user->email_verified_at = now();
         $user->save();
 
-        // If a class was chosen, assign this user as its teacher
-        if ($request->filled('class_id')) {
+        // Only a teacher is given a grade & section.
+        if ($request->role === 'teacher' && $request->filled('class_id')) {
             SchoolClass::where('id', $request->class_id)
                 ->update(['teacher_id' => $user->id]);
         }
@@ -137,9 +161,13 @@ class AdminController extends Controller
     public function updateUser(Request $request, User $user)
     {
         $request->validate([
-            'role'     => 'required|in:admin,teacher,parent,student',
+            'role'     => 'required|in:admin,teacher,parent',
             'class_id' => 'nullable|exists:classes,id',
         ]);
+
+        if ($request->role === 'teacher' && ($taken = $this->classTakenMessage($request->class_id, $user))) {
+            return back()->withInput()->with('error', $taken);
+        }
 
         $oldRole = $user->role;
 
@@ -150,8 +178,9 @@ class AdminController extends Controller
         // Remove this user from any class they were previously assigned as teacher
         SchoolClass::where('teacher_id', $user->id)->update(['teacher_id' => null]);
 
-        // Assign to new class if provided
-        if ($request->filled('class_id')) {
+        // Assign to new class if provided (only teachers have a grade & section)
+        $assignClass = $request->role === 'teacher' && $request->filled('class_id');
+        if ($assignClass) {
             SchoolClass::where('id', $request->class_id)
                 ->update(['teacher_id' => $user->id]);
         }
@@ -160,7 +189,7 @@ class AdminController extends Controller
         if ($oldRole !== $request->role) {
             $changes[] = "role {$oldRole}→{$request->role}";
         }
-        if ($request->filled('class_id')) {
+        if ($assignClass) {
             $cls = SchoolClass::find($request->class_id);
             $changes[] = "assigned to Grade {$cls->grade_level} – {$cls->section}";
         } else {
@@ -185,69 +214,146 @@ class AdminController extends Controller
 
     public function schools()
     {
-        $school   = $this->currentSchool();
-        $classes  = SchoolClass::with(['teacher', 'learners'])
-            ->withCount('learners')
-            ->orderBy('grade_level')
-            ->orderBy('section')
-            ->get();
-        $teachers = Directory::sortUsers(User::where('role', 'teacher')->get());
+        $school = $this->currentSchool();
+        $stats  = [
+            'sections' => SchoolClass::count(),
+            'teachers' => User::where('role', 'teacher')->count(),
+            'learners' => Learner::count(),
+        ];
 
-        return view('admin.schools', compact('school', 'classes', 'teachers'));
+        return view('admin.schools', compact('school', 'stats'));
     }
 
     public function storeClass(Request $request)
     {
-        $request->validate([
-            'grade_level' => 'required|integer|min:1|max:6',
-            'section'     => 'required|string|max:100',
-            'teacher_id'  => 'nullable|exists:users,id',
-            'school_year' => 'nullable|string|max:20',
-        ]);
+        $request->validate($this->classRules());
+
+        if ($problem = $this->classProblem($request, null)) {
+            return back()->withInput()->with('error', $problem);
+        }
 
         $school = $this->currentSchool();
 
         SchoolClass::create([
             'school_id'   => $school->id,
             'grade_level' => $request->grade_level,
-            'section'     => $request->section,
+            'section'     => trim($request->section),
             'teacher_id'  => $request->teacher_id ?: null,
-            'school_year' => $request->school_year,
+            'school_year' => $this->schoolYearFrom($request),
             'is_active'   => true,
         ]);
 
         ActivityLog::log('admin_create_class', "Added Grade {$request->grade_level} – {$request->section}");
 
-        return back()->with('success', "Grade {$request->grade_level} – {$request->section} added successfully.");
+        return redirect()->route('admin.classes')->with('success', "Grade {$request->grade_level} – {$request->section} added.");
     }
 
     public function updateClass(Request $request, SchoolClass $schoolClass)
     {
-        $request->validate([
-            'grade_level' => 'required|integer|min:1|max:6',
-            'section'     => 'required|string|max:100',
-            'teacher_id'  => 'nullable|exists:users,id',
-            'school_year' => 'nullable|string|max:20',
-        ]);
+        $request->validate($this->classRules());
+
+        if ($problem = $this->classProblem($request, $schoolClass)) {
+            return back()->withInput()->with('error', $problem);
+        }
 
         $schoolClass->update([
             'grade_level' => $request->grade_level,
-            'section'     => $request->section,
+            'section'     => trim($request->section),
             'teacher_id'  => $request->teacher_id ?: null,
-            'school_year' => $request->school_year,
+            'school_year' => $this->schoolYearFrom($request),
         ]);
 
         ActivityLog::log('admin_update_class', "Updated class: Grade {$request->grade_level} – {$request->section}", 'class', $schoolClass->id);
 
-        return back()->with('success', "Section updated successfully.");
+        return redirect()->route('admin.classes')->with('success', 'Section updated.');
     }
 
-    public function deleteClass(SchoolClass $schoolClass)
+    /** Danger zone: the principal must type the section name to delete it. */
+    public function deleteClass(Request $request, SchoolClass $schoolClass)
     {
-        $label = "Grade {$schoolClass->grade_level} – {$schoolClass->section}";
+        $request->validate(['confirm' => 'required|string']);
+
+        if (mb_strtolower(trim($request->confirm)) !== mb_strtolower(trim($schoolClass->section))) {
+            return back()->withInput()->with('error', 'The name you typed does not match this section, so nothing was deleted.');
+        }
+
+        $label    = "Grade {$schoolClass->grade_level} – {$schoolClass->section}";
+        $learners = $schoolClass->learners()->count();
+        $reports  = $schoolClass->reports()->count();
         $schoolClass->delete();
-        ActivityLog::log('admin_delete_class', "Deleted class: {$label}");
-        return back()->with('success', "{$label} deleted.");
+
+        ActivityLog::log('admin_delete_class', "Deleted class: {$label} ({$learners} learners left without a section, {$reports} teacher reports removed)");
+
+        return redirect()->route('admin.classes')->with('success', "{$label} deleted."
+            . ($learners ? " {$learners} learner" . ($learners === 1 ? ' is' : 's are') . ' now without a section.' : ''));
+    }
+
+    private function classRules(): array
+    {
+        return [
+            'grade_level' => 'required|integer|min:1|max:6',
+            'section'     => 'required|string|max:100',
+            'teacher_id'  => 'nullable|exists:users,id',
+            'school_year' => 'nullable|string|max:20',
+        ];
+    }
+
+    private function schoolYearFrom(Request $request): string
+    {
+        return trim((string) $request->school_year) ?: $this->defaultSchoolYear();
+    }
+
+    /** The school year most classes are in, or the current Philippine school year (starts in June). */
+    private function defaultSchoolYear(): string
+    {
+        return SchoolClass::orderByDesc('school_year')->value('school_year')
+            ?? (now()->month >= 6 ? now()->year . '-' . (now()->year + 1) : (now()->year - 1) . '-' . now()->year);
+    }
+
+    /** Business-rule check for adding/editing a section. Returns a message, or null when it is fine. */
+    private function classProblem(Request $request, ?SchoolClass $current): ?string
+    {
+        $grade   = (int) $request->grade_level;
+        $section = trim($request->section);
+        $year    = $this->schoolYearFrom($request);
+
+        $duplicate = SchoolClass::where('grade_level', $grade)
+            ->whereRaw('LOWER(section) = ?', [mb_strtolower($section)])
+            ->where('school_year', $year)
+            ->when($current, fn ($q) => $q->where('id', '!=', $current->id))
+            ->exists();
+        if ($duplicate) {
+            return "Grade {$grade} – {$section} already exists for S.Y. {$year}.";
+        }
+
+        if ($request->filled('teacher_id')) {
+            $teacher = User::find($request->teacher_id);
+            if (! $teacher || $teacher->role !== 'teacher') {
+                return 'The adviser must be a teacher.';
+            }
+            $other = SchoolClass::where('teacher_id', $teacher->id)
+                ->when($current, fn ($q) => $q->where('id', '!=', $current->id))
+                ->first();
+            if ($other) {
+                return "{$teacher->name} already advises Grade {$other->grade_level} – {$other->section}. A teacher can only have one section.";
+            }
+        }
+
+        return null;
+    }
+
+    /** A section can only have one teacher. Message when {classId} already belongs to someone other than $forUser. */
+    private function classTakenMessage(?int $classId, ?User $forUser): ?string
+    {
+        if (! $classId) {
+            return null;
+        }
+        $class = SchoolClass::with('teacher')->find($classId);
+        if ($class && $class->teacher_id && (! $forUser || $class->teacher_id !== $forUser->id)) {
+            return "Grade {$class->grade_level} – {$class->section} already has a teacher ({$class->teacher?->name}). A section can only have one teacher.";
+        }
+
+        return null;
     }
 
     public function storeSchool(Request $request)
@@ -288,12 +394,17 @@ class AdminController extends Controller
     public function classesOverview(Request $request)
     {
         $classes = SchoolClass::with(['teacher', 'learners'])
-            ->withCount('learners')
+            ->withCount(['learners', 'reports'])
             ->orderBy('grade_level')
             ->orderBy('section')
             ->get();
 
-        return view('admin.classes', compact('classes'));
+        $teachers    = Directory::sortUsers(User::where('role', 'teacher')->where('is_active', true)->get());
+        $advising    = $classes->whereNotNull('teacher_id')->keyBy('teacher_id');   // teacher id => the section they advise
+        $school      = $this->currentSchool();
+        $defaultYear = $this->defaultSchoolYear();
+
+        return view('admin.classes', compact('classes', 'teachers', 'advising', 'school', 'defaultYear'));
     }
 
     public function activityLogs(Request $request)

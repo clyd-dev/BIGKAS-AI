@@ -47,7 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Learners
     Route::get('/learners', [LearnerApiController::class, 'index']);
-    Route::post('/learners', [LearnerApiController::class, 'store']);
+    Route::post('/learners', [LearnerApiController::class, 'store'])->middleware('teacher.assigned');
     Route::get('/learners/{learner}', [LearnerApiController::class, 'show']);
     Route::put('/learners/{learner}', [LearnerApiController::class, 'update']);
     Route::delete('/learners/{learner}', [LearnerApiController::class, 'destroy']);
@@ -63,10 +63,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Assessments
     Route::get('/assessments', [AssessmentApiController::class, 'index']);
-    Route::post('/assessments', [AssessmentApiController::class, 'store']);
+    Route::post('/assessments', [AssessmentApiController::class, 'store'])->middleware('teacher.assigned');
     Route::get('/assessments/{assessment}', [AssessmentApiController::class, 'show']);
-    Route::post('/assessments/{assessment}/audio', [AssessmentApiController::class, 'uploadAudio']);
-    Route::post('/assessments/{assessment}/analyze', [AssessmentApiController::class, 'analyze']);
+    Route::post('/assessments/{assessment}/audio', [AssessmentApiController::class, 'uploadAudio'])->middleware('teacher.assigned');
+    Route::post('/assessments/{assessment}/analyze', [AssessmentApiController::class, 'analyze'])->middleware('teacher.assigned');
     Route::get('/assessments/{assessment}/results', [AssessmentApiController::class, 'results']);
 
     // Interventions

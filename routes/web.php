@@ -135,7 +135,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Roster changes are teacher-only; the admin (principal) has a read-only view.
     // Registered before the shared group so /learners/create wins over /learners/{learner}.
     Route::middleware('role:teacher')->group(function () {
-        Route::resource('learners', LearnerController::class)->except(['index', 'show']);
+        Route::resource('learners', LearnerController::class)->except(['index', 'show', 'create', 'store']);
+
+        // Adding learners needs a grade & section first (the principal assigns it).
+        Route::middleware('teacher.assigned')->group(function () {
+            Route::get('/learners/create', [LearnerController::class, 'create'])->name('learners.create');
+            Route::post('/learners', [LearnerController::class, 'store'])->name('learners.store');
+            Route::post('/learners/import/preview', [LearnerImportController::class, 'preview'])->name('learners.import.preview');
+            Route::post('/learners/import/confirm', [LearnerImportController::class, 'confirm'])->name('learners.import.confirm');
+        });
 
         // The teacher who adds a learner issues the student-portal PIN (admin does not).
         Route::post('/learners/{learner}/generate-pin', [AssessmentController::class, 'generatePin'])->name('learners.generate-pin');
@@ -145,9 +153,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/badges', [BadgeController::class, 'store'])->name('badges.store');
         Route::put('/badges/{badge}', [BadgeController::class, 'update'])->name('badges.update');
         Route::post('/badges/{badge}/toggle', [BadgeController::class, 'toggle'])->name('badges.toggle');
-
-        Route::post('/learners/import/preview', [LearnerImportController::class, 'preview'])->name('learners.import.preview');
-        Route::post('/learners/import/confirm', [LearnerImportController::class, 'confirm'])->name('learners.import.confirm');
     });
 
     Route::middleware('role:admin,teacher')->group(function () {
@@ -174,7 +179,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // list and open completed results. Teacher group is registered first so
     // /assessments/new wins over /assessments/{assessment}.
     // ----------------------------------------
-    Route::middleware('role:teacher')->group(function () {
+    Route::middleware(['role:teacher', 'teacher.assigned'])->group(function () {
         Route::get('/assessments/new', [AssessmentController::class, 'create'])->name('assessments.create');
         Route::get('/assessments/start/{learner}', [AssessmentController::class, 'start'])->name('assessments.start');
         Route::post('/assessments', [AssessmentController::class, 'store'])->name('assessments.store');
@@ -347,6 +352,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Phil-IRI Reading Profile (Form 4 matrix + Form 3A detail)
         Route::get('/phil-iri', [AdminController::class, 'philIri'])->name('phil-iri');
+
+        // Health of the AI parts (ML classifier, Whisper), fetched by the dashboard card
+        Route::get('/system-status', [AdminController::class, 'systemStatus'])->name('system-status');
     });
 
     // ----------------------------------------

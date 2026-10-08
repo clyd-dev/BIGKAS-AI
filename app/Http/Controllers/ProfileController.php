@@ -39,8 +39,8 @@ class ProfileController extends Controller
 
         $request->validate([
             'current_password' => 'required',
-            'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
-        ]);
+            'password' => \App\Support\PasswordPolicy::rules(),
+        ], \App\Support\PasswordPolicy::messages());
 
         if (!Hash::check($request->current_password, $user->password)) {
             return back()->with('error', 'Current password is incorrect.');

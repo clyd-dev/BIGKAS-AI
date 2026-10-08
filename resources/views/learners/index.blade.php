@@ -3,7 +3,7 @@
 @section('title', 'Learners')
 
 @section('content')
-    @php $canManage = auth()->user()->isTeacher(); @endphp
+    @php $canManage = auth()->user()->isTeacher() && auth()->user()->hasAssignedClass(); @endphp
 
     <x-page-header title="Learners" icon="bi-people">
         <x-slot:actions>
@@ -14,6 +14,8 @@
             @endif
         </x-slot:actions>
     </x-page-header>
+
+    @include('partials.unassigned-teacher')
 
     {{-- Section summary (click a tile to filter) --}}
     @if($allClasses->isNotEmpty())

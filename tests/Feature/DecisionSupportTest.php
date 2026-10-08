@@ -337,6 +337,7 @@ class DecisionSupportTest extends TestCase
     {
         $assessment = $this->assessmentFor($this->teacher());
         $outsider = $this->teacher();
+        $this->assessmentFor($outsider);   // the outsider has a section of their own, but not this learner
 
         $this->actingAs($outsider)
             ->post(route('assessments.verdict', $assessment), ['decision' => 'accepted'])

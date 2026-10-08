@@ -55,9 +55,8 @@ class AuthApiController extends Controller
             'name' => 'required|string|min:2|max:100',
             'email' => ['required', 'email', \App\Rules\UniqueBlindIndex::email()],
             'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
-            'role' => 'required|in:teacher,parent,student',
+            'role' => 'required|in:teacher,parent',
             'phone' => 'nullable|string',
-            'school_id' => 'nullable|exists:schools,id',
         ]);
 
         $user = User::create([
@@ -65,13 +64,15 @@ class AuthApiController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,
-            'school_id' => $validated['school_id'] ?? null,
+            'school_id' => \App\Models\School::orderBy('id')->value('id'),
         ]);
 
         // role and is_active are guarded — set via explicit assignment.
         $user->role = $validated['role'];
         $user->is_active = true;
         $user->save();
+
+        \App\Notifications\NewUserRegistered::notifyAdmins($user);
 
         $token = $user->createToken('api-token', $this->tokenAbilities($user->role))->plainTextToken;
 

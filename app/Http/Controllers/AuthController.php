@@ -146,10 +146,7 @@ class AuthController extends Controller
     {
         ActivityLog::log('logout', 'User logged out');
 
-        Auth::logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        \App\Support\SignOut::everywhere($request);
 
         return redirect()->route('login')->with('success', 'You have been logged out.');
     }

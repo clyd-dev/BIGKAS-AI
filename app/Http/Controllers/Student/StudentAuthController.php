@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Learner;
+use App\Support\SignOut;
 use Illuminate\Http\Request;
 
 class StudentAuthController extends Controller
@@ -91,7 +92,7 @@ class StudentAuthController extends Controller
         return redirect()->route('student.dashboard');
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         $learner = Learner::find(session('student_learner_id'));
         if ($learner) {
@@ -107,7 +108,10 @@ class StudentAuthController extends Controller
             ]);
         }
 
-        session()->forget('student_learner_id');
+        // Forgetting only the learner key left the rest of the shared session
+        // alive — including a teacher signed in on the same tablet.
+        SignOut::everywhere($request);
+
         return redirect()->route('student.login')
             ->with('success', 'You have been logged out. See you next time!');
     }

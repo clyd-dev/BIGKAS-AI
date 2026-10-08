@@ -1,8 +1,11 @@
 <?php
 
+use App\Support\ExpiredSession;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,5 +35,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // A stale CSRF token is a routine event (a tab left open past the
+        // session lifetime), not a crash. The default 419 screen is a dead
+        // end that also leaves the old session intact — see ExpiredSession.
+        // The handler rewrites TokenMismatchException to a 419 HttpException
+        // before render callbacks run, so match on the status, not the class.
+        $exceptions->render(fn (HttpException $e, Request $request) => $e->getStatusCode() === 419
+            ? ExpiredSession::respond($request)
+            : null);
     })->create();

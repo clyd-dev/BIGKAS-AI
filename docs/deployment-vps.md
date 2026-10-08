@@ -71,7 +71,10 @@ DB_PASSWORD=<DB_PASSWORD>
 
 SESSION_DRIVER=database
 SESSION_ENCRYPT=false
-SESSION_SECURE_COOKIE=false   # HTTPS-only cookies can't work over plain HTTP
+# Do NOT set SESSION_SECURE_COOKIE. Unset, the cookie is Secure on HTTPS and
+# plain over HTTP, so this file needs no edit when the certificate arrives.
+# Setting it true over plain HTTP makes the browser throw the session cookie
+# away, and every login/logout dies with "419 Page Expired".
 
 MAIL_MAILER=smtp
 MAIL_HOST=smtp-relay.brevo.com
@@ -186,13 +189,16 @@ server {
 }
 ```
 
-Then flip three lines in `.env` and rebuild caches:
+Then flip two lines in `.env` and rebuild caches:
 
 ```
 APP_ENV=production
 APP_URL=https://your-domain.com
-SESSION_SECURE_COOKIE=true
 ```
+
+Session cookies become Secure on their own once requests arrive over HTTPS.
+Pin `SESSION_SECURE_COOKIE=true` only if HTTP is fully closed off — it blocks
+any remaining plain-HTTP access from holding a session at all.
 
 ```bash
 php artisan config:cache
@@ -313,6 +319,53 @@ php artisan migrate --force
 npm ci && npm run build
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 ```
+
+## Troubleshooting — "419 Page Expired" and sessions that won't end
+
+A 419 means the form's CSRF token didn't match the session behind it. Almost
+always the session cookie never came back from the browser, so the POST landed
+on a brand-new session. In order of likelihood:
+
+1. **`SESSION_SECURE_COOKIE=true` while the site is served over HTTP.** The
+   browser accepts the `Set-Cookie` and then discards it, silently. Comment the
+   line out (unset = Secure only on HTTPS) and rebuild the config cache.
+2. **A config cache built before the `.env` edit.** `php artisan config:cache`
+   freezes `.env`; editing `.env` afterwards changes nothing until you run it
+   again. When in doubt: `php artisan config:clear` and re-cache.
+3. **`APP_KEY` changed.** Session payloads are encrypted, so a new key
+   invalidates every live session at once. Never regenerate it on a running
+   server.
+4. **Reaching the app by two hostnames** (IP and domain, or with and without
+   `www`). Cookies are per-host, so logging in on one and posting from the
+   other cannot work. Pick one and 301 the rest.
+
+One paste that shows which of those is live — run it on the server:
+
+```bash
+cd /var/www/bigkas-ai
+
+# What the app actually believes (reads the cached config, like the site does)
+php artisan tinker --execute='foreach (["app.url","app.env","session.driver","session.secure","session.encrypt","session.domain","session.lifetime","session.same_site"] as $k) printf("%-18s %s\n", $k, var_export(config($k), true));'
+
+# What the browser is really told — look for "Secure" on a http:// URL
+curl -sI http://localhost/login -H 'Host: <SERVER-IP>' | grep -i '^set-cookie\|^cache-control'
+
+# Sessions are being written?
+mysql -u bigkas -p bigkas_prod -e 'SELECT COUNT(*) AS rows_, FROM_UNIXTIME(MAX(last_activity)) AS newest FROM sessions;'
+
+# Recent token failures
+grep -ci 'TokenMismatch\|419' storage/logs/laravel.log
+```
+
+`session.secure` should print `NULL` on an HTTP-only server and the `set-cookie`
+line must **not** contain `Secure`. If it does, that is your 419.
+
+Sessions that come back after logout are a different fault and are fixed in the
+app, not the server: every logout now clears the whole session (staff guard,
+learner PIN key and CSRF token together), and every page is sent with
+`Cache-Control: no-store` so the back button cannot resurrect a signed-in page.
+If an old page still appears after deploying, hard-refresh once — the browser is
+showing you a copy it stored before the fix landed.
 
 ## Pre-deploy checklist (local machine)
 

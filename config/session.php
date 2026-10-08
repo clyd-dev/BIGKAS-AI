@@ -167,9 +167,16 @@ return [
     | to the server if the browser has a HTTPS connection. This will keep
     | the cookie from being sent to you when it can't be done securely.
     |
+    | Left unset (null) this follows the request: Secure on HTTPS, plain over
+    | HTTP. Hard-coding true cost us a week of "419 Page Expired" reports —
+    | the server is reached by IP over HTTP until the domain's certificate is
+    | in place, and the browser silently discarded every Secure cookie, so
+    | each POST arrived with a new session and a token that could not match.
+    | Set SESSION_SECURE_COOKIE=true explicitly if HTTPS is the only way in.
+    |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE', true),
+    'secure' => env('SESSION_SECURE_COOKIE', null),
 
     /*
     |--------------------------------------------------------------------------

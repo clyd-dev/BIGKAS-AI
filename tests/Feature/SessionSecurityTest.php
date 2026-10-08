@@ -26,10 +26,17 @@ class SessionSecurityTest extends TestCase
         $this->assertTrue($defaults['encrypt']);
     }
 
-    public function test_session_secure_defaults_true(): void
+    /**
+     * Secure follows the request rather than being pinned on: null means
+     * Secure over HTTPS and plain over HTTP (see Response::prepare), so the
+     * hardening holds behind a certificate without silently discarding every
+     * cookie — and every login — while the server is still reached by IP.
+     * SessionHandlingTest covers both schemes end to end.
+     */
+    public function test_session_secure_defaults_to_following_the_request_scheme(): void
     {
         $defaults = $this->shippedSessionDefaults();
 
-        $this->assertTrue($defaults['secure']);
+        $this->assertNull($defaults['secure']);
     }
 }

@@ -313,11 +313,28 @@ apt install -y unattended-upgrades && dpkg-reconfigure -plow unattended-upgrades
 **Every future update:**
 
 ```bash
-cd /var/www/bigkas && git pull origin master
+cd /var/www/bigkas-ai && git pull origin master
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
-npm ci && npm run build
-php artisan config:cache && php artisan route:cache && php artisan view:cache
+npm ci && npm run build        # only when resources/js, resources/css or package.json changed
+
+# Rebuild ALL THREE caches, every time — not the subset the change seems to need
+php artisan optimize:clear     # config + route + view + events
+php artisan optimize           # rebuilds the same three
+```
+
+Never rebuild a subset. A pull that adds a route leaves the old
+`bootstrap/cache/routes-v7.php` in place, and the first view calling
+`route()` on the new name throws from `View->renderContents()` — a 500 that
+reads like a Blade bug and sends you looking in the wrong file. Equally,
+`.env` edits do nothing at all until `config:cache` runs again.
+
+Reading a 500 afterwards: Laravel writes each entry as one very long line, so
+`tail` drops you into the middle of a stack trace with the message out of
+reach. Extract it by content instead:
+
+```bash
+grep -oE '(local|production)\.(ERROR|CRITICAL):.{0,500}' storage/logs/laravel.log | tail -2
 ```
 
 ## Troubleshooting — "419 Page Expired" and sessions that won't end

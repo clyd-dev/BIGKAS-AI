@@ -63,7 +63,7 @@ class SpeechToTextService
             throw new \Exception("Local Whisper error: HTTP {$response->status()} - {$response->body()}");
         }
 
-        return $this->formatWhisperResponse($response->json());
+        return $this->formatWhisperResponse($response->json(), 'local_whisper');
     }
 
     protected function callWhisperApi(string $audioPath, string $language): array
@@ -84,10 +84,10 @@ class SpeechToTextService
             throw new \Exception("API error ({$response->status()}): {$error}");
         }
 
-        return $this->formatWhisperResponse($response->json());
+        return $this->formatWhisperResponse($response->json(), 'openai_api');
     }
 
-    protected function formatWhisperResponse(array $data): array
+    protected function formatWhisperResponse(array $data, string $engine = 'unknown'): array
     {
         $words = [];
         if (isset($data['words'])) {
@@ -107,6 +107,12 @@ class SpeechToTextService
             'language' => $data['language'] ?? 'en',
             'duration' => $data['duration'] ?? 0,
             'segments' => $data['segments'] ?? [],
+            'engine' => $engine,
+            // Measured from the waveform by the local service (speech vs
+            // background, noise level, non-reading sounds). The cloud API
+            // doesn't provide this, so it may be absent.
+            'audio_quality' => $data['audio_quality'] ?? null,
+            'verbatim_mode' => $data['verbatim_mode'] ?? false,
             'raw_response' => $data,
         ];
     }
@@ -144,6 +150,7 @@ class SpeechToTextService
             'language' => $language,
             'duration' => round($estimatedDuration, 2),
             'segments' => [],
+            'engine' => 'mock',
             'is_mock' => true,
         ];
     }

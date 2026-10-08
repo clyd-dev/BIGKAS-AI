@@ -5,6 +5,11 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Reports</h4>
+        @if(auth()->user()->isTeacher())
+            <a href="{{ route('reports.submissions.index') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-send me-1"></i> Reports to Principal
+            </a>
+        @endif
     </div>
 
     {{-- Quick Stats --}}
@@ -45,7 +50,7 @@
 
     <div class="row g-3">
         {{-- Individual Learner Reports --}}
-        <div class="col-md-6">
+        <div class="col-lg-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-person me-1"></i> Learner Reports</h6></div>
                 <div class="card-body p-0">
@@ -77,7 +82,7 @@
         </div>
 
         {{-- Class Reports --}}
-        <div class="col-md-6">
+        <div class="col-lg-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-people me-1"></i> Class Reports</h6></div>
                 <div class="card-body p-0">
@@ -85,7 +90,7 @@
                         @forelse($classes ?? [] as $class)
                             <a href="{{ route('reports.class', $class) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <div>
-                                    <strong>{{ $class->name }}</strong>
+                                    <strong>Grade {{ $class->grade_level }} &ndash; {{ $class->section }}</strong>
                                     <br><small class="text-muted">Grade {{ $class->grade_level }} &middot; {{ $class->school?->name ?? '' }}</small>
                                 </div>
                                 <span class="badge bg-primary rounded-pill">{{ $class->learners_count ?? 0 }} learners</span>
@@ -96,12 +101,14 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            {{-- Distribution Chart --}}
-            <div class="card border-0 shadow-sm mt-3">
+        {{-- Distribution Chart --}}
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white"><h6 class="mb-0">Reading Level Distribution</h6></div>
                 <div class="card-body">
-                    <canvas id="distChart" height="200"></canvas>
+                    <canvas id="distChart" height="220"></canvas>
                 </div>
             </div>
         </div>

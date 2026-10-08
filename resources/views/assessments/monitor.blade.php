@@ -84,7 +84,11 @@
                 </div>
                 <div class="mb-3">
                     <small class="text-muted d-block">PIN</small>
-                    <strong class="text-primary">{{ $learner->pin ?? 'Not Set' }}</strong>
+                    @if($learner->pin_created_at)
+                        <strong class="text-primary">Issued {{ $learner->pin_created_at->format('M d, Y') }}</strong>
+                    @else
+                        <a href="{{ route('learners.show', $learner) }}" class="text-danger fw-bold">Not set &ndash; issue a PIN</a>
+                    @endif
                 </div>
                 <div class="mb-3">
                     <small class="text-muted d-block">Connection Status</small>
@@ -116,7 +120,8 @@
                         Student goes to <strong class="text-primary">/student/login</strong>
                     </li>
                     <li class="mb-2">
-                        Enters PIN: <strong class="text-primary">{{ $learner->pin ?? 'Generate PIN first!' }}</strong>
+                        Enters the PIN you gave them
+                        @unless($learner->pin_created_at) <strong class="text-danger">(issue a PIN first)</strong> @endunless
                     </li>
                     <li class="mb-2">
                         The assessment will appear on their dashboard

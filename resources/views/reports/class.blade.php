@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Class Report - ' . ($class->name ?? ''))
+@section('title', 'Class Report - ' . $class->getDisplayName())
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-people me-2"></i>Class Report: {{ $class->name ?? 'N/A' }}</h4>
+        <h4 class="mb-0"><i class="bi bi-people me-2"></i>Class Report: {{ $class->getDisplayName() }}</h4>
         <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
     </div>
 

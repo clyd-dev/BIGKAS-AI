@@ -62,12 +62,12 @@
                                         <button type="submit" class="btn btn-outline-secondary btn-sm" onclick="return confirm('Are you sure you want to discard this recording and retry?')">Retry</button>
                                     </form>
                                     <button id="btnAnalyze" class="btn btn-success btn-sm">
-                                        <i class="bi bi-cpu me-1"></i> Analyze Reading
+                                        <i class="bi bi-cpu me-1"></i> Analyze
                                     </button>
                                 @else
                                     <button id="btnRetry" class="btn btn-outline-secondary btn-sm d-none">Retry</button>
                                     <button id="btnAnalyze" class="btn btn-success btn-sm d-none">
-                                        <i class="bi bi-cpu me-1"></i> Analyze Reading
+                                        <i class="bi bi-cpu me-1"></i> Analyze
                                     </button>
                                 @endif
                             </div>
@@ -91,28 +91,95 @@
                             </div>
                         </div>
 
-                        <hr>
-
-                        {{-- Manual Upload --}}
-                        @if($assessment->status === 'pending')
-                            <form method="POST" action="{{ route('assessments.upload-audio', $assessment) }}" enctype="multipart/form-data">
-                                @csrf
-                                <div class="mb-3">
-                                    <label class="form-label small">Or upload an audio file:</label>
-                                    <input type="file" class="form-control form-control-sm" name="audio" accept="audio/*" required>
-                                </div>
-                                <button type="submit" class="btn btn-sm btn-primary w-100">
-                                    <i class="bi bi-upload me-1"></i> Upload Audio
-                                </button>
-                            </form>
+                        {{--
+                            Manual upload is an alternative to recording here, for
+                            when the child can't read at this device. It's offered
+                            only before any audio exists, and hidden as soon as
+                            recording starts.
+                        --}}
+                        @if($assessment->status === 'pending' && !$assessment->audio_file)
+                            <div id="uploadAudioSection">
+                                <hr>
+                                <form method="POST" action="{{ route('assessments.upload-audio', $assessment) }}" enctype="multipart/form-data">
+                                    @csrf
+                                    <div class="mb-2">
+                                        <label class="form-label small mb-1">Can't record here? Upload an audio file instead:</label>
+                                        <input type="file" class="form-control form-control-sm" name="audio" accept="audio/*" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                                        <i class="bi bi-upload me-1"></i> Upload Audio
+                                    </button>
+                                </form>
+                            </div>
                         @endif
                     </div>
                 </div>
             @endif
         </div>
 
-        {{-- Reading Passage --}}
+        {{-- Reading Passage + Comprehension --}}
         <div class="col-md-8">
+            @if($questions->isNotEmpty())
+                {{--
+                    Comprehension test. Hidden until the recording stops, then the
+                    teacher marks what the child answered (or hands over the
+                    device). If the learner already answered from their own
+                    portal, it renders read-only instead.
+                --}}
+                <div id="comprehensionPanel"
+                     class="card border-0 shadow-sm mb-3 {{ $submittedAnswers->isEmpty() && $assessment->status !== 'processing' ? 'd-none' : '' }}"
+                     data-prefilled="{{ $submittedAnswers->isNotEmpty() ? '1' : '0' }}">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-patch-question me-1"></i> Comprehension Questions</h6>
+                        @if($submittedAnswers->isNotEmpty())
+                            <span class="badge bg-info">Answered by learner — {{ $assessment->comprehensionScore() }}%</span>
+                        @else
+                            <span class="badge bg-warning text-dark">Required before analyzing</span>
+                        @endif
+                    </div>
+                    <div class="card-body">
+                        @if($submittedAnswers->isNotEmpty())
+                            <ol class="mb-0">
+                                @foreach($submittedAnswers as $answer)
+                                    <li class="mb-2">
+                                        <div>{{ $answer->question_text }}</div>
+                                        <div class="small">
+                                            @if($answer->is_correct)
+                                                <span class="text-success"><i class="bi bi-check-circle me-1"></i>{{ $answer->selected_text }}</span>
+                                            @else
+                                                <span class="text-danger"><i class="bi bi-x-circle me-1"></i>{{ $answer->selected_text ?? 'No answer' }}</span>
+                                                <span class="text-muted ms-2">Correct: {{ $answer->correct_text }}</span>
+                                            @endif
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ol>
+                        @else
+                            <p class="small text-muted">
+                                Ask each question aloud and mark what the child answered — or hand them the device to tap their own answers.
+                            </p>
+                            @foreach($questions as $i => $question)
+                                <div class="mb-3 pb-2 border-bottom comprehension-question" data-question-id="{{ $question->id }}">
+                                    <p class="fw-semibold mb-2">{{ $i + 1 }}. {{ $question->question }}</p>
+                                    <div class="d-flex flex-column gap-1">
+                                        @foreach($question->getOptions() as $letter => $text)
+                                            <label class="border rounded px-3 py-2 comprehension-option" style="cursor: pointer;">
+                                                <input class="form-check-input me-2" type="radio"
+                                                       name="comprehension[{{ $question->id }}]" value="{{ $letter }}">
+                                                <strong class="me-1">{{ $letter }}.</strong> {{ $text }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                            <div id="comprehensionGateMsg" class="small text-muted">
+                                Answer all {{ $questions->count() }} questions to enable Analyze.
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h6 class="mb-0">Reading Passage</h6>

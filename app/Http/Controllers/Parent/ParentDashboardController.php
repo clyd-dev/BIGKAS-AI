@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Parent;
 
+use App\Support\Directory;
+
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Assessment;
@@ -11,6 +13,7 @@ use App\Models\InterventionLog;
 use App\Models\Learner;
 use App\Models\Message;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ParentDashboardController extends Controller
 {
@@ -20,13 +23,13 @@ class ParentDashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $learners = $user->learners()->orderBy('last_name')->get();
+        $learners = Directory::sortLearners($user->learners()->get());
 
         // Aggregate stats
         $learnerIds = $learners->pluck('id');
         $totalAssessments = $learnerIds->isEmpty() ? 0 : Assessment::whereIn('learner_id', $learnerIds)->count();
         $pendingInterventions = $learnerIds->isEmpty() ? 0 :
-            InterventionLog::whereIn('learner_id', $learnerIds)->where('status', 'pending')->count();
+            InterventionLog::whereIn('learner_id', $learnerIds)->whereIn('status', ['pending', 'in_progress'])->count();
         $unreadMessages = Message::where('receiver_id', $user->id)->whereNull('read_at')->count();
         
         $stats = [
@@ -53,7 +56,27 @@ class ParentDashboardController extends Controller
                 ->limit(5)
                 ->get();
 
-        return view('parent.dashboard', compact('learners', 'stats', 'recentAssessments', 'pendingLogs'));
+        // Per-child summary for the friendly "child cards"
+        $latestResults = $learnerIds->isEmpty() ? collect() :
+            AssessmentResult::select('assessment_results.*', 'assessments.learner_id as owner_id')
+                ->join('assessments', 'assessments.id', '=', 'assessment_results.assessment_id')
+                ->whereIn('assessments.learner_id', $learnerIds)
+                ->with('assessment')
+                ->orderByDesc('assessments.created_at')
+                ->get()
+                ->groupBy('owner_id')
+                ->map->first();
+
+        $openByLearner = $learnerIds->isEmpty() ? collect() :
+            InterventionLog::whereIn('learner_id', $learnerIds)
+                ->whereIn('status', ['pending', 'in_progress'])
+                ->selectRaw('learner_id, count(*) as total')
+                ->groupBy('learner_id')
+                ->pluck('total', 'learner_id');
+
+        return view('parent.dashboard', compact(
+            'learners', 'stats', 'recentAssessments', 'pendingLogs', 'latestResults', 'openByLearner'
+        ));
     }
 
     /**
@@ -97,11 +120,53 @@ class ParentDashboardController extends Controller
             ->limit(10)
             ->get();
 
+        // Latest assessment: focus area, last-assessed date
+        $latestResult   = $progressData->last();
+        $weaknessInfo   = $latestResult?->getPrimaryWeaknessInfo();
+        $lastAssessedAt = $latestResult?->assessment?->created_at;
+
+        // Open home activities the teacher assigned (next up for the parent)
+        $suggestedActivities = $learner->interventionLogs()
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->with('intervention')
+            ->latest()
+            ->limit(3)
+            ->get();
+
+        // Earned badges + XP
+        $badges = $learner->badges()->limit(8)->get();
+
+        // Last few reading checks (newest first) and change since the one before
+        $checkups   = $progressData->take(-5)->reverse()->values();
+        $checkups->each->loadMissing('assessment.material');
+        $comparison = $latestResult?->getComparisonWithPrevious();
+        $weaknessId = $latestResult?->primary_weakness;
+
         return view('parent.learner-profile', compact(
+            'latestResult', 'checkups', 'comparison', 'weaknessId',
             'learner', 'stats', 'skillScores', 'levelInfo',
             'progressDates', 'progressAccuracy', 'progressWpm',
-            'recentPractice', 'interventionLogs'
+            'recentPractice', 'interventionLogs',
+            'weaknessInfo', 'lastAssessedAt', 'suggestedActivities', 'badges'
         ));
+    }
+
+    /**
+     * Full practice-session history for a child.
+     */
+    public function practiceHistory(Learner $learner)
+    {
+        $this->authorizeParent($learner);
+
+        $sessions = $learner->practiceSessions()->with('material')->latest()->paginate(20);
+
+        $stats = [
+            'total_sessions' => $learner->practiceSessions()->count(),
+            'avg_score'      => $learner->practiceSessions()->whereNotNull('score')->avg('score'),
+            'total_time'     => (int) $learner->practiceSessions()->sum('time_spent'),
+        ];
+
+        return view('parent.practice-history', compact('learner', 'sessions', 'stats'));
     }
 
     /**
@@ -176,15 +241,28 @@ class ParentDashboardController extends Controller
         $this->authorizeParent($learner);
         abort_unless($interventionLog->learner_id === $learner->id, 403);
 
-        $action = $request->input('action');
+        $data = $request->validate([
+            'action'               => ['required', Rule::in(['start', 'complete'])],
+            'effectiveness_rating' => 'nullable|integer|between:1,10',
+            'notes'                => 'nullable|string|max:2000',
+        ]);
+        $action = $data['action'];
+
+        // Only allow forward transitions: pending -> in_progress -> completed
+        $allowed = [
+            'start'    => [InterventionLog::STATUS_PENDING],
+            'complete' => [InterventionLog::STATUS_IN_PROGRESS],
+        ];
+        if (!in_array($interventionLog->status, $allowed[$action], true)) {
+            return back()->with('error', 'This activity cannot be updated from its current status.');
+        }
 
         match ($action) {
             'start'    => $interventionLog->start(),
             'complete' => $interventionLog->complete(
-                $request->input('effectiveness_rating'),
-                $request->input('notes')
+                isset($data['effectiveness_rating']) ? (int) $data['effectiveness_rating'] : null,
+                $data['notes'] ?? null
             ),
-            default    => null,
         };
 
         ActivityLog::log('parent_update_intervention', "Parent updated intervention status to {$action} for learner #{$interventionLog->learner_id}", 'intervention_log', $interventionLog->id);

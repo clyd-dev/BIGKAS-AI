@@ -19,16 +19,21 @@
     </div>
 
     <div class="col-md-3">
-        <label for="grade_level" class="form-label">Grade Level <span class="text-danger">*</span></label>
-        <select class="form-select @error('grade_level') is-invalid @enderror" id="grade_level" name="grade_level" required>
-            <option value="">Select</option>
-            @for($i = 1; $i <= 6; $i++)
-                <option value="{{ $i }}" {{ old('grade_level', $learner->grade_level ?? '') == $i ? 'selected' : '' }}>
-                    Grade {{ $i }}
-                </option>
-            @endfor
-        </select>
-        @error('grade_level') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        <label for="grade_level" class="form-label">Grade Level</label>
+        @if(isset($lockedClass) && $lockedClass)
+            <input type="text" class="form-control bg-light" value="Grade {{ $lockedClass->grade_level }}" readonly>
+            <input type="hidden" name="grade_level" value="{{ $lockedClass->grade_level }}">
+        @else
+            <select class="form-select @error('grade_level') is-invalid @enderror" id="grade_level" name="grade_level" required>
+                <option value="">Select</option>
+                @for($i = 1; $i <= 6; $i++)
+                    <option value="{{ $i }}" {{ old('grade_level', $learner->grade_level ?? '') == $i ? 'selected' : '' }}>
+                        Grade {{ $i }}
+                    </option>
+                @endfor
+            </select>
+            @error('grade_level') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        @endif
     </div>
     <div class="col-md-3">
         <label for="gender" class="form-label">Gender</label>
@@ -55,19 +60,25 @@
     </div>
     <div class="col-md-6">
         <label for="class_id" class="form-label">Class / Section</label>
-        <select class="form-select" id="class_id" name="class_id">
-            <option value="">Select class</option>
-            @foreach(($allClasses ?? collect())->groupBy('grade_level') as $grade => $classes)
-                <optgroup label="Grade {{ $grade }}">
-                    @foreach($classes as $class)
-                        <option value="{{ $class->id }}" {{ old('class_id', $learner->class_id ?? '') == $class->id ? 'selected' : '' }}>
-                            {{ $class->section }}
-                        </option>
-                    @endforeach
-                </optgroup>
-            @endforeach
-        </select>
-        <div class="form-text">Selecting a class will automatically set the grade level.</div>
+        @if(isset($lockedClass) && $lockedClass)
+            <input type="text" class="form-control bg-light" value="{{ $lockedClass->section }}" readonly>
+            <input type="hidden" name="class_id" value="{{ $lockedClass->id }}">
+            <div class="form-text">You're assigned to this class/section, so it can't be changed here.</div>
+        @else
+            <select class="form-select" id="class_id" name="class_id">
+                <option value="">Select class</option>
+                @foreach(($allClasses ?? collect())->groupBy('grade_level') as $grade => $classes)
+                    <optgroup label="Grade {{ $grade }}">
+                        @foreach($classes as $class)
+                            <option value="{{ $class->id }}" {{ old('class_id', $learner->class_id ?? '') == $class->id ? 'selected' : '' }}>
+                                {{ $class->section }}
+                            </option>
+                        @endforeach
+                    </optgroup>
+                @endforeach
+            </select>
+            <div class="form-text">Selecting a class will automatically set the grade level.</div>
+        @endif
     </div>
     
     <div class="col-md-12">

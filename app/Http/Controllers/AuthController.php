@@ -38,7 +38,7 @@ class AuthController extends Controller
         $remember = $request->boolean('remember');
 
         // Check if user is active
-        $user = User::where('email', $credentials['email'])->first();
+        $user = User::byEmail($credentials['email'])->first();
 
         if ($user && !$user->is_active) {
             return back()->with('error', 'Your account has been deactivated. Please contact the administrator.');
@@ -98,7 +98,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|min:2|max:100',
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', \App\Rules\UniqueBlindIndex::email()],
             'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
             'role' => 'required|in:teacher,parent,student',
             'school_id' => 'nullable|exists:schools,id',

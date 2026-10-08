@@ -21,6 +21,11 @@ class Assessment extends Model
     const STATUS_COMPLETED = 'completed';
     const STATUS_FAILED = 'failed';
 
+    // Assessment type constants
+    const TYPE_ORAL_READING = 'oral_reading';
+    const TYPE_COMPREHENSION = 'comprehension';
+    const TYPE_COMBINED = 'combined';
+
     protected $fillable = [
         'learner_id',
         'material_id',
@@ -28,6 +33,7 @@ class Assessment extends Model
         'audio_file',
         'transcription',
         'language',
+        'assessment_type',
         'status',
         'assessed_at',
         'notes',
@@ -58,6 +64,98 @@ class Assessment extends Model
         return $this->belongsTo(User::class, 'assessor_id');
     }
 
+    public function comprehensionAnswers(): HasMany
+    {
+        return $this->hasMany(ComprehensionAnswer::class, 'assessment_id');
+    }
+
+    public function verdict(): HasOne
+    {
+        return $this->hasOne(AssessmentVerdict::class, 'assessment_id');
+    }
+
+    // ── Effective values: the teacher's verdict outranks the AI ──
+    //
+    // The model advises and the teacher decides, so anything that reports on a
+    // child reads these rather than the raw result columns.
+
+    public function isInvalidated(): bool
+    {
+        return $this->verdict?->isInvalidated() ?? false;
+    }
+
+    public function isReviewed(): bool
+    {
+        return $this->verdict !== null;
+    }
+
+    public function effectiveReadingLevel(): ?string
+    {
+        return $this->verdict?->final_reading_level ?? $this->result?->reading_level;
+    }
+
+    public function effectivePrimaryWeakness(): ?int
+    {
+        $verdict = $this->verdict;
+
+        if ($verdict && $verdict->final_primary_weakness !== null) {
+            return $verdict->final_primary_weakness;
+        }
+
+        return $this->result?->primary_weakness;
+    }
+
+    public function effectiveAccuracy(): ?float
+    {
+        return $this->verdict?->final_accuracy_rate ?? $this->result?->accuracy_rate;
+    }
+
+    public function effectiveWordsPerMinute(): ?float
+    {
+        return $this->verdict?->final_words_per_minute ?? $this->result?->words_per_minute;
+    }
+
+    /** True when the teacher changed any of the AI's conclusions. */
+    public function wasEdited(): bool
+    {
+        return $this->verdict?->isOverridden() ?? false;
+    }
+
+    /**
+     * Does this assessment include a comprehension test? True for the
+     * comprehension and combined types when the material actually has questions.
+     */
+    public function needsComprehensionTest(): bool
+    {
+        if (!in_array($this->assessment_type, [self::TYPE_COMPREHENSION, self::TYPE_COMBINED], true)) {
+            return false;
+        }
+
+        return $this->material?->comprehensionQuestions()->exists() ?? false;
+    }
+
+    public function hasComprehensionAnswers(): bool
+    {
+        return $this->comprehensionAnswers()->exists();
+    }
+
+    /**
+     * Percentage of comprehension questions answered correctly, or null when
+     * the test hasn't been administered.
+     */
+    public function comprehensionScore(): ?float
+    {
+        $total = $this->comprehensionAnswers()->count();
+
+        if ($total === 0) {
+            return null;
+        }
+
+        $correct = $this->comprehensionAnswers()->where('is_correct', true)->count();
+
+        return round(($correct / $total) * 100, 2);
+    }
+
     public function result(): HasOne
     {
         return $this->hasOne(AssessmentResult::class);
@@ -78,6 +176,21 @@ class Assessment extends Model
     public function hasAudio(): bool
     {
         return $this->audio_file && file_exists($this->getAudioPath());
+    }
+
+    /**
+     * Why there is (or isn't) a recording to play:
+     *   available — the file is there
+     *   not_saved — no recording was ever kept for this assessment
+     *   missing   — one was saved, but the file is gone from the server
+     */
+    public function audioStatus(): string
+    {
+        if (!$this->audio_file) {
+            return 'not_saved';
+        }
+
+        return file_exists($this->getAudioPath()) ? 'available' : 'missing';
     }
 
     public function getTranscribedText(): string
@@ -138,9 +251,10 @@ class Assessment extends Model
             'ml_analysis_json' => $analysisData,
         ]);
 
-        // Update learner reading level
-        $this->learner->update(['reading_level' => $result->reading_level]);
+        // Recompute from the learner's assessments so a teacher verdict or an
+        // invalidated result is respected rather than blindly trusting this one.
         $this->markCompleted();
+        $this->refresh()->learner?->updateReadingLevel();
 
         // Notify linked parent(s)
         $parents = $this->learner->users()->wherePivot('relationship', 'parent')->get();

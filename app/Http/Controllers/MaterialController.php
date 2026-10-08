@@ -10,25 +10,32 @@ class MaterialController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
         $query = ReadingMaterial::active();
+
+        // Teachers only ever see materials for their own assigned grade —
+        // the grade filter isn't shown to them at all (nothing to pick).
+        $lockedGrade = null;
+        if (!$user->isAdmin()) {
+            $lockedGrade = $user->taughtClasses()->first()?->grade_level;
+            $query->where('grade_level', $lockedGrade ?? -1);
+        } elseif ($request->filled('grade_level')) {
+            $query->where('grade_level', $request->grade_level);
+        }
 
         if ($request->filled('language')) {
             $query->where('language', $request->language);
         }
-        if ($request->filled('grade_level')) {
-            $query->where('grade_level', $request->grade_level);
-        }
         if ($request->filled('difficulty')) {
             $query->where('difficulty', $request->difficulty);
         }
-        if ($request->filled('category')) {
-            $query->where('category', $request->category);
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
         }
 
-        $materials = $query->orderBy('grade_level')->orderBy('title')->paginate(20);
-        $gradeLevels = config('bigkas.grade_levels', []);
+        $materials = $query->orderBy('grade_level')->orderBy('title')->paginate(20)->withQueryString();
 
-        return view('materials.index', compact('materials', 'gradeLevels'));
+        return view('materials.index', compact('materials', 'lockedGrade'));
     }
 
     /**
@@ -115,27 +122,41 @@ class MaterialController extends Controller
 
     public function create()
     {
-        $gradeLevels = config('bigkas.grade_levels', []);
-        return view('materials.create', compact('gradeLevels'));
+        $user = auth()->user();
+        $lockedClass = $user->isAdmin() ? null : $user->taughtClasses()->first();
+
+        return view('materials.create', compact('lockedClass'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'language' => 'required|in:en,fil,hil',
-            'grade_level' => 'required|integer|min:1|max:12',
-            'difficulty' => 'required|in:easy,medium,hard',
-            'category' => 'required|in:narrative,expository,poetry,dialogue',
+        $user = auth()->user();
+
+        $rules = $this->materialRules($user);
+
+        $validated = $request->validate($rules);
+
+        if ($user->isAdmin()) {
+            $gradeLevel = $validated['grade_level'];
+        } else {
+            $lockedClass = $user->taughtClasses()->first();
+            abort_if(!$lockedClass, 403, 'You are not assigned to a class/section yet.');
+            $gradeLevel = $lockedClass->grade_level;
+        }
+
+        $material = ReadingMaterial::create([
+            'title' => $validated['title'],
+            'content' => $validated['content'],
+            'language' => $validated['language'],
+            'difficulty' => $validated['difficulty'],
+            'type' => $validated['type'],
+            'grade_level' => $gradeLevel,
+            'source' => $validated['source'] ?? null,
+            'word_count' => count(preg_split('/\s+/', trim($validated['content']), -1, PREG_SPLIT_NO_EMPTY)),
+            'created_by' => $user->id,
         ]);
 
-        $material = ReadingMaterial::create(array_merge($request->only([
-            'title', 'content', 'language', 'grade_level', 'difficulty', 'category', 'source', 'genre',
-        ]), [
-            'word_count' => count(preg_split('/\s+/', trim($request->content), -1, PREG_SPLIT_NO_EMPTY)),
-            'created_by' => auth()->id(),
-        ]));
+        $this->syncQuestions($material, $validated);
 
         ActivityLog::log('create_material', "Created reading material: {$material->title}", 'reading_material', $material->id);
 
@@ -153,31 +174,113 @@ class MaterialController extends Controller
 
     public function edit(ReadingMaterial $material)
     {
-        $gradeLevels = config('bigkas.grade_levels', []);
-        return view('materials.edit', compact('material', 'gradeLevels'));
+        $user = auth()->user();
+        $lockedClass = $user->isAdmin() ? null : $user->taughtClasses()->first();
+
+        return view('materials.edit', compact('material', 'lockedClass'));
     }
 
     public function update(Request $request, ReadingMaterial $material)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'language' => 'required|in:en,fil,hil',
-            'grade_level' => 'required|integer|min:1|max:12',
-            'difficulty' => 'required|in:easy,medium,hard',
-            'category' => 'required|in:narrative,expository,poetry,dialogue',
+        $user = auth()->user();
+
+        $validated = $request->validate($this->materialRules($user));
+
+        // Teachers can't move a material to a different grade — it stays
+        // wherever it already is.
+        $gradeLevel = $user->isAdmin() ? $validated['grade_level'] : $material->grade_level;
+
+        $material->update([
+            'title' => $validated['title'],
+            'content' => $validated['content'],
+            'language' => $validated['language'],
+            'difficulty' => $validated['difficulty'],
+            'type' => $validated['type'],
+            'grade_level' => $gradeLevel,
+            'source' => $validated['source'] ?? null,
+            'word_count' => count(preg_split('/\s+/', trim($validated['content']), -1, PREG_SPLIT_NO_EMPTY)),
         ]);
 
-        $material->update(array_merge($request->only([
-            'title', 'content', 'language', 'grade_level', 'difficulty', 'category', 'source', 'genre',
-        ]), [
-            'word_count' => count(preg_split('/\s+/', trim($request->content), -1, PREG_SPLIT_NO_EMPTY)),
-        ]));
+        $this->syncQuestions($material, $validated);
 
         ActivityLog::log('update_material', "Updated reading material: {$material->title}", 'reading_material', $material->id);
 
         return redirect()->route('materials.show', $material)
             ->with('success', 'Reading material updated successfully.');
+    }
+
+    private function materialRules($user): array
+    {
+        $rules = [
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'language' => 'required|in:en,fil',
+            'difficulty' => 'required|in:easy,medium,hard',
+            'type' => 'required|in:oral_reading,comprehension',
+            'source' => 'nullable|string|max:255',
+            'questions' => 'required_if:type,comprehension|array|min:1',
+            'questions.*.question' => 'required_with:questions|string',
+            'questions.*.question_type' => 'nullable|in:literal,inferential',
+            'questions.*.option_a' => 'required_with:questions|string|max:255',
+            'questions.*.option_b' => 'required_with:questions|string|max:255',
+            'questions.*.option_c' => 'required_with:questions|string|max:255',
+            'questions.*.option_d' => 'required_with:questions|string|max:255',
+            'questions.*.correct_option' => 'required_with:questions|in:A,B,C,D',
+        ];
+
+        if ($user->isAdmin()) {
+            $rules['grade_level'] = 'required|integer|min:3|max:6';
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Write the posted question set onto the material.
+     *
+     * Existing rows are updated in place by position so their IDs survive an
+     * edit; extra rows are created and removed ones deleted. Past assessment
+     * answers keep their own text snapshots, so editing questions here never
+     * rewrites what an earlier learner was actually asked.
+     */
+    private function syncQuestions(ReadingMaterial $material, array $validated): void
+    {
+        if (($validated['type'] ?? null) !== ReadingMaterial::TYPE_COMPREHENSION) {
+            $material->comprehensionQuestions()->delete();
+            return;
+        }
+
+        $existing = $material->comprehensionQuestions()->orderBy('sort_order')->get();
+
+        foreach (array_values($validated['questions'] ?? []) as $i => $q) {
+            $options = [
+                'A' => $q['option_a'],
+                'B' => $q['option_b'],
+                'C' => $q['option_c'],
+                'D' => $q['option_d'],
+            ];
+
+            $attributes = [
+                'question' => $q['question'],
+                'question_type' => $q['question_type'] ?? 'literal',
+                'correct_answer' => $options[$q['correct_option']],
+                'option_a' => $q['option_a'],
+                'option_b' => $q['option_b'],
+                'option_c' => $q['option_c'],
+                'option_d' => $q['option_d'],
+                'sort_order' => $i + 1,
+            ];
+
+            if ($row = $existing->get($i)) {
+                $row->update($attributes);
+            } else {
+                $material->comprehensionQuestions()->create($attributes);
+            }
+        }
+
+        // Drop any rows the teacher removed from the form.
+        $keep = count($validated['questions'] ?? []);
+        $existing->slice($keep)->each(fn ($row) => $row->delete());
     }
 
     public function destroy(ReadingMaterial $material)

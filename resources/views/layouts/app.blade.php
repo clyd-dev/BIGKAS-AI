@@ -16,7 +16,7 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     @stack('styles')
 </head>
-<body>
+<body class="app-shell">
     {{-- Navbar --}}
     @include('partials.navbar')
 
@@ -34,6 +34,27 @@
             </div>
         </div>
     </div>
+
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+    <script>
+        // Hamburger: slide the sidebar in over the page on small screens
+        (function () {
+            var btn = document.getElementById('sidebarToggle');
+            var bd = document.getElementById('sidebarBackdrop');
+            var side = document.getElementById('sidebar-wrapper');
+            if (!btn || !side) return;
+            function set(open) {
+                document.body.classList.toggle('sidebar-open', open);
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            btn.addEventListener('click', function () { set(!document.body.classList.contains('sidebar-open')); });
+            bd.addEventListener('click', function () { set(false); });
+            side.addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+            window.matchMedia('(min-width: 992px)').addEventListener('change', function () { set(false); });
+        })();
+    </script>
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

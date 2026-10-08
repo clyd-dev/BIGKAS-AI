@@ -46,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'email_index',
     ];
 
     protected function casts(): array
@@ -55,8 +56,36 @@ class User extends Authenticatable implements MustVerifyEmail
             'last_login_at' => 'datetime',
             'locked_at' => 'datetime',
             'password' => 'hashed',
+            // Personal data is stored encrypted (see the encrypt_learner_and_user_identity migration).
+            'name' => 'encrypted',
+            'email' => 'encrypted',
+            'phone' => 'encrypted',
             'is_active' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Exact-match fingerprint of the (encrypted) email: used for login and the uniqueness check.
+        static::saving(function (self $user) {
+            if ($user->isDirty('email') || $user->email_index === null) {
+                $user->email_index = \App\Support\BlindIndex::make($user->email, 'email');
+            }
+        });
+    }
+
+    public function scopeByEmail($query, ?string $email)
+    {
+        return $query->where('email_index', \App\Support\BlindIndex::make($email, 'email') ?? '-none-');
+    }
+
+    /**
+     * Password-reset tokens are keyed by the email's blind index, so the reset table never holds a readable email.
+     * (The reset link itself still carries the real email; see AppServiceProvider.)
+     */
+    public function getEmailForPasswordReset(): string
+    {
+        return (string) $this->email_index;
     }
 
     // ── Relationships ──

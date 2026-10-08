@@ -10,8 +10,9 @@ babies. The house is on fire. Flames come out of the windows.","to the ball the 
 [mis: smiles > milis] [mis: parents > pirints] [mis: save > seb] [sub: babies > baby] the house [om_is] on [sub: fire > pry] [sub: flames > plan] 
 come [om_out] [mis: of > off] the windows",3,en,
 data/std001_g3_en_chunk_04.wav,▶ PLAY AUDIO,,,"Smoke comes out of the windows. A man runs out of the house. He carries a baby in his arms. A woman
-runs out of the house. She carries a baby in her arms. A fire truck arrives at the house.","smoke comes out of the windows  a man runs out of the house he carries a baby in his arms a woman
-runs out of the house she carries a baby in her arms a fire truck arrives at the house",3,en,
+runs out of the house. She carries a baby in her arms. A fire truck arrives at the house.","[om_smoke] [om_comes] out [mis: of > off] the [mis: windows > window] a man [mis: runs > ra] [om_out] [mis: of > off] the house [om_he] 
+[mis: carries > cers] a [mis: baby > bab] [om_in] [om_his] arms a woman runs out [mis: of > off] the house [om_she] carries a baby in her 
+arms a [mis: fire > fir] [om_truck] [mis: arrives > arreyve] at the house",3,en,
 data/std001_g3_en_chunk_05.wav,▶ PLAY AUDIO,,,"A backpack and a bus. It is time to go to school. He puts his books into his backpack. He puts his arms 
 through the straps. He puts his backpack on his back. He walks outside. He goes to the bus stop.","a backpack and a bus it is time to go [mis: to > t] school he [sub: puts > pass] his books [mis: into > to] [om_his]
 [sub: backpack > backs] [om_he] [om_puts] his [mis: arms > arm]  [om_through] [om_the] [om_straps] [ins:the] 
@@ -264,9 +265,12 @@ bahay ni Ella. Pupitre","dalawa ang [mis: palapag > palap] ng bahay ni [mis: ber
 data/std004_g3_fil_chunk_14.wav,▶ PLAY AUDIO,,,"ang tawag sa akin, ng nakararami ay desk na sulatan o kaya'y pupitre. Batang nag-aaral","ang tawag sa [mis: akin > arin] ng [mis: nakararami > marararami] ay de-desk na sulatan o [mis: kayay > rayay] [mis: pupitre > pupinre] 
 batang  nag aaral",3,fil,
 data/std004_g3_fil_chunk_15.wav,▶ PLAY AUDIO,,,ako ay upuan kami ay marami sa silid-aralan.,[mis: ako > aro] ang upuan kami ay marami sa silid aralan ,3,fil,
-data/std005_g3_en_chunk_01.wav,▶ PLAY AUDIO,ELLEN,,,,3,en,
-data/std005_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,,,3,en,
-data/std005_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,,,3,en,
+data/std005_g3_en_chunk_01.wav,▶ PLAY AUDIO,ELLEN,,"Parents save babies. The house is on fire. Flames come out of the windows. Smoke comes out of the windows. A 
+man runs out of the house. He carries a baby in his arms. A woman runs out of the house","parents save babies the house is on fire flames come out of the windows smoke comes out of the [mis: windows > window] 
+[unintelligible]",3,en,
+data/std005_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,"My friend. Tony is my friend. We are playmates. We like to ride our bikes. We also play hide and seek.
+It is fun to play with my friend. Red ball on the Floor.",[unintelligible],3,en,
+data/std005_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,The baby crawls on the floor. It stops. Then it crawls some more. Then it stops again.,[unintelligible],3,en,
 data/std005_g3_fil_chunk_01.wav,▶ PLAY AUDIO,FRED,,"Ang ama ay haligi, ng ating tahanan. Sa buong mag-anak, siyang bumubuhay. Ang ama at ina, laging magkatuwang
 sa pag-aalaga, sa anak na mahal.","ang ama ay haligi ng ating tahanan sa buong [mis: mag-anak > mga-anak] siyang bumubuhay ang ama at ina laging 
 [mis: magkatuwang > magkakatuwang] sa [mis: pag-aalaga > pag-alalaga] sa anak na mahal",3,fil,
@@ -306,10 +310,8 @@ data/std006_g3_en_chunk_01.wav,▶ PLAY AUDIO,ELLEN,,I can read. Richard has a k
 data/std006_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,Vic has a pig. It is big and fat. It lives in the pen. The pig has six piglets. Vic,[mis: vic > bic] has a pig it is big and [mis: fat > pat] it lives in the pen the pig has six piglets [mis: vic > bic],3,en,
 data/std006_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,feeds them everyday. My friend. Toni is my friend we are playmates we like to ride our,feeds them everyday [pause] my friend toni is my friend we are playmates we like to ride our [ins:we] [ins:ay],3,en,
 data/std006_g3_en_chunk_04.wav,▶ PLAY AUDIO,,,bikes. We also play hide and seek. It is fun to play with my friend. Mommy is big,bikes we also play hide and seek it is fun to play with my friend [pause] mommy is big,3,en,
-data/std006_g3_en_chunk_05.wav,▶ PLAY AUDIO,,,Daddy is humble so who are you I buy a cakeIi want to dancce all I have to say is yes,daddy is humble so [sub: who > wo] are you i buy a cake i want to dancce all i have to say is yes,3,en,
-data/std006_g3_en_chunk_06.wav,▶ PLAY AUDIO,,,"Ang guro ay matatagpuan na sa isang panig ng silidaralan ang gamit ng guro dito nakalagay ito ang patungan ito ang 
-sulatan [pause]","ang guro ay matatagpuan na sa isang panig ng silidaralan ang gamit ng guro dito nakalagay ito ang patungan ito ang sulatan [pause]
-",3,en,
+data/std006_g3_en_chunk_05.wav,▶ PLAY AUDIO,,,Daddy is humble so who are you I buy a cake I want to dance all I have to say is yes,daddy is humble so [sub: who > wo] are you i buy a cake i want to dancce all i have to say is yes,3,en,
+data/std006_g3_en_chunk_06.wav,▶ PLAY AUDIO,,,Be my lady. Pretty girl. Well enjoy. The School is big. A Baby Goes to Sleep. The baby,be my [mis: lady > ladi] pretty girl [mis: well > wi-will] enjoy the school is big a baby goes to sleep the [mis: baby > bay],3,en,
 data/std006_g3_en_chunk_07.wav,▶ PLAY AUDIO,,,baby crawls on the floor its stops then it crawls some more then its stop again mama looks at the baby,"baby [mis: crawls > calls] on the floor [sub: its > is] stops then it [mis: crawls > calls] some more then [sub: its > is] stop again mama looks
 at the baby",3,en,
 data/std006_g3_en_chunk_08.wav,▶ PLAY AUDIO,,,she pick up the baby she carries the baby to the crib put the baby in the crib she put a blanket on the,she pick up the baby she carries the baby to the crib she [sub: put > pat] the baby in the crib she [sub: put > pat] a blanket on the,3,en,
@@ -321,7 +323,7 @@ data/std006_g3_en_chunk_13.wav,▶ PLAY AUDIO,,,cat hits the ball its the ball r
 data/std006_g3_en_chunk_14.wav,▶ PLAY AUDIO,,,babies from fire the house is on fire flames come out of the windows smoke comes,[mis: babies > babes] from [mis: fire > pire] the house is on [mis: fire > pire] [mis: flames > fames] come out of the windows smoke comes,3,en,
 data/std006_g3_en_chunk_15.wav,▶ PLAY AUDIO,,,out of the windows a man runs out of the house he carries a baby in his arms a woman runs,out oof the windows a man runs oout [mis: of > ot] the house he carries a baby in his arms a woman runs,3,en,
 data/std006_g3_en_chunk_16.wav,▶ PLAY AUDIO,,,runs out of the house she carries a baby in her arm a fire truck arrives at the house,runs [sub: out > at] of the house she carries a baby in [sub: her > the] arm a [mis: fire > pire] truck [mis: arrives > aribs] at the house,3,en,
-data/std006_g3_en_chunk_17.wav,▶ PLAY AUDIO,,,a backpack and a bus it is time to go to school he put his book in-into his backpack he put it his arms,a backpack and a bus it is time to go to school he [mis:put > fut] his book in-into his [mis: backpack > backfack] he put it [om_in] his arms,3,en,
+data/std006_g3_en_chunk_17.wav,▶ PLAY AUDIO,,,a backpack and a bus it is time to go to school he put his book into his backpack he put it his arms,a backpack and a bus it is time to go to school he [mis:put > fut] his book in-into his [mis: backpack > backfack] he put it [om_in] his arms,3,en,
 data/std006_g3_en_chunk_18.wav,▶ PLAY AUDIO,,,through the strap he put his backpack on his back he walks outside,[pause] [mis: through > rou] the strap he put his backpack on his back he [mis: walks > waks] outside,3,en,
 data/std006_g3_en_chunk_19.wav,▶ PLAY AUDIO,DHESIRY,,He goes to the bus stop. He stands at the bus stop. He waits for the bus. He sees the bus.,he goes to the bus stop he [mis: stands > stand] at the bus stop he waits for the bus he sees the bus,3,en,
 data/std006_g3_en_chunk_20.wav,▶ PLAY AUDIO,,,"He Gets Dressed, Sees His Friend. The boy puts on his socks. He puts on his shoes.",he [mis: gets > ges] [mis: dressed > drets] [mis: sees > shes] his friend the boy puts on his socks he puts on [om_his] [om_shoes],3,en,
@@ -434,10 +436,10 @@ data/std007_g3_fil_chunk_22.wav,▶ PLAY AUDIO,,,buko at biko sa loob ng kubo ma
 data/std007_g3_fil_chunk_23.wav,▶ PLAY AUDIO,,,sa ating bayan lungsod o bayan ang may tsapel o kayay simbahan dito dumadalaw dito nagdarasal,"sa ating baryo lungsod o bayan ang [sub: may > mga] [mis: tsapel > tachpel] o [mis: kayay > kaya] simbahan dito dumadalaw dito 
 [mis: nagdarasal > nagdara]",3,fil,
 data/std007_g3_fil_chunk_24.wav,▶ PLAY AUDIO,,,nagdarasal ang nais tumawag sa poong maykapal,[mis: nagdarasal > darasal] ang nais tumawag sa poong [mis: maykapal > maykapa],3,fil,
-data/std008_g3_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,,,3,en,
-data/std008_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,,,3,en,
-data/std008_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,,,3,en,
-data/std008_g3_en_chunk_04.wav,▶ PLAY AUDIO,,,,,3,en,
+data/std008_g3_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,The ball is on the floor. It is a red ball. It is a rubber ball.,[unintelligible],3,en,
+data/std008_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,The baby looks at the ball. The baby smiles. My Friend. Tonie is my friend. ,[unintelligible],3,en,
+data/std008_g3_en_chunk_03.wav,▶ PLAY AUDIO,,,It is a red ball. The cat looks at the ball. The cat is black. The cat walks over to the  ball. ,[unintelligible],3,en,
+data/std008_g3_en_chunk_04.wav,▶ PLAY AUDIO,,,The ball rolls on the floor. The baby smiles.,the ball [mis: rolls > rows] on the [miss: floor > fall] the baby [om_smiles],3,en,
 data/std008_g3_fil_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,Iskul Boy. Ikaw ay lalaki,"[pause] [mis: iskul > las kal] boy [pause] [mis: ikaw > lakaw] ay lalaki [ins: ni] [ins: hu] [ins: ki]",3,fil,
 data/std008_g3_fil_chunk_02.wav,▶ PLAY AUDIO,,,alam ko na ngayon. Ikaw kung tawagin. ,"alam [mis: ko > ka] [ins: ay] [ins: ko] [ins: ay] [ins:ka] [ins: ko] [ins: ay] [ins:ka] na
 [mis: ngayon > nang] [ins: ay] [ins: on] [mis: ikaw > laray] [ins: ay] [ins: laraw] [mis: kung > ro nang] tawagin",3,fil,
@@ -465,20 +467,20 @@ data/std008_g3_fil_chunk_22.wav,▶ PLAY AUDIO,,,"kulay, pula, puti, bughaw. At 
 data/std008_g3_fil_chunk_23.wav,▶ PLAY AUDIO,,,"may taglay parin, akong isang araw",may taglay parin akong [mis: isang > isa] [mis: araw > ag ay ari ay],3,fil,
 data/std008_g3_fil_chunk_24.wav,▶ PLAY AUDIO,,,Ako ang bandila ng bayan kong mahal.,[mis: ako > ar aw arko] ang [mis: bandila > bandil la] [mis: ng > nag] [mis: bayan > bay ay nag yan] [om_kong] [om_mahal],3,fil,
 data/std008_g3_fil_chunk_25.wav,▶ PLAY AUDIO,,,Ng bayan kong mahal. Ang tawag sa akin ng nakararami ,[mis: ng > ko ng] [om_bayan] [om_kong] mahal ang tawag sa akin ng [mis: nakararami > raka ar ar],3,fil,
-data/std008_g3_fil_chunk_26.wav,▶ PLAY AUDIO,Fred,,"nakararami ay desk na sulatan, o kaya'y",,3,fil,
-data/std008_g3_fil_chunk_27.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_28.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_29.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_30.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_31.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_32.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_33.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_34.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_35.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_36.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_37.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_38.wav,▶ PLAY AUDIO,,,,,3,fil,
-data/std008_g3_fil_chunk_39.wav,▶ PLAY AUDIO,,,,,3,fil,
+data/std008_g3_fil_chunk_26.wav,▶ PLAY AUDIO,Fred,,"nakararami ay desk na sulatan, o kaya'y",[mis: nakararami > ami] ay [mis: desk > des-desir] na sulatan o [mis: kaya'y > ro-ay-oray-ay-orayan],3,fil,
+data/std008_g3_fil_chunk_27.wav,▶ PLAY AUDIO,,,"kaya'y pupitre. Batang nag-aaral, ako ang upuan",[mis: kayay > ya] pupitre [sub: batang > bata] [ins: ng] [pause] nag-aaral [mis: ako > aro] ang [mis: upuan > up],3,fil,
+data/std008_g3_fil_chunk_28.wav,▶ PLAY AUDIO,,,"upuan kami ay marami, sa silid-aralan. Ang Bahay ni Ella",[mis: upuan > tuan] kami [mis: ay > ey] marami sa silid-aralan ang bahay [sub: ni > na] el-la,3,fil,
+data/std008_g3_fil_chunk_29.wav,▶ PLAY AUDIO,,,Maganda ang bahay ni Ella. Dalawa ang palapag,mag- [ins: ay] maganda ang bahay ni ella [sub: dalawa > dalawan] [ins: ng] [ins: ay] ang [mis: palapag > pagla],3,fil,
+data/std008_g3_fil_chunk_30.wav,▶ PLAY AUDIO,,,ng bahay niya. Berde ang kulay,[sub: ng > pag] [ins: ang] [ins: pag] [ins: ay] bahay [ins: ang] [ins: ay] [mis: niya > naya] [mis: berde > der-der] ang kulay,3,fil,
+data/std008_g3_fil_chunk_31.wav,▶ PLAY AUDIO,,,ng bahay. Pula ang pinta ng bubong. Maganda ang,[sub: ng > ang] bahay [sub: pula > pala] [sub: ang > ng] [mis: pinta > inta] ng [mis: bubong > bubo] [ins: ng] [ins: mga] [ins: ay] maganda ang,3,fil,
+data/std008_g3_fil_chunk_32.wav,▶ PLAY AUDIO,,,"bahay ni Ella. Ina. Iisa ang ina, sa balat ng lupa.",bahay ni ella [ins: i] [ins: ay] ina iisa ang ina sa balat ng lupa,3,fil,
+data/std008_g3_fil_chunk_33.wav,▶ PLAY AUDIO,,,"Siya ang sa atin, ay nag-aalaga. Mahalin",[om_siya] ang [ins: ya] [ins: ng] sa atin [ins: is] [ins: nag-aaral] ay [mis: nag-aalaga > aaraga] [mis: mahalin > maha],3,fil,
+data/std008_g3_fil_chunk_34.wav,▶ PLAY AUDIO,,,"Mahalin ang ina, dakila sa lahat. Ating kaibigan",[mis: mahalin > habal] ang ina dakila sa lahat [mis: ating > ata-ata] [mis: kaibigan > kai],3,fil,
+data/std008_g3_fil_chunk_35.wav,▶ PLAY AUDIO,,,kaibigang pinakamatapat. Lapis. Ako'y isang,[mis: kaibigang > idedadganang] pinakamatapat lapis [mis: ako'y > angko'y] [mis: isang > is],3,fil,
+data/std008_g3_fil_chunk_36.wav,▶ PLAY AUDIO,,,"isang lapis, dulo ko'y matulis. Naiguguhit ko, ang bawat ",[sub: isang > isa] [ins: ng] lapis [mis: dulo > bulo] [mis: koy > roy] matulis [mis: naiguguhit > naig-guhit] [ins: ro] [ins: ay] ko ang [mis: bawat > ba],3,fil,
+data/std008_g3_fil_chunk_37.wav,▶ PLAY AUDIO,,,"ang bawat maisip. Nabubura ko rin, ang bawat sulatin",[om_ang] bawat maisip nabubura ko [pause] rin ang bawat [mis: sulatin > ssa],3,fil,
+data/std008_g3_fil_chunk_38.wav,▶ PLAY AUDIO,,,"sulatin. Ako'y baligtarin, ulo ko'y",[ins: ay] [sub: sulatin > sulat] [ins: ay] [ins: latin] [mis: akoy > aroy] [ins: balan] [ins: ay] [mis: baligtarin > lagtarin] ulo [mis: koy > ro],3,fil,
+data/std008_g3_fil_chunk_39.wav,▶ PLAY AUDIO,,,ko'y gamitin.,koy [mis: gamitin > gaminit],3,fil,
 data/std009_g3_en_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,My friend  toni is my friend we,"[mis: my > moy] [sub: friend > furi] [ins: furo] [ins: an] [ins: ay] [mis: toni > to] [ins: ay] [ins: ta] [ins: no] [sub:is > osh] [mis: my > moy]
 [ins: for] [ins: ay] [sub: friend > furo] [ins: e] [ins: ay] [ins: on] [ins: ond] we",3,en,
 data/std009_g3_en_chunk_02.wav,▶ PLAY AUDIO,,,are playmates we like to ride our bikes we also play hide and,"are [ins: ay] [ins: ari] [mis: playmates > palaymates] [mis: we > wo] [ins: le] [ins: ay] [mis: like > loke] [sub: to > ta] [sub: ride > ro] [ins: o] 
@@ -580,36 +582,44 @@ ako [ins: a] [ins: a] kaagad kong binitbit sa",4,fil,
 data/std010_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,"buntot ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie. ""Talagang maaasahan ang asong ito,""
 sabi niya.","buntot ang daga at [mis: ipinakita > pinakita] kay tatay [mis: masayang > sayang] hinimas ni tatay si brownie talagang
 [mis: maaasahan > maasahan] ang asong ito sabi niya",4,fil,
-data/std010_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,"Balat ng Saging. ""Lito! Lito!"" Si Mina ang sumisigaw. Kay lakas ng kanyang sigaw. ""Bakit, Ate? Ano iyon?"" Ito naman
-ang tanong ni Lito. Lumapit siya kay Mina. Ayaw niyang sumigaw pa ang kanyang ate. ""Balat ng saging ito, hindi ba?
-Sino ang nagtapon nito?"" Galit","balat ng saging [ins: i] [mis: lito > tito] lito si [mis: mina > mana] ang [mis: sumisigaw > sumigaw] kay lakas ng kanyang sigaw bakit ate ano
-[mis: iyon > yong] ito [sub: naman > laman] ang tanong ni lito lumapit [mis: siya > siyang] kay mina [ins: ay] ayaw niyang
-[mis: sumigaw > gumigaw] [ins: na] pa ang kanyang ate balat ng saging ito hindi ba sino ang nagtapon nito galit",4,fil,
-data/std010_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,"si Mina. Galit siya sa nagtapon ng balat ng saging.""Ako, Ate,"" sagot ni Lito. Mahina ang kanyang sagot. Mahina ang
-kanyang tinig. ""Sabi ko na nga ba. Huwag ka nang magtatapon dito, ha! Sa basurahan ka magtatapon. Hayan ang
-basurahan natin. Hayan, natapakan ko ang balat ng saging. Nadulas ako.""","si mina galit siya [pause] [mis: sa > ta] [om_nagtapon] [om_ng] [om_balat] [om_ng] [om_saging] ako ate sagot ni lito mahina ang
-[mis: kanyang > kayong] sagot mahina ang kanyang tinig sabi ko [mis: na > nay] nga ba [mis: huwag > wag] ka nang
-[mis: magtatapon > magtapon] dito ha sa [mis: basurahan > basura] ka [mis: magtatapon > magtapon] hayan ang
-[mis: basurahan > basura] natin hayan natapakan ko ang balat ng saging nadulas ako",4,fil,
+data/std010_g4_fil_chunk_16a.wav,▶ PLAY AUDIO,,,"Balat ng Saging. ""Lito! Lito!"" Si Mina ang sumisigaw. Kay lakas ng kanyang sigaw. ""Bakit, Ate? Ano iyon?"" Ito naman
+ang tanong ni Lito. Lumapit siya ","balat ng saging [ins: i] [mis: lito > tito] lito si [mis: mina > mana] ang [mis: sumisigaw > sumigaw] kay lakas ng kanyang sigaw bakit ate ano
+[mis: iyon > yong] ito [sub: naman > laman] ang tanong ni lito lumapit [mis: siya > siyang] ",4,fil,
+data/std010_g4_fil_chunk_16b.wav,▶ PLAY AUDIO,,,"kay Mina. Ayaw niyang sumigaw pa ang kanyang ate. ""Balat ng saging ito, hindi ba? Sino ang nagtapon nito?"" Galit","kay mina [ins: ay] ayaw niyang [mis: sumigaw > gumigaw] [ins: na] pa ang kanyang ate balat ng saging ito hindi ba sino ang nagtapon 
+nito galit",4,fil,
+data/std010_g4_fil_chunk_17a.wav,▶ PLAY AUDIO,,,"si Mina. Galit siya sa nagtapon ng balat ng saging.""Ako, Ate,"" sagot ni Lito. Mahina ang kanyang sagot. Mahina ang
+kanyang tinig. ""Sabi ko na nga","si mina galit siya [pause] [mis: sa > ta] [om_nagtapon] [om_ng] [om_balat] [om_ng] [om_saging] ako ate sagot ni lito mahina ang
+[mis: kanyang > kayong] sagot mahina ang kanyang tinig sabi ko [mis: na > nay] nga ",4,fil,
+data/std010_g4_fil_chunk_17b.wav,▶ PLAY AUDIO,,,"nga ba. Huwag ka nang magtatapon dito, ha! Sa basurahan ka magtatapon. Hayan ang basurahan natin. Hayan, 
+natapakan ko ang balat ng saging. Nadulas ako.""","nga ba [mis: huwag > wag] ka nang [mis: magtatapon > magtapon] dito ha sa [mis: basurahan > basura] ka 
+[mis: magtatapon > magtapon] hayan ang [mis: basurahan > basura] natin hayan natapakan ko ang balat ng saging nadulas ako",4,fil,
 data/std010_g4_fil_chunk_18.wav,▶ PLAY AUDIO,,,"""E... hindi ko sinasadya, Ate. Talaga, hindi ko sinasadya. Hindi na ako magtatapon ng balat ng saging kahit saan.
 Sa basurahan na ako magtatapon."" ""Mabuti. Mabuti kung gayon,"" sabi ni Mina.","[om_e] [mis: hindi > di] ko sinasadya ate talaga hindi ko sinasadya hindi na ako magtatapon ng balat ng saging kahit saan sa basurahan
 na ako [mis: magtatapon > magtapon] mabuti mabuti kung [sub: gayon > ngayon] sabi ni mina",4,fil,
 data/std011_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Fred,,"Ang Aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong",ang aso sa lungga may isang asong gutom na gutom na naglalakad sa kalsada habang naglalakad [mis: ibinubulong > ibinubu],4,fil,
 data/std011_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain. Nang makakita,"[ins: long] [sub: niya > siya] sa sarili na [mis: kailangan > kailanggan] niyang [sub: makakita > makita] [sub: ng > ang] isang 
 [mis: lunggang > lunggan] puno ng [pause] pagkain nang [mis: makakita > mak]",4,fil,
-data/std011_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std011_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,,,4,fil,
+data/std011_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang","[om_nang] [sub: makakita > makita] siya ng lungga sa dulo ng kalsada agad siyang pumu-pumasok dito kumain siya 
+[mis: hanggang > ha-hanggan]",4,fil,
+data/std011_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"hanggang mabusog. Pero kahit busog na siya, kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga.",[mis: hanggang > hanggan] mabusog pero kahit busog na siya kumain pa rin at inbu-i-inubos ang lahat ng pagkain sa loob ng lungga,4,fil,
+data/std011_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Sa kanyang kabusugan, halos pumutok ang malaki niyang tiyan. Nang lalabas na lamang siya, napansin",sa kanyang kabusugan halos [pause] pumutok ang malaki niyang tiyan nang lalabas na lamang siya [mis: napansin > napa],4,fil,
+data/std011_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,napansin niyang hindi na siya magkasya sa labasan. Sumigaw siya upang humingi ng tulong.,[mis: napansin > sin] [ins: niya] niyang hindi na siya [mis: magkasya > magkaya] sa labasan sumigaw siya upang humingi [om_ng] tulong,4,fil,
+data/std011_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,"tulong. Dumating ang isa pang aso at nalaman ang nangyari. Bago ito umalis, nagwika siya sa",tulong dumating ang [sub: isa > isang] pang aso at nalaman ang [mis: nangyari > nanyari] bago ito umalis nagwika siya sa,4,fil,
+data/std011_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"kasamang aso, ""Hintayin mo na lang umimpis ang tiyan mo.""",[ins: kal] [mis: kasamang > kaasamang] aso [ins: i] hintayin mo na lang umi-umimpis ang tiyan mo,4,fil,
+data/std011_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,"Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na malaking manok 
+sa aming bakuran. Kaagad niya itong tinahulan.","si brownie ay aking alag-alagang aso ang aking aso ay ma-masamang [ins: mali] magalit minsan ay may pumu-pum may pumasok na 
+malaking manok sa aming bakuran [mis: kaagad > kaagiad] niya itong [mis: tinahulan > tinuhulan]",4,fil,
+data/std011_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito. Nagulat ang manok at tumakbo ito 
+nang mabilis palabas ng bakuran.","kung hindi lamang siya nakatali nang mahigpit malamang malamang na [mis: habulin > humi-humo-ham-hambulin] [sub: niya > siya] 
+ito nagulat ang manok at tumuk-tumakbo ito nang ma-ma-mabilis palabas ng bakuran",4,fil,
+data/std011_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,Kagabi ay hindi ko naitali si Brownie. Panay ang ungol niya.,[pause] [ins: kung] [ins: hin] [ins: kagabi] kagabi ay hindi ko [mis: naitali > natili] si brownie panay ang [mis: ungol > unggol] niya,4,fil,
+data/std011_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,"Maya-maya ay may tinahulan siya nang malakas. Biglang lumukso si Brownie sa kanyang tulugan at may hinabol. 
+Dali-dali","maya-maya ay may [mis: tinahulan > tinuhulan] [sub: siya > siyang] nang malakas biglang [mis: lumukso > pumaasok] si brownie sa 
+kanyang tulugan at may may hinabol [mis: dali-dali > dali]",4,fil,
+data/std011_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,Dali-dali kong sinilip ang aking alaga. May napatay siyang daga! Bahagya pa niyang ginalaw,dali-dali kong sinilip ang aking [sub: alaga > halaga] may napatay siyang daga daga [ins: bahangya] bahagya pa niyang ginalaw,4,fil,
+data/std011_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,ang kanyang buntot nang makita ako. Kaagad kong binitbit sa buntot ang daga at ipinakita kay Tatay. Masayang,"ang kanyang buntot [ins: na] nang makita ako [ins: ma] [sub: kaagad > agad] kong [mis: binitbit > binitit] [ins: ay] [ins: bininbit] sa buntot
+ang daga at pi-ipinakita kay tatay masayang",4,fil,
+data/std011_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,"hinimas ni Tatay si Brownie. ""Talagang maaasahan ang asong ito,"" sabi niya.",hinimas ni tatay si brownie talagang maaasahan [om_ang] asong ito sabi niya,4,fil,
 data/std012_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Ellen,,Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit minsan ay may,si brownie ay aking alagang aso ang aking aso ay masamang magalit mi-minsan ay may,4,fil,
 data/std012_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,may pumasok na malaking manok sa aming bakuran,may pumasok na [ins: malaki] malaking manok sa [ins: iming] aming bakuran,4,fil,
 data/std012_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,kaagad niya itong tinahulan kung hindi lamang siya nakatali,kaagad niya itong-itong tinahulan kung hi-hindi lamang siya nakatali,4,fil,
@@ -637,19 +647,16 @@ nangyari.","na siya mak-magkasya sa labasan sumigaw siya upang humingi ng tulong
 ang nanyari",4,fil,
 data/std013_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,"dumating ang isa pang aso at nalaman ang nangyari. Bago ito umalis, nagwika",dumating ang [sub: isa > isang] pang [ins: a] [ins: is] aso at nalaman ang nangyari bago ito umalis nagwika,4,fil,
 data/std013_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"siya sa kasamang aso, ""Hintayin mo na lang umimpis ang tiyan mo.""",siya sa kasamang aso hintayin mo na lang [mis: umimpis > uma-um-umipis] ang tiyan mo,4,fil,
-data/std013_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,"Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na malaking 
-manok sa aming bakuran. Kaagad niya itong tinahulan.","si brownie ay aking alagang aso ang aking aso ay masamang magal-magalit minsan ay may pumasok na malaking manok sa aming
-bakuran kaagad [mis: niya > niyang] itong tinahulan  ",4,fil,
-data/std013_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito. Nagulat ang manok at tumakbo 
-ito nang mabilis palabas ng bakuran.","kung hindi-kung hindi lamang siya nakatali nang mahigpit malamang na habulin niya ito nagulat ang manok at tumakbo ito nang 
-mabilis palabas ng bakuran",4,fil,
+data/std013_g4_fil_chunk_09a.wav,▶ PLAY AUDIO,,,Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay,si brownie ay aking alagang aso ang aking aso ay masamang magal-magalit minsan ay,4,fil,
+data/std013_g4_fil_chunk_09b.wav,▶ PLAY AUDIO,,,may pumasok na malaking manok sa aming bakuran. Kaagad niya itong tinahulan.,may pumasok na malaking manok sa aming bakuran kaagad [sub: niya > niyang] itong tinahulan  ,4,fil,
+data/std013_g4_fil_chunk_10a.wav,▶ PLAY AUDIO,,,"Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin",kung hindi-kung hindi lamang siya nakatali nang mahigpit malamang na [mis: habulin > ha],4,fil,
+data/std013_g4_fil_chunk_10b.wav,▶ PLAY AUDIO,,,habulin niya ito. Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran.,habulin niya ito nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran,4,fil,
 data/std013_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,Kagabi ay hindi  ko naitali si Brownie. Panay ang ungol niya. Maya-maya ay may tinahulan siya nang malakas.,kagabi ay hindi ko naitali si brownie panay ang [mis: ungol > ug-unggo-unggol] niya mayamaya ay may tinahulan siya nang malakas,4,fil,
 data/std013_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,"Biglang lumukso si Brownie sa kanyang tulugan at may hinabol. Dali-dali kong sinilip ang akin alaga. May 
 napatay siyang daga!","biglang lumukso si brownie sa kanyang tulugan at may hino-hinabol  dali dali kong sinilip ang aking [mis: alaga > alagang] 
 may-may napatay siyang da-daga ",4,fil,
-data/std013_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,"Bahagya pa niyang ginalaw ang kanyang bunto nang makita ako. Kaagad kong binitbit sa bunto ang daga at ipinakita
- kay Tatay.","bahag-bahagya pa niyang ginalaw ang kanyang buntot nang makita ako kaagad kong binitbit sa buntot ang daga at pi-ipinakita kay 
-tata-tatay",4,fil,
+data/std013_g4_fil_chunk_13a.wav,▶ PLAY AUDIO,,,Bahagya pa niyang ginalaw ang kanyang bunto nang makita ako. Kaagad,bahag-bahagya pa niyang ginalaw ang kanyang buntot nang makita ako [mis: kaagad > kaag],4,fil,
+data/std013_g4_fil_chunk_13b.wav,▶ PLAY AUDIO,,,Kaagad kong binitbit sa bunto ang daga at ipinakita kay Tatay.,[mis: kaagad > gad] kong [mis: binitbit > binibit] sa buntot ang daga at pi-ipinakita kay tata-tatay,4,fil,
 data/std013_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,"Masayang hinimas ni Tatay si brownie. Talagang maaasahan ang ason ito, sabi niya.",masayang hinima-hinimas ni tatay si brownie talagang [mis: maaasahan > maasahan] ang asong ito sabi niya [ins: okay],4,fil,
 data/std014_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"Ang Aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ","ang aso [sub: sa > na] [mis: lungga > lunga] may isang [mis: asong > aso] may isang aso gutom na gutom na naglalakad sa kalsada habang 
 [mis: naglalakad > naglalaka]",4,fil,
@@ -679,11 +686,12 @@ makita ako. Kaagad kong binitbit","dali-dali kong sinilip ang aking alaga may na
 kong [mis: binitbit > binit]",4,fil,
 data/std014_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,"bit sa buntot ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie. ""Talagang maaasahan ang
 asong ito,"" sabi niya.",bit sa buntot ang daga at ipinakita kay tatay masayang hinimas ni tatay si brownie talagang maaasahan ang asong ito sabi niya,4,fil,
-data/std014_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Muning! Muning! Hanap nang hanap si Susan kay Muning. Dala ni Susan ang lalagyan ng pagkain ni Muning. May
-laman na ang lalagyan, pero wala si Muning. Wala siya sa kusina. Wala rin siya sa silid. Nasaan kaya si Muning?
-Bumaba ng bahay si Susan. Hinanap niya kung naroon si Muning. Ikot","muning muning hanap nang hanap si susan kay muning dala ni susan ang lalagyan ng pagkain ni muning may laman na ang lalagyan
-pero wala si muning wala siya [om_sa] kusina wala rin siya sa silid nasaan kaya si muning bumaba ng bahay si susan hinanap niya
-kung naroon si muning ikot",4,fil,
+data/std014_g4_fil_chunk_10a.wav,▶ PLAY AUDIO,,,"Muning! Muning! Hanap nang hanap si Susan kay Muning. Dala ni Susan ang lalagyan ng pagkain ni Muning. May
+laman na ang lalagyan, pero wala si Muning.","muning muning hanap nang hanap si susan kay muning dala ni susan ang lalagyan [mis: ng > nya] [mis: pagkain > pakain] ni muning 
+may laman na ang lalagyan pero wala si [mis: muning > mun] ",4,fil,
+data/std014_g4_fil_chunk_10b.wav,▶ PLAY AUDIO,,,"Wala siya sa kusina. Wala rin siya sa silid. Nasaan kaya si Muning? Bumaba ng bahay si Susan. Hinanap niya kung
+ naroon si Muning. Ikot","wala [sub: siya > siyang] [om_sa] kusina wala rin siya sa silid nasaan kaya si muning bumaba ng bahay si susan hinanap niya kung naroon si muning 
+ikot",4,fil,
 data/std014_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,"Ikot na siya nang ikot, pero hindi pa rin niya nakita. Baka lumabas ito ng bahay. Ngiyaw! Ngiyaw! Hayun si Muning!
 Ngiyaw siya nang ngiyaw. Nasa loob siya ng kahon. May mga kasama si Muning sa loob","ikot [sub: na > ni] siya nang ikot pero hindi pa rin niya nakita baka lumabas ito ng bahay [ins: ikot] [ins: ay] ngiyaw ngiyaw hayun si
 muning ngiyaw siya nang ngiyaw nasa loob [mis: siya > sa] ng kahon may mga kasama si muning [sub: sa > ng] loob",4,fil,
@@ -695,8 +703,8 @@ aming bakuran. Kaagad niya itong tinahulan.","si brownie ay aking [ins: alaga] a
 manok sa aming bakuran [mis: kaagad > kaa-kaagad] niya itong [sub: tinahulan > tinulungan]",4,fil,
 data/std015_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito.",kung hindi lamang siya [ins: naka] nakatali nang mahigpit malamang na habulin niya ito [ins: na],4,fil,
 data/std015_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran.,nagulat [sub: ang > ng] manok at [mis: tumakbo > tu-ta-tumakbo] ito nang [mis: mabilis > ma-mabilis] palabas ng bakuran,4,fil,
-data/std015_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,Kagabi ay hindi ko naitali si Brownie. Panay ang ungol niya. Maya-maya ay may tinahulan siya nang malakas.,"kagabi ay hindi ko [sub: naitali > natali] si brownie pa-panay ang u-ungol niya ma-maya-maya ay may [ins: tano] tinahulan siya nang 
-malakas",4,fil,
+data/std015_g4_fil_chunk_04a.wav,▶ PLAY AUDIO,,,Kagabi ay hindi ko naitali si Brownie. Panay ang ungol niya.,kagabi ay hindi ko [sub: naitali > natali] si brownie pa-panay ang u-ungol niya,4,fil,
+data/std015_g4_fil_chunk_04b.wav,▶ PLAY AUDIO,,,Maya-maya ay may tinahulan siya nang malakas.,may-maya-maya ay may [ins: tano] tinahulan siya nang malakas,4,fil,
 data/std015_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Biglang lumukso si Brownie sa kanyang tulugan at may hinabol. Dali-dali kong sinilip ang aking alaga. May napatay 
 siyang daga! ","biglang [mis: lumukso > imukso] si brownie sa kanyang [sub: tulugan > tinu-tinutulugan] at may hinabol dali-dali kong 
 [sub: sinilip > si-sinisilip] ang aking alaga may na-napatay [ins: siya] siyang [mis: daga > dagal]",4,fil,
@@ -767,28 +775,43 @@ data/std019_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,Dali-dali kong sinilip ang akin
 data/std019_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,Bahagya pa niyang ginalaw ang kanyang buntot nang makita ako. Kaagad kong binitbit,"[mis: bahagya > hagya] pa [sub: niyang > niya] ginalaw ang [mis: kanyang > kanyag] [mis: buntot > bun-bunto] [sub: nang > nag] makita 
 ako kaagad kong [mis: binitbit > binitbi]",4,fil,
 data/std019_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"sa buntot ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie. ""Talagang",sa buntot ang daga at ipinakita kay tatay masayang hinimas [om_ni] tatay [om_si] [mis: brownie > browin] talagang,4,fil,
-data/std020_g4_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,,,4,en,
-data/std020_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std020_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std020_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std020_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std021_g4_en_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,""  yelled Mom. And yet 
-Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still laid",,4,en,
-data/std021_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"snug on the bed. Suddenly a rooster crowed out loud and sat on the window sill. Jacky get up and said with cheer.
-""I will get up now. I will"".",,4,en,
-data/std021_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad? 
-No. It is on the mat.",,4,en,
-data/std021_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. Let's swim in the 
+data/std020_g4_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,""  yelled Mom. And yet 
+Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus.","ring ring rang the clock but jacky did not get up wake up jacky ti-time for school [om_yelled] mom and yet [sub: jacky > dady] did not
+ge-get up beep beep [om_honked] the horn of the bus",4,en,
+data/std020_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"Jacky still snug on the bed. Suddenly a rooster crowed out loud and sat on the window sill. Jacky get up and said
+with cheer. ""I will get up now. I will"".","jacky still [mis: laid > lead] [mis: snug > snog] [ins: ay] on the bed [om_suddenly] a rooster [mis: crowed > cowed] out [mis: loud >
+lod] and [mis: sat > sit] on the window sill jacky got up and said with [mis: cheer > chair] i will get up now i will",4,en,
+data/std020_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. Let's swim in the 
 river,"" says Lina. ""Let's get some star apples from the tree,"" says 
-Leo. ""Let's pick flowers,""",,4,en,
-data/std021_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"says Lina. ""That is so much fun!"" says Mama. But can you help me dust the shelves too?"" Yes, we can Mama,"" 
-they say. ""Helping can be fun too!""  ",,4,en,
-data/std022_g4_en_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some star apples from the
-tree,"" says Leo.","[sub: lets > yes] have some fun this summer [sub: says > yes] leo [sub: lets > yes] swim in the [mis: river > rayver] says lina
-[mis: lets > les] get some star apples from the tree [om_says] [om_leo]",4,en,
-data/std022_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"Leo. ""Let's pick flowers,"" says Lina. ""That is so much fun!"" says Mama. ""But can you help me dust the shelves too?""
-""Yes, we can Mama,"" they say. ""Helping can be fun too!""","leo [mis: lets > les] pick flowers [sub: says > say] lina that is so much [sub: fun > funny] says mama but can you help me
-[sub: dust > dutch] the [sub: shelves > self] too yes we can mama they say help can be fun too",4,en,
+Leo. ""Let's pick flowers,""","lets have some fun this summer [ins: sey] [ins: ay] says leo lets swim in the river says lina lets get some star apples from the tree
+says leo lets pick [mis: flowers > flower]",4,en,
+data/std020_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"flowers,"" says Lina. ""That is so much fun!"" says Mama. But can you help me dust the shelves too?"" Yes, we can Mama,"" 
+they say. ""Helping can be fun too!""  ","[mis: flowers > wers] [mis: says > say] [mis: lina > lin] that is so much fun [mis: says > say] mama but can you help me [mis: dust 
+> das] the [ins: dede] [ins: ay] [mis: shelves > delfes] [mis: too > to] yes we can mama they say helping can be fun [mis: too > to]",4,en,
+data/std020_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad? 
+No. It is on the mat.","pam has a cat it is on the bed it can nap it can sit oh no [mis: says > say] pam the cat fell off the  bed is the cat sad no 
+it is on the mat ",4,en,
+data/std021_g4_en_chunk_01a.wav,▶ PLAY AUDIO,Jeremy,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,""  yelled Mom. And ","ring ring rang [mis: the > dal] clock but jacky did not get up [mis: wake > wa-ke] up jacky [mis: time > tim] for school 
+sub: yelled > yell] mom and ",4,en,
+data/std021_g4_en_chunk_01b.wav,▶ PLAY AUDIO,Jeremy,,"yet Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still laid","yet jacky did not get up [sub: beep > bee] [sub: beep > bee] [ins: no] [mis: honked > hon-ked] the horn of the [mis: bus > bos] 
+jacky [ins: is] still [sub: laid > lend]",4,en,
+data/std021_g4_en_chunk_02a.wav,▶ PLAY AUDIO,,,snug on the bed. Suddenly a rooster crowed out loud and sat on the window sill. Jacky get up and ,"[sub: snug > song] on the bed [mis: suddenly > sod-dedenly] a rooster [mis: crowed > cro-wed] [sub: out > at] [sub: loud > lone] and
+ sat [sub: on > at] the wimdow [sub: sill > still] jacky got up and ",4,en,
+data/std021_g4_en_chunk_02b.wav,▶ PLAY AUDIO,,,"sat on the window sill. Jacky get up and said with cheer. ""I will get up now. I will"".",sat [sub: on > at] the wimdow [sub: sill > still] jacky got up and said [sub: with > wit] [mis: cheer > heer] i will get up now i will,4,en,
+data/std021_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad? 
+No. It is on the mat.","pam [mis: has > han] a cat it is on the bed it can nap it can sit [mis: oh > op] no [sub: says > say] pam the cat fell 
+[mis: off > op] the bed is the cat sad [sub: no > na] it is on the mat",4,en,
+data/std021_g4_en_chunk_04a.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. Let's swim in the river,"" says Lina. ""Let's ","lets have some [mis: fun > fon] this summer [sub: says > say] [mis: leo > le] lets [sub: swim > swing] [ins: it]
+in the river [sub: says > say] lina [sub: lets > let]",4,en,
+data/std021_g4_en_chunk_04b.wav,▶ PLAY AUDIO,,,"""Let's get some star apples from the tree,"" says Leo. ""Let's pick flowers,""","lets get some [mis: star > istar] [mis: apples > app-les] [sub: from > farm] the[sub: tree > her] [sub: says > say] [mis: leo > le-o] 
+[sub: lets > let] pick [ins: fake] [sub: flowers > follow] [ins: ay] [ins: fal] [ins: fer]",4,en,
+data/std021_g4_en_chunk_05a.wav,▶ PLAY AUDIO,,,"says Lina. ""That is so much fun!"" says Mama. But can you help me",[sub: says > say] lina that is so [mis: much > muk] fun [sub: says > say] mama bu-but can you help me,4,en,
+data/std021_g4_en_chunk_05b.wav,▶ PLAY AUDIO,,,"dust the shelves too?"" ""Yes, we can Mama,"" they say. ""Helping can be fun too!""",[mis: dust > thats] the [mis: shelves > shelfie] too yes we can mama they say helping can be fun too,4,en,
+data/std022_g4_en_chunk_01a.wav,▶ PLAY AUDIO,Dhesiry,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the",[sub: lets > yes] have some fun this summer [sub: says > yes] leo [sub: lets > yes] swim in the,4,en,
+data/std022_g4_en_chunk_01b.wav,▶ PLAY AUDIO,Dhesiry,,"river,"" says Lina. ""Let's get some star apples from the tree,"" says",[mis: river > rayver] says lina [mis: lets > les] get some star apples [sub: from > firm] the tree [sub: says > say],4,en,
+data/std022_g4_en_chunk_02a.wav,▶ PLAY AUDIO,,,"Leo. ""Let's pick flowers,"" says Lina. ""That is so much fun!"" says Mama. ""But can you help ","leo [mis: lets > les] pick flowers [sub: says > say] lina that is so much [sub: fun > funny] [sub: says > say] mama but [sub: can > cant] 
+you help",4,en,
+data/std022_g4_en_chunk_02b.wav,▶ PLAY AUDIO,,,"me dust the shelves too?"" ""Yes, we can Mama,"" they say. ""Helping can be fun too!""",[sub: dust > dutch] the [sub: shelves > self] too yes we can mama they say help can be fun too,4,en,
 data/std022_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
 No. It is on the mat.",pam has a cat it is on the bed it can nap it can sit oh no [sub: says > say] pam the cat fell off the bed is the cat sad no it is on the mat,4,en,
 data/std022_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet
@@ -798,13 +821,13 @@ data/std022_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"the bus. Jacky still laid snug 
 up and said with cheer, ""I will get up now. I will!""","the bus [mis: jacky > jeyck] still [mis: laid > land] [mis: snug > sno] on the bed [mis: suddenly > slowgy] a rooster crowed [sub: out > off]
 [mis: loud > load] [sub: sat > sad] on the [mis: window > widow] sill [mis: jacky > jeyck] [mis: got > gut] up the said with [mis: cheer > teer]
 i will get up now i will",4,en,
-data/std023_g4_en_chunk_01.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet  
-Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still laid","ring [om_ring] rang the clock but [mis: jacky > jack] did not get up wake up [mis: jacky > jack] time for school [mis: yelled > yell-yel-led]
-mom and yet [mis: jacky > jack] did not get up [mis: beep > bep] [mis: beep > bep] [mis: honked > han-ked] the [sub: horn > harm] of
-the bus [mis: jacky > jeck] [ins: is] [mis: still > stel] [mis: laid > led]",4,en,
-data/std023_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"snug on the bed. Suddenly, a rooster crowed out loud and sat on the window sill. Jacky got up and said with cheer,
-""I will get up now. I will!""","[om_snug] [ins: sss] [ins: goy] [ins: sing ]on the bed [mis: suddenly > sundaily] a [sub: rooster > raster] [mis: crowed > clownt] [ins: climp]
-[mis: out > ot] [sub: loud > load] and sat on the window sill [mis: jacky > jeck] [mis: got > gut] up and [sub: said > send] [sub: with > white]
+data/std023_g4_en_chunk_01a.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom.","ring [om_ring] rang the clock but [mis: jacky > jack] did not get up wake up [mis: jacky > jack] time for school 
+[mis: yelled > yell-yel-led] mom ",4,en,
+data/std023_g4_en_chunk_01b.wav,▶ PLAY AUDIO,,,"And yet Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still laid","and yet [mis: jacky > jack] [mis: did > ded] not get up [mis: beep > bep] [mis: beep > bep] [mis: honked > han-ked] the [sub: horn > harm] 
+[sub: of > off] the bus [mis: jacky > jeck] [ins: is] [mis: still > stel] [mis: laid > led]",4,en,
+data/std023_g4_en_chunk_02a.wav,▶ PLAY AUDIO,,,"snug on the bed. Suddenly, a rooster crowed out loud","[ins: sss] [ins: goy] [sub: snug > sing] on the bed [mis: suddenly > sundaily] a [sub: rooster > raster] [mis: crowed > clownt] [ins: climp]
+[mis: out > ot] [sub: loud > load]",4,en,
+data/std023_g4_en_chunk_02b.wav,▶ PLAY AUDIO,,,"and sat on the window sill. Jacky got up and said with cheer,"" I will get up now. I will!""","and sat on the window sill [mis: jacky > jeck] [mis: got > gut] up and [sub: said > send] [sub: with > white] 
 [sub: cheer > clock] i will get up now i will",4,en,
 data/std023_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
 No. It is on the mat.","pam has a cat it is on the bed it can nap it can sit oh no [sub: says > say] pam the cat fell off the bed is the cat [sub: sad > said] no it is
@@ -864,21 +887,33 @@ we can mama they say helping can be fun too",4,en,
 data/std026_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
 No. It is on the mat.","pam has a cat [ins: its] it is on the bed it can nap it can sit oh no [sub: says > say] pam the cat fell off the bed [sub: is > its] the cat 
 [sub: sad > said] no [sub: it > its] is on the mat",4,en,
-data/std027_g4_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,,,4,en,
-data/std027_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std027_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std027_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std027_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std028_g4_en_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet 
-Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus.",,4,en,
-data/std028_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"Jacky still laid snug on the bed. Suddenly, a rooster crowed out loud and sat on the window sill. Jacky got up and 
-said with cheer. ""I will get up now. I will!""",,4,en,
-data/std028_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"Pam's cat. Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh ",,4,en,
-data/std028_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad? No. It is on the mat.",,4,en,
+data/std027_g4_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad?
+No. It is on the mat.","pam has a cat it is [ins: an] on the bed it can nap it can sit [mis: oh > who] no [mis: says > say] pam the cat [mis: fell > sell] off the
+bed is the cat sad no it is on the mat",4,en,
+data/std027_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some star apples from
+the tree,"" says Leo. ""Let's pick flowers,"" ","lets have some fun this summer [sub: says > say] leo lets swim in the river [sub: says > say] lina lets get some star apples 
+from the tree [sub: says > say] leo lets pick flowers",4,en,
+data/std027_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"says Lina. ""That is so much fun!"" says Mama. But can you help me dust the shelves too?"" Yes, we can Mama,"" 
+they say. ""Helping can be fun too!""  ","[mis: flowers > wers] says lina that is so much fun [mis: says > say] mama but can you help me [mis: dust > just] the [mis: shelves 
+> chilves] [mis: too > to] [mis: yes > des] we can mama they say helping can be fun too",4,en,
+data/std027_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet 
+Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky ","ring ring rang the clock but jacky did not get up wake up jacky time for school yelled mom and yet jacky [mis: did > ded] not get up
+beep beep [mis: honked > hanked the [sub: horn > form] of the bus jacky [ins: is]",4,en,
+data/std027_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"still laid snug on the bed. Suddenly, a rooster crowed out loud and sat on the window sill. Jacky got up and 
+said with cheer. ""I will get up now. I will!""","[mis: still > till] laid su-snug on the bed [mis: suddenly > sudenli] a rooster [mis: crowed > clowed] [ins: wag] [ins: you] [om_out]
+[mis: loud > lod] and sat [sub: on > and] the window sill jacky got up and said with [mis: cheer > cher] i will gt up i will",4,en,
+data/std028_g4_en_chunk_01a.wav,▶ PLAY AUDIO,Jeremy,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. ",ring ring rang the clock but jacky did not get up wake up jacky time for school yelled mom ,4,en,
+data/std028_g4_en_chunk_01b.wav,▶ PLAY AUDIO,Jeremy,,"And yet Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus.",and yet jacky di-did not get up [sub: beep > bed] beep [mis: honked > hon hanked] the [mis: horn > ro horn] [ins: the] of the bus,4,en,
+data/std028_g4_en_chunk_02a.wav,▶ PLAY AUDIO,,,"Jacky still laid snug on the bed. Suddenly, a rooster crowed out loud ",jacky still laid [mis: snug > sno-snog] on the bed [sub: suddenly > sadly] a rooster [mis: crowed > cro-wed] out loud ,4,en,
+data/std028_g4_en_chunk_02b.wav,▶ PLAY AUDIO,,,"and sat on the window sill. Jacky got up and said with cheer. ""I will get up now. I will!""",and sat on the window sill jacky [mis: got > ge go-goat] up and said with cheer i will get up now [ins: we] i will,4,en,
+data/std028_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"Pam's cat. Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh ",pams cat pam has a cat [sub: it > its] is on the bed it can nap it can sit [sub: oh > ho],4,en,
+data/std028_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad? No. It is on the mat.",no [sub: says > say] pam the cat fell off the bed is the cat [sub: sad > said] no it is [ins: no] on the mat,4,en,
 data/std028_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some star apples from 
-the tree,"" says Leo. ""Let's pick flowers,"" says Lina.",,4,en,
+the tree,"" says Leo. ""Let's pick flowers,"" says Lina.","lets have some fun this summer [sub: says > say] leo lets swim in the river [sub: says > say] lina lets get some [sub: star > start] 
+[mis: apples > app-les] from the tree [sub: says > say] leo lets pick flowers [sub: says > say] [mis: lina > li]",4,en,
 data/std028_g4_en_chunk_06.wav,▶ PLAY AUDIO,,,"Lina. ""That is so much fun!"" says Mama. ""But can you help me  dust the shelves too?"" ""Yes, we can Mama,"" they 
-say. ""Helping can be fun too!"" ",,4,en,
+say. ""Helping can be fun too!"" ","lina that is so much fun [sub: says > say] mama but can you help [sub: me > made] dust the [mis: shelves > selve] too [sub: yes > say]
+we can mama they say helping can be fun too",4,en,
 data/std029_g4_en_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!",pam has a cat [sub: it > let] is on [sub: the > they] bed [sub: it > let] can nap [sub: it > let] can sit oh no [ins: et],4,en,
 data/std029_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"says Pam. ""The cat fell off the bed!"" Is the cat sad? No. It is on the mat.","says pam [sub: the > they] cat fell off [sub: the > they] [sub: bed > be] [ins: they] [mis: is > ies] [sub: the > they] cat sad no
 [sub: it > let] is [ins: no] on [sub: the > they] mat",4,en,
@@ -917,22 +952,50 @@ data/std030_g4_en_chunk_06.wav,▶ PLAY AUDIO,,,"""Let's pick flowers,"" says Li
 ""Yes, we can Mama,"" they say. ""Helping can be fun too!""","[mis: lets > lates] [sub: pick > pigs] [mis: flowers > flow-er] says lina [mis: that > tha] is so [mis: much > moch] [mis: fun > fon] 
 [sub: says > say] mama but [sub: can > cat] you help me [mis: dust > dis] [ins: a] the [ins: is] [sub: shelves > wish] [mis: too > tu] 
 yes we [sub: can > cat] mama [sub: they > the] [mis: say > sayh] helping can be fun [mis: too > tu]",4,en,
-data/std031_g4_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,,,4,en,
-data/std031_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std031_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std031_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_01.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_06.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_07.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_08.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_09.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_10.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_11.wav,▶ PLAY AUDIO,,,,,4,en,
-data/std032_g4_en_chunk_12.wav,▶ PLAY AUDIO,,,,,4,en,
+data/std031_g4_en_chunk_01.wav,▶ PLAY AUDIO,Ellen,,"Summer Fun. ""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some
+star apples from the tree,"" says Leo. ""Let's pick flowers,"" says Lina. ""That is so much fun!"" says Mama.","summer fun lets have some fun this summer [mis: says > say] leo lets swim in the river [mis: says > say] lina lets [mis: get > git] some 
+star [mis: apples > apple] from the tree [mis: says > say] leo lets pick flowers says lina that is so mu-much [mis: says > say] mama",4,en,
+data/std031_g4_en_chunk_02.wav,▶ PLAY AUDIO,,,"""But can you help me dust the shelves too?"" ""Yes, we can Mama,"" they say. ""Helping can be fun too!"" 
+Pam's Cat. Pam has a cat. It is on the bed. It can nap. It can sit.","[mis: but > at] can you help me [om_dust] [ins: with] the [mis: shelves > selv] [mis: too > tu] yes we can mama they say [mis: helping
+> help] can be fun [mis: too > tu] pams cat pam has a cat it is on the bed it can nap it can sit ",4,en,
+data/std031_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"""Oh no!"" says Pam. ""The cat fell off the bed!"" Is the cat sad? No. It is on the mat. ""Ring! Ring!"" rang the clock. 
+But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet Jacky did not get up.","oh no [mis: says > say] pam th cat fell off the bed is the cat sad [sub: no > to] it [om_is] [ins: end] on the mat ring ring rang the clock
+but jacky did not get up wake up jacky time for school yelled mom [om_and] yet jacky did",4,en,
+data/std031_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still laid snug on the bed. Suddenly, a rooster crowed 
+out loud and sat on the window sill. Jacky got up and said with cheer, ""I will get up now. I will!""","not get up beep beep [mis: honked > hon] the horn [mis: of > off] the bus jacky still [mis: laid > late] snug on the bed [mis: suddenly 
+> sendely] a rooster [mis: crowed > crol] out [mis: loud > load] and sat on the window sill jacky got up [om_and] [om_said] with 
+[mis: cheer > cher] i will get up now i will",4,en,
+data/std032_g4_en_chunk_01a.wav,▶ PLAY AUDIO,,,"Summer Fun. ""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina.","sum-summer fun lets have [sub: some > most] [om_fun] [ins: of] this summer says leo lets swim in the [om_river] [mis: says > say]
+[mis: lina > li]",4,en,
+data/std032_g4_en_chunk_01b.wav,▶ PLAY AUDIO,,,"Lina. ""Let's get some star apples from the tree,"" says Leo. ""Let's pick flowers,"" says Lina.",lina [ins: lean] lets get some star [mis: apples > apps] [om_from] the tree [mis: says > say] leo lets pick flowers [mis: says > say] [mis: lina > len],4,en,
+data/std032_g4_en_chunk_02a.wav,▶ PLAY AUDIO,,,"Lina. ""That is so much fun!"" says Mama. ""But can you help me dust the shelves ",lina [sub: that > lets] is so much fun [mis: says > say] mama but can you help me [om_dust] the-the [mis: shelves > sha lev] ,4,en,
+data/std032_g4_en_chunk_02b.wav,▶ PLAY AUDIO,,,"too?"" ""Yes, we can Mama,"" they say. ""Helping can be fun too!"" ",[mis: too > tu] yes we can mama they-they say helping can be fun too,4,en,
+data/std032_g4_en_chunk_03.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet 
+Jacky did not get up. ""Beep! Beep!"" honked the horn of the bus. Jacky still laid snug on the bed. Suddenly, 
+a rooster crowed out loud and sat on the window sill. Jacky got up and said with cheer, ""I will get up now. I will!""","ring ring rang the clock but jacky did not get up wake up jacky time for school yelled mom yet jacky did not get up beep beep 
+honked the horn of the bus jacky still laid snug on the bed [mis: suddenly > suddently] a rooster crowed out loud and sat on the 
+window sill jacky got up and said with [mis: cheer > cher] i will get up now i will",4,en,
+data/std032_g4_en_chunk_04.wav,▶ PLAY AUDIO,,,"Pam's Cat. Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says Pam. ""The cat fell off the bed!""
+Is the cat sad? No. It is on the mat. Summer Fun. ""Let's have some fun this summer,"" says Leo. ""Let's swim in the
+river,"" says Lina. ","pams cat pam has a cat it is on the  bed it can nap it can sit oh no says pam the cat fell off the bed is the cat sad no it is on the mat
+summer fun lets have some fun this summer says leo lets swim in the river says lina",4,en,
+data/std032_g4_en_chunk_05.wav,▶ PLAY AUDIO,,,"""Let's get some star apples from the tree,"" says Leo. ""Let's pick flowers,"" says Lina. ""That is so much fun!"" says 
+Mama. ""But can you help me dust the shelves too?"" ""Yes, we can Mama,"" they say. ""Helping can be fun too!"" ","lets get some star apples from the tree says leo lets pick flowers says lina that is so much fun says mama but can you help me dust
+the shelves too yes we can mama they say helping can be fun too",4,en,
+data/std032_g4_en_chunk_06.wav,▶ PLAY AUDIO,,," ""Wake up Jacky! Time for school,"" yelled Mom. And yet Jacky did not get up. ""Beep! Beep!"" honked the horn of 
+the bus."," wake up jacky time [ins: to] for school [mis: yelled > yelling] mom and yet jacky [sub: did > can] not get up beep beep [mis: honking
+> honked] the horn of the bus",4,en,
+data/std032_g4_en_chunk_07.wav,▶ PLAY AUDIO,,,"Jacky still laid snug on the bed. Suddenly, a rooster crowed out loud ","jacky still [mis: laid > laynk] [om_snug] on the bed [mis: suddenly > suddently] a [mis: rooster > osort] [mis: crowed > crowid]
+[mis: out > ot] [mis: loud > load]",4,en,
+data/std032_g4_en_chunk_08.wav,▶ PLAY AUDIO,,,"sat on the window sill. Jacky got up and said with cheer, ""I will get up now. I will!""","[mis: sat > set] on the window [mis: sill > sell] jacky got up and [mis: said > say]  [mis: with > went] [om_cheer] [ins: ways] 
+i [mis: will > well] get up now [om_i] [mis: will > well]",4,en,
+data/std032_g4_en_chunk_09.wav,▶ PLAY AUDIO,,,"Pam's Cat. Pam has a cat. It is on the bed. It can nap. It can sit. ""Oh no!"" says",[ins: pam] [ins: ay] pams cat pam has a cat it is on the bed it can na-nap it can [mis: sit > sing] [mis: oh > aw] no says,4,en,
+data/std032_g4_en_chunk_10.wav,▶ PLAY AUDIO,,,"Pam. ""The cat fell off the bed!"" Is the cat sad? No. It is on the mat.",pam the cat [mis: fell > fill] off the bed is the cat [mis: sad > said] [mis: no > not] it is [ins: no] [om_on] [om_the] mat ,4,en,
+data/std032_g4_en_chunk_11.wav,▶ PLAY AUDIO,,,"""Ring! Ring!"" rang the clock. But Jacky did not get up. ""Wake up Jacky! Time for school,"" yelled Mom. And yet 
+Jacky did not get up.",ring ring rang the clock but jacky did not get up wake up jacky time for school [mis: yelled > yeled]  mom yet jacky did not get up,4,en,
+data/std032_g4_en_chunk_12.wav,▶ PLAY AUDIO,,,"""Let's have some fun this summer,"" says Leo. ""Let's swim in the river,"" says Lina. ""Let's get some star apples from
+the tree,"" says Leo. ""Let's pick flowers,"" says","lets have some fun this summer [mis: says > say] leo lets swim in the river [mis: says > say] lina lets get some star [mis: apples > 
+apple from the tree [mis: says > say] leo lets pick flower [mis: says > say]",4,en,
 data/std032_g4_en_chunk_13.wav,▶ PLAY AUDIO,Jeremy,,"says Lina. ""That is so much fun!"" says Mama. ""But can you help me dust the shelves too?"" ""Yes, we can Mama,"" 
 they say. ""Helping can be fun too!""","[mis: say > ay] lina that is so much fun [mis: says > say] mama but can you help me dust the [mis: shelves > shelve] too yes we 
 can mama they [sub: say > said] helping can be fun too",4,en,
@@ -1039,45 +1102,108 @@ nadulas ako",4,fil,
 data/std038_g4_fil_chunk_19.wav,▶ PLAY AUDIO,,,"""E... hindi ko sinasadya, Ate. Talaga, hindi ko sinasadya. Hindi na ako magtatapon. ""Mabuti. Mabuti kung gayon,"" 
 sabi ni Mina.","e hindi ko sinasadya ate talaga hindi ko sinasadya hindi na [sub: ako > ko] magtatapon [ins: ng] mabuti mabuti kung [sub: gayon > ganon] 
 [sub: sabi > sinabi] ni mina",4,fil,
-data/std039_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Ellen,,,,4,fil,
-data/std039_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std039_g4_fil_chunk_18.wav,▶ PLAY AUDIO,,,,,4,fil,
+data/std039_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Ellen,,"Ang Aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong 
+niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain.","ang aso sa lungga may isang asong gutom na gutom na naglalakad sa kalsada habang naglalakad [ins: may] [mis: ibinubulong >
+binubulong] niya sa sarili na [ins: kaniya] kailangan niyang [mis: makakita > mapakita] [om_ng] isang [mis: lunggang > lungga]
+[ins: mu] [om_puno] [mis: ng > nga] pagkain",4,fil,
+data/std039_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang mabusog. 
+Pero kahit busog na siya, kumain pa rin at inubos ang lahat ng pagkain sa loob ng lungga.","nang [ins: mapa] [mis: makakita > nakakita] [mis: siyang > siya] [ins: sa] [mis: ng > nga] lungga sa dulo ng kalsada, agad siyang
+pumasok [om_dito] [ins: inubos] [ins: ang] [ins: lahat] [ins: ito] kumain siya hanggang [ins: maubos] mabusog pero kahit busog na siya, kumain pa rin at inubos ang lahat [mis: ng > na] pagkain sa loob ng lungga.",4,fil,
+data/std039_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Sa kanyang kabusugan, halos pumutok ang malaki niyang tiyan. Nang lalabas na lamang siya, napansin niyang
+hindi na siya magkasya sa labasan. Sumigaw siya upang humingi ng tulong. Dumating","[ins: kahit] [ins: bus] [ins: lungga] sa kanyang kabusugan, halos pumutok ang malaki niyang tiyan nang lalabas na lamang [mis: siya >
+siyang] napansin niyang hindi na siya magkasya sa labasan sumigaw siya upang humingi ng tulong dumating",4,fil,
+data/std039_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,"Dumating ang isa pang aso at nalaman ang nangyari. Bago ito umalis, nagwika siya sa kasamang aso, ""Hintayin mo 
+na lang umimpis ang tiyan mo.""","dumating ang [mis: isa > isang] pang aso at nalaman ang nangyari. Bago ito umalis, nagwika [mis: siya > siyang] [om_sa] kasamang
+aso hintayin mo na lang umimpis ang tiyan mo",4,fil,
+data/std039_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Si Muning! Muning! Muning! Hanap nang hanap si Susan kay Muning. Dala ni Susan ang lalagyan ng pagkain
+pagkain ni Muning. May laman na ang lalagyan, pero wala si Muning. Wala siya sa kusina. Wala rin siya sa silid. 
+Nasaan kaya si Muning?","si muning muning muning hanap nang hanap si susan kay muning dala ni susan ang lalagyan [mis: ng > nga] pagkain
+pagkain ni muning may laman na ang lalagyan, pero wala [mis: si > siya] muning wala siya sa kusina wala rin siya sa silid
+nasaan kaya si muning",4,fil,
+data/std039_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,"Bumaba ng bahay si Susan. Hinanap niya kung naroon si Muning. Muning. Ikot na siya nang ikot, pero hindi pa rin
+niya nakita. Baka lumabas ito ng bahay.","bumaba [mis: ng > nga] bahay si susan hinanap niya kung naroon si muning muning ikot na siya nang ikot pero hindi pa rin
+niya nakita aka lumabas ito [mis: ng > na] bahay",4,fil,
+data/std039_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,"Ngiyaw! Ngiyaw! Hayun si Muning! Ngiyaw siya nang ngiyaw. Nasa loob siya ng kahon. May mga kasama si 
+Muning sa loob ng kahon. ","Ngiyaw! Ngiyaw! [mis: hayun > ngayon si [mis: muning > uning] ngiyaw siya nang ngiyaw nasa loob siya ng kahon may mga kasama 
+si muning sa loob ng kahon",4,fil,
+data/std039_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"Nakita ni Susan ang kasama ni Muning. Mga kuting ang kasama ni Muning sa kahon! May puti, itim at 
+magkahalong puti at itim na kulay ng kuting. Tuwang-tuwa si Susan!","nakita ni susan ang kasama ni muning mga kuting ang kasama ni muning sa kahon may puti itim at [ins: bag] [ins: kaka] 
+magkahalong puti at itim na kulay [mis: ng > nga] kuting uwang-tuwa si susan",4,fil,
+data/std039_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,"Si Brownie. Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na 
+malaking manok sa aming bakuran. Kaagad niya itong","si brownie. si brownie ay aking alagang aso ang aking aso ay masamang magalit minsan ay may pumasok na 
+malaking manok sa aming bakuran kaagad niya itong",4,fil,
+data/std039_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"tinahulan. Kung hindi lamang siya nakatali nang mahigpit, malamang na 
+habulin niya ito. Nagulat","tinu-tinahulan kung hindi lamang siya nakatali nang mahigpit malamang na 
+[mis: habulin > nabulin] niya ito nagulat",4,fil,
+data/std039_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,"Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran. Kagabi ay hindi ko naitali si Brownie. Panay 
+ang ungol niya.","nagulat ang manok at tumakbo ito nang mabilis palabas [ins: sa] [mis: ng > nga] bakuran kagabi ay hindi ko naitali si brownie panay 
+ang [mis: ungol > bungol] niya",4,fil,
+data/std039_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,Maya-maya ay may tinahulan siya nang malakas. Biglang lumukso si Brownie sa kanyang tulugan at may hinabol.,"maya-maya ay may tinabula-tinahulan siya nang malakas biglang lumukso si brownie sa kanyang [mis: tulugan > tulungan at may 
+hinabol",4,fil,
+data/std039_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,"Dali-dali kong sinilip ang aking alaga. May napatay siyang daga! Bahagya pa niyang ginalaw ang kanyang buntot
+nang makita ako. Kaagad kong binitbit sa buntot ang daga at ipinakita kay Tatay.","dali-dali kong sinilip ang aking [mis: alaga > alagang] ay napatay siyang daga bahagya pa [ins: inag] niyang ginalaw ang kanyang 
+buntot [mis: nang > ang] makita ako kaagad kong binitbit sa buntot ang daga at ipinakita kay tatay",4,fil,
+data/std039_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,"Masayang hinimas ni Tatay si Brownie. ""Talagang maaasahan ang asong ito,"" sabi niya.",masayang hinimas ni tatay si brownie talagang maaasahan ang asong ito sabi niya,4,fil,
+data/std039_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,"Balat ng Saging. ""Lito! Lito!"" Si Mina ang sumigaw. Kay lakas ng kanyang sigaw. ""Bakit, Ate? Ano iyon?"" Ito 
+naman ang tanong ni Lito. Lumapit siya kay Mina. Ayaw niyang sumigaw pa ang kanyang ate.","balat ng saging lito lito si mina [sub: ang > ay] sumigaw kay lakas ng kanyang sigaw bakit ate ano iyon ito 
+naman ang tanong ni lito lumapit siya kay mina [ins: ay] [ins: ang] [ins: balat] [ins: ay] [om_ayaw]  niyang sumigaw pa ang kanyang ate",4,fil,
+data/std039_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,"""Balat ng saging ito, hindi ba?"" Sino ang nagtapon nito?"" Galit si Mina. Galit siya sa nagtapon ng balat ng 
+saging. ""Ako, Ate,"" sagot ni Lito. Mahina ang kanyang sagot. Mahina ang kanyang tinig,.","balat ng saging ito hindi ba sino ang nagtapon nito galit si mina galit siya sa nagtapon ng balat ng 
+saging ako ate sagot ni lito mahina ang kanyang sagot mahina ang kanyang tinig",4,fil,
+data/std039_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,"""Sabi ko na nga ba. Huwang ka nang magtatapon dito, ha! Sa basurahan ka magtatapon. Hayan ang basurahan
+natin. Hayan, natapakan ko ang balat ng saging. Nadulas ako.""","sabi ko na nga ba [mis: huwang > wag] ka nang magtatapon dito ha sa basurahan ka magtatapon hayan ang basurahan
+natin hayan natapakan ko ang balat ng saging nadulas ako",4,fil,
+data/std039_g4_fil_chunk_18.wav,▶ PLAY AUDIO,,,"""E... hindi ko sinasadya, Ate. Talaga, hindi ko sinasadya. Hindi na ako magtatapon ng balat ng saging kahit 
+saan. Sa basurahan na ako magtatapon."" ""Mabuti. Mabuti kung gayon,"" sabi ni Mina.","hi-hindi ko sinasadya ate talaga hindi ko sinasadya hindi na ako magtatapon ng balat ng saging kahit 
+saan sa basurahan na ako magtatapon mabuti mabuti kung gayon sabi ni mina",4,fil,
 data/std040_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Jeremy,,"Ang aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong 
 niya sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain","ang aso sa [mis: lungga > lunga] may isang [sub: asong > aso] gutom na gutom na naglalakad sa kalsada habang naglalakad 
 ibinubulong niya sa sarili na kailangan niyang [sub: makakita > makita] ng isang [mis: lunggang > lugang] puno ng pagkain",4,fil,
 data/std040_g4_fil_chunk_02.wav,▶ PLAY AUDIO,,,"Nang makakita siya ng lungga sa dulo ng kalsada, agad siyang pumasok dito. Kumain siya hanggang mabusog. Pero 
 kahit busog na siya, kumain pa rin at inubos ang lahat ng pagkain sa loon ng lungga","nang [sub: makakita > makita] siya ng lungga sa dulo ng kalsada agad siyang pumasok [ins: in] dito kumain siya hanggang 
 mabusog pero kahit busog na siya kumain pa rin at inubos ang lahat ng pagkain sa loob ng [mis: lungga > lungas]",4,fil,
-data/std040_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,,,4,fil,
-data/std040_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,,,4,fil,
+data/std040_g4_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Sa kanyang kabusugan halos pumutok ang malaki niyang tiyan. Nang lalabas na lamang siya, napansin niyang 
+hindi na siya magkasya sa labasan.","sa kanyang kabusugan halos pumutok ang malaki niyang [mis: tiyan > shan] nang lalabas na lamang siya napansin niyang hindi na 
+siya magkasya sa [mis: labasan > labansan]",4,fil,
+data/std040_g4_fil_chunk_04a.wav,▶ PLAY AUDIO,,,Sumigaw siya upang humingi ng tulong. Dumating ang isa pang aso at nalaman ang nangyari. Bago,sumigaw siya upang [mis: humingi > ma huminga ngi] ng tulong dumating ang isa pang aso at nalaman ang nangyari [mis: bago > bag],4,fil,
+data/std040_g4_fil_chunk_04b.wav,▶ PLAY AUDIO,,,"Bago ito umalis, nagwika siya sa kasamang aso. ""Hintayin mo na lang umimpis ang tiyan mo.""",bago ito umalis nagwika siya sa kasamang aso hintayin mo na lang umimpis ang tiyan mo,4,fil,
+data/std040_g4_fil_chunk_05a.wav,▶ PLAY AUDIO,,,"Si Muning! Muning! Muning! Hanap ng hanap si Susan kay Muning.Dala ni Susan ang lalagyan ng pagkain ni 
+Muning.",si muning muning muning hanap nang hanap si susan kay muning dala [sub: ni > niya] susan ang lalagyan ng pagkain ni muning ,4,fil,
+data/std040_g4_fil_chunk_05b.wav,▶ PLAY AUDIO,,,"May laman na ang lalagyan, pero wala si Muning. Wala siya sa kusina. Wala rin siya sa silid. Nasaan 
+kaya Muning?",may laman na ang [mis: lalagyan > laglagyan] pero wala si muning wala siya sa kusina wala rin siya sa silid nasaan kaya si muning,4,fil,
+data/std040_g4_fil_chunk_06.wav,▶ PLAY AUDIO,,,"Bumaba ng bahay si Susan. Hinanap niya kung naroon si Muning. Ikot na siya nang ikot, pero hindi pa rin niya
+nakita. Baka lumabas ito ng bahay","bumaba ng bahay si susan [sub: hinanap > hinahanap]niya kung naroon si muning ikot na siya nang ikot pero hindi pa rin niya nakita
+baka lumabas ito ng bahay",4,fil,
+data/std040_g4_fil_chunk_07.wav,▶ PLAY AUDIO,,,"Ngiyaw! Ngiyaw! Hayun si Muning! Ngiyaw siya nang ngiyaw. Nasa loob siya ng kahon. May kasama si Muning
+sa loob ng kahon.",ngiyaw ngiyaw hayun si muning ngiyaw [ins: sa] siya ng ngiyaw nasa loob siya ng kahon may mga kasama si muning sa loob ng kahon,4,fil,
+data/std040_g4_fil_chunk_08.wav,▶ PLAY AUDIO,,,"Nakita ni Susan ang kasama ni Munig. Mga kuting ang kasama ni Muning sa kahon! May puti, itim at 
+magkahalong puti at itim na kulay ng kuting. Tuwang-tuwa si Susan!","nakita ni susan ang kasama ni muning mga kuting ang kasama ni muning sa kahon may puti itim at [mis: magkahalong > makahalong]
+puti at itim na kulay [sub: ng > sa] kuting tuwang tuwa si susan",4,fil,
+data/std040_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,"Si Brownie. Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na 
+malaking manok sa aming bakuran.","si brownie si brownie ay aking alagang aso ang aking aso ay masamang magalit minsan ay may pumasok na malakaing manok sa 
+aming bakuran",4,fil,
+data/std040_g4_fil_chunk_10.wav,▶ PLAY AUDIO,,,"Kaagad niya itong tinahulan. Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito.",kaagad niya itong tinahulan kung hindi lamang siya nakatali nang mahigpit malamang na habulin niya ito,4,fil,
+data/std040_g4_fil_chunk_11.wav,▶ PLAY AUDIO,,,"Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran. Kagabi ay hindi ko naitali si Brownie. 
+Panay ang ungol niya. Maya-may ay may tinahulan siya nang malakas.","nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran [mis: kagabi > agabi] ay hindi ko naitali si brownie panay ang 
+[sub: ungol > ngungol] niya maya maya ay may tinahulan siya [sub: nang > na] malakas",4,fil,
+data/std040_g4_fil_chunk_12.wav,▶ PLAY AUDIO,,,"Biglang lumukso si Brownie sa kanyang tulugan at may hinabol. Dali-dali kong sinilip ang aking alaga. May 
+napatay siyang daga! Bahagya pa niyang ginalaw ang kanyang buntot nang makita ako.","biglang lumukso si brownie sa kanyang [sub: tulugan > tulungan] at may hinabol dali dali kong sinilip ang aking [sub: alaga > alagang]
+may napatay siyang daga bahagya pa niyang ginalaw ang kanyang buntot [ins: at] [ins: ay] buntot nang makita ako",4,fil,
+data/std040_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,"Kaagad kong binitbit sa buntot ang daga at ipinakita kay Tatay. Masayang hinimas ni Tatay si Brownie. ""Talagang
+maaasahan ang asong ito, "" sabi niya.","kaagag kong [mis: binitbit > bini-bit] sa buntot ang daga at [sub: ipinakita > pinakita] kay tatay masayang hinimas ni tatay si brownie
+talagang maaasahan ang asong ito sabi niya",4,fil,
+data/std040_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,"Balat ng Saging. ""Lito! Lito!"" Si Mina ang sumigaw. Kay lakas ng kanyang sigaw. ""Bakit, Ate? Ano iyon?"" Ito 
+naman ang tanong ni Lito. Lumapit siya kay Mina. Ayaw niyang sumigaw pa ang kanyang ate.","balat ng saging lito lito si mina ang [mis: sumigaw > sumigsigaw] kay lakas ng kanyang sigaw bakit ate ano iyon ito naman ang tanong 
+ni lito lumapit siya kay mina ayaw niyang sumigaw pa ang kanyang ate",4,fil,
+data/std040_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,"""Balat ng saging ito, hindi ba?"" Sino ang nagtapon nito?"" Galit si Mina. Galit siya sa nagtapon ng balat ng 
+saging. ""Ako, Ate,"" sagot ni Lito. Mahina ang kanyang sagot. Mahina ang kanyang tinig,.","balat ng saging ito hindi ba sino ang nagtapon nito galit si mina galit siya sa nagtapon ng balat ng saging ako ate sagot ni lito mahina
+ang kanyang sagot mahina ang kanyang tinig",4,fil,
+data/std040_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,"""Sabi ko na nga ba. Huwang ka nang magtatapon dito, ha! Sa basurahan ka magtatapon. Hayan ang basurahan
+natin. Hayan, natapakan ko ang balat ng saging. Nadulas ako.""","sabi ko na nga ba huwag ka nang magtatapon dito ha sa [sub: basurahan > basura] ka magtatapon hayan ang basurahan natin 
+[sub: hayan > ayan] natapakan ko ang balat ng saging nadulas ako",4,fil,
+data/std040_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,"""E... hindi ko sinasadya, Ate. Talaga, hindi ko sinasadya. Hindi na ako magtatapon ng balat ng saging kahit 
+saan. Sa basurahan na ako magtatapon."" ""Mabuti. Mabuti kung gayon,"" sabi ni Mina.","e hindi ko sinasadya ate talaga hindi ko sinasadya hindi na ako magtatapon ng balat ng saging kahit saan sa basurahan na ako
+magtatapon mabuti [ins: ng] mabuti-mabuti kung [mis: gayon > gang ngayon] sabi ni mina",4,fil,
 data/std041_g4_fil_chunk_01.wav,▶ PLAY AUDIO,Dhesiry,,"Ang Aso sa Lungga. May isang asong gutom na gutom na naglalakad sa kalsada. Habang naglalakad, ibinubulong niya
 sa sarili na kailangan niyang makakita ng isang lunggang puno ng pagkain.","ang aso sa lungga may isang [mis: asong > aso] gutom na gutom na naglalakad sa kalsada habang naglalakad ibinubulong niya sa 
 sarili na kailangan niyang makakita ng isang [mis: lunggang > lungga] puno ng pagkain",4,fil,
@@ -1104,9 +1230,8 @@ data/std041_g4_fil_chunk_13.wav,▶ PLAY AUDIO,,,at magkahalong puti at itim na 
 data/std041_g4_fil_chunk_14.wav,▶ PLAY AUDIO,,,"Si Brownie. Si Brownie ay aking alagang aso. Ang aking aso ay masamang magalit. Minsan ay may pumasok na 
 malaking manok sa aming bakuran.","si brownie si brownie ay aking alagang aso ang aking aso ay masamang ga-magalit minsan ay may pumasok na malaking manok 
 [sub: sa > ay] aming [ins: bak] [ins: aming] bakuran",4,fil,
-data/std041_g4_fil_chunk_15.wav,▶ PLAY AUDIO,,,"Kaagad niya itong tinahulan. Kung hindi lamang siya nakatali nang mahigpit, malamang na habulin niya ito. 
-Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran.","kaagad niya [sub: itong > ito] [mis: tinahulan > tinahul] kung hindi lamang siya nakatali nang mahigpit malamang na [ins: na] habulin 
-niya ito nag-nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran",4,fil,
+data/std041_g4_fil_chunk_15a.wav,▶ PLAY AUDIO,,,"Kaagad niya itong tinahulan. Kung hindi lamang siya nakatali nang mahigpit, malamang ",kaagad niya [sub: itong > ito] [mis: tinahulan > tinahul] kung hindi lamang siya nakatali nang mahigpit malamang,4,fil,
+data/std041_g4_fil_chunk_15b.wav,▶ PLAY AUDIO,,,na habulin niya ito. Nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran.,na-na habulin niya ito nag-nagulat ang manok at tumakbo ito nang mabilis palabas ng bakuran,4,fil,
 data/std041_g4_fil_chunk_16.wav,▶ PLAY AUDIO,,,Kagabi ay hindi ko naitali si Brownie. Panay ang ungol niya. Maya-maya,kagabi ay hindi ko naitali si brownie panay ang [mis: ungol > unggol] niya [ins: pa] maya-maya,4,fil,
 data/std041_g4_fil_chunk_17.wav,▶ PLAY AUDIO,,,ay may tinahulan siya nang malakas. Biglang lumukso si Brownie sa kanyang tulugan at may hinabol.,ay may tinahulan siya [ins: nag] nang mala-malakas biglang lumukso si brownie sa kanyang tulugan at may hinabol [ins: dal],4,fil,
 data/std041_g4_fil_chunk_18.wav,▶ PLAY AUDIO,,,"Dali-dali kong sinilip ang aking alaga. May napatay siyang daga! Bahagya pa niyang ginalaw ang kanyang buntot 
@@ -1141,3 +1266,396 @@ umimpis ang tiyan mo.""","[sub: isa > isang] pang aso [sub: at > ang] nalaman [s
 [sub: siya > siyang] sa [sub: kasamang > kasama] [ins: ang] aso hintayin mo na lang umi-umimpis [sub: ang > ng] tiyan mo",4,fil,
 data/std042_g4_fil_chunk_09.wav,▶ PLAY AUDIO,,,Si Muning! Muning! Muning! Hanap nang hanap si Susan kay Muning. Dala ni Susan ang lalagyan ng pagkain ni,"si muning muning muning hanap nang hanap [sub: si > sa] susan kay muning dala ni susan ang [sub: lalagyan > lagyan] ng 
 [mis: pagkain > pagakain] ni",4,fil,
+data/std043_g5_en_chunk_01.wav,▶ PLAY AUDIO,,,"Counting the rain. I love counting the rain, Mother. As they patter and as I see Do not all the great men like Rizal 
+Count rain, too, when still young like me? See the","counting the rain i love counting the rain mother as they patter and [ins: i] and as i see do not all the great men like rizal count rain 
+too when still young [ins: men] like me see the",5,en,
+data/std043_g5_en_chunk_02.wav,▶ PLAY AUDIO,,,"numerous dropping rains How hard it is for little brains. And I recall the children's riddle About the old man's 
+countless canes How I love the fast falling rain Like a thousand pounding pestles And the little rushing water Down 
+the stream to see it nestles.","numerous dropping rains how hard it is for little brains and i recall the childrens riddle about the old mans countless canes how i love 
+the fast falling rain like a thousand pounding [mis: pestles > pes-tles] and the little rushing water down the stream to see it 
+[mis: nestles > nes-tles]",5,en,
+data/std043_g5_en_chunk_03.wav,▶ PLAY AUDIO,,,"The Enchanted Deer. Once there were two warring tribes whose kingdoms were divided only by a wide river. 
+The king on the land north of the river had a beautiful daughter named Mayumi; while the king on the land south 
+of the river had a brave handsome son named Bayani. Both kings","the enchanted deer once there were two warring tribes whose kingdoms were divided only by a wide river the king on the land north 
+of the river had a beautiful daughter named mayumi while the king on the land south of the river had a brave handsome son named 
+bayani both kings",5,en,
+data/std043_g5_en_chunk_04.wav,▶ PLAY AUDIO,,,"hated each other so much that they even wanted their children to hate each other, too. But fate played a trick on 
+them. Mayumi and Bayani felt so madly in love with each other that they defied their parents wish. They often 
+met secretly in the nearby forest.","hated each other so much that they even wanted their children to hate each other too but fate played a trick on them mayumi and 
+bayani felt so madly in love with each other that they defied their parents wish they-they often [mis: secretly > sequently] 
+met in the nearby forest",5,en,
+data/std043_g5_en_chunk_05.wav,▶ PLAY AUDIO,,,"One early morning, Mayumi went to meet Bayani in the forest. She had some enchanted power so she changed 
+herself into a deer. She did not want anybody to see her. Bayani waited for her. When he saw the deer, he was 
+attracted to it.","one early morning mayumi went to meet bayani in the forest she had some enchanted power so she [mis: changed > chan-ged] 
+herself into a deer she did not want anybody to see her bayani waited for her when he saw the deer he was attracted to it",5,en,
+data/std043_g5_en_chunk_06.wav,▶ PLAY AUDIO,,,"shot an arrow not knowing it was Mayumi. The deer fell bleeding. Bayani ran to see his prize, but he saw Mayumi
+instead. He wept and in his grief, he stabbed himself to death.","shot an arrow not knowing it was mayumi the deer fell bleeding bayani ran to see his prize but he saw mayumi instead he wept and in 
+his grief [ins: and] [sub: he > his] stabbed himself to death",5,en,
+data/std043_g5_fil_chunk_06.wav,▶ PLAY AUDIO,,,"Sinaunang Sistema ng Pagsulat at Panitikan. Ang sistema ng pagsulat ng sinaunang Pilipino ay ang baybayin. 
+Binubuo ito ng 17 na titik 14 na katinig at tatlong patinig. Ang pagsulat ay mula itaas pababa",,5,fil,
+data/std043_g5_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std043_g5_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std043_g5_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std043_g5_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std043_g5_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std043_g5_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std043_g5_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std043_g5_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std043_g5_fil_chunk_15.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std043_g5_fil_chunk_16.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std043_g5_fil_chunk_17.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_en_chunk_01.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std044_g5_en_chunk_02.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std044_g5_en_chunk_03.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std044_g5_en_chunk_04.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std044_g5_en_chunk_05.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std044_g5_en_chunk_06.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std044_g5_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_15.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_16.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std044_g5_fil_chunk_17.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_en_chunk_01.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std045_g5_en_chunk_02.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std045_g5_en_chunk_03.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std045_g5_en_chunk_04.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std045_g5_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std045_g5_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std046_g5_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std046_g5_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std046_g5_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std046_g5_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std046_g5_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std046_g5_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std046_g5_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std047_g5_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std047_g5_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std047_g5_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std047_g5_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std047_g5_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std047_g5_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std047_g5_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std047_g5_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std047_g5_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_15.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_16.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_17.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_18.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_19.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_20.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_21.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_22.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_23.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_24.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_25.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std048_g5_fil_chunk_26.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_01.wav,▶ PLAY AUDIO,,,"Ang Regalo kay Lea. May biglang sumigaw sa labas ng bahay nina Lea. Narinig niya ang malakas na ungol ni 
+Dagul, ang alaga niyang tuta. Dumungaw si Lea sa bintana. Nakita niya ang kaniyang tuta sa daan. Nakahiga at 
+may dugo ito sa mukha. Tumakbo siya sa labas. ","ang regalo kay lea may biglang sumigaw sa labas ng bahay nina lea narinig niya ang malakas na [mis: ungol > unggol] ni 
+dagul ang alaga niyang tuta [mis: dumungaw > dumunggaw] si lea sa bintana nakita niya ang kaniyang tuta sa daan nakahiga at 
+may dugo ito sa mukha tumakbo siya sa labas",5,fil,
+data/std049_g5_fil_chunk_02.wav,▶ PLAY AUDIO,,,"""Patay na si Dagul. Nasagasaan siya ng dyip,"" malungkot na sabi ng kaniyang kapatid na si Bong. ""May bibilhin ako
+sa tindahan. Sumunod siya sa akin,"" paliwanag ni Bong. Bumalik si Lea sa bahay. Ayaw niyang kumain at maglaro.","patay na si dagul [mis: nasagasaan > nagasaan] siya ng dyip [mis: malungkot > malungkots] na sabi ng kaniyang kapatid na si bong 
+[ins: may] [ins: bilib] may bibilhin ako sa tindahan sumunod siya sa akin paliwanag ni bong bumalik si lea sa bahay ayaw niyang 
+kumain at maglaro",5,fil,
+data/std049_g5_fil_chunk_03.wav,▶ PLAY AUDIO,,,"Naiisip niya si Dagul. Kinabukasan ay Pasko na! Nagising si Lea sa ingay. Sa tabi niya ay may basket na may kard.
+Nakasulat sa kard ang ""Para kay Lea, mula kina Daddy at Mommy."" Inalis ni Lea ang takip ng basket. Nakita niya 
+ang isang magandang tuta. Ito ay katulad na katulad ni Dagul. Inakap ni Lea ang tuta!","naiisip niya si dagul [kinabuksan] kinabukasan ay pasko na nagising si lea sa ingay sa tabi niya ay may basket na may kard
+akasulat sa kard ang para kay lea mula kina daddy at mommy inalis ni lea ang takip ng basket nakita niya 
+ang isang [mis: magandang > magagandang] tuta ito ay katulad na katulad ni dagul inakalap-inakap ni Lea ang tuta",5,fil,
+data/std049_g5_fil_chunk_04.wav,▶ PLAY AUDIO,,,"""Kuya! May napulot ako sa daan."" Tuwang-tuwa si Luis. ""Anong napulot mo?"" tanong ni Jun. ""Nakapulot ako ng 
+pitakang may lamang pera."" ""Pera? Magkano ang pera, Luis?"" tanong ni Jun. ""Sandaang piso, Kuya. May sandaang
+piso na ako.","[om_kuya] [ins: la] may napulot ako sa daan tuwang-tuwa si luis anong napulot mo tanong ni jun nakapulot ako ng 
+pitakang may lamang pera pera magkana-magkano [mis: ang > ng] pera luis tanong ni jun [ins: eh] sandaang piso kuya 
+may sandaang piso na ako",5,fil,
+data/std049_g5_fil_chunk_05.wav,▶ PLAY AUDIO,,,"Mapalad ako, hindi ba?"" tuwang-tuwang sabi ni Luis. ""Hindi Luis. HIndi iyo ang perang iyan. Isauli natin ang pitaka
+sa may ari,"" sabi naman ni Jun. ""Kuya, napulot ko ito sa daan. Akin na ito, hindi ba?"" Nagtataka si Luis. ""Pero 
+kawawa naman ang may-ari ng pitaka. Hala,","mapalad ako hindi ba tuwang-tuwang sabi ni luis hindi luis hindi [mis: iyo > iyong] ang [mis: perang > pera] iyan isauli natin ang pitaka 
+samay ari sabi naman ni jun kuya napulot ko ito sa daan akin na ito hindi ba [mis: nagtataka > natataka] si luis pero 
+kawawa naman ang may-ari ng pitaka hala",5,fil,
+data/std049_g5_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_15.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std049_g5_fil_chunk_16.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std050_g5_fil_chunk_14.wav,▶ PLAY AUDIO,,,,,5,fil,
+data/std051_g5_en_chunk_01.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std051_g5_en_chunk_02.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std051_g5_en_chunk_03.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std051_g5_en_chunk_04.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std052_g5_en_chunk_01.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std052_g5_en_chunk_02.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std052_g5_en_chunk_03.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std052_g5_en_chunk_04.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std053_g5_en_chunk_01.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std053_g5_en_chunk_02.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std053_g5_en_chunk_03.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std053_g5_en_chunk_04.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std053_g5_en_chunk_05.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std053_g5_en_chunk_06.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std053_g5_en_chunk_07.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std053_g5_en_chunk_08.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_01.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_02.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_03.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_04.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_05.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_06.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_07.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_08.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_09.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_10.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_11.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std054_g5_en_chunk_12.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_01.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_02.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_03.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_04.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_05.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_06.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_07.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_08.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_09.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_10.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_11.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std055_g5_en_chunk_12.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std056_g5_en_chunk_06.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std057_g5_en_chunk_01.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std057_g5_en_chunk_02.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std057_g5_en_chunk_03.wav,▶ PLAY AUDIO,,,,,5,en,
+data/std056_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std056_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std056_g6_en_chunk_03.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std056_g6_en_chunk_04.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std056_g6_en_chunk_05.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std056_g6_en_chunk_06.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std056_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std056_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std057_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std057_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std057_g6_en_chunk_03.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std057_g6_en_chunk_04.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std057_g6_en_chunk_05.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std057_g6_en_chunk_06.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std057_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std057_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std058_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std058_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std058_g6_en_chunk_03.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std058_g6_en_chunk_04.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std058_g6_en_chunk_05.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std058_g6_en_chunk_06.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std058_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std058_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std059_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std059_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std059_g6_en_chunk_03.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std059_g6_en_chunk_04.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std059_g6_en_chunk_05.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std059_g6_en_chunk_06.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std060_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std060_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std060_g6_en_chunk_03.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std060_g6_en_chunk_04.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std060_g6_en_chunk_05.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std060_g6_en_chunk_06.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std061_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std061_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std061_g6_en_chunk_03.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std061_g6_en_chunk_04.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std061_g6_en_chunk_05.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std061_g6_en_chunk_06.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std061_g6_en_chunk_07.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std061_g6_en_chunk_08.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std062_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std062_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std062_g6_en_chunk_03.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std062_g6_en_chunk_04.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std062_g6_en_chunk_05.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std062_g6_en_chunk_06.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std062_g6_en_chunk_07.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std062_g6_en_chunk_08.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std063_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std063_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std063_g6_en_chunk_03.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std063_g6_en_chunk_04.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std063_g6_en_chunk_05.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std063_g6_en_chunk_06.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std063_g6_en_chunk_07.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std063_g6_en_chunk_08.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std064_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std064_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std064_g6_en_chunk_03.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std064_g6_en_chunk_04.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std064_g6_en_chunk_05.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std064_g6_en_chunk_06.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std064_g6_en_chunk_07.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std064_g6_en_chunk_08.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std065_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std065_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std066_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std066_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std067_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std067_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std068_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std068_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std069_g6_en_chunk_01.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std069_g6_en_chunk_02.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std070_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std070_g6_fil_chunk_13.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std071_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std071_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std071_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std071_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std071_g6_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std071_g6_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std071_g6_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std071_g6_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std071_g6_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std071_g6_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std072_g6_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_05.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_06.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_07.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_08.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_09.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_10.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_11.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std073_g6_fil_chunk_12.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std074_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std074_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std074_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std074_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std075_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std075_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std075_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std075_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std076_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std076_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std077_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std077_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std078_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std078_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std079_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std079_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std079_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std079_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std080_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std080_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std080_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std080_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std081_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std081_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std082_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std082_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std082_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std082_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std083_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std083_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std084_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std084_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std084_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std084_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std085_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std085_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std086_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std086_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std087_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std087_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std087_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std087_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std088_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std088_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std088_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std088_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std089_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std089_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std089_g6_fil_chunk_03.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std089_g6_fil_chunk_04.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std090_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std090_g6_fil_chunk_02.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std091_g6_fil_chunk_01.wav,▶ PLAY AUDIO,,,,,6,fil,
+data/std094_g6_en_chunk_06.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std094_g6_en_chunk_07.wav,▶ PLAY AUDIO,,,,,6,en,
+data/std094_g6_en_chunk_08.wav,▶ PLAY AUDIO,,,,,6,en,

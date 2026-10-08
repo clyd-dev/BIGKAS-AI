@@ -71,6 +71,10 @@ async function startRecording() {
             if (btnStop) btnStop.classList.add('d-none');
             if (btnRetry) btnRetry.classList.remove('d-none');
             if (btnAnalyze) btnAnalyze.classList.remove('d-none');
+
+            // Reading is done — the comprehension questions come next.
+            revealComprehensionPanel();
+            updateAnalyzeGate();
         };
 
         // Start recording
@@ -81,6 +85,10 @@ async function startRecording() {
         showStatus('recording');
         document.getElementById('btnStartRecording').classList.add('d-none');
         document.getElementById('btnStopRecording').classList.remove('d-none');
+
+        // Uploading a file is an alternative to recording, not an addition —
+        // once we're recording here, it no longer applies.
+        hideUploadSection();
 
         // Start timer
         startTimer();
@@ -148,6 +156,66 @@ function retryRecording() {
 }
 
 // ============================================================
+// COMPREHENSION TEST
+// ============================================================
+
+function hideUploadSection() {
+    const uploadSection = document.getElementById('uploadAudioSection');
+    if (uploadSection) uploadSection.classList.add('d-none');
+}
+
+function revealComprehensionPanel() {
+    const panel = document.getElementById('comprehensionPanel');
+    if (panel) panel.classList.remove('d-none');
+}
+
+/**
+ * Returns {answers, total, answered} for the comprehension panel, or null when
+ * this assessment has no questions to ask (or the learner already answered them).
+ */
+function collectComprehensionAnswers() {
+    const panel = document.getElementById('comprehensionPanel');
+    if (!panel || panel.dataset.prefilled === '1') return null;
+
+    const questions = panel.querySelectorAll('.comprehension-question');
+    if (questions.length === 0) return null;
+
+    const answers = {};
+    let answered = 0;
+
+    questions.forEach(q => {
+        const picked = q.querySelector('input[type="radio"]:checked');
+        if (picked) {
+            answers[q.dataset.questionId] = picked.value;
+            answered++;
+        }
+    });
+
+    return { answers: answers, total: questions.length, answered: answered };
+}
+
+/** Analyze stays disabled until every comprehension question has an answer. */
+function updateAnalyzeGate() {
+    const btnAnalyze = document.getElementById('btnAnalyze');
+    if (!btnAnalyze) return;
+
+    const state = collectComprehensionAnswers();
+    if (!state) return;
+
+    const complete = state.answered === state.total;
+    btnAnalyze.disabled = !complete;
+
+    const msg = document.getElementById('comprehensionGateMsg');
+    if (msg) {
+        msg.textContent = complete
+            ? 'All questions answered — you can analyze now.'
+            : `Answered ${state.answered} of ${state.total}. Answer all to enable Analyze.`;
+        msg.classList.toggle('text-success', complete);
+        msg.classList.toggle('text-muted', !complete);
+    }
+}
+
+// ============================================================
 // AI ANALYSIS
 // ============================================================
 
@@ -156,6 +224,12 @@ async function analyzeRecording() {
     
     if (!audioBlob && !hasExistingAudio) {
         alert('No recording found. Please record first.');
+        return;
+    }
+
+    const comprehension = collectComprehensionAnswers();
+    if (comprehension && comprehension.answered < comprehension.total) {
+        alert(`Please answer all ${comprehension.total} comprehension questions before analyzing.`);
         return;
     }
 
@@ -176,7 +250,13 @@ async function analyzeRecording() {
             formData.append('audio', audioBlob, `recording.${extension}`);
         }
         formData.append('_token', csrfToken);
-        
+
+        if (comprehension) {
+            Object.entries(comprehension.answers).forEach(([questionId, letter]) => {
+                formData.append(`answers[${questionId}]`, letter);
+            });
+        }
+
         // We will send BOTH the audio and trigger analysis in a single step for this prototype
         const response = await fetch(`/assessments/${assessmentId}/analyze`, {
             method: 'POST',
@@ -223,6 +303,28 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnStop) btnStop.addEventListener('click', stopRecording);
     if (btnRetry) btnRetry.addEventListener('click', retryRecording);
     if (btnAnalyze) btnAnalyze.addEventListener('click', analyzeRecording);
+
+    // Comprehension answers gate the Analyze button; highlight the picked option.
+    const panel = document.getElementById('comprehensionPanel');
+    if (panel) {
+        panel.addEventListener('change', function (e) {
+            if (e.target.type !== 'radio') return;
+
+            const question = e.target.closest('.comprehension-question');
+            if (question) {
+                question.querySelectorAll('.comprehension-option').forEach(opt => {
+                    opt.classList.remove('border-primary', 'bg-primary-subtle');
+                });
+                e.target.closest('.comprehension-option').classList.add('border-primary', 'bg-primary-subtle');
+            }
+
+            updateAnalyzeGate();
+        });
+
+        // Audio already on the server (uploaded, or recorded by the learner):
+        // the questions apply right away rather than waiting on a stop event.
+        updateAnalyzeGate();
+    }
 });
 
 // ============================================================

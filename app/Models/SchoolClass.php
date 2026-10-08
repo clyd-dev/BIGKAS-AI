@@ -47,6 +47,11 @@ class SchoolClass extends Model
         return $this->hasMany(Learner::class, 'class_id');
     }
 
+    public function reports(): HasMany
+    {
+        return $this->hasMany(ClassReport::class, 'class_id');
+    }
+
     // ── Scopes ──
 
     public function scopeActive($query)

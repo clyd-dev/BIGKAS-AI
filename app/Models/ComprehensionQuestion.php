@@ -43,6 +43,26 @@ class ComprehensionQuestion extends Model
         ]);
     }
 
+    /**
+     * Which option letter holds the correct answer. Answers are stored as text,
+     * so the letter is derived by matching it back against the options.
+     */
+    public function getCorrectOptionLetter(): ?string
+    {
+        foreach ($this->getOptions() as $letter => $text) {
+            if ($this->isCorrect((string) $text)) {
+                return $letter;
+            }
+        }
+
+        return null;
+    }
+
+    public function getOptionText(string $letter): ?string
+    {
+        return $this->getOptions()[strtoupper($letter)] ?? null;
+    }
+
     public function isCorrect(string $answer): bool
     {
         return strtolower(trim($answer)) === strtolower(trim($this->correct_answer));

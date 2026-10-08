@@ -23,14 +23,22 @@
         @error('content') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
     <div class="col-md-3">
-        <label for="grade_level" class="form-label">Grade Level <span class="text-danger">*</span></label>
-        <select class="form-select @error('grade_level') is-invalid @enderror" id="grade_level" name="grade_level" required>
-            <option value="">Select</option>
-            @for($i = 1; $i <= 6; $i++)
-                <option value="{{ $i }}" {{ old('grade_level', $material->grade_level ?? '') == $i ? 'selected' : '' }}>Grade {{ $i }}</option>
-            @endfor
-        </select>
-        @error('grade_level') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        <label for="grade_level" class="form-label">Grade Level</label>
+        @if(isset($lockedClass) && $lockedClass)
+            <input type="text" class="form-control bg-light" value="Grade {{ $lockedClass->grade_level }}" readonly>
+            <input type="hidden" name="grade_level" value="{{ $lockedClass->grade_level }}">
+        @elseif(isset($material) && !isset($lockedClass))
+            {{-- Teacher editing an existing material: grade stays put. --}}
+            <input type="text" class="form-control bg-light" value="Grade {{ $material->grade_level }}" readonly>
+        @else
+            <select class="form-select @error('grade_level') is-invalid @enderror" id="grade_level" name="grade_level" required>
+                <option value="">Select</option>
+                @for($i = 3; $i <= 6; $i++)
+                    <option value="{{ $i }}" {{ old('grade_level', $material->grade_level ?? '') == $i ? 'selected' : '' }}>Grade {{ $i }}</option>
+                @endfor
+            </select>
+            @error('grade_level') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        @endif
     </div>
     <div class="col-md-3">
         <label for="difficulty" class="form-label">Difficulty</label>
@@ -41,13 +49,12 @@
         </select>
     </div>
     <div class="col-md-3">
-        <label for="category" class="form-label">Category</label>
-        <select class="form-select" id="category" name="category">
-            <option value="narrative" {{ old('category', $material->category ?? '') === 'narrative' ? 'selected' : '' }}>Narrative</option>
-            <option value="informational" {{ old('category', $material->category ?? '') === 'informational' ? 'selected' : '' }}>Informational</option>
-            <option value="literary" {{ old('category', $material->category ?? '') === 'literary' ? 'selected' : '' }}>Literary</option>
-            <option value="poetry" {{ old('category', $material->category ?? '') === 'poetry' ? 'selected' : '' }}>Poetry</option>
+        <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
+        <select class="form-select @error('type') is-invalid @enderror" id="type" name="type" required>
+            <option value="oral_reading" {{ old('type', $material->type ?? 'oral_reading') === 'oral_reading' ? 'selected' : '' }}>Oral Reading</option>
+            <option value="comprehension" {{ old('type', $material->type ?? '') === 'comprehension' ? 'selected' : '' }}>Comprehension</option>
         </select>
+        @error('type') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
     <div class="col-md-3">
         <label for="source" class="form-label">Source</label>

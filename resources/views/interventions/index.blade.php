@@ -5,6 +5,11 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Interventions</h4>
+        @if(auth()->user()->isTeacher())
+            <a href="{{ route('interventions.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Add Intervention
+            </a>
+        @endif
     </div>
 
     {{-- Filters --}}
@@ -21,12 +26,15 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label small">Type</label>
+                    <label class="form-label small">Activity Type</label>
                     <select name="type" class="form-select form-select-sm">
                         <option value="">All</option>
-                        <option value="activity" {{ request('type') === 'activity' ? 'selected' : '' }}>Activity</option>
-                        <option value="exercise" {{ request('type') === 'exercise' ? 'selected' : '' }}>Exercise</option>
-                        <option value="strategy" {{ request('type') === 'strategy' ? 'selected' : '' }}>Strategy</option>
+                        <option value="game" {{ request('type') === 'game' ? 'selected' : '' }}>Interactive Game</option>
+                        <option value="drill" {{ request('type') === 'drill' ? 'selected' : '' }}>Practice Drill</option>
+                        <option value="reading" {{ request('type') === 'reading' ? 'selected' : '' }}>Reading Activity</option>
+                        <option value="writing" {{ request('type') === 'writing' ? 'selected' : '' }}>Writing Activity</option>
+                        <option value="audio" {{ request('type') === 'audio' ? 'selected' : '' }}>Audio-Based</option>
+                        <option value="visual" {{ request('type') === 'visual' ? 'selected' : '' }}>Visual Activity</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -44,7 +52,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="card-title mb-0">{{ $intervention->name }}</h6>
-                            <span class="badge bg-primary">{{ ucfirst($intervention->type ?? 'activity') }}</span>
+                            <span class="badge bg-primary">{{ $intervention->getActivityTypeName() }}</span>
                         </div>
                         <p class="text-muted small mb-2">{{ Str::limit($intervention->description, 120) }}</p>
                         <div class="d-flex gap-2 flex-wrap">
@@ -55,10 +63,10 @@
                                 <i class="bi bi-crosshair me-1"></i>{{ $weaknessLabels[$intervention->target_weakness]['name'] ?? 'General' }}
                             </span>
                             <span class="badge bg-light text-dark">
-                                <i class="bi bi-clock me-1"></i>{{ $intervention->duration_minutes ?? '?' }} min
+                                <i class="bi bi-clock me-1"></i>{{ $intervention->getDurationDisplay() }}
                             </span>
                             <span class="badge bg-light text-dark">
-                                {{ ucfirst($intervention->difficulty ?? 'medium') }}
+                                {{ $intervention->getGradeLevelRange() }}
                             </span>
                         </div>
                     </div>

@@ -32,9 +32,16 @@ class StudentAssessmentController extends Controller
         if ($assessment->learner_id !== $learner->id || $assessment->status !== \App\Models\Assessment::STATUS_PENDING) {
             return redirect()->route('student.dashboard')->with('error', 'No pending assessment found.');
         }
-        
+
         $material = $assessment->material;
-        return view('student.assessment.reading', compact('assessment', 'material', 'learner'));
+
+        // Questions are asked on this same screen after the learner finishes
+        // reading, before anything is sent to the teacher.
+        $questions = $assessment->needsComprehensionTest()
+            ? $material->comprehensionQuestions
+            : collect();
+
+        return view('student.assessment.reading', compact('assessment', 'material', 'learner', 'questions'));
     }
 
     public function start(Request $request, \App\Models\Assessment $assessment)
@@ -58,6 +65,14 @@ class StudentAssessmentController extends Controller
         }
 
         $request->validate(['audio' => 'required|file|max:25600']); // Relaxed mimes for browser-recorded blobs
+
+        // A comprehension assessment can't be handed to the teacher without the
+        // learner's answers — they're recorded first, so a failed upload never
+        // loses them.
+        if ($assessment->needsComprehensionTest()) {
+            app(\App\Services\ComprehensionService::class)
+                ->record($assessment, $request->input('answers', []));
+        }
 
         $file = $request->file('audio');
         $filename = "assessment_{$assessment->id}_student_{$learner->id}." . ($file->getClientOriginalExtension() ?: 'webm');

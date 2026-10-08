@@ -5,10 +5,7 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>{{ $material->title }}</h4>
-        <div>
-            <a href="{{ route('materials.edit', $material) }}" class="btn btn-outline-warning btn-sm"><i class="bi bi-pencil me-1"></i> Edit</a>
-            <a href="{{ route('materials.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-        </div>
+        <a href="{{ route('materials.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
     </div>
 
     <div class="row g-3">
@@ -54,11 +51,34 @@
                                 {{ ucfirst($material->difficulty) }}
                             </span>
                         </td></tr>
-                        <tr><th class="text-muted">Category</th><td>{{ ucfirst($material->category ?? 'N/A') }}</td></tr>
+                        <tr><th class="text-muted">Type</th><td>
+                            <span class="badge {{ $material->isComprehensionType() ? 'bg-info' : 'bg-primary' }}">
+                                {{ $material->getTypeName() }}
+                            </span>
+                        </td></tr>
                         <tr><th class="text-muted">Word Count</th><td>{{ $material->word_count }}</td></tr>
                         <tr><th class="text-muted">Source</th><td>{{ $material->source ?? 'N/A' }}</td></tr>
                         <tr><th class="text-muted">Created</th><td>{{ $material->created_at?->format('M d, Y') }}</td></tr>
                     </table>
+                </div>
+            </div>
+
+            {{-- Danger Zone --}}
+            <div class="card border-danger-subtle shadow-sm mt-3">
+                <div class="card-header bg-danger-subtle text-danger-emphasis">
+                    <h6 class="mb-0"><i class="bi bi-exclamation-triangle me-1"></i> Danger Zone</h6>
+                </div>
+                <div class="card-body d-flex gap-2">
+                    <a href="{{ route('materials.edit', $material) }}" class="btn btn-outline-warning flex-fill">
+                        <i class="bi bi-pencil me-1"></i> Edit Material
+                    </a>
+                    <form method="POST" action="{{ route('materials.destroy', $material) }}"
+                          class="flex-fill" onsubmit="return confirm('Deactivate this material? It will no longer appear in listings.')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-trash me-1"></i> Delete Material
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

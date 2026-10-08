@@ -8,15 +8,23 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AssessmentController;
+use App\Http\Controllers\AssessmentVerdictController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InterventionController;
 use App\Http\Controllers\LearnerController;
+use App\Http\Controllers\LearnerImportController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PracticeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ClassReportController;
+use App\Http\Controllers\BadgeController;
+use App\Http\Controllers\GstScreeningController;
+use App\Http\Controllers\Form2Controller;
+use App\Http\Controllers\LearnerForm4Controller;
+use App\Http\Controllers\AssessmentForm3Controller;
 use App\Http\Controllers\VerificationCodeController;
 use App\Http\Controllers\Student\StudentAuthController;
 use App\Http\Controllers\Student\StudentDashboardController;
@@ -117,29 +125,56 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Notifications (bell icon)
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.read-all');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
-    
+
     // ----------------------------------------
     // Learner Management (admin, teacher)
     // ----------------------------------------
-    Route::middleware('role:admin,teacher')->group(function () {
-        Route::resource('learners', LearnerController::class);
-        Route::get('/learners/{learner}/progress', [LearnerController::class, 'progress'])->name('learners.progress');
+    // Roster changes are teacher-only; the admin (principal) has a read-only view.
+    // Registered before the shared group so /learners/create wins over /learners/{learner}.
+    Route::middleware('role:teacher')->group(function () {
+        Route::resource('learners', LearnerController::class)->except(['index', 'show']);
+
+        // The teacher who adds a learner issues the student-portal PIN (admin does not).
         Route::post('/learners/{learner}/generate-pin', [AssessmentController::class, 'generatePin'])->name('learners.generate-pin');
+
+        // Student portal: reset a learner's XP/streak, and manage the achievement badges (Learners page).
+        Route::post('/learners/{learner}/reset-xp', [LearnerController::class, 'resetXp'])->name('learners.reset-xp');
+        Route::post('/badges', [BadgeController::class, 'store'])->name('badges.store');
+        Route::put('/badges/{badge}', [BadgeController::class, 'update'])->name('badges.update');
+        Route::post('/badges/{badge}/toggle', [BadgeController::class, 'toggle'])->name('badges.toggle');
+
+        Route::post('/learners/import/preview', [LearnerImportController::class, 'preview'])->name('learners.import.preview');
+        Route::post('/learners/import/confirm', [LearnerImportController::class, 'confirm'])->name('learners.import.confirm');
+    });
+
+    Route::middleware('role:admin,teacher')->group(function () {
+        Route::resource('learners', LearnerController::class)->only(['index', 'show']);
+        Route::get('/learners/{learner}/progress', [LearnerController::class, 'progress'])->name('learners.progress');
+
+        // Phil-IRI Form 4 (Individual Summary Record)
+        Route::get('/learners/{learner}/form4', [LearnerForm4Controller::class, 'show'])->name('learners.form4');
+        Route::get('/learners/{learner}/form4/print', [LearnerForm4Controller::class, 'print'])->name('learners.form4.print');
+        Route::get('/learners/{learner}/form4/pdf', [LearnerForm4Controller::class, 'pdf'])->name('learners.form4.pdf');
     });
 
     // ----------------------------------------
     // Reading Materials (admin, teacher)
     // ----------------------------------------
     Route::middleware('role:admin,teacher')->group(function () {
+        Route::get('/materials/options', [MaterialController::class, 'options'])->name('materials.options');
         Route::resource('materials', MaterialController::class);
     });
 
     // ----------------------------------------
-    // Assessments (admin, teacher)
+    // Assessments
+    // Teachers conduct assessments; the admin (principal) can only browse the
+    // list and open completed results. Teacher group is registered first so
+    // /assessments/new wins over /assessments/{assessment}.
     // ----------------------------------------
-    Route::middleware('role:admin,teacher')->group(function () {
-        Route::get('/assessments', [AssessmentController::class, 'index'])->name('assessments.index');
+    Route::middleware('role:teacher')->group(function () {
         Route::get('/assessments/new', [AssessmentController::class, 'create'])->name('assessments.create');
         Route::get('/assessments/start/{learner}', [AssessmentController::class, 'start'])->name('assessments.start');
         Route::post('/assessments', [AssessmentController::class, 'store'])->name('assessments.store');
@@ -148,7 +183,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/assessments/{assessment}/upload-audio', [AssessmentController::class, 'uploadAudio'])->name('assessments.upload-audio');
         Route::post('/assessments/{assessment}/retry', [AssessmentController::class, 'retry'])->name('assessments.retry');
         Route::post('/assessments/{assessment}/analyze', [AssessmentController::class, 'analyze'])->name('assessments.analyze');
-        Route::get('/assessments/{assessment}/results', [AssessmentController::class, 'results'])->name('assessments.results');
+
+        // Teacher's decision on an AI result (accept / override / invalidate)
+        Route::post('/assessments/{assessment}/verdict', [AssessmentVerdictController::class, 'store'])->name('assessments.verdict');
 
         // Live assessment sessions
         Route::post('/assessments/session/create', [AssessmentController::class, 'createSession'])->name('assessments.session.create');
@@ -158,9 +195,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/assessments/session/{session}/cancel', [AssessmentController::class, 'cancelSession'])->name('assessments.session.cancel');
     });
 
+    Route::middleware('role:admin,teacher')->group(function () {
+        Route::get('/assessments', [AssessmentController::class, 'index'])->name('assessments.index');
+        Route::get('/assessments/learner/{learner}', [AssessmentController::class, 'learnerHistory'])->name('assessments.learner-history');
+        Route::get('/assessments/{assessment}/results', [AssessmentController::class, 'results'])->name('assessments.results');
+        // Phil-IRI Form 3A/3B (Grade Level Passage Rating Sheet)
+        Route::get('/assessments/{assessment}/form3', [AssessmentForm3Controller::class, 'print'])->name('assessments.form3');
+        Route::get('/assessments/{assessment}/form3/pdf', [AssessmentForm3Controller::class, 'pdf'])->name('assessments.form3.pdf');
+    });
+
     // ----------------------------------------
-    // Interventions (admin, teacher)
+    // Interventions
+    // Creating/editing/deleting interventions is teacher-only; the admin
+    // (principal) has a read-only view. Teacher group is registered first so
+    // /interventions/create wins over /interventions/{intervention}.
     // ----------------------------------------
+    Route::middleware('role:teacher')->group(function () {
+        Route::get('/interventions/create', [InterventionController::class, 'create'])->name('interventions.create');
+        Route::post('/interventions', [InterventionController::class, 'store'])->name('interventions.store');
+        Route::get('/interventions/{intervention}/edit', [InterventionController::class, 'edit'])->name('interventions.edit');
+        Route::put('/interventions/{intervention}', [InterventionController::class, 'update'])->name('interventions.update');
+        Route::delete('/interventions/{intervention}', [InterventionController::class, 'destroy'])->name('interventions.destroy');
+    });
+
     Route::middleware('role:admin,teacher')->group(function () {
         Route::get('/interventions', [InterventionController::class, 'index'])->name('interventions.index');
         Route::get('/interventions/{intervention}', [InterventionController::class, 'show'])->name('interventions.show');
@@ -170,9 +227,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // ----------------------------------------
-    // Practice Center (admin, teacher)
+    // Practice Center (teacher only)
     // ----------------------------------------
-    Route::middleware('role:admin,teacher')->group(function () {
+    Route::middleware('role:teacher')->group(function () {
         Route::get('/practice', [PracticeController::class, 'index'])->name('practice.index');
         Route::get('/practice/phonemic', [PracticeController::class, 'phonemic'])->name('practice.phonemic');
         Route::get('/practice/sight-words', [PracticeController::class, 'sightWords'])->name('practice.sight-words');
@@ -188,10 +245,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ----------------------------------------
     // Reports (admin, teacher, parent)
     // ----------------------------------------
+    // Group Screening Test (Phil-IRI Forms 1A/1B): teachers encode, admin views.
+    Route::middleware('role:teacher')->group(function () {
+        Route::post('/screening', [GstScreeningController::class, 'store'])->name('screening.store');
+        Route::post('/screening/import', [GstScreeningController::class, 'import'])->name('screening.import');
+    });
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/screening/section/{schoolClass}', [GstScreeningController::class, 'section'])->name('screening.section');
+    });
+    Route::middleware('role:admin,teacher')->group(function () {
+        Route::get('/screening', [GstScreeningController::class, 'index'])->name('screening.index');
+        Route::get('/screening/record/{schoolClass}/print', [GstScreeningController::class, 'recordPrint'])->name('screening.record.print');
+        Route::get('/screening/record/{schoolClass}/pdf', [GstScreeningController::class, 'recordPdf'])->name('screening.record.pdf');
+    });
+
+    // Teacher → principal submissions (registered first so /reports/submissions/create
+    // is not swallowed by the {classReport} wildcard).
+    Route::middleware('role:teacher')->group(function () {
+        Route::get('/reports/submissions/create', [ClassReportController::class, 'create'])->name('reports.submissions.create');
+        Route::post('/reports/submissions', [ClassReportController::class, 'store'])->name('reports.submissions.store');
+    });
+    Route::middleware('role:admin')->group(function () {
+        // Principal: consolidated DepEd Form 2 + record of submission
+        Route::get('/reports/form2', [Form2Controller::class, 'index'])->name('reports.form2.index');
+        Route::get('/reports/form2/print', [Form2Controller::class, 'print'])->name('reports.form2.print');
+        Route::get('/reports/form2/pdf', [Form2Controller::class, 'pdf'])->name('reports.form2.pdf');
+        Route::post('/reports/form2/submit', [Form2Controller::class, 'submit'])->name('reports.form2.submit');
+        Route::get('/reports/form2/submissions/{depedSubmission}', [Form2Controller::class, 'show'])->name('reports.form2.show');
+
+        Route::post('/reports/submissions/{classReport}/review', [ClassReportController::class, 'review'])->name('reports.submissions.review');
+    });
+    Route::middleware('role:admin,teacher')->group(function () {
+        Route::get('/reports/submissions', [ClassReportController::class, 'index'])->name('reports.submissions.index');
+        Route::get('/reports/submissions/{classReport}', [ClassReportController::class, 'show'])->name('reports.submissions.show');
+    });
+
     Route::middleware('role:admin,teacher,parent')->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/learner/{learner}', [ReportController::class, 'learnerReport'])->name('reports.learner');
-        Route::get('/reports/class/{schoolClass}', [ReportController::class, 'classReport'])->name('reports.class');
+        Route::get('/reports/class/{class}', [ReportController::class, 'classReport'])->name('reports.class');
         Route::get('/reports/learner/{learner}/pdf', [ReportController::class, 'downloadPdf'])->name('reports.pdf');
         Route::get('/reports/learner/{learner}/print', [ReportController::class, 'printReport'])->name('reports.print');
     });
@@ -244,30 +336,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/classes', [AdminController::class, 'classesOverview'])->name('classes');
         Route::get('/logs', [AdminController::class, 'activityLogs'])->name('logs');
 
-        // Intervention management
+        // Intervention management (read-only — creating/editing/deleting is teacher-only)
         Route::get('/interventions', [AdminController::class, 'interventions'])->name('interventions');
-        Route::post('/interventions', [AdminController::class, 'storeIntervention'])->name('interventions.store');
-        Route::put('/interventions/{intervention}', [AdminController::class, 'updateIntervention'])->name('interventions.update');
-        Route::delete('/interventions/{intervention}', [AdminController::class, 'deleteIntervention'])->name('interventions.delete');
 
         // Materials & Settings
         Route::get('/materials', [AdminController::class, 'materials'])->name('materials');
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
         Route::post('/settings', [AdminController::class, 'saveSettings'])->name('settings.save');
 
-        // Badge management
-        Route::get('/badges', [AdminController::class, 'badges'])->name('badges');
-        Route::post('/badges', [AdminController::class, 'storeBadge'])->name('badges.store');
-        Route::put('/badges/{badge}', [AdminController::class, 'updateBadge'])->name('badges.update');
-        Route::post('/badges/{badge}/toggle', [AdminController::class, 'toggleBadge'])->name('badges.toggle');
 
         // Phil-IRI Reading Profile (Form 4 matrix + Form 3A detail)
         Route::get('/phil-iri', [AdminController::class, 'philIri'])->name('phil-iri');
-
-        // Learner portal oversight
-        Route::get('/learner-portal', [AdminController::class, 'learnerPortal'])->name('learner-portal');
-        Route::post('/learner-portal/{learner}/generate-pin', [AdminController::class, 'generateLearnerPin'])->name('learner-portal.generate-pin');
-        Route::post('/learner-portal/{learner}/reset-xp', [AdminController::class, 'resetLearnerXp'])->name('learner-portal.reset-xp');
     });
 
     // ----------------------------------------
@@ -282,6 +361,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Feature 3: Assessment Results
         Route::get('/children/{learner}/assessments', [ParentDashboardController::class, 'assessmentResults'])->name('children.assessments');
         Route::get('/children/{learner}/assessments/{assessment}', [ParentDashboardController::class, 'assessmentDetail'])->name('children.assessment-detail');
+
+        // Send a child's report to a teacher (as a message)
+        Route::post('/children/{learner}/send-report', [ParentMessageController::class, 'sendReport'])->name('children.send-report');
+
+        // Practice history
+        Route::get('/children/{learner}/practice', [ParentDashboardController::class, 'practiceHistory'])->name('children.practice');
 
         // Feature 1: Home Intervention Activities
         Route::get('/children/{learner}/interventions', [ParentDashboardController::class, 'interventions'])->name('children.interventions');

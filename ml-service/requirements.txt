@@ -5,6 +5,7 @@
 # Windows venv here — it pins Windows-only packages that break Linux.
 Flask>=3.1,<4
 faster-whisper>=1.2
+av>=11,<19                # av 19+ removed metadata_errors kwarg that faster-whisper uses
 joblib>=1.4
 pandas>=2.2
 scikit-learn>=1.5

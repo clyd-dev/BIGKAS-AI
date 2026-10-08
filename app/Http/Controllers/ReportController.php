@@ -17,15 +17,28 @@ class ReportController extends Controller
         $user = auth()->user();
 
         if ($user->isAdmin()) {
-            $learners = Learner::all();
-            $classes  = SchoolClass::with(['school', 'teacher'])->withCount('learners')->get();
-        } else {
-            $learners = $user->accessibleLearnersQuery()->get();
-            $classes  = SchoolClass::where('teacher_id', $user->id)
-                ->with('school')
-                ->withCount('learners')
-                ->get();
+            return $this->adminOverview();
         }
+
+        $learners = $user->accessibleLearnersQuery()->get();
+
+        if ($user->isParent()) {
+            $latestByLearner = AssessmentResult::select('assessment_results.*', 'assessments.learner_id as owner_id')
+                ->join('assessments', 'assessments.id', '=', 'assessment_results.assessment_id')
+                ->whereIn('assessments.learner_id', $learners->pluck('id'))
+                ->with('assessment')
+                ->orderByDesc('assessments.created_at')
+                ->get()
+                ->groupBy('owner_id')
+                ->map->first();
+
+            return view('parent.reports', compact('learners', 'latestByLearner'));
+        }
+
+        $classes  = SchoolClass::where('teacher_id', $user->id)
+            ->with('school')
+            ->withCount('learners')
+            ->get();
 
         $learnerIds = $learners->pluck('id');
 
@@ -54,6 +67,44 @@ class ReportController extends Controller
         return view('reports.index', compact('distribution', 'learners', 'stats', 'classes'));
     }
 
+    /**
+     * Admin (principal): school-wide summary plus one row per section, instead of
+     * a flat list of every learner.
+     */
+    private function adminOverview()
+    {
+        $levels = ['independent', 'instructional', 'frustration'];
+        $total  = Learner::count();
+        $distribution = [];
+        foreach ($levels as $level) {
+            $distribution[$level] = Learner::where('reading_level', $level)->count();
+        }
+        $distribution['not_assessed'] = Learner::whereNull('reading_level')->count();
+
+        $stats = [
+            'total_learners' => $total,
+            'assessed'       => $total - $distribution['not_assessed'],
+            'avg_accuracy'   => round((float) (AssessmentResult::avg('accuracy_rate') ?? 0), 1),
+            'avg_wpm'        => round((float) (AssessmentResult::avg('words_per_minute') ?? 0), 1),
+        ];
+
+        $counts = ['learners'];
+        foreach ($levels as $level) {
+            $counts["learners as {$level}_count"] = fn ($q) => $q->where('reading_level', $level);
+        }
+        $counts['learners as assessed_count'] = fn ($q) => $q->whereNotNull('reading_level');
+
+        $sections = SchoolClass::with('teacher')
+            ->withCount($counts)
+            ->orderBy('grade_level')->orderBy('section')
+            ->paginate(10)
+            ->withQueryString();
+
+        $pendingReports = \App\Models\ClassReport::where('status', \App\Models\ClassReport::STATUS_SUBMITTED)->count();
+
+        return view('reports.admin-index', compact('stats', 'distribution', 'sections', 'pendingReports'));
+    }
+
     public function learnerReport(Learner $learner)
     {
         $this->authorizeLearnerAccess($learner);
@@ -72,7 +123,7 @@ class ReportController extends Controller
         $progressWpm      = $progressData->pluck('words_per_minute')->map(fn($v) => (int)$v)->values()->toArray();
 
         // Pass assessments (Assessment models with result) for the history table
-        $assessments = $learner->assessments()->with(['material', 'result'])->latest()->get();
+        $assessments = $learner->assessments()->with(['material', 'result'])->latest()->paginate(10)->withQueryString();
 
         // Map skill breakdown keys to match view (phonemic, decoding, fluency, comprehension)
         $rawSkill = $learner->getSkillBreakdown();
@@ -83,6 +134,19 @@ class ReportController extends Controller
             'comprehension' => $rawSkill['comprehension'] ?? 0,
         ];
 
+        // Parents get a plain-language, phone-friendly version of the report,
+        // with the option to send it to the class teacher / admin.
+        if (auth()->user()->isParent()) {
+            $latestResult     = $progressData->last();
+            $comparison       = $latestResult?->getComparisonWithPrevious();
+            $reportRecipients = $learner->reportRecipients();
+
+            return view('parent.report', compact(
+                'learner', 'stats', 'skillScores', 'assessments',
+                'latestResult', 'comparison', 'reportRecipients'
+            ));
+        }
+
         return view('reports.learner', compact(
             'learner', 'assessmentResults', 'progressData', 'interventionLogs',
             'stats', 'skillScores', 'assessments',
@@ -92,6 +156,8 @@ class ReportController extends Controller
 
     public function classReport(SchoolClass $class)
     {
+        abort_unless(auth()->user()->isAdmin() || $class->teacher_id === auth()->id(), 403, 'This is not your class.');
+
         $class->load(['teacher', 'school']);
         $classLearners = $class->learners()->get();
         $learnerIds    = $classLearners->pluck('id');

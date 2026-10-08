@@ -9,7 +9,11 @@
             <a href="{{ route('reports.print', $learner) }}" class="btn btn-outline-primary btn-sm" target="_blank">
                 <i class="bi bi-printer me-1"></i> Print
             </a>
-            <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary btn-sm">
+            <a href="{{ route('reports.pdf', $learner) }}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+            </a>
+            <a href="{{ auth()->user()->isParent() ? route('parent.children.profile', $learner) : route('learners.show', $learner) }}" class="btn btn-outline-secondary btn-sm"
+               onclick="if (window.history.length > 1) { window.history.back(); return false; }">
                 <i class="bi bi-arrow-left me-1"></i> Back
             </a>
         </div>
@@ -147,7 +151,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $weaknessLabels[$r?->primary_weakness]['name'] ?? '-' }}</td>
-                                <td><a href="{{ route('assessments.results', $assessment) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+                                <td><a href="{{ auth()->user()->isParent() ? route('parent.children.assessment-detail', [$learner, $assessment]) : route('assessments.results', $assessment) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
                             </tr>
                         @empty
                             <tr><td colspan="7" class="text-center text-muted py-3">No assessments</td></tr>
@@ -156,6 +160,16 @@
                 </table>
             </div>
         </div>
+    </div>
+
+    {{-- Pagination --}}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+        <div class="small text-muted">
+            @if($assessments->total() > 0)
+                Showing {{ $assessments->firstItem() }}–{{ $assessments->lastItem() }} of {{ $assessments->total() }}
+            @endif
+        </div>
+        {{ $assessments->onEachSide(1)->links('partials.pagination') }}
     </div>
 
 @push('scripts')

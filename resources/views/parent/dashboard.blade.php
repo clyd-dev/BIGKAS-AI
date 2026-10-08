@@ -1,181 +1,128 @@
-@extends('layouts.app')
+@extends('layouts.parent')
 
-@section('title', 'Parent Dashboard')
+@section('title', 'Home')
+
+@php use App\Support\ParentFriendly as PF; @endphp
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-house-heart me-2"></i>Parent Dashboard</h4>
-        <span class="text-muted">Welcome, {{ Auth::user()->name }}</span>
-    </div>
+<div class="pp">
+    @php
+        $hour = now()->hour;
+        $greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
+    @endphp
+    <h4 class="mb-1">{{ $greeting }}, {{ Str::before(Auth::user()->name, ' ') }}! 👋</h4>
+    <p class="text-muted mb-4">Here is how your {{ $learners->count() > 1 ? 'children are' : 'child is' }} doing with reading.</p>
 
-    {{-- Stats Cards --}}
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-people display-6 text-primary"></i>
-                    <h3 class="mt-2 mb-0">{{ $stats['total_children'] ?? 0 }}</h3>
-                    <small class="text-muted">My Children</small>
+    {{-- Things that need attention --}}
+    @if(($stats['unread_messages'] ?? 0) > 0)
+        <a href="{{ route('parent.messages.index') }}" class="text-decoration-none">
+            <div class="pp-tone pp-none rounded-3 p-3 mb-3 d-flex align-items-center gap-3">
+                <i class="bi bi-envelope-fill fs-3"></i>
+                <div>
+                    <strong>You have {{ $stats['unread_messages'] }} new {{ Str::plural('message', $stats['unread_messages']) }} from school.</strong>
+                    <div class="small">Tap to read</div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-clipboard-check display-6 text-success"></i>
-                    <h3 class="mt-2 mb-0">{{ $stats['total_assessments'] ?? 0 }}</h3>
-                    <small class="text-muted">Assessments</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-lightbulb display-6 text-warning"></i>
-                    <h3 class="mt-2 mb-0">{{ $stats['pending_interventions'] ?? 0 }}</h3>
-                    <small class="text-muted">Pending Activities</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="bi bi-envelope display-6 text-info"></i>
-                    <h3 class="mt-2 mb-0">{{ $stats['unread_messages'] ?? 0 }}</h3>
-                    <small class="text-muted">Unread Messages</small>
-                </div>
-            </div>
-        </div>
-    </div>
+        </a>
+    @endif
 
-    <div class="row g-3">
-        {{-- My Children --}}
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white">
-                    <h6 class="mb-0"><i class="bi bi-people me-1"></i> My Children</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @forelse($learners as $learner)
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>{{ $learner->full_name }}</strong>
-                                        <br><small class="text-muted">Grade {{ $learner->grade_level }} &middot; {{ ucfirst($learner->mother_tongue ?? 'N/A') }}</small>
-                                    </div>
-                                    <div class="text-end">
-                                        @if($learner->reading_level === 'independent')
-                                            <span class="badge bg-success">Independent</span>
-                                        @elseif($learner->reading_level === 'instructional')
-                                            <span class="badge bg-warning text-dark">Instructional</span>
-                                        @elseif($learner->reading_level === 'frustration')
-                                            <span class="badge bg-danger">Frustration</span>
-                                        @else
-                                            <span class="badge bg-secondary">Not Assessed</span>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="mt-2 d-flex gap-1">
-                                    <a href="{{ route('parent.children.profile', $learner) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-person-lines-fill me-1"></i>Profile
-                                    </a>
-                                    <a href="{{ route('parent.children.assessments', $learner) }}" class="btn btn-sm btn-outline-success">
-                                        <i class="bi bi-clipboard-data me-1"></i>Results
-                                    </a>
-                                    <a href="{{ route('parent.children.interventions', $learner) }}" class="btn btn-sm btn-outline-warning">
-                                        <i class="bi bi-lightbulb me-1"></i>Activities
-                                    </a>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="list-group-item text-center text-muted py-4">
-                                <i class="bi bi-info-circle me-1"></i>
-                                No children linked to your account yet. Please contact the school administrator.
-                            </div>
-                        @endforelse
+    {{-- One card per child --}}
+    @forelse($learners as $learner)
+        @php
+            $latest   = $latestResults[$learner->id] ?? null;
+            $lv       = PF::level($latest?->reading_level ?? $learner->reading_level);
+            $open     = $openByLearner[$learner->id] ?? 0;
+            $when     = $latest?->assessment?->created_at;
+            $speed    = $latest ? PF::speed($latest->words_per_minute, $learner->grade_level) : null;
+        @endphp
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-0">
+                <div class="pp-hero pp-{{ $lv['tone'] }} pp-tone d-flex gap-3 align-items-start" style="border-bottom-left-radius:0;border-bottom-right-radius:0;">
+                    <div class="pp-emoji" aria-hidden="true">{{ $lv['emoji'] }}</div>
+                    <div class="flex-grow-1">
+                        <div class="small text-muted">{{ $learner->full_name }} &middot; Grade {{ $learner->grade_level }}</div>
+                        <h3 class="pp-tone-label">{{ $lv['title'] }}</h3>
+                        @if($latest)
+                            <div>{{ PF::accuracySentence($latest->accuracy_rate) }}</div>
+                            @if($speed && $speed['tone'] !== 'none')
+                                <div>{{ $speed['text'] }}.</div>
+                            @endif
+                            @if($when)
+                                <div class="small text-muted mt-1">Last reading check: {{ $when->format('F j, Y') }}</div>
+                            @endif
+                        @else
+                            <div>{{ $lv['meaning'] }}</div>
+                        @endif
                     </div>
                 </div>
-            </div>
-        </div>
 
-        {{-- Right Column --}}
-        <div class="col-md-6">
-            {{-- Pending Home Activities --}}
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0"><i class="bi bi-clipboard-heart me-1"></i> Pending Home Activities</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @forelse($pendingLogs as $log)
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <strong>{{ $log->intervention?->name ?? 'N/A' }}</strong>
-                                        <br><small class="text-muted">
-                                            For: {{ $log->learner?->full_name ?? 'N/A' }}
-                                            &middot; {{ $log->created_at?->diffForHumans() }}
-                                        </small>
-                                    </div>
-                                    <span class="badge {{ $log->status === 'in_progress' ? 'bg-primary' : 'bg-secondary' }}">
-                                        {{ ucfirst(str_replace('_', ' ', $log->status)) }}
-                                    </span>
-                                </div>
-                                @if($log->status === 'pending')
-                                    <form method="POST" action="{{ route('parent.children.intervention-update', [$log->learner_id, $log]) }}" class="mt-2">
-                                        @csrf
-                                        <input type="hidden" name="action" value="start">
-                                        <button type="submit" class="btn btn-sm btn-primary">
-                                            <i class="bi bi-play-fill me-1"></i>Start Activity
-                                        </button>
-                                    </form>
-                                @endif
+                <div class="p-3 p-md-4">
+                    @if($open > 0)
+                        <div class="pp-todo mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div>
+                                <strong><i class="bi bi-house-heart me-1"></i>{{ $open }} {{ Str::plural('activity', $open) }} to do at home</strong>
+                                <div class="small text-muted">Short activities from the teacher to help {{ $learner->first_name }}.</div>
                             </div>
-                        @empty
-                            <div class="list-group-item text-center text-muted py-3">
-                                No pending activities
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
-            {{-- Recent Assessment Results --}}
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h6 class="mb-0"><i class="bi bi-clipboard-check me-1"></i> Recent Assessments</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @forelse($recentAssessments as $assessment)
-                            <a href="{{ route('parent.children.assessment-detail', [$assessment->learner_id, $assessment]) }}"
-                               class="list-group-item list-group-item-action">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>{{ $assessment->learner?->first_name }}</strong>
-                                        <span class="text-muted">&middot; {{ $assessment->material?->title ?? 'Untitled' }}</span>
-                                        <br><small class="text-muted">{{ $assessment->created_at?->format('M d, Y') }}</small>
-                                    </div>
-                                    @if($assessment->result)
-                                        <div class="text-end">
-                                            <span class="badge {{ ($assessment->result->accuracy_rate ?? 0) >= 80 ? 'bg-success' : (($assessment->result->accuracy_rate ?? 0) >= 60 ? 'bg-warning text-dark' : 'bg-danger') }}">
-                                                {{ number_format($assessment->result->accuracy_rate ?? 0, 1) }}%
-                                            </span>
-                                        </div>
-                                    @else
-                                        <span class="badge bg-secondary">Pending</span>
-                                    @endif
-                                </div>
+                            <a href="{{ route('parent.children.interventions', $learner) }}" class="btn btn-warning fw-bold">
+                                <i class="bi bi-play-circle-fill"></i> See activities
                             </a>
-                        @empty
-                            <div class="list-group-item text-center text-muted py-3">
-                                No assessments yet
-                            </div>
-                        @endforelse
+                        </div>
+                    @endif
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ route('parent.children.profile', $learner) }}" class="btn btn-primary">
+                            <i class="bi bi-emoji-smile"></i> How is {{ $learner->first_name }} doing?
+                        </a>
+                        <a href="{{ route('parent.children.assessments', $learner) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-clipboard-check"></i> Reading checks
+                        </a>
+                        @if($open === 0)
+                            <a href="{{ route('parent.children.interventions', $learner) }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-house-heart"></i> Home activities
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    @empty
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <div style="font-size:3rem" aria-hidden="true">👨‍👩‍👧</div>
+                <h5 class="mt-2">No child is linked to your account yet</h5>
+                <p class="text-muted mb-0">Please ask your child's teacher or the school office to link your account.</p>
+            </div>
+        </div>
+    @endforelse
+
+    {{-- Recent reading checks, in words --}}
+    @if($recentAssessments->isNotEmpty())
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white"><i class="bi bi-clock-history me-1"></i> Latest reading checks</div>
+            <div class="list-group list-group-flush">
+                @foreach($recentAssessments as $assessment)
+                    @php
+                        $r  = $assessment->result;
+                        $rl = PF::level($r?->reading_level);
+                    @endphp
+                    <a href="{{ route('parent.children.assessment-detail', [$assessment->learner_id, $assessment]) }}"
+                       class="list-group-item list-group-item-action py-3">
+                        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                            <div>
+                                <strong>{{ $assessment->learner?->first_name }}</strong>
+                                read <em>{{ $assessment->material?->title ?? 'a story' }}</em>
+                                <div class="small text-muted">{{ $assessment->created_at?->format('F j, Y') }}</div>
+                            </div>
+                            @if($r)
+                                <span class="pp-pill pp-{{ $rl['tone'] }}">{{ $rl['emoji'] }} {{ $rl['short'] }}</span>
+                            @else
+                                <span class="pp-pill pp-none"><i class="bi bi-hourglass-split"></i> Waiting for results</span>
+                            @endif
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+</div>
 @endsection

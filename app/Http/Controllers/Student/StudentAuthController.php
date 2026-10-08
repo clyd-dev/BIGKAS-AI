@@ -67,6 +67,10 @@ class StudentAuthController extends Controller
 
         $learner->update(['failed_login_attempts' => 0, 'locked_at' => null]);
 
+        // PINs issued before they could be viewed are bcrypt hashes; the PIN was just proven correct,
+        // so store it encrypted from now on and the teacher can see it.
+        $learner->upgradeLegacyPin($request->pin);
+
         // Expiry is DETECTION ONLY — never block login here (no rotation UX
         // yet). Log distinctly so teachers/admins can act.
         if ($learner->isPinExpired()) {

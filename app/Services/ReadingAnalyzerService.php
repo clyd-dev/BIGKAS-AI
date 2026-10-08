@@ -37,12 +37,21 @@ class ReadingAnalyzerService
         $transcribedText = $transcription['text'] ?? '';
         $transcribedWords = $transcription['words'] ?? [];
 
+        // Sounds the speech engine labelled rather than transcribed ("[music]",
+        // "(coughs)") are not words the child read. Lift them out first so they
+        // are reported as sounds instead of being scored as extra words.
+        $spoken = $this->extractSpokenTokens($transcribedText, $transcribedWords);
+
         // Get reference words
         $referenceWords = $this->tokenizeText($referenceText);
-        $spokenWords = $this->tokenizeText($transcribedText);
+        $spokenWords = array_column($spoken['tokens'], 'word');
 
         // Calculate text comparison
         $comparison = $this->compareTexts($referenceWords, $spokenWords);
+
+        // Name each miscue the way a reading teacher would (repetition,
+        // self-correction, mispronunciation, talk that isn't reading...).
+        $miscues = app(MiscueClassifierService::class)->classify($comparison['alignment'], $spoken['tokens']);
 
         // Calculate basic metrics
         $totalWords = count($referenceWords);
@@ -113,18 +122,42 @@ class ReadingAnalyzerService
             'fluency_score' => $fluencyScore,
             'reading_level' => $readingLevel,
 
-            // Error details
-            'error_count' => $errorCount,
-            'substitutions' => $errorAnalysis['substitutions'],
-            'omissions' => $errorAnalysis['omissions'],
-            'insertions' => $errorAnalysis['insertions'],
-            'repetitions' => $repetitionCount,
-            'self_corrections' => $errorAnalysis['self_corrections'],
+            // Error details. These follow the Phil-IRI miscue list and no longer
+            // overlap: a repeated word is a repetition (not also an insertion),
+            // a mistake the child fixed is a self-correction (not a miscue at
+            // all), and talk that isn't reading is counted as neither.
+            // `substitutions` keeps mispronunciations inside it, as the
+            // training data does; the split is in `miscues` below.
+            'error_count' => $miscues['counts']['mispronunciation']
+                + $miscues['counts']['substitution']
+                + $miscues['counts']['omission']
+                + $miscues['counts']['not_reached']
+                + $miscues['counts']['insertion']
+                + $miscues['counts']['repetition'],
+            'substitutions' => $miscues['counts']['mispronunciation'] + $miscues['counts']['substitution'],
+            // Words the child never got to are still unread words, so they stay
+            // in this total; `miscues` tells them apart from mid-passage skips.
+            'omissions' => $miscues['counts']['omission'] + $miscues['counts']['not_reached'],
+            'insertions' => $miscues['counts']['insertion'],
+            'repetitions' => $miscues['counts']['repetition'],
+            'self_corrections' => $miscues['counts']['self_correction'],
+
+            // Full miscue breakdown, including what isn't scored.
+            'miscues' => $miscues['counts'],
+
+            // Everything the microphone caught that was not the child reading.
+            'non_reading' => [
+                'off_passage' => $miscues['off_passage'],
+                'sounds' => $spoken['sounds'],
+                'unreliable_segments' => $this->unreliableSegments($transcription['segments'] ?? []),
+            ],
+            'audio_quality' => $transcription['audio_quality'] ?? null,
 
             // Weakness classification (rule-based fallback)
             'primary_weakness' => $weaknessClassification['primary'],
             'secondary_weakness' => $weaknessClassification['secondary'],
             'confidence_score' => $weaknessClassification['confidence'],
+            'all_scores' => $weaknessClassification['all_scores'] ?? [],
 
             // ML-ready feature vector (12 features, sent to Flask /api/classify)
             'ml_features' => $mlFeatures,
@@ -132,7 +165,7 @@ class ReadingAnalyzerService
             // Additional data
             'skill_scores' => $this->calculateSkillScores($accuracyRate, $fluencyScore, $errorAnalysis),
             'error_patterns' => $errorAnalysis['patterns'],
-            'word_comparison' => $comparison['word_details'],
+            'word_comparison' => $miscues['details'],
 
             // Metadata
             'total_words' => $totalWords,
@@ -372,7 +405,101 @@ class ReadingAnalyzerService
             'error_count' => count($errors),
             'errors' => $errors,
             'word_details' => $wordDetails,
+            'alignment' => $alignment,
         ];
+    }
+
+    /**
+     * Stretches the speech engine itself doubted were speech. Words it wrote
+     * for these are likely invented over noise rather than heard.
+     */
+    protected function unreliableSegments(array $segments): array
+    {
+        $doubtful = [];
+
+        foreach ($segments as $segment) {
+            if (($segment['no_speech_prob'] ?? 0) >= 0.5) {
+                $doubtful[] = [
+                    'text' => trim((string) ($segment['text'] ?? '')),
+                    'start' => $segment['start'] ?? null,
+                    'end' => $segment['end'] ?? null,
+                    'no_speech_prob' => $segment['no_speech_prob'],
+                ];
+            }
+        }
+
+        return $doubtful;
+    }
+
+    /**
+     * The words the child said, each with its timing and the speech engine's
+     * confidence, plus any non-speech sounds the engine labelled.
+     *
+     * Timing comes from the engine's per-word list. If that list doesn't line
+     * up with the transcript text (some engines omit it), the text alone is
+     * used and the words simply carry no timing.
+     */
+    protected function extractSpokenTokens(string $text, array $words): array
+    {
+        $soundTag = '/\[[^\]]*\]|\([^)]*\)|\*[^*]+\*/u';
+
+        $sounds = [];
+        $tokens = [];
+        $openTag = null;
+
+        foreach ($words as $word) {
+            $raw = trim((string) ($word['word'] ?? ''));
+
+            // A tag can span several "words": "[background" "noise]".
+            if ($openTag !== null) {
+                $openTag['label'] .= ' ' . $raw;
+                $openTag['end'] = $word['end'] ?? $openTag['end'];
+
+                if (preg_match('/[\]\)\*]/u', $raw)) {
+                    $sounds[] = $openTag;
+                    $openTag = null;
+                }
+                continue;
+            }
+
+            if (preg_match('/^[\[\(\*]/u', $raw)) {
+                $tag = ['label' => $raw, 'start' => $word['start'] ?? null, 'end' => $word['end'] ?? null];
+
+                if (preg_match($soundTag, $raw)) {
+                    $sounds[] = $tag;
+                } else {
+                    $openTag = $tag;
+                }
+                continue;
+            }
+
+            foreach ($this->tokenizeText($raw) as $token) {
+                $tokens[] = [
+                    'word' => $token,
+                    'start' => $word['start'] ?? null,
+                    'end' => $word['end'] ?? null,
+                    'confidence' => $word['confidence'] ?? null,
+                ];
+            }
+        }
+
+        $textTokens = $this->tokenizeText(preg_replace($soundTag, ' ', $text));
+
+        if (array_column($tokens, 'word') !== $textTokens) {
+            // Fall back to the transcript text; keep any sounds found in it.
+            $tokens = array_map(fn ($w) => ['word' => $w], $textTokens);
+
+            if (empty($sounds) && preg_match_all($soundTag, $text, $found)) {
+                $sounds = array_map(fn ($label) => ['label' => $label, 'start' => null, 'end' => null], $found[0]);
+            }
+        }
+
+        $sounds = array_map(function ($sound) {
+            $sound['label'] = trim(preg_replace('/[\[\]\(\)\*]/u', '', $sound['label']));
+            return $sound;
+        }, $sounds);
+
+        return ['tokens' => $tokens, 'sounds' => array_values(array_filter($sounds, fn ($s) => $s['label'] !== ''))];
     }
 
     /**
@@ -387,36 +514,56 @@ class ReadingAnalyzerService
         $m = count($reference);
         $n = count($spoken);
 
-        // Build cost matrix
+        // Many alignments share the same number of edits, and which one is
+        // chosen decides what the teacher is told. Two rules pick among them:
+        //
+        //  1. Most matched words. Each edit costs $edit, each match earns 1
+        //     back; $edit is larger than any possible number of matches, so a
+        //     match can only break a tie, never justify an extra edit.
+        //  2. Earliest position (in the backtrack below). A reader moves
+        //     forward from the start, so if "to school" could be either the
+        //     words just reached or the same words at the very end, it is the
+        //     ones just reached — and what follows was never read.
+        $edit = $m + $n + 1;
+
         $dp = [];
         $dp[0][0] = 0;
 
         for ($i = 1; $i <= $m; $i++) {
-            $dp[$i][0] = $i;
+            $dp[$i][0] = $i * $edit;
         }
         for ($j = 1; $j <= $n; $j++) {
-            $dp[0][$j] = $j;
+            $dp[0][$j] = $j * $edit;
         }
 
         for ($i = 1; $i <= $m; $i++) {
             for ($j = 1; $j <= $n; $j++) {
-                $cost = $reference[$i - 1] === $spoken[$j - 1] ? 0 : 1;
+                $step = $reference[$i - 1] === $spoken[$j - 1] ? -1 : $edit;
                 $dp[$i][$j] = min(
-                    $dp[$i - 1][$j] + 1,         // Deletion (omission)
-                    $dp[$i][$j - 1] + 1,         // Insertion
-                    $dp[$i - 1][$j - 1] + $cost  // Match/Substitution
+                    $dp[$i - 1][$j] + $edit,        // Deletion (omission)
+                    $dp[$i][$j - 1] + $edit,        // Insertion
+                    $dp[$i - 1][$j - 1] + $step     // Match/Substitution
                 );
             }
         }
 
-        // Backtrack to get alignment
+        // Backtrack to get alignment. Working from the end, taking an omission
+        // whenever it is equally good pushes the unread words to the end of
+        // the passage and the matches to the start.
         $alignment = [];
         $i = $m;
         $j = $n;
         $position = max($m, $n);
 
         while ($i > 0 || $j > 0) {
-            if ($i > 0 && $j > 0 && $dp[$i][$j] === $dp[$i - 1][$j - 1] + ($reference[$i - 1] === $spoken[$j - 1] ? 0 : 1)) {
+            if ($i > 0 && $dp[$i][$j] === $dp[$i - 1][$j] + $edit) {
+                array_unshift($alignment, [
+                    'reference' => $reference[$i - 1],
+                    'spoken' => null,
+                    'position' => $position--,
+                ]);
+                $i--;
+            } elseif ($i > 0 && $j > 0 && $dp[$i][$j] === $dp[$i - 1][$j - 1] + ($reference[$i - 1] === $spoken[$j - 1] ? -1 : $edit)) {
                 array_unshift($alignment, [
                     'reference' => $reference[$i - 1],
                     'spoken' => $spoken[$j - 1],
@@ -424,13 +571,6 @@ class ReadingAnalyzerService
                 ]);
                 $i--;
                 $j--;
-            } elseif ($i > 0 && $dp[$i][$j] === $dp[$i - 1][$j] + 1) {
-                array_unshift($alignment, [
-                    'reference' => $reference[$i - 1],
-                    'spoken' => null,
-                    'position' => $position--,
-                ]);
-                $i--;
             } else {
                 array_unshift($alignment, [
                     'reference' => null,

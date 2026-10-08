@@ -21,7 +21,7 @@ class AuthApiController extends Controller
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $validated['email'])->first();
+        $user = User::byEmail($validated['email'])->first();
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
             return $this->error('Invalid credentials', 401);
@@ -53,7 +53,7 @@ class AuthApiController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|min:2|max:100',
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', \App\Rules\UniqueBlindIndex::email()],
             'password' => 'required|string|min:8|confirmed|regex:/[a-z]/|regex:/[A-Z]/|regex:/[0-9]/',
             'role' => 'required|in:teacher,parent,student',
             'phone' => 'nullable|string',

@@ -1,41 +1,19 @@
 """
-BIGKAS-AI: Train Random Forest on Real Teacher-Validated Data (12 Features)
-============================================================================
+BIGKAS-AI: Train Random Forest on Real Teacher-Validated Data (12 Features, 5 Classes)
+=========================================================================================
 Trains the weakness classifier on REAL annotated + teacher-validated data.
+Handles combined labels (e.g. "1,3" or "1,4,2") by extracting a primary class
+for training and preserving the full combo for reporting.
 
-Run this AFTER the teacher has reviewed labeled_features_for_review.csv
-and saved their completed version as labeled_features_reviewed.csv.
-
-Output files (placed in parent directory ml-service/):
-  weakness_classifier.joblib  ← the trained RF model (Flask loads this)
-  feature_scaler.joblib       ← StandardScaler (Flask loads this)
-  model_metadata.json         ← training metadata for documentation
-
-IMPORTANT: FEATURE_COLUMNS here MUST match EXACTLY:
-  - ml-service/app.py FEATURE_COLUMNS
-  - ReadingAnalyzerService.php $mlFeatures array keys
-  - parse_annotations.py output columns
-If you rename any column, you must rename it in ALL 4 files.
-
-Prerequisites:
-  pip install pandas scikit-learn joblib
+Run this AFTER merge_teacher_labels.py produces labeled_features_master_confirmed.csv.
 
 Usage:
-  cd F:\\MyApp\\BIGKAS-AI\\ml-service\\training
-
-  # Step 1: Generate provisional labels (if not done yet)
-  python generate_provisional_labels.py
-
-  # Step 2: Teacher reviews and saves as labeled_features_reviewed.csv
-
-  # Step 3: Train the model
+  cd ml-service/training
   python train_model_real_data.py
-
-  # Step 4: Restart Flask
-  cd .. && python app.py
 """
 
 import os
+import re
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -49,7 +27,6 @@ import json
 # CONFIGURATION
 # ============================================================
 
-# These 12 columns MUST match Flask app.py FEATURE_COLUMNS EXACTLY
 FEATURE_COLUMNS = [
     'accuracy_rate', 'words_per_minute', 'fluency_score',
     'substitution_rate', 'omission_rate', 'insertion_rate',
@@ -58,19 +35,48 @@ FEATURE_COLUMNS = [
 ]
 
 WEAKNESS_LABELS = {
-    0: 'Independent Reader',
+    0: 'Independent Reader / No Weakness',
     1: 'Phonemic Awareness',
     2: 'Decoding Accuracy',
     3: 'Oral Reading Fluency',
     4: 'Reading Comprehension',
 }
+VALID_CLASSES = set(WEAKNESS_LABELS.keys())
 
-INPUT_CSV = 'labeled_features_reviewed.csv'
-# Output to PARENT directory (ml-service/) where Flask loads from
+INPUT_CSV = 'labeled_features_master_confirmed.csv'
 SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 MODEL_FILENAME = 'weakness_classifier.joblib'
 SCALER_FILENAME = 'feature_scaler.joblib'
 METADATA_FILENAME = 'model_metadata.json'
+
+
+# ============================================================
+# LABEL PARSING — handles "1", "1,3", "1,4,2", "0"
+# ============================================================
+
+def parse_combo_label(value):
+    """
+    Parses teacher_confirmed_label into (primary, secondary, tertiary, raw_combo).
+    '1'       -> (1, None, None, '1')
+    '1,3'     -> (1, 3, None, '1,3')
+    '1,4,2'   -> (1, 4, 2, '1,4,2')
+    '0'       -> (0, None, None, '0')
+    blank/NaN -> (None, None, None, None)
+    """
+    if pd.isna(value) or str(value).strip() == '':
+        return (None, None, None, None)
+
+    nums = re.findall(r'\d+', str(value))
+    if not nums:
+        return (None, None, None, None)
+
+    nums = [int(n) for n in nums]
+    primary = nums[0]
+    secondary = nums[1] if len(nums) > 1 else None
+    tertiary = nums[2] if len(nums) > 2 else None
+    raw_combo = ','.join(str(n) for n in nums)
+
+    return (primary, secondary, tertiary, raw_combo)
 
 
 # ============================================================
@@ -80,69 +86,97 @@ METADATA_FILENAME = 'model_metadata.json'
 def train_on_real_data(csv_path=INPUT_CSV):
     if not os.path.exists(csv_path):
         print(f"ERROR: {csv_path} not found.")
-        print(f"Complete these steps first:")
-        print(f"  1. Run: python parse_annotations.py")
-        print(f"  2. Run: python generate_provisional_labels.py")
-        print(f"  3. Send labeled_features_for_review.csv to teacher")
-        print(f"  4. Save teacher's completed file as: {csv_path}")
+        print("Run merge_teacher_labels.py first.")
         return
 
     df = pd.read_csv(csv_path)
+    rows_start = len(df)
 
-    # Merge teacher-filled prosody into the main column
+    # ── Parse prosody (now plain numeric 0-10 from teacher dropdown) ──
     if 'prosody_score_teacher' in df.columns:
-        df['prosody_score'] = df['prosody_score'].fillna(
-            pd.to_numeric(df['prosody_score_teacher'], errors='coerce')
-        )
+        df['prosody_score'] = pd.to_numeric(df['prosody_score_teacher'], errors='coerce')
 
-    # Fill remaining null prosody with a neutral default (5.0)
-    # and document this in metadata
-    prosody_filled = df['prosody_score'].isna().sum()
-    df['prosody_score'] = df['prosody_score'].fillna(5.0)
-
-    # Determine label column
+    # ── Parse combined labels ──
     label_col = 'teacher_confirmed_label'
-    if label_col not in df.columns or df[label_col].isna().all() or (df[label_col].astype(str).str.strip() == '').all():
+    if label_col not in df.columns or df[label_col].isna().all():
         label_col = 'provisional_weakness_label'
         print("WARNING: No teacher_confirmed_label found.")
         print("Training on provisional (rule-based) labels only.")
-        print("Disclose this explicitly in your methodology section.")
+        print("Disclose this explicitly in your methodology section.\n")
+        df['primary_label'] = pd.to_numeric(df[label_col], errors='coerce')
+        df['secondary_label'] = None
+        df['tertiary_label'] = None
+        df['raw_combo_label'] = df['primary_label'].astype(str)
+    else:
+        parsed = df[label_col].apply(lambda v: pd.Series(
+            parse_combo_label(v),
+            index=['primary_label', 'secondary_label', 'tertiary_label', 'raw_combo_label']
+        ))
+        df = pd.concat([df, parsed], axis=1)
 
-    # Clean labels
-    df[label_col] = pd.to_numeric(df[label_col], errors='coerce')
-    df = df.dropna(subset=FEATURE_COLUMNS + [label_col])
-
-    if len(df) < 20:
-        print(f"ERROR: Only {len(df)} usable samples. Need at least 20.")
-        print("Collect more audio data before training.")
+    # ── Validate: fail loudly on unexpected classes, not silently drop ──
+    unexpected = df[df['primary_label'].notna() & ~df['primary_label'].isin(VALID_CLASSES)]
+    if not unexpected.empty:
+        print(f"ERROR: {len(unexpected)} rows have an out-of-range primary label:")
+        print(unexpected[['file_name', label_col]].to_string(index=False))
+        print(f"Valid classes are {sorted(VALID_CLASSES)}. Fix these rows and re-run.")
         return
 
-    if len(df) < 50:
-        print(f"WARNING: Only {len(df)} samples. Model will likely overfit.")
+    # ── Report combo usage before dropping anything ──
+    combo_rows = df[df['secondary_label'].notna()]
+    print(f"\n{'=' * 60}")
+    print(f"Rows loaded from {csv_path}: {rows_start}")
+    print(f"Rows with combined labels (2+ weaknesses): {len(combo_rows)}")
+    if not combo_rows.empty:
+        print("Combo label distribution:")
+        print(combo_rows['raw_combo_label'].value_counts().to_string())
+    print(f"{'=' * 60}\n")
+
+    # ── Report what will be dropped, BEFORE dropping ──
+    missing_label = df['primary_label'].isna().sum()
+    missing_prosody = df['prosody_score'].isna().sum()
+    missing_other = df[[c for c in FEATURE_COLUMNS if c != 'prosody_score']].isna().any(axis=1).sum()
+
+    print(f"Rows with blank/unparsed primary label: {missing_label}")
+    print(f"Rows with missing prosody_score:        {missing_prosody}")
+    print(f"Rows with missing other features:       {missing_other}")
+
+    df_clean = df.dropna(subset=FEATURE_COLUMNS + ['primary_label'])
+
+    if len(df_clean) < 20:
+        print(f"\nERROR: Only {len(df_clean)} usable samples. Need at least 20.")
+        print("Collect more audio data or complete more teacher reviews before training.")
+        return
+
+    if len(df_clean) < 50:
+        print(f"\nWARNING: Only {len(df_clean)} samples. Model will likely overfit.")
         print("Document this limitation in your capstone paper.")
 
-    y = df[label_col].astype(int).values
-    X = df[FEATURE_COLUMNS].values
+    y = df_clean['primary_label'].astype(int).values
+    X = df_clean[FEATURE_COLUMNS].values
 
     print(f"\n{'=' * 60}")
-    print(f"Training on {len(df)} real annotated samples")
-    print(f"Label source: {label_col}")
+    print(f"Training on {len(df_clean)} real annotated samples")
+    print(f"Label source: {label_col} (primary class extracted from combos)")
     print(f"Feature columns ({len(FEATURE_COLUMNS)}): {FEATURE_COLUMNS}")
-    print(f"Prosody scores filled with default (5.0): {prosody_filled}")
     print(f"{'=' * 60}")
 
-    # Report class distribution
+    # Class distribution
     unique_classes = np.unique(y)
     label_counts = pd.Series(y).value_counts().sort_index()
-    print(f"\nLabel distribution:")
+    print(f"\nLabel distribution (by primary class):")
     for label_id, count in label_counts.items():
         name = WEAKNESS_LABELS.get(int(label_id), f'Unknown ({label_id})')
         print(f"  {label_id} ({name}): {count} samples")
 
+    missing_classes = VALID_CLASSES - set(unique_classes)
+    if missing_classes:
+        print(f"\nNOTE: No samples at all for class(es): {sorted(missing_classes)}")
+        print("Model cannot predict a class it never saw. Document this gap.")
+
     # Train/test split
     min_class_count = min([np.sum(y == c) for c in unique_classes])
     can_stratify = min_class_count >= 2
-
     if not can_stratify:
         print("\nWARNING: Some classes have only 1 sample. Cannot stratify split.")
 
@@ -151,12 +185,10 @@ def train_on_real_data(csv_path=INPUT_CSV):
         stratify=y if can_stratify else None
     )
 
-    # Scale features (StandardScaler)
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # Train Random Forest
     rf_model = RandomForestClassifier(
         n_estimators=100,
         max_depth=8,
@@ -168,7 +200,6 @@ def train_on_real_data(csv_path=INPUT_CSV):
     )
     rf_model.fit(X_train_scaled, y_train)
 
-    # Evaluate
     y_pred = rf_model.predict(X_test_scaled)
     test_accuracy = accuracy_score(y_test, y_pred)
 
@@ -185,11 +216,10 @@ def train_on_real_data(csv_path=INPUT_CSV):
         zero_division=0
     ))
 
-    # Cross-validation (if enough data)
     cv_mean = None
     cv_std = None
-    if len(df) >= 30:
-        n_splits = min(5, len(df) // 5)
+    if len(df_clean) >= 30:
+        n_splits = min(5, len(df_clean) // 5)
         cv_scores = cross_val_score(rf_model, scaler.transform(X), y, cv=n_splits, scoring='accuracy')
         cv_mean = float(cv_scores.mean())
         cv_std = float(cv_scores.std())
@@ -197,7 +227,6 @@ def train_on_real_data(csv_path=INPUT_CSV):
     else:
         print("Too few samples for cross-validation.")
 
-    # Feature importance
     print(f"\nFeature Importance:")
     for name, importance in sorted(
         zip(FEATURE_COLUMNS, rf_model.feature_importances_),
@@ -206,9 +235,7 @@ def train_on_real_data(csv_path=INPUT_CSV):
         bar = '#' * int(importance * 50)
         print(f"  {name:25s} {importance:.4f} {bar}")
 
-    # Save model + scaler to ml-service/ (parent directory)
     os.makedirs(SAVE_DIR, exist_ok=True)
-
     model_path = os.path.join(SAVE_DIR, MODEL_FILENAME)
     scaler_path = os.path.join(SAVE_DIR, SCALER_FILENAME)
     metadata_path = os.path.join(SAVE_DIR, METADATA_FILENAME)
@@ -218,29 +245,32 @@ def train_on_real_data(csv_path=INPUT_CSV):
     print(f"\nModel saved:  {model_path}")
     print(f"Scaler saved: {scaler_path}")
 
-    # Save metadata
     metadata = {
         'model_type': 'Random Forest',
-        'version': '2.0.0-12feature-real-data',
+        'version': '3.0.0-12feature-5class-combo-aware',
         'test_accuracy': round(test_accuracy, 4),
         'cv_accuracy': round(cv_mean, 4) if cv_mean else None,
         'cv_std': round(cv_std, 4) if cv_std else None,
         'feature_columns': FEATURE_COLUMNS,
         'weakness_labels': {str(k): v for k, v in WEAKNESS_LABELS.items()},
+        'classes_present_in_training': sorted(int(c) for c in unique_classes),
+        'classes_missing_from_training': sorted(int(c) for c in missing_classes),
         'training_samples': len(X_train),
         'test_samples': len(X_test),
-        'total_samples': len(df),
+        'total_samples': len(df_clean),
+        'rows_with_combo_labels': len(combo_rows),
         'label_source': label_col,
         'trained_with': 'real_annotated_data',
         'data_source': 'BIGKAS-AI Grade 3-6 collected audio (EN/FIL), teacher-validated labels',
         'scaler': 'StandardScaler',
-        'prosody_defaults_filled': prosody_filled,
-        'class_distribution': label_counts.to_dict(),
+        'class_distribution': {str(k): int(v) for k, v in label_counts.to_dict().items()},
         'notes': [
             f'Model uses {len(FEATURE_COLUMNS)} features (rates/scores, not raw counts).',
+            'Combined teacher labels (e.g. "1,3", "1,4,2") were reduced to a PRIMARY '
+            'class for training. Secondary/tertiary weaknesses preserved in source CSV '
+            '(secondary_label, tertiary_label columns) but not used for this classifier.',
             'Feature scaler (StandardScaler) MUST be loaded alongside the model.',
-            'Flask app.py loads weakness_classifier.joblib + feature_scaler.joblib from ml-service/.',
-            f'Prosody score was NULL for {prosody_filled} rows and filled with default 5.0.',
+            'Flask app.py loads weakness_classifier.joblib + feature_scaler.joblib.',
         ],
     }
 

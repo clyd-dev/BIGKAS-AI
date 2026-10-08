@@ -13,6 +13,8 @@
             <form method="POST" action="{{ route('materials.store') }}">
                 @csrf
                 @include('materials._form')
+                @include('materials._questions')
+
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i> Save Material</button>
                     <a href="{{ route('materials.index') }}" class="btn btn-outline-secondary ms-2">Cancel</a>

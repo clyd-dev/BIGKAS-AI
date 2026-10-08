@@ -19,6 +19,33 @@ class MLClassificationService
         $this->enabled = (bool) ($config['enabled'] ?? true);
     }
 
+    /**
+     * Translate a prediction into the integer weakness id stored on
+     * assessment_results. The service may answer with either the class number
+     * or its label, and the rule-based fallback has labels of its own.
+     */
+    public static function mapWeaknessToId(mixed $predicted): ?int
+    {
+        $map = [
+            '0' => 0,
+            'Independent Reader' => 0,
+            'Independent Reader / No Weakness' => 0,
+            'None (Independent)' => 0,
+            '1' => 1,
+            'Phonemic Awareness' => 1,
+            '2' => 2,
+            'Decoding Accuracy' => 2,
+            'Instructional (Mixed)' => 2,
+            '3' => 3,
+            'Oral Reading Fluency' => 3,
+            '4' => 4,
+            'Comprehension' => 4,
+            'Reading Comprehension' => 4,
+        ];
+
+        return $map[(string) $predicted] ?? null;
+    }
+
     public function classify(array $features): array
     {
         if (!$this->enabled) {

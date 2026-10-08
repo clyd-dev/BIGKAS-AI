@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\Directory;
+
 use App\Http\Controllers\Controller;
 use App\Models\Learner;
 use App\Models\SchoolClass;
@@ -60,9 +62,8 @@ class ReportApiController extends Controller
     {
         $learners = Learner::where('class_id', $schoolClass->id)
             ->with(['assessments' => fn ($q) => $q->where('status', 'completed')->latest()->with('results')])
-            ->orderBy('last_name')
-            ->orderBy('first_name')
             ->get();
+        $learners = Directory::sortLearners($learners);
 
         $distribution = ['independent' => 0, 'instructional' => 0, 'frustration' => 0, 'not_assessed' => 0];
         $totalAccuracy = 0;

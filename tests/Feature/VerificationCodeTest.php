@@ -45,7 +45,7 @@ class VerificationCodeTest extends TestCase
         $response->assertRedirect(route('verification-code.show'));
         $this->assertGuest();
         $this->assertDatabaseHas('email_verification_codes', [
-            'user_id' => \App\Models\User::where('email', 'newparent@gmail.com')->first()->id,
+            'user_id' => \App\Models\User::byEmail('newparent@gmail.com')->first()->id,
         ]);
     }
 
@@ -127,7 +127,7 @@ class VerificationCodeTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.users'));
-        $user = \App\Models\User::where('email', 'staffteacher@gmail.com')->firstOrFail();
+        $user = \App\Models\User::byEmail('staffteacher@gmail.com')->firstOrFail();
         $this->assertTrue($user->hasVerifiedEmail());
         $this->assertDatabaseMissing('email_verification_codes', ['user_id' => $user->id]);
     }

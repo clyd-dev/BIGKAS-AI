@@ -3,12 +3,49 @@
 @section('title', 'Learners')
 
 @section('content')
+    @php $canManage = auth()->user()->isTeacher(); @endphp
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0"><i class="bi bi-people me-2"></i>Learners</h4>
-        <a href="{{ route('learners.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-1"></i> Add Learner
-        </a>
+        @if($canManage)
+            <a href="{{ route('learners.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Add Learner
+            </a>
+        @endif
     </div>
+
+    {{-- Section summary (click a tile to filter) --}}
+    @if($allClasses->isNotEmpty())
+        <div class="row g-2 mb-4">
+            @foreach($allClasses as $class)
+                @php
+                    $rows   = $sectionStats->get($class->id, collect());
+                    $total  = $rows->sum('total');
+                    $by     = $rows->pluck('total', 'reading_level');
+                    $active = request('class_id') == $class->id;
+                @endphp
+                <div class="col-6 col-md-4 col-xl-2">
+                    <a href="{{ route('learners.index', $active ? [] : ['class_id' => $class->id]) }}"
+                       class="card border-0 shadow-sm h-100 text-decoration-none"
+                       @if($active) style="outline: 2px solid var(--bigkas-primary);" @endif>
+                        <div class="card-body py-2 px-3">
+                            <div class="small text-muted">Grade {{ $class->grade_level }}</div>
+                            <div class="fw-semibold text-dark">{{ $class->section }}</div>
+                            <div class="small text-muted mb-1">{{ $total }} learner{{ $total === 1 ? '' : 's' }}</div>
+                            @if($total > 0)
+                                <div class="progress" style="height: 6px;"
+                                     title="Independent {{ $by['independent'] ?? 0 }} · Instructional {{ $by['instructional'] ?? 0 }} · Frustration {{ $by['frustration'] ?? 0 }}">
+                                    <div class="progress-bar bg-success" style="width: {{ ($by['independent'] ?? 0) / $total * 100 }}%"></div>
+                                    <div class="progress-bar bg-warning" style="width: {{ ($by['instructional'] ?? 0) / $total * 100 }}%"></div>
+                                    <div class="progress-bar bg-danger" style="width: {{ ($by['frustration'] ?? 0) / $total * 100 }}%"></div>
+                                </div>
+                            @endif
+                        </div>
+                    </a>
+                </div>
+            @endforeach
+        </div>
+    @endif
 
     {{-- Filters --}}
     <div class="card border-0 shadow-sm mb-4">
@@ -61,22 +98,28 @@
                 <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Name</th>
+                            <th>Learner</th>
                             <th>LRN</th>
                             <th>Grade &amp; Section</th>
-                            <th>Gender</th>
                             <th>Reading Level</th>
-                            <th class="text-end">Actions</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($learners as $learner)
-                            <tr>
+                            <tr role="link" style="cursor: pointer;"
+                                onclick="window.location='{{ route('learners.show', $learner) }}'">
                                 <td>
-                                    <a href="{{ route('learners.show', $learner) }}"
-                                       class="text-decoration-none fw-semibold">
-                                        {{ $learner->getFullName() }}
-                                    </a>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="rounded-circle bg-primary bg-opacity-10 text-primary fw-semibold d-inline-flex align-items-center justify-content-center"
+                                              style="width: 34px; height: 34px; font-size: .8rem;">
+                                            {{ strtoupper(mb_substr($learner->first_name, 0, 1) . mb_substr($learner->last_name, 0, 1)) }}
+                                        </span>
+                                        <a href="{{ route('learners.show', $learner) }}"
+                                           class="text-decoration-none fw-semibold">
+                                            {{ $learner->getFullName() }}
+                                        </a>
+                                    </div>
                                 </td>
                                 <td><code>{{ $learner->lrn ?? '-' }}</code></td>
                                 <td>
@@ -88,7 +131,6 @@
                                         <span class="text-muted small">Grade {{ $learner->grade_level }} — no section</span>
                                     @endif
                                 </td>
-                                <td>{{ ucfirst($learner->gender ?? '-') }}</td>
                                 <td>
                                     @if($learner->reading_level === 'independent')
                                         <span class="badge bg-success">Independent</span>
@@ -100,33 +142,15 @@
                                         <span class="badge bg-secondary">Not Assessed</span>
                                     @endif
                                 </td>
-                                <td class="text-end">
-                                    <a href="{{ route('assessments.start', $learner) }}"
-                                       class="btn btn-sm btn-primary" title="Start Assessment">
-                                        <i class="bi bi-mic"></i>
-                                    </a>
-                                    <a href="{{ route('learners.show', $learner) }}"
-                                       class="btn btn-sm btn-outline-secondary" title="View">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('learners.edit', $learner) }}"
-                                       class="btn btn-sm btn-outline-warning" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form method="POST" action="{{ route('learners.destroy', $learner) }}"
-                                          class="d-inline" onsubmit="return confirm('Remove this learner?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
+                                <td class="text-end text-muted"><i class="bi bi-chevron-right"></i></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
+                                <td colspan="5" class="text-center text-muted py-4">
                                     No learners found.
-                                    <a href="{{ route('learners.create') }}">Add your first learner</a>
+                                    @if($canManage)
+                                        <a href="{{ route('learners.create') }}">Add your first learner</a>
+                                    @endif
                                 </td>
                             </tr>
                         @endforelse
@@ -137,7 +161,17 @@
     </div>
 
     {{-- Pagination --}}
-    @if(method_exists($learners ?? collect(), 'links'))
-        <div class="mt-3">{{ $learners->links() }}</div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+        <div class="small text-muted">
+            @if($learners->total() > 0)
+                Showing {{ $learners->firstItem() }}–{{ $learners->lastItem() }} of {{ $learners->total() }}
+            @endif
+        </div>
+        {{ $learners->onEachSide(1)->links('partials.pagination') }}
+    </div>
+
+    {{-- Student portal activity and badges (teachers) --}}
+    @if($portalLearners)
+        @include('learners._student_portal')
     @endif
 @endsection

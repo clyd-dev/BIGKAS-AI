@@ -3,12 +3,20 @@
 @section('title', 'Reading Materials')
 
 @section('content')
+    @php $isAdmin = auth()->user()->isAdmin(); @endphp
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0"><i class="bi bi-journal-text me-2"></i>Reading Materials</h4>
         <a href="{{ route('materials.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i> Add Material
         </a>
     </div>
+
+    @unless($isAdmin)
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-1"></i> Showing materials for your assigned grade{{ $lockedGrade ? " (Grade {$lockedGrade})" : '' }} only.
+        </div>
+    @endunless
 
     {{-- Filters --}}
     <div class="card border-0 shadow-sm mb-4">
@@ -26,15 +34,17 @@
                         <option value="fil" {{ request('language') === 'fil' ? 'selected' : '' }}>Filipino</option>
                         </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label small">Grade</label>
-                    <select name="grade_level" class="form-select form-select-sm">
-                        <option value="">All</option>
-                        @for($i = 1; $i <= 6; $i++)
-                            <option value="{{ $i }}" {{ request('grade_level') == $i ? 'selected' : '' }}>Grade {{ $i }}</option>
-                        @endfor
-                    </select>
-                </div>
+                @if($isAdmin)
+                    <div class="col-md-2">
+                        <label class="form-label small">Grade</label>
+                        <select name="grade_level" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            @for($i = 3; $i <= 6; $i++)
+                                <option value="{{ $i }}" {{ request('grade_level') == $i ? 'selected' : '' }}>Grade {{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                @endif
                 <div class="col-md-2">
                     <label class="form-label small">Difficulty</label>
                     <select name="difficulty" class="form-select form-select-sm">
@@ -42,6 +52,14 @@
                         <option value="easy" {{ request('difficulty') === 'easy' ? 'selected' : '' }}>Easy</option>
                         <option value="medium" {{ request('difficulty') === 'medium' ? 'selected' : '' }}>Medium</option>
                         <option value="hard" {{ request('difficulty') === 'hard' ? 'selected' : '' }}>Hard</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">Type</label>
+                    <select name="type" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        <option value="oral_reading" {{ request('type') === 'oral_reading' ? 'selected' : '' }}>Oral Reading</option>
+                        <option value="comprehension" {{ request('type') === 'comprehension' ? 'selected' : '' }}>Comprehension</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -70,13 +88,10 @@
                             <span class="badge bg-light text-dark"><i class="bi bi-card-text me-1"></i>{{ $material->word_count }} words</span>
                         </div>
                     </div>
-                    <div class="card-footer bg-white border-top-0 d-flex gap-1">
-                        <a href="{{ route('materials.show', $material) }}" class="btn btn-sm btn-outline-primary flex-fill">View</a>
-                        <a href="{{ route('materials.edit', $material) }}" class="btn btn-sm btn-outline-warning flex-fill">Edit</a>
-                        <form method="POST" action="{{ route('materials.destroy', $material) }}" onsubmit="return confirm('Delete this material?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                        </form>
+                    <div class="card-footer bg-white border-top-0">
+                        <a href="{{ route('materials.show', $material) }}" class="btn btn-sm btn-primary w-100">
+                            <i class="bi bi-eye me-1"></i> View
+                        </a>
                     </div>
                 </div>
             </div>

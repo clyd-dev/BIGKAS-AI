@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Directory;
+
 use App\Models\ActivityLog;
 use App\Models\Learner;
 use App\Models\Message;
@@ -75,26 +77,24 @@ class MessageController extends Controller
             $recipients = User::whereIn('role', ['teacher', 'parent'])
                 ->where('id', '!=', $user->id)
                 ->with('learners:id')
-                ->orderBy('role')
-                ->orderBy('name')
                 ->get()
-                ->groupBy('role');
+                ->groupBy('role')
+                ->map(fn ($group) => Directory::sortUsers($group));
 
-            $learners = Learner::orderBy('last_name')->get();
+            $learners = Directory::sortLearners(Learner::get());
         } else {
             // Teacher can message parents of their accessible learners + any admin
             $learnerIds = $user->accessibleLearnersQuery()->pluck('learners.id');
-            $parents = User::where('role', 'parent')
+            $parents = Directory::sortUsers(User::where('role', 'parent')
                 ->whereHas('learners', fn ($q) => $q->whereIn('learners.id', $learnerIds))
                 ->with('learners:id')
-                ->orderBy('name')
-                ->get();
-            $admins = User::where('role', 'admin')->with('learners:id')->orderBy('name')->get();
+                ->get());
+            $admins = Directory::sortUsers(User::where('role', 'admin')->with('learners:id')->get());
 
             $recipients = collect(['parent' => $parents, 'admin' => $admins])
                 ->filter(fn ($group) => $group->isNotEmpty());
 
-            $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
+            $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
         }
 
         return view('messages.compose', compact('recipients', 'learners'));

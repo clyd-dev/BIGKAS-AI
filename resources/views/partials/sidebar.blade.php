@@ -1,13 +1,15 @@
 {{-- Sidebar Navigation --}}
-<div class="bg-white border-end shadow-sm" id="sidebar-wrapper" style="min-width: 250px; max-width: 250px; min-height: calc(100vh - 56px);">
+<div class="bg-white border-end shadow-sm" id="sidebar-wrapper" style="min-width: 250px; max-width: 250px;">
     <div class="list-group list-group-flush pt-2">
         @php $role = Auth::user()->role ?? 'teacher'; @endphp
 
-        {{-- Dashboard --}}
-        <a href="{{ route('dashboard') }}"
-           class="list-group-item list-group-item-action border-0 {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-            <i class="bi bi-speedometer2 me-2"></i> Dashboard
-        </a>
+        {{-- Dashboard (parents use "Home" in their own section below) --}}
+        @if($role !== 'parent')
+            <a href="{{ route('dashboard') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+            </a>
+        @endif
 
         @if(in_array($role, ['admin', 'teacher']))
             {{-- Learners --}}
@@ -20,6 +22,12 @@
             <a href="{{ route('assessments.index') }}"
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('assessments.*') ? 'active' : '' }}">
                 <i class="bi bi-clipboard-check me-2"></i> Assessments
+            </a>
+
+            {{-- Group Screening Test (Phil-IRI Forms 1A/1B) --}}
+            <a href="{{ route('screening.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('screening.*') ? 'active' : '' }}">
+                <i class="bi bi-ui-checks-grid me-2"></i> Screening Test
             </a>
 
             {{-- Reading Materials --}}
@@ -35,16 +43,16 @@
             </a>
         @endif
 
-        @if(in_array($role, ['admin', 'teacher', 'student']))
-            {{-- Practice Center --}}
+        @if(in_array($role, ['teacher', 'student']))
+            {{-- Practice Center (not available to the admin/principal) --}}
             <a href="{{ route('practice.index') }}"
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('practice.*') ? 'active' : '' }}">
                 <i class="bi bi-controller me-2"></i> Practice Center
             </a>
         @endif
 
-        @if(in_array($role, ['admin', 'teacher', 'parent']))
-            {{-- Reports --}}
+        @if(in_array($role, ['admin', 'teacher']))
+            {{-- Reports (parents get it inside their own section) --}}
             <a href="{{ route('reports.index') }}"
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                 <i class="bi bi-bar-chart me-2"></i> Reports
@@ -92,13 +100,18 @@
                 <i class="bi bi-house-heart me-2"></i> Home
             </a>
 
-            @php $parentLearners = auth()->user()->learners()->orderBy('first_name')->get(); @endphp
+            @php $parentLearners = auth()->user()->learners()->get()->sortBy(fn ($l) => \App\Support\Directory::key($l->first_name))->values(); @endphp
             @foreach($parentLearners as $child)
                 <a href="{{ route('parent.children.profile', $child) }}"
                    class="list-group-item list-group-item-action border-0 ps-4 {{ request()->is('parent/children/'.$child->id.'*') ? 'active' : '' }}">
                     <i class="bi bi-person me-2"></i> {{ $child->first_name }}
                 </a>
             @endforeach
+
+            <a href="{{ route('reports.index') }}"
+               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                <i class="bi bi-bar-chart me-2"></i> Reports
+            </a>
 
             <hr class="my-1">
             <small class="text-muted px-3">COMMUNICATION</small>
@@ -117,13 +130,9 @@
             <hr class="my-1">
             <small class="text-muted px-3">ADMINISTRATION</small>
 
-            <a href="{{ route('admin.index') }}"
-               class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.index') ? 'active' : '' }}">
-                <i class="bi bi-gear me-2"></i> Admin Panel
-            </a>
             <a href="{{ route('admin.phil-iri') }}"
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.phil-iri') ? 'active' : '' }}">
-                <i class="bi bi-journal-bookmark-fill me-2"></i> Phil-IRI Profile
+                <i class="bi bi-journal-bookmark-fill me-2"></i> Phil-IRI Forms
             </a>
             <a href="{{ route('admin.classes') }}"
                class="list-group-item list-group-item-action border-0 {{ request()->routeIs('admin.classes') ? 'active' : '' }}">

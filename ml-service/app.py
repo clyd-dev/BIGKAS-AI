@@ -81,6 +81,38 @@ except Exception as e:
     print(f"Error loading Whisper model: {e}")
 
 # ============================================================
+# VERBATIM TRANSCRIPTION + AUDIO QUALITY
+# ============================================================
+# Set WHISPER_VERBATIM=0 to go back to Whisper's default (tidied) behaviour.
+VERBATIM_MODE = os.environ.get('WHISPER_VERBATIM', '1') != '0'
+
+VERBATIM_PROMPTS = {
+    'en': "Umm, the, the dog... ra- ran to the, uh, to the park.",
+    'tl': "Ah, ang, ang aso ay... tu- tumakbo sa, ah, sa parke.",
+}
+
+
+def measure_audio_quality(path):
+    """
+    Measure the recording itself (speech vs background, noise level, sounds
+    that weren't reading). Never allowed to fail a transcription: if anything
+    goes wrong the transcript is still returned, just without measurements.
+    """
+    try:
+        from faster_whisper.audio import decode_audio
+        from faster_whisper.vad import get_speech_timestamps, VadOptions
+        import audio_quality
+
+        audio = decode_audio(path, sampling_rate=audio_quality.SAMPLE_RATE)
+        speech = get_speech_timestamps(audio, VadOptions(min_silence_duration_ms=300))
+
+        return audio_quality.measure(audio, speech)
+    except Exception as e:
+        print(f"Audio quality measurement failed: {e}")
+        return {'measured': False, 'reason': str(e)}
+
+
+# ============================================================
 # ENDPOINT: /api/classify (Random Forest — 12 features)
 # ============================================================
 @app.route('/api/classify', methods=['POST'])
@@ -137,7 +169,35 @@ def transcribe():
         language_map = {'en': 'en', 'fil': 'tl', 'hil': 'tl'}
         lang_code = language_map.get(request.form.get('language', 'en'), 'en')
 
-        segments, info = whisper_model.transcribe(temp_path, language=lang_code, word_timestamps=True)
+        # Measure the recording before transcribing it. Given silence, Whisper
+        # does not return nothing — it invents a word or two, and a different
+        # one each run. If the voice detector found no speech, there is nothing
+        # to transcribe, so say so instead of passing an invention downstream.
+        quality = measure_audio_quality(temp_path)
+
+        if quality.get('rating') == 'no_speech':
+            return jsonify({
+                'text': '',
+                'words': [],
+                'language': lang_code,
+                'duration': quality.get('total_seconds', 0),
+                'segments': [],
+                'audio_quality': quality,
+                'verbatim_mode': VERBATIM_MODE,
+            })
+
+        transcribe_options = {'language': lang_code, 'word_timestamps': True}
+
+        # Whisper is a language model: left alone it tidies speech up, dropping
+        # repeated words and nudging a misread word toward the expected one —
+        # which erases exactly the miscues a reading assessment is looking for.
+        # A disfluent prompt, and not conditioning on its own earlier output,
+        # keep the transcript closer to what was actually said.
+        if VERBATIM_MODE:
+            transcribe_options['condition_on_previous_text'] = False
+            transcribe_options['initial_prompt'] = VERBATIM_PROMPTS.get(lang_code, VERBATIM_PROMPTS['en'])
+
+        segments, info = whisper_model.transcribe(temp_path, **transcribe_options)
 
         words = []
         full_text = []
@@ -149,6 +209,11 @@ def transcribe():
                 'start': segment.start,
                 'end': segment.end,
                 'text': segment.text,
+                # Whisper's own doubts about this stretch: a high no_speech_prob
+                # means it probably wasn't speech at all.
+                'no_speech_prob': round(float(segment.no_speech_prob), 3),
+                'avg_logprob': round(float(segment.avg_logprob), 3),
+                'compression_ratio': round(float(segment.compression_ratio), 3),
             })
             if segment.words:
                 for w in segment.words:
@@ -166,6 +231,8 @@ def transcribe():
             'language': lang_code,
             'duration': info.duration,
             'segments': all_segments,
+            'audio_quality': quality,
+            'verbatim_mode': VERBATIM_MODE,
         })
     finally:
         # Always clean up the temp file

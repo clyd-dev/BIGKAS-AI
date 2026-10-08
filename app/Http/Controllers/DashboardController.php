@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Directory;
+
 use App\Models\Assessment;
 use App\Models\AssessmentResult;
 use App\Models\Learner;
@@ -28,7 +30,7 @@ class DashboardController extends Controller
         // Teacher dashboard
         // 1. Scalability Fix: Don't fetch all learners at once for UI, use pagination
         $learnersQuery = $user->accessibleLearnersQuery();
-        $learners = (clone $learnersQuery)->orderBy('last_name')->paginate(10);
+        $learners = Directory::paginate(Directory::sortLearners((clone $learnersQuery)->get()), 10);
         $learnerIds = (clone $learnersQuery)->pluck('learners.id');
         
         $baseStats = $user->getStats();
@@ -93,44 +95,46 @@ class DashboardController extends Controller
         ));
     }
 
+    /**
+     * The single admin (principal) page: key counts with links to manage each area,
+     * what needs attention, school-wide reading weaknesses, and recent activity.
+     */
     private function adminDashboard($user)
     {
         $stats = [
-            'total_users' => \App\Models\User::count(),
-            'total_learners' => Learner::count(),
-            'total_assessments' => Assessment::count(),
-            'total_teachers' => \App\Models\User::where('role', 'teacher')->count(),
-            'total_schools' => \App\Models\School::count(),
-            'frustration_learners' => Learner::where('reading_level', 'frustration')->count(),
+            'total_users'         => \App\Models\User::count(),
+            'total_teachers'      => \App\Models\User::where('role', 'teacher')->count(),
+            'total_learners'      => Learner::count(),
+            'total_assessments'   => Assessment::count(),
+            'total_materials'     => \App\Models\ReadingMaterial::where('is_active', true)->count(),
+            'total_interventions' => \App\Models\Intervention::where('is_active', true)->count(),
         ];
 
-        $distributionData = Learner::select('reading_level', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
-            ->groupBy('reading_level')
-            ->pluck('count', 'reading_level')
+        // School-wide primary weaknesses from the ML classification (1-4).
+        $counts = AssessmentResult::selectRaw('primary_weakness, COUNT(*) as count')
+            ->whereNotNull('primary_weakness')
+            ->groupBy('primary_weakness')
+            ->pluck('count', 'primary_weakness')
             ->toArray();
 
-        $distribution = [
-            'independent'  => $distributionData['independent'] ?? 0,
-            'instructional' => $distributionData['instructional'] ?? 0,
-            'frustration'  => $distributionData['frustration'] ?? 0,
-            'not_assessed' => ($distributionData[''] ?? 0) + ($distributionData[null] ?? 0),
-        ];
-
-        // Monthly Data (Last 6 months)
-        $monthlyLabels = [];
-        $monthlyCounts = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
-            $monthlyLabels[] = $date->format('M');
-            $monthlyCounts[] = Assessment::whereMonth('created_at', $date->month)
-                ->whereYear('created_at', $date->year)
-                ->count();
+        $categories = config('bigkas.weakness_categories', [
+            1 => ['name' => 'Phonemic Awareness'],
+            2 => ['name' => 'Decoding'],
+            3 => ['name' => 'Fluency'],
+            4 => ['name' => 'Comprehension'],
+        ]);
+        $weaknessLabels = [];
+        $weaknessData   = [];
+        foreach ($categories as $id => $cat) {
+            $weaknessLabels[] = $cat['name'];
+            $weaknessData[]   = $counts[$id] ?? 0;
         }
 
-        $recentAssessments = Assessment::with(['learner', 'material', 'result', 'assessor'])
-            ->latest()->limit(10)->get();
+        $pendingReports = \App\Models\ClassReport::where('status', \App\Models\ClassReport::STATUS_SUBMITTED)->count();
+        $recentActivity = \App\Models\ActivityLog::with('user')->latest()->limit(10)->get();
+        $school         = \App\Models\School::orderBy('id')->first();
 
-        return view('dashboard.admin', compact('stats', 'recentAssessments', 'distribution', 'monthlyLabels', 'monthlyCounts'));
+        return view('dashboard.admin', compact('stats', 'weaknessLabels', 'weaknessData', 'pendingReports', 'recentActivity', 'school'));
     }
 
     private function studentDashboard($user)

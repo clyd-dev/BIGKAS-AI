@@ -9,8 +9,8 @@
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
                 <i class="bi bi-person-plus me-1"></i> Create User
             </button>
-            <a href="{{ route('admin.index') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Admin Panel
+            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
             </a>
         </div>
     </div>

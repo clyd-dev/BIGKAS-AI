@@ -6,11 +6,13 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0"><i class="bi bi-person me-2"></i>{{ $learner->getFullName() }}</h4>
         <div>
-            <a href="{{ route('assessments.start', $learner) }}" class="btn btn-primary btn-sm">
-                <i class="bi bi-mic me-1"></i> New Assessment
-            </a>
-            <a href="{{ route('learners.edit', $learner) }}" class="btn btn-outline-warning btn-sm">
-                <i class="bi bi-pencil me-1"></i> Edit
+            @if(auth()->user()->isTeacher())
+                <a href="{{ route('assessments.start', $learner) }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-mic me-1"></i> New Assessment
+                </a>
+            @endif
+            <a href="{{ route('learners.form4', $learner) }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-file-earmark-person me-1"></i> Form 4
             </a>
             <a href="{{ route('learners.index') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left me-1"></i> Back
@@ -94,6 +96,62 @@
                     </table>
                 </div>
             </div>
+
+            {{-- Student portal PIN (the teacher who added the learner issues it) --}}
+            @if(auth()->user()->isTeacher())
+                <div class="card border-0 shadow-sm mt-3">
+                    <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-key me-1"></i> Student Portal PIN</h6></div>
+                    <div class="card-body">
+                        @if($learner->pin)
+                            <div class="text-center bg-light rounded py-3 mb-3">
+                                <div class="small text-muted">PIN for {{ $learner->getFullName() }}</div>
+                                <div class="display-6 fw-bold font-monospace user-select-all">{{ $learner->pin }}</div>
+                            </div>
+                        @elseif($learner->hasLegacyPin())
+                            <div class="alert alert-warning small py-2">
+                                This PIN was saved before PINs could be viewed, so it cannot be shown. It keeps working, and it
+                                becomes viewable the next time the learner logs in. Or issue a new PIN now.
+                            </div>
+                        @endif
+                        <p class="small text-muted mb-2">
+                            @if($learner->pin_created_at)
+                                PIN issued {{ $learner->pin_created_at->format('M d, Y') }}.
+                                @if($learner->isPinExpired()) <span class="text-danger">It has expired; issue a new one.</span> @endif
+                            @elseif(! $learner->pin)
+                                No PIN has been issued yet.
+                            @endif
+                        </p>
+                        <form method="POST" action="{{ route('learners.generate-pin', $learner) }}"
+                              onsubmit="return confirm('{{ $learner->pin_created_at || $learner->pin ? 'Issue a new PIN? The old PIN will stop working.' : 'Issue a PIN for this learner?' }}')">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-key me-1"></i> {{ $learner->pin_created_at || $learner->pin ? 'Issue New PIN' : 'Generate PIN' }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Danger Zone (teachers only; admin view is read-only) --}}
+            @if(!auth()->user()->isAdmin())
+            <div class="card border-danger-subtle shadow-sm mt-3">
+                <div class="card-header bg-danger-subtle text-danger-emphasis">
+                    <h6 class="mb-0"><i class="bi bi-exclamation-triangle me-1"></i> Danger Zone</h6>
+                </div>
+                <div class="card-body d-flex gap-2">
+                    <a href="{{ route('learners.edit', $learner) }}" class="btn btn-outline-warning flex-fill">
+                        <i class="bi bi-pencil me-1"></i> Edit Learner
+                    </a>
+                    <form method="POST" action="{{ route('learners.destroy', $learner) }}"
+                          class="flex-fill" onsubmit="return confirm('Remove this learner? This cannot be undone.')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-trash me-1"></i> Delete Learner
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endif
         </div>
 
         {{-- Assessment History --}}
@@ -101,8 +159,8 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h6 class="mb-0">Assessment History</h6>
-                    <a href="{{ route('learners.progress', $learner) }}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-graph-up me-1"></i> Full Progress
+                    <a href="{{ route('reports.learner', $learner) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-file-earmark-bar-graph me-1"></i> Full Report
                     </a>
                 </div>
                 <div class="card-body p-0">

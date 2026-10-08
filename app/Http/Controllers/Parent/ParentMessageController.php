@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Parent;
 
+use App\Support\Directory;
+
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Learner;
@@ -9,6 +11,7 @@ use App\Models\Message;
 use App\Models\User;
 use App\Notifications\NewMessageReceived;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ParentMessageController extends Controller
 {
@@ -71,18 +74,17 @@ class ParentMessageController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
+        $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
 
         // Teachers who teach classes containing the parent's children
         $classIds = $learners->pluck('class_id')->filter()->unique();
-        $teachers = User::where('role', 'teacher')
+        $teachers = Directory::sortUsers(User::where('role', 'teacher')
             ->whereHas('taughtClasses', fn ($q) => $q->whereIn('classes.id', $classIds))
             ->with('learners:id')
-            ->orderBy('name')
-            ->get();
+            ->get());
 
         // Admins (principal) — always available to any parent
-        $admins = User::where('role', 'admin')->with('learners:id')->orderBy('name')->get();
+        $admins = Directory::sortUsers(User::where('role', 'admin')->with('learners:id')->get());
 
         $recipients = collect(['teacher' => $teachers, 'admin' => $admins])
             ->filter(fn ($group) => $group->isNotEmpty());
@@ -95,14 +97,17 @@ class ParentMessageController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth()->user();
+
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'learner_id'  => 'nullable|exists:learners,id',
+            'learner_id'  => [
+                'nullable',
+                Rule::exists('learner_user', 'learner_id')->where('user_id', $user->id),
+            ],
             'subject'     => 'required|string|max:255',
             'body'        => 'required|string|max:5000',
         ]);
-
-        $user = auth()->user();
 
         // Verify the receiver is a teacher of the parent's children's classes, or an admin
         $classIds = $user->accessibleLearnersQuery()
@@ -127,11 +132,54 @@ class ParentMessageController extends Controller
             'body'        => $request->body,
         ]);
 
-        ActivityLog::log('parent_send_message', "Parent sent message to teacher #{$message->receiver_id}", 'message', $message->id);
+        ActivityLog::log('parent_send_message', "Parent sent message to user #{$message->receiver_id}", 'message', $message->id);
 
         $message->receiver->notify(new NewMessageReceived($message));
 
         return redirect()->route('parent.messages.show', $message)->with('success', 'Message sent.');
+    }
+
+    /**
+     * Send a child's reading report to the class teacher (or admin) as a message.
+     */
+    public function sendReport(Request $request, Learner $learner)
+    {
+        $user = auth()->user();
+        abort_unless($learner->users()->where('users.id', $user->id)->exists(), 403, 'You are not linked to this learner.');
+
+        $recipients = $learner->reportRecipients()->flatten(1);
+
+        $data = $request->validate([
+            'receiver_id' => ['required', Rule::in($recipients->pluck('id')->all())],
+            'note'        => 'nullable|string|max:2000',
+        ]);
+
+        $latest = $learner->getLatestAssessment()?->result;
+        $lines  = [];
+        if (!empty($data['note'])) {
+            $lines[] = $data['note'];
+            $lines[] = '';
+        }
+        $lines[] = "I am sharing {$learner->full_name}'s reading report with you.";
+        if ($latest) {
+            $level   = ucfirst((string) $latest->reading_level);
+            $lines[] = "Latest result: {$level} level, " . round($latest->accuracy_rate) . '% of words read correctly, about ' . round($latest->words_per_minute) . ' words per minute.';
+        }
+        $lines[] = 'Full report: ' . route('reports.learner', $learner);
+
+        $message = Message::create([
+            'sender_id'   => $user->id,
+            'receiver_id' => $data['receiver_id'],
+            'learner_id'  => $learner->id,
+            'subject'     => "Reading report for {$learner->full_name}",
+            'body'        => implode("\n", $lines),
+        ]);
+
+        ActivityLog::log('parent_send_report', "Parent sent report for learner #{$learner->id} to user #{$message->receiver_id}", 'message', $message->id);
+
+        $message->receiver->notify(new NewMessageReceived($message));
+
+        return back()->with('success', 'Report sent to ' . $message->receiver->name . '. You can follow the conversation in Messages.');
     }
 
     /**

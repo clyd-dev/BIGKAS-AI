@@ -1,6 +1,9 @@
 {
   "model_type": "Random Forest",
-  "accuracy": 0.99,
+  "version": "3.0.0-12feature-5class-combo-aware",
+  "test_accuracy": 0.625,
+  "cv_accuracy": 0.4993,
+  "cv_std": 0.1049,
   "feature_columns": [
     "accuracy_rate",
     "words_per_minute",
@@ -16,13 +19,39 @@
     "prosody_score"
   ],
   "weakness_labels": {
+    "0": "Independent Reader / No Weakness",
     "1": "Phonemic Awareness",
     "2": "Decoding Accuracy",
     "3": "Oral Reading Fluency",
     "4": "Reading Comprehension"
   },
-  "training_samples": 1600,
-  "test_samples": 400,
-  "version": "1.0.0",
-  "trained_with": "synthetic_data"
+  "classes_present_in_training": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "classes_missing_from_training": [],
+  "training_samples": 415,
+  "test_samples": 104,
+  "total_samples": 519,
+  "rows_with_combo_labels": 253,
+  "label_source": "teacher_confirmed_label",
+  "trained_with": "real_annotated_data",
+  "data_source": "BIGKAS-AI Grade 3-6 collected audio (EN/FIL), teacher-validated labels",
+  "scaler": "StandardScaler",
+  "class_distribution": {
+    "0": 68,
+    "1": 145,
+    "2": 86,
+    "3": 217,
+    "4": 3
+  },
+  "notes": [
+    "Model uses 12 features (rates/scores, not raw counts).",
+    "Combined teacher labels (e.g. \"1,3\", \"1,4,2\") were reduced to a PRIMARY class for training. Secondary/tertiary weaknesses preserved in source CSV (secondary_label, tertiary_label columns) but not used for this classifier.",
+    "Feature scaler (StandardScaler) MUST be loaded alongside the model.",
+    "Flask app.py loads weakness_classifier.joblib + feature_scaler.joblib."
+  ]
 }

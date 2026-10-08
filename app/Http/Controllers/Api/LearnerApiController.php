@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Support\Directory;
+
 use App\Http\Controllers\Controller;
 use App\Models\Learner;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +27,7 @@ class LearnerApiController extends Controller
         }
         // admin sees all
 
-        $learners = $query->orderBy('last_name')->orderBy('first_name')->get();
+        $learners = Directory::sortLearners($query->get());
 
         return $this->success([
             'learners' => $learners->map(fn ($l) => $this->formatLearner($l))->toArray(),

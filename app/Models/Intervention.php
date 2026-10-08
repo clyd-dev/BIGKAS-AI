@@ -183,14 +183,21 @@ class Intervention extends Model
 
     public function getStats(): array
     {
-        $logs = $this->logs();
+        // Each call below must get a fresh query builder — `logs()` returns a
+        // mutable relation builder, so chaining ->where() on a reused instance
+        // permanently narrows it, corrupting any later count() on that same
+        // variable (previously caused a 0/0 DivisionByZeroError whenever an
+        // intervention had assignments but none yet completed).
+        $totalCount = $this->logs()->count();
+        $completedCount = $this->logs()->where('status', 'completed')->count();
+        $avgEffectiveness = $this->logs()->whereNotNull('effectiveness_rating')->avg('effectiveness_rating');
 
         return [
-            'times_assigned' => $logs->count(),
-            'completion_rate' => $logs->count() > 0
-                ? round(($logs->where('status', 'completed')->count() / $logs->count()) * 100, 1)
+            'times_assigned' => $totalCount,
+            'completion_rate' => $totalCount > 0
+                ? round(($completedCount / $totalCount) * 100, 1)
                 : 0,
-            'average_effectiveness' => round((float) $logs->whereNotNull('effectiveness_rating')->avg('effectiveness_rating'), 1),
+            'average_effectiveness' => round((float) $avgEffectiveness, 1),
         ];
     }
 

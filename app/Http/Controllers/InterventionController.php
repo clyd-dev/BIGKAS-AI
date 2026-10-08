@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Directory;
+
 use App\Models\Intervention;
 use App\Models\InterventionLog;
 use App\Models\Learner;
@@ -30,13 +32,81 @@ class InterventionController extends Controller
         return view('interventions.index', compact('interventions', 'weaknessCategories'));
     }
 
+    public function create()
+    {
+        $weaknessCategories = config('bigkas.weakness_categories', []);
+        return view('interventions.create', compact('weaknessCategories'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $this->validateIntervention($request);
+
+        $intervention = Intervention::create(array_merge($validated, [
+            'for_teacher' => $request->has('for_teacher'),
+            'for_parent' => $request->has('for_parent'),
+            'effectiveness_score' => 5.0,
+        ]));
+
+        ActivityLog::log('create_intervention', "Created intervention: {$intervention->name}", 'intervention', $intervention->id);
+
+        return redirect()->route('interventions.show', $intervention)
+            ->with('success', "Intervention \"{$intervention->name}\" created.");
+    }
+
+    public function edit(Intervention $intervention)
+    {
+        $weaknessCategories = config('bigkas.weakness_categories', []);
+        return view('interventions.edit', compact('intervention', 'weaknessCategories'));
+    }
+
+    public function update(Request $request, Intervention $intervention)
+    {
+        $validated = $this->validateIntervention($request);
+
+        $intervention->update(array_merge($validated, [
+            'for_teacher' => $request->has('for_teacher'),
+            'for_parent' => $request->has('for_parent'),
+        ]));
+
+        ActivityLog::log('update_intervention', "Updated intervention: {$intervention->name}", 'intervention', $intervention->id);
+
+        return redirect()->route('interventions.show', $intervention)
+            ->with('success', 'Intervention updated.');
+    }
+
+    public function destroy(Intervention $intervention)
+    {
+        $intervention->update(['is_active' => false]);
+
+        ActivityLog::log('deactivate_intervention', "Deactivated intervention: {$intervention->name}", 'intervention', $intervention->id);
+
+        return redirect()->route('interventions.index')
+            ->with('success', "Intervention \"{$intervention->name}\" deactivated.");
+    }
+
+    private function validateIntervention(Request $request): array
+    {
+        return $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'target_weakness' => 'required|integer|in:1,2,3,4',
+            'activity_type' => 'required|in:game,drill,reading,writing,audio,visual',
+            'materials_needed' => 'nullable|string',
+            'instructions' => 'required|string',
+            'grade_level_min' => 'required|integer|min:3|max:6',
+            'grade_level_max' => 'required|integer|min:3|max:6|gte:grade_level_min',
+            'estimated_duration' => 'required|integer|min:1|max:240',
+        ]);
+    }
+
     public function show(Intervention $intervention)
     {
         $stats = $intervention->getStats();
 
         // Learners for the assign form (scoped to teacher)
         $user = auth()->user();
-        $learners = $user->isAdmin() ? Learner::orderBy('last_name')->get() : $user->learners()->orderBy('last_name')->get();
+        $learners = Directory::sortLearners($user->isAdmin() ? Learner::get() : $user->learners()->get());
 
         // Recent assignments of this intervention
         $recentLogs = InterventionLog::where('intervention_id', $intervention->id)

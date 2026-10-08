@@ -25,3 +25,16 @@ Thumbs.db
 ml/training/audio_files/
 bigkas_ai
 ml-service/training/audio_files/
+
+__pycache__/
+*.pyc
+
+ml-service/training/whisper_out/
+ml-service/bigkas-whisper-ct2/
+ml-service/training/bigkas-whisper-ct2/
+ml-service/training/whisper_training_manifest.csv
+
+ml-service/training/bigkas_whisper_data/
+
+# Large training archives (never push)
+ml-service/training/*.zip

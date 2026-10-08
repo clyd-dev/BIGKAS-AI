@@ -14,101 +14,71 @@
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('assessments.index') }}" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small">Search</label>
+                    <input type="text" name="search" class="form-control form-control-sm"
+                           placeholder="Learner name..." value="{{ request('search') }}">
+                </div>
                 <div class="col-md-3">
-                    <label class="form-label small">Status</label>
-                    <select name="status" class="form-select form-select-sm">
-                        <option value="">All</option>
-                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="audio_uploaded" {{ request('status') === 'audio_uploaded' ? 'selected' : '' }}>Audio Uploaded</option>
-                        <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                    <label class="form-label small">Reading Level</label>
+                    <select name="reading_level" class="form-select form-select-sm">
+                        <option value="">All Levels</option>
+                        <option value="independent"  {{ request('reading_level') === 'independent'  ? 'selected' : '' }}>Independent</option>
+                        <option value="instructional" {{ request('reading_level') === 'instructional' ? 'selected' : '' }}>Instructional</option>
+                        <option value="frustration"  {{ request('reading_level') === 'frustration'  ? 'selected' : '' }}>Frustration</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label small">Language</label>
-                    <select name="language" class="form-select form-select-sm">
-                        <option value="">All</option>
-                        <option value="english" {{ request('language') === 'english' ? 'selected' : '' }}>English</option>
-                        <option value="filipino" {{ request('language') === 'filipino' ? 'selected' : '' }}>Filipino</option>
-                        </select>
-                </div>
-                <div class="col-md-2">
+                <div class="col-md-3 d-flex gap-1">
                     <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-search me-1"></i> Filter</button>
+                    <a href="{{ route('assessments.index') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- Assessments Table --}}
+    {{-- Teacher: one row per learner who has taken at least one assessment --}}
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
                             <th>Learner</th>
-                            <th>Material</th>
-                            <th>Language</th>
-                            <th>Status</th>
-                            <th>Accuracy</th>
-                            <th>WPM</th>
-                            <th>Level</th>
-                            <th>Date</th>
-                            <th class="text-end">Actions</th>
+                            <th>Summary of Activity</th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($assessments as $assessment)
+                        @forelse($learners as $learner)
+                            @php $latest = $learner->getLatestAssessment(); @endphp
                             <tr>
-                                <td>{{ $assessment->learner?->full_name ?? 'N/A' }}</td>
-                                <td>{{ Str::limit($assessment->material?->title ?? 'N/A', 30) }}</td>
-                                <td>{{ ucfirst($assessment->language) }}</td>
+                                <td class="fw-semibold">{{ $learner->getFullName() }}</td>
                                 <td>
-                                    @if($assessment->status === 'completed')
-                                        <span class="badge bg-success">Completed</span>
-                                    @elseif($assessment->status === 'audio_uploaded')
-                                        <span class="badge bg-info">Audio Ready</span>
-                                    @else
-                                        <span class="badge bg-secondary">Pending</span>
-                                    @endif
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="badge bg-secondary">{{ $learner->assessments_count }} assessment{{ $learner->assessments_count === 1 ? '' : 's' }}</span>
+                                        @if($latest)
+                                            @php $level = $latest->result?->reading_level; @endphp
+                                            @if($level === 'independent')
+                                                <span class="badge bg-success">Independent</span>
+                                            @elseif($level === 'instructional')
+                                                <span class="badge bg-warning text-dark">Instructional</span>
+                                            @elseif($level === 'frustration')
+                                                <span class="badge bg-danger">Frustration</span>
+                                            @endif
+                                            <span class="small text-muted">Last assessed {{ $latest->created_at?->format('M d, Y') }}</span>
+                                        @endif
+                                    </div>
                                 </td>
-                                <td>{{ $assessment->accuracy_rate ?? '-' }}%</td>
-                                <td>{{ $assessment->words_per_minute ?? '-' }}</td>
-                                <td>
-                                    @php $level = $assessment->reading_level; @endphp
-                                    @if($level === 'independent')
-                                        <span class="badge bg-success">Ind.</span>
-                                    @elseif($level === 'instructional')
-                                        <span class="badge bg-warning text-dark">Inst.</span>
-                                    @elseif($level === 'frustration')
-                                        <span class="badge bg-danger">Frus.</span>
-                                    @else
-                                        <span class="badge bg-secondary">-</span>
-                                    @endif
-                                </td>
-                                <td>{{ $assessment->created_at?->format('M d, Y') }}</td>
                                 <td class="text-end">
-                                    @if($assessment->status === 'completed')
-                                        <a href="{{ route('assessments.results', $assessment) }}" class="btn btn-sm btn-outline-primary" title="Results">
-                                            <i class="bi bi-bar-chart"></i>
-                                        </a>
-                                    @elseif($assessment->status === 'audio_uploaded')
-                                        <form method="POST" action="{{ route('assessments.analyze', $assessment) }}" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary" title="Analyze">
-                                                <i class="bi bi-cpu"></i> Analyze
-                                            </button>
-                                        </form>
-                                    @else
-                                        <a href="{{ route('assessments.show', $assessment) }}" class="btn btn-sm btn-outline-primary" title="Continue">
-                                            <i class="bi bi-mic"></i>
-                                        </a>
-                                    @endif
+                                    <a href="{{ route('assessments.learner-history', $learner) }}" class="btn btn-sm btn-primary px-3">
+                                        <i class="bi bi-clock-history me-1"></i> View History
+                                    </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4">
-                                    No assessments yet. <a href="{{ route('assessments.create') }}">Start your first assessment</a>
+                                <td colspan="3" class="text-center text-muted py-4">
+                                    No assessments found. <a href="{{ route('assessments.create') }}">Start an assessment</a>
                                 </td>
                             </tr>
                         @endforelse
@@ -118,7 +88,14 @@
         </div>
     </div>
 
-    @if(method_exists($assessments ?? collect(), 'links'))
-        <div class="mt-3">{{ $assessments->links() }}</div>
-    @endif
+    {{-- Pagination --}}
+    @php $paginated = $learners; @endphp
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+        <div class="small text-muted">
+            @if($paginated->total() > 0)
+                Showing {{ $paginated->firstItem() }}–{{ $paginated->lastItem() }} of {{ $paginated->total() }}
+            @endif
+        </div>
+        {{ $paginated->onEachSide(1)->links('partials.pagination') }}
+    </div>
 @endsection

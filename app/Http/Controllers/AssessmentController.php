@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Assessment;
 use App\Models\AssessmentSession;
 use App\Models\Learner;
+use App\Support\Directory;
 use App\Models\ReadingMaterial;
 use App\Models\ActivityLog;
 use App\Services\SpeechToTextService;
@@ -21,17 +22,70 @@ class AssessmentController extends Controller
     {
         $user = auth()->user();
 
-        $assessments = $user->isAdmin()
-            ? Assessment::with(['learner', 'material', 'result', 'assessor'])->latest()->paginate(20)
-            : Assessment::forUser($user)->with(['learner', 'material', 'result'])->latest()->paginate(20);
+        if ($user->isAdmin()) {
+            // Admin (principal): every assessed learner in the school with a
+            // summary of activity. Assessor details live in the history page.
+            $query = Learner::with('schoolClass')
+                ->whereHas('assessments')
+                ->withCount([
+                    'assessments',
+                    'assessments as completed_count' => fn ($q) => $q->where('status', Assessment::STATUS_COMPLETED),
+                ])
+                ->withMax('assessments as last_assessed_at', 'created_at');
 
-        return view('assessments.index', compact('assessments'));
+            if (request()->filled('search')) {
+                // Names are encrypted, so the match is made in PHP.
+                $query->whereIn('learners.id', Directory::matchingLearnerIds($query, request('search')) ?: [0]);
+            }
+            if (request()->filled('class_id')) {
+                $query->where('class_id', request('class_id'));
+            }
+
+            $learners   = Directory::paginate(Directory::sortLearners($query->get()), 10);
+            $allClasses = \App\Models\SchoolClass::orderBy('grade_level')->orderBy('section')->get();
+
+            return view('assessments.admin-index', compact('learners', 'allClasses'));
+        }
+
+        // Teacher: one row per learner who has taken at least one assessment,
+        // instead of an ever-growing list of every individual assessment.
+        $learnerQuery = $user->accessibleLearnersQuery()->whereHas('assessments');
+
+        if (request()->filled('search')) {
+            $s = request('search');
+            $learnerQuery->whereIn('learners.id', Directory::matchingLearnerIds($learnerQuery, $s) ?: [0]);
+        }
+        if (request()->filled('reading_level')) {
+            $learnerQuery->where('reading_level', request('reading_level'));
+        }
+
+        $learners = Directory::paginate(Directory::sortLearners($learnerQuery->withCount('assessments')->get()), 10);
+
+        return view('assessments.index', compact('learners'));
+    }
+
+    /**
+     * Per-learner assessment history (date, assessor, summary per assessment),
+     * reached from the teacher's or admin's Assessments list.
+     */
+    public function learnerHistory(Learner $learner)
+    {
+        $this->authorizeLearnerAccess($learner);
+
+        $learner->load('schoolClass');
+        $assessments = $learner->assessments()
+            ->with(['assessor', 'material', 'result', 'verdict'])
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('assessments.learner-history', compact('learner', 'assessments'));
     }
 
     public function create()
     {
         $user = auth()->user();
-        $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
+        $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
 
         // Materials are loaded progressively via materials.options once the
         // teacher picks learner → language → assessment type.
@@ -96,6 +150,7 @@ class AssessmentController extends Controller
             'material_id' => $validated['material_id'],
             'assessor_id' => auth()->id(),
             'language' => $validated['language'],
+            'assessment_type' => $validated['assessment_type'],
             'status' => Assessment::STATUS_PENDING,
         ]);
 
@@ -120,12 +175,16 @@ class AssessmentController extends Controller
     public function show(Assessment $assessment)
     {
         $this->authorizeLearnerAccess($assessment->learner);
-        $assessment->load(['learner', 'material']);
+        $assessment->load(['learner', 'material.comprehensionQuestions', 'comprehensionAnswers']);
 
         return view('assessments.show', [
             'assessment' => $assessment,
             'learner' => $assessment->learner,
             'material' => $assessment->material,
+            'questions' => $assessment->needsComprehensionTest()
+                ? $assessment->material->comprehensionQuestions
+                : collect(),
+            'submittedAnswers' => $assessment->comprehensionAnswers,
         ]);
     }
 
@@ -187,17 +246,41 @@ class AssessmentController extends Controller
             return response()->json(['success' => false, 'message' => 'No audio recording provided.'], 400);
         }
 
+        // Comprehension test: recorded before any transcription or ML runs, so a
+        // failure further down never costs the learner's answers. Answers the
+        // learner already submitted from their own portal are kept as-is.
+        $comprehensionScore = null;
+
+        if ($assessment->needsComprehensionTest()) {
+            if ($request->filled('answers')) {
+                $comprehensionScore = app(\App\Services\ComprehensionService::class)
+                    ->record($assessment, $request->input('answers', []));
+            } elseif ($assessment->hasComprehensionAnswers()) {
+                $comprehensionScore = $assessment->comprehensionScore();
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please complete the comprehension questions before analyzing.',
+                ], 422);
+            }
+        }
+
+        // A recording made in the browser only exists as PHP's temporary upload,
+        // which is deleted the moment this request ends. Keep it before doing
+        // anything else, so the teacher can always play it back later — and so a
+        // failure further down doesn't lose it.
+        if ($request->hasFile('audio')) {
+            $this->keepRecording($assessment, $request->file('audio'));
+        }
+
         $assessment->updateStatus(Assessment::STATUS_PROCESSING);
 
         try {
             // ==========================================
             // REAL: SPEECH TO TEXT (Whisper API)
             // ==========================================
-            if ($request->hasFile('audio')) {
-                $audioPath = $request->file('audio')->getRealPath();
-            } else {
-                $audioPath = $assessment->getAudioPath();
-            }
+            // Always the saved copy, so what was played back is what was analysed.
+            $audioPath = $assessment->getAudioPath();
             $sttService = app(SpeechToTextService::class);
             // Uses your OpenAI key in .env, or falls back to mock if not configured
             $transcription = $sttService->transcribe($audioPath, $assessment->language ?? 'en');
@@ -221,29 +304,24 @@ class AssessmentController extends Controller
             $classification = $mlService->classify($analysis['ml_features']);
             
             // Map the String predictions from Python back to the Database Integers
-            $weaknessMap = [
-                '0' => 0,
-                'Independent Reader' => 0,
-                '1' => 1,
-                'Phonemic Awareness' => 1,
-                '2' => 2,
-                'Decoding Accuracy' => 2,
-                '3' => 3,
-                'Oral Reading Fluency' => 3,
-                '4' => 4,
-                'Comprehension' => 4,
-                'Reading Comprehension' => 4,
-                'Instructional (Mixed)' => 2, // Fallback mapping
-                'None (Independent)' => 0
-            ];
-            
-            $predictedString = (string) ($classification['primary'] ?? '');
-            $primaryWeaknessId = $weaknessMap[$predictedString] ?? null;
-            
+            $primaryWeaknessId = \App\Services\MLClassificationService::mapWeaknessToId(
+                $classification['primary'] ?? ''
+            );
+
             // Merge ML classification into analysis results to store properly
             $analysis['primary_weakness'] = $primaryWeaknessId ?? $analysis['primary_weakness'];
             $analysis['secondary_weakness'] = null; // Update mapping if secondary model is implemented
             $analysis['confidence_score'] = $classification['confidence'] ?? $analysis['confidence_score'];
+
+            // Real comprehension score from the question set, when one was taken.
+            // The ML feature vector is deliberately left untouched.
+            if ($comprehensionScore !== null) {
+                $analysis['comprehension_score'] = $comprehensionScore;
+            }
+
+            // Record which engines actually produced this result, so the teacher
+            // can see whether to trust it (see AnalysisAdvisorService).
+            $analysis['provenance'] = $this->buildProvenance($transcription, $classification);
 
             // ==========================================
             // SAVE TO DATABASE
@@ -267,17 +345,74 @@ class AssessmentController extends Controller
         }
     }
 
+    /**
+     * Save a browser recording against the assessment, replacing any earlier one.
+     *
+     * The file's extension is chosen from a short list rather than taken from
+     * the client's file name: this folder is served publicly, so a name like
+     * "recording.php" must never be written as-is.
+     */
+    private function keepRecording(Assessment $assessment, \Illuminate\Http\UploadedFile $file): void
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $extension = in_array($extension, ['webm', 'weba', 'ogg', 'oga', 'wav', 'mp3', 'm4a', 'mp4'], true)
+            ? $extension
+            : 'webm';
+
+        $path = $file->storeAs('assessments/audio', "assessment_{$assessment->id}_" . time() . ".{$extension}", 'public');
+
+        $previous = $assessment->audio_file;
+        $assessment->update(['audio_file' => $path]);
+
+        if ($previous && $previous !== $path) {
+            Storage::disk('public')->delete($previous);
+        }
+    }
+
+    /**
+     * Provenance of one analysis run: which speech engine and which classifier
+     * produced it, and how confident the transcription was.
+     */
+    private function buildProvenance(array $transcription, array $classification): array
+    {
+        $confidences = array_filter(
+            array_column($transcription['words'] ?? [], 'confidence'),
+            fn ($v) => $v !== null
+        );
+
+        // Read the shipped metadata rather than calling the ML service again —
+        // analyze() is already the slowest request in the app.
+        $metadataPath = base_path('ml-service/model_metadata.json');
+        $metadata = is_file($metadataPath)
+            ? (json_decode((string) file_get_contents($metadataPath), true) ?: [])
+            : [];
+
+        return [
+            'stt_engine' => $transcription['engine'] ?? 'unknown',
+            'stt_is_mock' => (bool) ($transcription['is_mock'] ?? false),
+            'mean_word_confidence' => $confidences ? round(array_sum($confidences) / count($confidences), 3) : null,
+            'classifier' => ($classification['is_fallback'] ?? false) ? 'rule_based' : 'ml',
+            'model_version' => $metadata['version'] ?? null,
+            'analysed_at' => now()->toIso8601String(),
+        ];
+    }
+
     public function results(Assessment $assessment)
     {
         $this->authorizeLearnerAccess($assessment->learner);
         $result = $assessment->result;
 
         if (!$result) {
+            if (auth()->user()->isAdmin()) {
+                return redirect()->route('assessments.index')
+                    ->with('error', 'Assessment results not available yet.');
+            }
+
             return redirect()->route('assessments.show', $assessment)
                 ->with('error', 'Assessment results not available yet.');
         }
 
-        $assessment->load(['learner', 'material']);
+        $assessment->load(['learner', 'material', 'comprehensionAnswers', 'verdict.decidedBy']);
         $recommendations = $assessment->getRecommendedInterventions();
         $comparison = $result->getComparisonWithPrevious();
 
@@ -291,6 +426,11 @@ class AssessmentController extends Controller
             'readingLevelInfo' => $result->getReadingLevelInfo(),
             'errorBreakdown' => $result->getErrorBreakdown(),
             'skillScores' => $result->getSkillScores(),
+            // Decision support: how this result was produced and what to watch for.
+            'advisor' => app(\App\Services\AnalysisAdvisorService::class)->for($assessment),
+            // Why the reading landed at its level, in the teacher's terms.
+            'interpretation' => app(\App\Services\ReadingInterpretationService::class)->for($assessment),
+            'weaknessWhy' => app(\App\Services\ReadingInterpretationService::class)->weakness($assessment),
         ]);
     }
 
@@ -310,12 +450,17 @@ class AssessmentController extends Controller
         $learner = Learner::findOrFail($request->learner_id);
         $this->authorizeLearnerAccess($learner);
 
-        // Create the assessment record
+        // Create the assessment record. A live session has no separate type
+        // picker, so the material's own type decides whether a comprehension
+        // test follows the reading.
         $assessment = Assessment::create([
             'learner_id' => $request->learner_id,
             'material_id' => $request->material_id,
             'assessor_id' => auth()->id(),
             'language' => $material->language,
+            'assessment_type' => $material->isComprehensionType()
+                ? Assessment::TYPE_COMPREHENSION
+                : Assessment::TYPE_ORAL_READING,
             'status' => Assessment::STATUS_PENDING,
         ]);
 
@@ -413,7 +558,7 @@ class AssessmentController extends Controller
 
         ActivityLog::log('generate_pin', "Generated PIN for learner: {$learner->first_name} {$learner->last_name}", 'learner', $learner->id);
 
-        return back()->with('success', "PIN for {$learner->getFullName()}: {$pin}");
+        return back()->with('success', "A new PIN was issued for {$learner->getFullName()}.");
     }
 }
 

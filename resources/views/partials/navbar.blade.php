@@ -1,6 +1,10 @@
 {{-- Top Navigation Bar --}}
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm sticky-top">
     <div class="container-fluid">
+        {{-- Hamburger: opens the sidebar as a slide-out menu below 992px --}}
+        <button type="button" class="btn btn-link text-white d-lg-none p-0 me-2 fs-3 lh-1" id="sidebarToggle" aria-label="Open menu" aria-controls="sidebar-wrapper">
+            <i class="bi bi-list"></i>
+        </button>
         <a class="navbar-brand fw-bold" href="{{ route('dashboard') }}">
             <i class="bi bi-book"></i> BIGKAS-AI
         </a>
@@ -43,6 +47,16 @@
                         @empty
                             <li><span class="dropdown-item-text text-muted small">No notifications</span></li>
                         @endforelse
+                        <li><hr class="dropdown-divider"></li>
+                        <li class="d-flex justify-content-between px-2">
+                            <a href="{{ route('notifications.index') }}" class="small">View all</a>
+                            @if($unreadNotifCount > 0)
+                                <form method="POST" action="{{ route('notifications.read-all') }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-link btn-sm p-0 small">Mark all read</button>
+                                </form>
+                            @endif
+                        </li>
                     </ul>
                 </li>
 

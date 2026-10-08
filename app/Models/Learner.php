@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Support\Directory;
+
+use App\Casts\EncryptedPin;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -53,7 +56,14 @@ class Learner extends Model
     protected function casts(): array
     {
         return [
-            'birth_date' => 'date',
+            // Personal data is stored encrypted (see the encrypt_learner_and_user_identity migration).
+            'first_name' => 'encrypted',
+            'last_name' => 'encrypted',
+            'middle_name' => 'encrypted',
+            'lrn' => 'encrypted',
+            'mother_tongue' => 'encrypted',
+            'notes' => 'encrypted',
+            'birth_date' => \App\Casts\EncryptedDate::class,
             'grade_level' => 'integer',
             'is_active' => 'boolean',
             'locked_at' => 'datetime',
@@ -62,8 +72,23 @@ class Learner extends Model
             'total_xp' => 'integer',
             'last_activity_date' => 'date',
             'pin_created_at' => 'datetime',
-            'pin' => 'hashed',
+            'pin' => \App\Casts\EncryptedPin::class,
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Exact-match fingerprint of the (encrypted) LRN, for lookups and the uniqueness check.
+        static::saving(function (self $learner) {
+            if ($learner->isDirty('lrn') || $learner->lrn_index === null) {
+                $learner->lrn_index = \App\Support\BlindIndex::make($learner->lrn, 'lrn');
+            }
+        });
+    }
+
+    public function scopeByLrn($query, ?string $lrn)
+    {
+        return $query->where('lrn_index', \App\Support\BlindIndex::make($lrn, 'lrn') ?? '-none-');
     }
 
     // ── Relationships ──
@@ -78,11 +103,35 @@ class Learner extends Model
         return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
+    /**
+     * Staff a parent may send this learner's report to: the teacher of the
+     * learner's class, plus the admin (principal).
+     */
+    public function reportRecipients(): \Illuminate\Support\Collection
+    {
+        $teachers = $this->class_id
+            ? User::where('role', 'teacher')
+                ->whereHas('taughtClasses', fn ($q) => $q->where('classes.id', $this->class_id))
+                ->get()
+            : collect();
+        $teachers = Directory::sortUsers($teachers);
+
+        $admins = Directory::sortUsers(User::where('role', 'admin')->get());
+
+        return collect(['teacher' => $teachers, 'admin' => $admins])
+            ->filter(fn ($group) => $group->isNotEmpty());
+    }
+
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'learner_user')
             ->withPivot('relationship')
             ->withTimestamps();
+    }
+
+    public function gstResults(): HasMany
+    {
+        return $this->hasMany(GstResult::class);
     }
 
     public function assessments(): HasMany
@@ -208,11 +257,29 @@ class Learner extends Model
             ->get();
     }
 
+    /**
+     * Set the learner's reading level from their most recent usable assessment.
+     *
+     * Results a teacher marked invalid are skipped (they stay on record, they
+     * just don't define the child's level), and where a teacher overrode the
+     * AI's judgement, the teacher's level wins.
+     */
     public function updateReadingLevel(): void
     {
-        $latest = $this->getLatestAssessment();
-        if ($latest && $latest->result) {
-            $this->update(['reading_level' => $latest->result->reading_level]);
+        $latest = $this->assessments()
+            ->whereHas('result')
+            ->with(['result', 'verdict'])
+            // Tie-break on id: two assessments can share a created_at second,
+            // which would otherwise make "most recent" non-deterministic.
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get()
+            ->first(fn (Assessment $assessment) => !$assessment->isInvalidated());
+
+        $level = $latest?->effectiveReadingLevel();
+
+        if ($level) {
+            $this->update(['reading_level' => $level]);
         }
     }
 
@@ -231,20 +298,49 @@ class Learner extends Model
 
     // ── Student Portal / Gamification ──
 
+    /** A new 6-digit PIN that no other learner currently has. */
     public static function generatePin(): string
     {
         $commonPins = ['000000', '123456', '111111', '222222', '654321', '987654'];
+        $holders = self::whereNotNull('pin')->get(['id', 'pin']);
 
         do {
             $pin = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        } while (in_array($pin, $commonPins, true) || self::where('pin', $pin)->exists());
+        } while (in_array($pin, $commonPins, true) || $holders->contains(fn (self $l) => $l->checkPin($pin)));
 
         return $pin;
     }
 
     public function checkPin(string $pin): bool
     {
-        return Hash::check($pin, $this->attributes['pin']);
+        $stored = $this->attributes['pin'] ?? null;
+        if ($stored === null || $stored === '') {
+            return false;
+        }
+
+        // Old PINs were stored as bcrypt hashes; they still work until re-issued or upgraded at login.
+        if (EncryptedPin::isLegacyHash($stored)) {
+            return Hash::check($pin, $stored);
+        }
+
+        $plain = $this->pin;
+
+        return $plain !== null && hash_equals($plain, $pin);
+    }
+
+    /** True when a PIN exists but was stored as an unreadable bcrypt hash (issued before PINs could be viewed). */
+    public function hasLegacyPin(): bool
+    {
+        return EncryptedPin::isLegacyHash($this->attributes['pin'] ?? null);
+    }
+
+    /** Re-store a legacy hashed PIN as an encrypted one. Call only with the PIN just proven correct at login. */
+    public function upgradeLegacyPin(string $plainPin): void
+    {
+        if ($this->hasLegacyPin()) {
+            $this->pin = $plainPin;   // encrypted by the cast; pin_created_at is left as issued
+            $this->save();
+        }
     }
 
     /**

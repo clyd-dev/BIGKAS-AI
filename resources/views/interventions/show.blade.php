@@ -61,12 +61,37 @@
                     @php $weaknessLabels = config('bigkas.weakness_categories', []); @endphp
                     <table class="table table-borderless table-sm mb-0">
                         <tr><th class="text-muted">Target</th><td>{{ $weaknessLabels[$intervention->target_weakness]['name'] ?? 'General' }}</td></tr>
-                        <tr><th class="text-muted">Type</th><td>{{ ucfirst($intervention->type ?? 'activity') }}</td></tr>
-                        <tr><th class="text-muted">Difficulty</th><td>{{ ucfirst($intervention->difficulty ?? 'medium') }}</td></tr>
-                        <tr><th class="text-muted">Duration</th><td>{{ $intervention->duration_minutes ?? '?' }} minutes</td></tr>
+                        <tr><th class="text-muted">Activity Type</th><td>{{ $intervention->getActivityTypeName() }}</td></tr>
+                        <tr><th class="text-muted">Grade Level</th><td>{{ $intervention->getGradeLevelRange() }}</td></tr>
+                        <tr><th class="text-muted">Duration</th><td>{{ $intervention->getDurationDisplay() }}</td></tr>
+                        <tr><th class="text-muted">Used By</th><td>
+                            @if($intervention->for_teacher)<span class="badge bg-light text-dark border me-1">Teacher</span>@endif
+                            @if($intervention->for_parent)<span class="badge bg-light text-dark border">Parent</span>@endif
+                        </td></tr>
                     </table>
                 </div>
             </div>
+
+            {{-- Danger Zone (teachers only; admin view is read-only) --}}
+            @if(auth()->user()->isTeacher())
+                <div class="card border-danger-subtle shadow-sm mt-3">
+                    <div class="card-header bg-danger-subtle text-danger-emphasis">
+                        <h6 class="mb-0"><i class="bi bi-exclamation-triangle me-1"></i> Danger Zone</h6>
+                    </div>
+                    <div class="card-body d-flex gap-2">
+                        <a href="{{ route('interventions.edit', $intervention) }}" class="btn btn-outline-warning flex-fill">
+                            <i class="bi bi-pencil me-1"></i> Edit
+                        </a>
+                        <form method="POST" action="{{ route('interventions.destroy', $intervention) }}"
+                              class="flex-fill" onsubmit="return confirm('Deactivate this intervention? It will no longer appear in listings.')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-trash me-1"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
 
             {{-- Recent Assignments --}}
             <div class="card border-0 shadow-sm mt-3">

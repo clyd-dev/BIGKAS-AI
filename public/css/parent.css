@@ -1,0 +1,59 @@
+/* Parent portal: larger text, bigger touch targets, soft colours, no colour-only meaning. */
+.pp { font-size: 1.05rem; line-height: 1.55; }
+.pp h4, .pp h5, .pp h6 { font-weight: 700; }
+.pp .btn { min-height: 44px; font-size: 1rem; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
+.pp .btn-sm { min-height: 40px; font-size: .95rem; }
+.pp .card { border-radius: 16px; }
+.pp .card-header { border-top-left-radius: 16px !important; border-top-right-radius: 16px !important; font-size: 1.05rem; }
+.pp .text-muted { color: #5b6470 !important; } /* stronger contrast than Bootstrap default */
+
+/* Tone palette (always paired with an icon or word) */
+.pp-good  { --tone: #1e7e46; --tone-bg: #e6f6ec; --tone-bd: #b7e2c6; }
+.pp-ok    { --tone: #8a5a00; --tone-bg: #fff4d6; --tone-bd: #f2dc9b; }
+.pp-help  { --tone: #a4400f; --tone-bg: #ffeadf; --tone-bd: #f5c4aa; }
+.pp-none  { --tone: #4b5563; --tone-bg: #eef0f3; --tone-bd: #d5d9df; }
+
+.pp-tone { background: var(--tone-bg); border: 1px solid var(--tone-bd); color: #1f2933; }
+.pp-tone .pp-tone-label { color: var(--tone); font-weight: 700; }
+.pp-pill { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .8rem; border-radius: 999px;
+           background: var(--tone-bg); border: 1px solid var(--tone-bd); color: var(--tone); font-weight: 700; font-size: .95rem; }
+
+/* Child hero card */
+.pp-hero { border-radius: 20px; padding: 1.25rem 1.5rem; }
+.pp-hero .pp-emoji { font-size: 2.6rem; line-height: 1; }
+.pp-hero h3 { font-weight: 800; margin-bottom: .25rem; }
+
+/* Skill rows */
+.pp-skill { display: flex; align-items: center; gap: .9rem; padding: .85rem 0; border-bottom: 1px solid #edf0f3; }
+.pp-skill:last-child { border-bottom: 0; }
+.pp-skill-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--tone-bg); color: var(--tone);
+                 display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex: 0 0 auto; }
+.pp-stars { color: #e0a100; font-size: 1.25rem; letter-spacing: 2px; white-space: nowrap; }
+.pp-stars .off { color: #cfd4da; }
+
+/* Checkup timeline */
+.pp-checkup { border-left: 4px solid var(--tone-bd); padding: .25rem 0 .25rem 1rem; margin-bottom: 1rem; }
+.pp-bar { height: 12px; border-radius: 999px; background: #e9edf1; overflow: hidden; }
+.pp-bar > span { display: block; height: 100%; background: var(--tone); border-radius: 999px; }
+
+/* Big action list */
+.pp-todo { border-radius: 14px; border: 1px solid #e3e7ec; padding: 1rem; background: #fff; }
+.pp-tip { display: flex; gap: .75rem; align-items: flex-start; padding: .6rem 0; }
+.pp-tip i { color: #1e7e46; font-size: 1.2rem; margin-top: .15rem; }
+
+/* Rating faces */
+.pp-faces { display: flex; gap: .5rem; flex-wrap: wrap; }
+.pp-faces input { position: absolute; opacity: 0; }
+.pp-faces label { cursor: pointer; border: 2px solid #d5d9df; border-radius: 14px; padding: .5rem .8rem; text-align: center; min-width: 78px; background: #fff; }
+.pp-faces label .face { font-size: 1.8rem; display: block; line-height: 1.1; }
+.pp-faces input:checked + label { border-color: #1a73e8; background: #e8f0fe; }
+.pp-faces input:focus-visible + label { outline: 3px solid #1a73e8; outline-offset: 2px; }
+
+.pp a:focus-visible, .pp button:focus-visible, .pp summary:focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; }
+.pp details > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+
+@media (max-width: 576px) {
+    .pp-hero { padding: 1rem; }
+    .pp-hero .pp-emoji { font-size: 2.2rem; }
+    .pp .btn-block-sm { width: 100%; }
+}

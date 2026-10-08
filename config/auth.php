@@ -63,7 +63,8 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            // Like 'eloquent', but looks users up by the blind index of their encrypted email.
+            'driver' => 'blind_eloquent',
             'model' => env('AUTH_MODEL', User::class),
         ],
 

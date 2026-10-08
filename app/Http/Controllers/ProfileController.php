@@ -22,7 +22,7 @@ class ProfileController extends Controller
 
         $request->validate([
             'name' => 'required|string|min:2|max:100',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => ['required', 'email', \App\Rules\UniqueBlindIndex::email($user->id)],
             'phone' => 'nullable|string|max:20',
         ]);
 

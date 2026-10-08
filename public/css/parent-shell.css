@@ -1,0 +1,100 @@
+/* =====================================================================
+   Parent app shell: top bar, desktop sidebar, mobile bottom tab bar.
+   Loaded by layouts/parent.blade.php after parent.css.
+   ===================================================================== */
+:root { --pp-topbar-h: 56px; --pp-tabbar-h: 64px; --pp-blue: #1a73e8; }
+.pp-body { background: #f0f2f5; margin: 0; -webkit-text-size-adjust: 100%; }
+.pp-skip { position: absolute; left: .5rem; top: .5rem; z-index: 2000; background: #fff; padding: .5rem 1rem; border-radius: 8px; }
+
+/* Top bar */
+.pp-topbar { position: sticky; top: 0; z-index: 1030; height: var(--pp-topbar-h); display: flex; align-items: center;
+             justify-content: space-between; gap: .5rem; padding: 0 1rem;
+             background: var(--pp-blue); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+.pp-brand { color: #fff; font-weight: 800; font-size: 1.15rem; display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; min-height: 44px; }
+.pp-brand:hover { color: #fff; }
+.pp-topbar-right { display: flex; align-items: center; gap: .25rem; }
+.pp-icon-btn { position: relative; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
+               color: #fff; font-size: 1.35rem; border-radius: 12px; text-decoration: none; }
+.pp-icon-btn:hover, .pp-icon-btn:focus-visible { color: #fff; background: rgba(255,255,255,.18); }
+.pp-dot { position: absolute; top: 4px; right: 3px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px;
+          background: #dc3545; color: #fff; font-size: .72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.pp-chip { display: inline-flex; align-items: center; gap: .4rem; min-height: 40px; padding: .25rem .8rem; border-radius: 999px;
+           border: 1px solid rgba(255,255,255,.55); background: rgba(255,255,255,.12); color: #fff; font-weight: 600; text-decoration: none; }
+.pp-chip:hover { color: #fff; background: rgba(255,255,255,.2); }
+.pp-chip-name { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-menu .dropdown-item { min-height: 44px; display: flex; align-items: center; }
+
+/* Layout */
+.pp-shell { display: flex; align-items: flex-start; min-height: calc(100vh - var(--pp-topbar-h)); }
+.pp-main { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.pp-container { max-width: 960px; margin: 0 auto; padding: 1rem; padding-bottom: 2rem; }
+
+/* Desktop sidebar */
+.pp-sidebar { flex: 0 0 240px; width: 240px; flex-direction: column; position: sticky; top: var(--pp-topbar-h);
+              height: calc(100vh - var(--pp-topbar-h)); overflow-y: auto; background: #fff; border-right: 1px solid #e3e7ec; padding: .75rem .5rem; }
+.pp-side-label { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: #5b6470; padding: 1rem .75rem .35rem; font-weight: 700; }
+.pp-side-link { display: flex; align-items: center; gap: .6rem; min-height: 44px; padding: .5rem .75rem; border-radius: 10px;
+                color: #1f2933; text-decoration: none; font-weight: 500; }
+.pp-side-link:hover { background: #f0f4fb; color: #1f2933; }
+.pp-side-link.active { background: #e8f0fe; color: #0d47a1; font-weight: 700; }
+
+/* Mobile bottom tab bar */
+.pp-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030; height: calc(var(--pp-tabbar-h) + env(safe-area-inset-bottom, 0px));
+             padding-bottom: env(safe-area-inset-bottom, 0px); display: flex; background: #fff; border-top: 1px solid #dfe3e8;
+             box-shadow: 0 -2px 10px rgba(0,0,0,.08); }
+.pp-tab { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+          color: #4b5563; background: none; border: 0; padding: 4px 2px; font-size: .74rem; font-weight: 600; text-decoration: none; }
+.pp-tab i { font-size: 1.45rem; line-height: 1; }
+.pp-tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-tab.active { color: var(--pp-blue); }
+.pp-tab.active::before { content: ""; position: absolute; top: 0; left: 22%; right: 22%; height: 3px; border-radius: 0 0 4px 4px; background: var(--pp-blue); }
+.pp-tab:focus-visible { outline: 3px solid var(--pp-blue); outline-offset: -3px; }
+.pp-tab-badge { background: #dc3545; color: #fff; font-size: .68rem; border-radius: 999px; padding: 1px 6px; font-weight: 700; margin-left: .35rem; }
+.pp-tab .pp-tab-badge { position: absolute; top: 6px; left: 55%; margin: 0; }
+
+/* "More" bottom sheet */
+.pp-sheet { border-top-left-radius: 20px; border-top-right-radius: 20px; height: auto; max-height: 85vh; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pp-sheet-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+.pp-sheet-grid a { display: flex; align-items: center; gap: .6rem; min-height: 56px; padding: .6rem .9rem; border: 1px solid #e3e7ec; border-radius: 14px;
+                   color: #1f2933; text-decoration: none; font-weight: 600; background: #fff; }
+.pp-sheet-grid a i { font-size: 1.4rem; color: var(--pp-blue); }
+.pp-sheet .pp-chip { border-color: #c9d3e0; background: #f3f6fb; color: #1f2933; }
+.pp-sheet .pp-chip-on { background: var(--pp-blue); border-color: var(--pp-blue); color: #fff; }
+
+/* Phones and tablets: leave room for the tab bar */
+@media (max-width: 991.98px) {
+    .pp-shell { display: block; }
+    .pp-container { padding: .85rem; padding-bottom: calc(var(--pp-tabbar-h) + env(safe-area-inset-bottom, 0px) + 1.25rem); }
+}
+@media (max-width: 575.98px) {
+    .pp-sheet-grid { grid-template-columns: 1fr; }
+    .pp h4 { font-size: 1.25rem; }
+    .pp h3 { font-size: 1.35rem; }
+}
+
+/* Forms and touch comfort (16px+ text prevents iOS zoom-on-focus) */
+.pp-body input:not([type=checkbox]):not([type=radio]):not([type=range]),
+.pp-body select, .pp-body textarea { font-size: 1rem; min-height: 44px; }
+.pp-body textarea { min-height: 88px; }
+.pp-body .form-control, .pp-body .form-select { border-radius: 10px; }
+.pp-body .btn { min-height: 44px; }
+
+/* Pop-ups become bottom sheets on phones */
+@media (max-width: 575.98px) {
+    .pp-body .modal.fade .modal-dialog { margin: 0; position: fixed; left: 0; right: 0; bottom: 0; max-width: none; transform: translateY(100%); transition: transform .25s ease-out; }
+    .pp-body .modal.show .modal-dialog { transform: none; }
+    .pp-body .modal-content { border-radius: 20px 20px 0 0 !important; max-height: 88vh; overflow-y: auto; padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .pp-body .modal-footer { position: sticky; bottom: 0; background: #fff; }
+    .pp-body .modal-footer .btn { flex: 1 1 0; }
+}
+
+/* Wide content never forces sideways page scroll */
+.pp-main img, .pp-main canvas { max-width: 100%; }
+.pp-main .table-responsive { -webkit-overflow-scrolling: touch; }
+@media (prefers-reduced-motion: reduce) { .pp-body * { transition: none !important; animation: none !important; } }
+
+/* Hamburger drawer + collapsible desktop sidebar */
+.pp-drawer { width: 290px; max-width: 85vw; }
+.pp-drawer .offcanvas-header { background: var(--pp-blue); color: #fff; }
+.pp-drawer .btn-close { filter: invert(1) grayscale(1) brightness(2); }
+body.pp-sidebar-hidden .pp-sidebar { display: none !important; }

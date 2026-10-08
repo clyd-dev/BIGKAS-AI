@@ -25,6 +25,10 @@ class ReadingMaterial extends Model
     const CATEGORY_POETRY = 'poetry';
     const CATEGORY_DIALOGUE = 'dialogue';
 
+    // Types (teacher/admin-facing: what kind of assessment this material supports)
+    const TYPE_ORAL_READING = 'oral_reading';
+    const TYPE_COMPREHENSION = 'comprehension';
+
     protected $fillable = [
         'title',
         'content',
@@ -33,6 +37,7 @@ class ReadingMaterial extends Model
         'difficulty',
         'word_count',
         'category',
+        'type',
         'source',
         'audio_guide',
         'image',
@@ -127,6 +132,19 @@ class ReadingMaterial extends Model
     public function getCategoryName(): string
     {
         return ucfirst($this->category ?? 'narrative');
+    }
+
+    public function getTypeName(): string
+    {
+        return match ($this->type) {
+            self::TYPE_COMPREHENSION => 'Comprehension',
+            default => 'Oral Reading',
+        };
+    }
+
+    public function isComprehensionType(): bool
+    {
+        return $this->type === self::TYPE_COMPREHENSION;
     }
 
     public function getWords(): array

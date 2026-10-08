@@ -2,7 +2,7 @@
 
 > **B**uilding **I**ntelligence for **G**uided **K**nowledge **A**ssessment **S**ystem
 
-An intelligent, multilingual reading assessment platform for public elementary and secondary schools in Sagay City, Negros Occidental, Philippines. BIGKAS uses speech-to-text, machine learning, and evidence-based intervention recommendations to help teachers identify struggling readers, classify their specific weaknesses, and coordinate home-based support with parents — all aligned with DepEd's Phil-IRI standards and MTB-MLE program.
+An intelligent, bilingual (English/Filipino) reading assessment platform for Grade 3–6 learners in public elementary schools in Sagay City, Negros Occidental, Philippines. BIGKAS uses speech-to-text, machine learning, and evidence-based intervention recommendations to help teachers identify struggling readers, classify their specific weaknesses, and coordinate home-based support with parents — all aligned with DepEd's Phil-IRI standards and MTB-MLE program.
 
 ![Laravel](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=flat-square&logo=laravel)
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python)
@@ -43,7 +43,7 @@ The Philippines faces a severe reading literacy crisis. According to EDCOM 2, **
 
 BIGKAS automates the oral reading assessment process. A teacher records a student reading a passage aloud, and the system:
 
-1. Transcribes the audio using OpenAI Whisper (speech-to-text)
+1. Transcribes the audio using a local `faster-whisper` model (speech-to-text; not yet fine-tuned for Filipino classroom audio)
 2. Compares the spoken words against the reference passage word-by-word
 3. Computes reading metrics (accuracy %, words per minute, fluency score, error types)
 4. Classifies the student's primary reading weakness using a Random Forest ML model
@@ -61,12 +61,12 @@ BIGKAS automates the oral reading assessment process. A teacher records a studen
 
 ### Key Differentiators
 
-- **Multilingual** — English, Filipino, (aligned with DepEd's MTB-MLE program)
+- **Bilingual** — English and Filipino only (aligned with DepEd's MTB-MLE program); Hiligaynon is not supported for reading assessment
 - **Phil-IRI Aligned** — Three reading levels: Frustration, Instructional, Independent
-- **ML-Powered Classification** — Four weakness categories: Phonemic Awareness, Decoding Accuracy, Oral Reading Fluency, Reading Comprehension
+- **ML-Powered Classification** — Five weakness categories: Independent Reader, Phonemic Awareness, Decoding Accuracy, Oral Reading Fluency, Reading Comprehension
 - **Gamified Student Portal** — XP points, streaks, badges, and class leaderboard
 - **Graceful Degradation** — Falls back to rule-based classification if the ML service is unavailable
-- **Scope** — Designed for Grade 1–7 learners in Sagay City Division
+- **Scope** — Designed for Grade 3–6 learners in Sagay City Division
 
 ---
 
@@ -103,11 +103,12 @@ BIGKAS automates the oral reading assessment process. A teacher records a studen
 └──────┬────────────────────┬────────────────────┬─────────────┘
        │                    │                    │
 ┌──────▼──────┐   ┌─────────▼──────┐   ┌────────▼────────────┐
-│  MySQL /    │   │  OpenAI Whisper │   │ Python Flask ML API │
-│  SQLite DB  │   │  (Speech-to-   │   │ localhost:5000       │
-│             │   │   Text API)    │   │ Random Forest Model  │
-│  18 tables  │   │  Mock mode     │   │ Rule-based fallback  │
-│             │   │  available     │   │ if unavailable       │
+│  MySQL /    │   │  faster-whisper │   │ Python Flask ML API │
+│  SQLite DB  │   │  (local,        │   │ localhost:5000       │
+│             │   │  primary, not   │   │ Random Forest Model  │
+│  18 tables  │   │  yet fine-tuned)│   │ Rule-based fallback  │
+│             │   │  -or- OpenAI    │   │ if unavailable       │
+│             │   │  Whisper API    │   │                      │
 └─────────────┘   └────────────────┘   └─────────────────────┘
 ```
 
@@ -116,7 +117,8 @@ BIGKAS automates the oral reading assessment process. A teacher records a studen
 - **MVC (Model-View-Controller)** — Laravel enforces MVC. Controllers handle HTTP, Models handle data, Blade templates handle views.
 - **Service Layer** — Complex business logic (reading analysis, ML calls, gamification) lives in `app/Services/`, keeping controllers thin.
 - **Dual Authentication** — Standard Laravel session auth for teachers/parents/admins. A completely separate PIN-based session system (`StudentAuth` middleware) for child-friendly student access.
-- **ML-First with Rule-Based Fallback** — The system always tries the Python ML API first. If it's unreachable or throws an error, `ReadingAnalyzerService` catches the exception and falls back to a deterministic rule-based classifier, ensuring zero downtime for assessments.
+- **ML-First with Rule-Based Fallback** — The system always tries the Python ML API first. If it's unreachable or throws an error, `MLClassificationService` catches the exception and falls back to a deterministic rule-based classifier in `ReadingAnalyzerService`, ensuring zero downtime for assessments.
+- **Dual Speech-to-Text** — `faster-whisper` installed locally in `ml-service/venv` is the **primary** transcription engine (offline, no API key required, not yet fine-tuned on BIGKAS classroom audio); the OpenAI Whisper API is available as an optional cloud alternative.
 - **REST API Layer** — A full Sanctum-authenticated API enables future mobile app integrations.
 
 ### Python ML Service Integration
@@ -207,7 +209,7 @@ bigkas/
 │       ├── InterventionRecommenderService.php  # Rank & recommend activities
 │       ├── MLClassificationService.php # HTTP client to Python Flask API
 │       ├── ReadingAnalyzerService.php  # Core: Levenshtein alignment + metrics
-│       └── SpeechToTextService.php     # OpenAI Whisper integration (+ mock)
+│       └── SpeechToTextService.php     # Local faster-whisper (primary) + OpenAI Whisper API (optional) + mock
 │
 ├── config/
 │   ├── bigkas.php          # Phil-IRI levels, weakness categories, WPM benchmarks
@@ -217,16 +219,31 @@ bigkas/
 │   ├── migrations/         # 18 migration files (full schema)
 │   └── seeders/            # Demo data (schools, users, learners, materials, etc.)
 │
-├── ml/                     # Python ML microservice
+├── ml-service/             # Python ML microservice (CANONICAL — use this one)
+│   ├── app.py              # Flask REST API (3 endpoints: /classify, /transcribe, /health)
+│   ├── weakness_classifier.joblib  # Trained Random Forest (currently: synthetic data)
+│   ├── feature_scaler.joblib       # StandardScaler fitted on training data
+│   ├── model_metadata.json         # Accuracy, feature list, trained_with field
+│   ├── requirements.txt    # Python dependencies (includes faster-whisper, the primary STT engine)
+│   ├── venv/               # Virtual environment (faster-whisper installed here, not yet fine-tuned)
+│   └── training/           # Full ML training pipeline (Steps 0–4)
+│       ├── validate_dataset.py         # Step 0: filter incomplete rows → metadata_clean.csv
+│       ├── parse_annotations.py        # Step 1: parse annotated transcripts → 12 features
+│       ├── generate_provisional_labels.py  # Step 2: rule-based labels 0–4
+│       ├── split_features_by_language.py   # Step 3a: split by language for expert review
+│       ├── add_transcript_context.py       # Step 3b: add prompt/transcript to review CSVs
+│       ├── merge_teacher_labels.py         # Step 3c: merge reviewed CSVs back
+│       ├── train_model_real_data.py        # Step 4: train 5-class RF on confirmed labels
+│       ├── check_audio_files.py            # Utility: verify audio files against metadata
+│       ├── prepare_whisper_manifest.py     # Utility: build Whisper transcription manifest
+│       ├── metadata.csv                    # Raw dataset (Google Sheets export)
+│       └── metadata_clean.csv              # Filtered dataset (output of Step 0)
+│
+├── ml/                     # Legacy ML directory (NOT canonical — do not use for deployment)
 │   ├── api/
-│   │   └── app.py          # Flask REST API (5 endpoints)
-│   ├── training/
-│   │   └── train_model.py  # Model training script (generates .joblib files)
-│   ├── models/
-│   │   ├── weakness_classifier.joblib  # Trained Random Forest
-│   │   ├── feature_scaler.joblib       # StandardScaler
-│   │   └── model_metadata.json         # Accuracy, features, version
-│   └── requirements.txt    # Python dependencies
+│   │   └── app.py          # Old Flask API (expects raw counts, not rates — wrong contract)
+│   └── training/
+│       └── (older training scripts)
 │
 ├── public/
 │   ├── css/
@@ -310,8 +327,9 @@ bigkas/
 ```
 Step 1 → Teacher selects learner + reading material
 Step 2 → Audio recorded in browser OR file uploaded
-Step 3 → SpeechToTextService sends audio to OpenAI Whisper API
-          (mock transcription used if API key not set)
+Step 3 → SpeechToTextService sends audio to the local faster-whisper
+          model (primary, not yet fine-tuned); OpenAI Whisper API is an
+          optional cloud alternative (mock transcription used if neither is available)
 Step 4 → ReadingAnalyzerService tokenizes & aligns text
           using Levenshtein dynamic programming algorithm
 Step 5 → Error analysis:
@@ -325,8 +343,10 @@ Step 6 → Metrics computed:
           - Fluency score (0–10, based on pause frequency)
           - Reading level (Frustration / Instructional / Independent)
 Step 7 → MLClassificationService calls Python Flask /api/classify
-          → Returns primary weakness (1–4) + confidence score
+          → 12 pre-computed rate features sent (not raw counts)
+          → Returns primary weakness (0–4) + confidence score
           → Falls back to rule-based if Flask unavailable
+          → primary_weakness = 0 → Independent Reader; skip interventions
 Step 8 → AssessmentResult saved to database
 Step 9 → Learner.reading_level updated
 Step 10 → InterventionRecommenderService ranks & returns top 7 activities
@@ -384,7 +404,9 @@ Upload audio file
 
 Click "Analyze"
                     →  SpeechToTextService::transcribe()
-                                              → OpenAI Whisper API
+                                              → Local faster-whisper (primary,
+                                                not yet fine-tuned); OpenAI
+                                                Whisper API optional fallback
                                               ← { text, words[], duration }
                     →  ReadingAnalyzerService::analyze()
                        - tokenizeText()
@@ -492,7 +514,7 @@ Assessment
 AssessmentResult
   ├── belongs to → Assessment
   └── stores → accuracy_rate, words_per_minute, reading_level,
-                primary_weakness (int 1-4), confidence_score,
+                primary_weakness (int 0–4, nullable), confidence_score,
                 ml_analysis_json (full output)
 
 Intervention
@@ -508,8 +530,8 @@ InterventionLog
 |---|---|
 | `learners` | `lrn`, `pin` (6-digit), `reading_level`, `total_xp`, `current_streak`, `longest_streak`, `last_activity_date` |
 | `assessments` | `audio_file`, `transcription` (JSON), `language` (en/fil/hil), `status` |
-| `assessment_results` | `accuracy_rate`, `words_per_minute`, `fluency_score`, `primary_weakness` (1-4), `confidence_score`, `ml_analysis_json` |
-| `interventions` | `target_weakness` (1-4), `activity_type`, `for_teacher`, `for_parent`, `grade_level_min/max`, `effectiveness_score` |
+| `assessment_results` | `accuracy_rate`, `words_per_minute`, `fluency_score`, `primary_weakness` (int **0–4**, nullable), `confidence_score`, `ml_analysis_json` |
+| `interventions` | `target_weakness` (1–4), `activity_type`, `for_teacher`, `for_parent`, `grade_level_min/max`, `effectiveness_score` |
 | `badges` | `slug`, `criteria` (JSON), `xp_reward`, `category` |
 
 ### Reading Level Thresholds (Phil-IRI Standard)
@@ -524,10 +546,13 @@ InterventionLog
 
 | ID | Name | Indicators |
 |---|---|---|
+| 0 | Independent Reader | Accuracy ≥ 95%, WPM ≥ 60, fluency ≥ 8 — no weakness; no intervention assigned |
 | 1 | Phonemic Awareness | High phonetic/vowel/blend error rates |
 | 2 | Decoding Accuracy | Low accuracy, many substitutions |
 | 3 | Oral Reading Fluency | Slow WPM, high pause frequency, low fluency score |
 | 4 | Reading Comprehension | Accurate but many omissions, low prosody |
+
+> **Note:** `primary_weakness = 0` means the learner reads at an independent level. The system skips intervention lookup and does not assign activities for class 0.
 
 ---
 
@@ -699,7 +724,8 @@ DB_CONNECTION=sqlite
 # DB_USERNAME=root
 # DB_PASSWORD=
 
-# OpenAI Whisper — leave blank to use mock transcription
+# OpenAI Whisper — optional cloud alternative; local faster-whisper
+# (not yet fine-tuned) is the primary transcription engine and needs no key
 OPENAI_API_KEY=
 
 # Python ML Service
@@ -727,20 +753,30 @@ npm run build
 ### Step 5: Set Up the Python ML Service
 
 ```bash
-cd ml/
+cd ml-service/
 
-# Install Python dependencies
+# Create and activate a virtual environment
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+
+# Install Python dependencies (includes faster-whisper, scikit-learn, flask)
 pip install -r requirements.txt
 
-# Train the model (REQUIRED before starting the Flask API)
-python training/train_model.py
-# Output:
-#   models/weakness_classifier.joblib
-#   models/feature_scaler.joblib
-#   models/model_metadata.json
+# The trained model files are already committed to the repo:
+#   ml-service/weakness_classifier.joblib   ← Random Forest classifier
+#   ml-service/feature_scaler.joblib        ← StandardScaler
+#   ml-service/model_metadata.json          ← metadata (check trained_with field)
+#
+# WARNING: The current model was trained on SYNTHETIC data (trained_with: "synthetic_data").
+# It will be retrained on real student assessment data after teacher review is complete.
+# See the ML Training Pipeline section below for details.
 
 # Start the Flask API
-python api/app.py
+python app.py
 # Runs on http://localhost:5000
 
 # Verify it's working
@@ -752,8 +788,8 @@ Expected health check response:
 {
   "status": "ok",
   "model_loaded": true,
-  "model_version": "1.0.0",
-  "service": "basa-plus-ai-ml"
+  "classifier_loaded": true,
+  "service": "bigkas-ml"
 }
 ```
 
@@ -764,8 +800,8 @@ Expected health check response:
 php artisan serve
 # → http://localhost:8000
 
-# Terminal 2 — Python ML service
-cd ml/ && python api/app.py
+# Terminal 2 — Python ML service (activate venv first)
+cd ml-service/ && venv\Scripts\activate && python app.py
 # → http://localhost:5000
 
 # Terminal 3 — Queue worker (for background jobs)
@@ -852,9 +888,10 @@ composer run dev
 
 ### Training Data
 
-- 2,000 synthetic samples (500 per weakness class)
-- Generated via `ml/training/train_model.py` using statistical distributions that model realistic reading difficulty patterns
-- Designed to be **replaced with real assessment data** as it accumulates in the database
+- Current model: **synthetic data** — 2,000 samples (500 per class, 4 original classes)
+- `model_metadata.json` `trained_with` field reads `"synthetic_data"` — confirms this
+- Real-data training pipeline is **in progress**: reading experts are reviewing annotated transcripts via the 5-step pipeline (`validate_dataset.py` → `parse_annotations.py` → `generate_provisional_labels.py` → teacher review CSVs → `train_model_real_data.py`)
+- Once real data is validated, rerun `train_model_real_data.py` to replace the current model
 
 ### Feature Inputs (12 Features)
 
@@ -875,49 +912,71 @@ composer run dev
 
 ### Output Classes
 
-| Class | Weakness |
-|---|---|
-| `1` | Phonemic Awareness |
-| `2` | Decoding Accuracy |
-| `3` | Oral Reading Fluency |
-| `4` | Reading Comprehension |
+| Class | Name | Notes |
+|---|---|---|
+| `0` | Independent Reader | No weakness; intervention lookup skipped |
+| `1` | Phonemic Awareness | |
+| `2` | Decoding Accuracy | |
+| `3` | Oral Reading Fluency | |
+| `4` | Reading Comprehension | |
 
 ### Model Performance
 
 - **Accuracy:** ~99% on synthetic test set
-- **Note:** Performance expected to decrease slightly but become more realistic as real assessment data replaces synthetic training data — this is by design.
+- **Note:** This figure is inflated because the model was trained on generated data. It is expected to decrease when retrained on real student recordings — this is by design and reflects a more honest measurement.
 
-### Flask API Endpoints
+### Flask API Endpoints (`ml-service/app.py`)
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/health` | Health check (public) |
-| `GET` | `/api/model-info` | Model metadata (type, accuracy, version) |
-| `POST` | `/api/classify` | Classify weakness from 12 features |
-| `POST` | `/api/analyze` | Full analysis + skill scores + interpretation |
-| `POST` | `/api/training-data` | Submit new labeled data for future retraining |
+| `GET` | `/api/health` | Health check — reports model loaded status |
+| `POST` | `/api/classify` | Classify weakness from 12 pre-computed rate features |
+| `POST` | `/api/transcribe` | Transcribe audio locally using `faster-whisper` |
 
-### Retraining the Model
+### ML Training Pipeline (Real Data)
+
+The system includes a full 4-step training pipeline under `ml-service/training/`:
 
 ```bash
-cd ml/training/
-python train_model.py
+# Step 0: Validate and clean the raw metadata export
+python training/validate_dataset.py
+# → produces metadata_clean.csv
 
-# Compares Decision Tree vs Random Forest vs Gradient Boosting
-# Selects best by test accuracy
-# Outputs updated .joblib files to ml/models/
+# Step 1: Parse annotated transcripts, compute 12 features
+python training/parse_annotations.py
+# → produces labeled_features_for_review.csv
+
+# Step 2: Apply provisional labels (rule-based, classes 0–4)
+python training/generate_provisional_labels.py
+# → updates labeled_features_for_review.csv with provisional_weakness_label
+
+# Step 3: Split by language for expert review, add transcript context
+python training/split_features_by_language.py
+python training/add_transcript_context.py
+# → produces labeled_features_for_review_fil.csv + labeled_features_for_review_en.csv
+
+# [Reading experts fill in teacher_confirmed_label column in Google Sheets]
+
+# Step 3c: Merge confirmed labels back
+python training/merge_teacher_labels.py
+# → produces labeled_features_master_confirmed.csv
+
+# Step 4: Train 5-class Random Forest on confirmed data
+python training/train_model_real_data.py
+# → overwrites ml-service/weakness_classifier.joblib + feature_scaler.joblib
 ```
-
-To use real collected data: edit `train_model.py` to load from `ml/models/collected_training_data.json` (populated via `POST /api/training-data`).
 
 ### Rule-Based Fallback
 
-When the Flask service is unavailable, `ReadingAnalyzerService::ruleBasedClassification()` scores each weakness category using:
+When the Flask service is unavailable, `MLClassificationService` falls back to a deterministic classifier implemented in `ReadingAnalyzerService`. It scores each category using the same 12 features:
 
-- **Phonemic:** Weighted sum of phonetic/vowel/blend error rates
-- **Decoding:** Accuracy below 90% + substitution rate
-- **Fluency:** WPM below 80 + fluency score below 6 + pause frequency
-- **Comprehension:** Omission count + accurate-but-low-prosody pattern
+- **Independent (0):** accuracy ≥ 95% AND WPM ≥ 60 AND fluency ≥ 8
+- **Phonemic (1):** Weighted sum of phonetic/vowel/blend error rates
+- **Decoding (2):** Accuracy below 90% + substitution rate
+- **Fluency (3):** WPM below grade threshold + fluency score below 6 + pause frequency
+- **Comprehension (4):** Omission count + accurate-but-low-prosody pattern
+
+The fallback returns string integers (`'0'`–`'4'`) that `AssessmentController` maps to integer class IDs.
 
 ---
 
@@ -927,9 +986,9 @@ When the Flask service is unavailable, `ReadingAnalyzerService::ruleBasedClassif
 
 | Limitation | Details |
 |---|---|
-| **Synthetic ML training data** | Model trained on generated data, not real student readings. Accuracy will improve significantly as real assessments accumulate. |
-| **Filipino STT fallback** | OpenAI Whisper has limited Filipino support; the system uses the Filipino (Tagalog) model as a fallback, which may reduce accuracy. |
-| **No offline mode** | Requires internet for OpenAI Whisper API calls. Assessment without an API key uses mock transcription. |
+| **Synthetic ML training data** | Current model trained on generated data, not real student recordings. `model_metadata.json` confirms `trained_with: "synthetic_data"`. Real-data retraining is in progress. |
+| **No Hiligaynon support** | Reading assessment only supports English and Filipino. The `assessments.language` column and `config/bigkas.php` still list `hil` as a schema/locale value, but Hiligaynon transcription/assessment is not supported in practice — the local `faster-whisper` model is not fine-tuned for it. |
+| **Local STT not yet fine-tuned** | The primary transcription engine, local `faster-whisper`, is running the stock pre-trained model (not fine-tuned on BIGKAS classroom audio), so accuracy on Filipino and noisy classroom recordings is limited. The OpenAI Whisper API remains available as an optional cloud alternative. |
 | **Polling-based live sessions** | Live teacher↔student sessions use HTTP polling every 3 seconds instead of WebSockets, introducing minor latency. |
 | **Comprehension scoring is inferred** | Comprehension weakness is detected from reading behavior patterns (omissions, prosody), not direct comprehension testing. |
 | **No open-ended auto-scoring** | Comprehension questions are displayed, but open-ended answer evaluation is not automated. |
@@ -947,14 +1006,15 @@ When the Flask service is unavailable, `ReadingAnalyzerService::ruleBasedClassif
 ## 🔮 Future Enhancements
 
 - [ ] **WebSocket-based live sessions** — Replace HTTP polling with Laravel Echo + Pusher for true real-time teacher↔student communication
-- [ ] **Retrain ML with real data** — Build a retraining pipeline that uses accumulated `/api/training-data` submissions
-- [ ] **Dedicated Filipino STT model** — Fine-tune or partner with local language AI initiatives
+- [x] **Real-data training pipeline** — 4-step annotation pipeline (validate → parse → label → train) is implemented; blocked on teacher review completion
+- [ ] **Retrain ML with real data** — Pipeline is ready; waiting for reading expert sign-off on reviewed CSVs
+- [ ] **Dedicated Filipino STT model** — Fine-tune Whisper on Filipino children's speech (LoRA script exists in `bigkas-ai vault/`; requires GPU via Google Colab)
 - [ ] **Mobile app** — Flutter or React Native app using the existing Sanctum REST API
 - [ ] **Digital parental consent** — In-app consent workflow before linking a learner to a parent account
 - [ ] **PDF export** — Generate printable Phil-IRI-style reports (already has a print view at `/reports/learner/{id}/print`)
 - [ ] **Offline PWA** — Service worker for offline reading practice and queued assessment submission
 - [ ] **Direct comprehension scoring** — Natural language processing for evaluating open-ended comprehension answers
-- [ ] **Automated retraining pipeline** — Trigger model retraining when sufficient new labeled data accumulates
+- [ ] **Consolidate ml/ and ml-service/** — Decide whether to delete the legacy `ml/` directory or merge it into `ml-service/`
 
 ---
 

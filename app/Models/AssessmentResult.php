@@ -58,6 +58,60 @@ class AssessmentResult extends Model
         return $this->belongsTo(Assessment::class);
     }
 
+    // ── Attribute aliases (view expects *_count / legacy names) ──
+    // Real columns are substitutions/omissions/insertions/self_corrections;
+    // word-level detail, duration and skill scores live in ml_analysis_json.
+
+    public function getSubstitutionCountAttribute(): int
+    {
+        return (int) ($this->attributes['substitutions'] ?? 0);
+    }
+
+    public function getOmissionCountAttribute(): int
+    {
+        return (int) ($this->attributes['omissions'] ?? 0);
+    }
+
+    public function getInsertionCountAttribute(): int
+    {
+        return (int) ($this->attributes['insertions'] ?? 0);
+    }
+
+    public function getSelfCorrectionCountAttribute(): int
+    {
+        return (int) ($this->attributes['self_corrections'] ?? 0);
+    }
+
+    public function getDurationSecondsAttribute(): float
+    {
+        return (float) (($this->ml_analysis_json['duration_seconds'] ?? null) ?? 0);
+    }
+
+    public function getWeaknessConfidenceAttribute(): ?float
+    {
+        return isset($this->attributes['confidence_score'])
+            ? (float) $this->attributes['confidence_score']
+            : null;
+    }
+
+    public function getWordComparisonDataAttribute(): array
+    {
+        return $this->ml_analysis_json['word_comparison'] ?? [];
+    }
+
+    public function getMlClassificationDataAttribute(): array
+    {
+        $ml = $this->ml_analysis_json ?? [];
+
+        // Prefer stored all_scores (new rows); fall back to rule-based
+        // scores derived from saved error patterns so old rows still render.
+        if (isset($ml['all_scores']) && is_array($ml['all_scores'])) {
+            return ['all_scores' => $ml['all_scores']];
+        }
+
+        return ['all_scores' => $ml['skill_scores'] ?? []];
+    }
+
     // ── Helpers ──
 
     public function getReadingLevelInfo(): array

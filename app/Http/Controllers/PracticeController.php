@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Directory;
+
 use App\Models\PracticeItem;
 use App\Models\PracticeSession;
 use App\Models\ReadingMaterial;
@@ -28,7 +30,7 @@ class PracticeController extends Controller
             ->limit(15)
             ->get();
 
-        $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
+        $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
 
         return view('practice.index', compact('recentSessions', 'learners'));
     }
@@ -91,7 +93,7 @@ class PracticeController extends Controller
     public function phonemic()
     {
         $user = auth()->user();
-        $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
+        $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
 
         return view('practice.phonemic', compact('learners'));
     }
@@ -99,7 +101,7 @@ class PracticeController extends Controller
     public function sightWords()
     {
         $user = auth()->user();
-        $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
+        $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
 
         return view('practice.sight-words', compact('learners'));
     }
@@ -107,7 +109,7 @@ class PracticeController extends Controller
     public function guidedReading(Request $request)
     {
         $user = auth()->user();
-        $learners = $user->accessibleLearnersQuery()->orderBy('last_name')->get();
+        $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
 
         $query = ReadingMaterial::active();
 

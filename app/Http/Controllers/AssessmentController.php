@@ -12,6 +12,7 @@ use App\Services\SpeechToTextService;
 use App\Services\ReadingAnalyzerService;
 use App\Services\InterventionRecommenderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Traits\AuthorizesLearnerAccess;
 
@@ -304,12 +305,20 @@ class AssessmentController extends Controller
             $classification = $mlService->classify($analysis['ml_features']);
             
             // Map the String predictions from Python back to the Database Integers
-            $primaryWeaknessId = \App\Services\MLClassificationService::mapWeaknessToId(
-                $classification['primary'] ?? ''
+            // A weakness is only stored when the measured evidence shows it, so
+            // the result never names a skill the teacher's own rows call fine.
+            $primaryWeaknessId = \App\Services\MLClassificationService::resolveWeaknessId(
+                $classification,
+                \App\Services\WeaknessEvidence::statuses(
+                    $analysis,
+                    $assessment->learner?->grade_level,
+                    $comprehensionScore ?? $assessment->comprehensionScore()
+                ),
+                $analysis['primary_weakness'] ?? null
             );
 
             // Merge ML classification into analysis results to store properly
-            $analysis['primary_weakness'] = $primaryWeaknessId ?? $analysis['primary_weakness'];
+            $analysis['primary_weakness'] = $primaryWeaknessId;
             $analysis['secondary_weakness'] = null; // Update mapping if secondary model is implemented
             $analysis['confidence_score'] = $classification['confidence'] ?? $analysis['confidence_score'];
 
@@ -336,11 +345,30 @@ class AssessmentController extends Controller
                 'redirect_url' => route('assessments.results', $assessment),
                 'message' => 'Analysis complete!',
             ]);
-        } catch (\Exception $e) {
+        } catch (\App\Exceptions\SpeechServiceUnavailable $e) {
+            // No engine transcribed the audio, so nothing was scored. The
+            // recording is already saved; analysing again is all it takes.
             $assessment->markFailed($e->getMessage());
+            Log::error("Assessment #{$assessment->id}: " . $e->getMessage(), ['assessment_id' => $assessment->id]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Analysis failed: ' . $e->getMessage(),
+                'message' => $e->forTeacher(),
+            ], 503);
+        } catch (\Exception $e) {
+            $assessment->markFailed($e->getMessage());
+
+            // The teacher gets something they can act on; the detail (which may
+            // name database tables or internal services) goes to the log only.
+            Log::error("Assessment #{$assessment->id} analysis failed: " . $e->getMessage(), [
+                'assessment_id' => $assessment->id,
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'The recording was saved, but the analysis could not be completed. '
+                    . 'Please try Analyze again — if it keeps failing, report assessment #' . $assessment->id . '.',
             ], 500);
         }
     }

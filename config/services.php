@@ -48,6 +48,20 @@ return [
     // Set WHISPER_USE_LOCAL=false to use the OpenAI cloud API (requires OPENAI_API_KEY)
     'whisper' => [
         'use_local' => env('WHISPER_USE_LOCAL', true),
+
+        // How long to wait for local CPU transcription. The recorder stops at
+        // 3 minutes of audio and faster-whisper 'small' on a small VPS runs
+        // slower than real time, so this has to allow for several minutes.
+        // It must stay BELOW php-fpm's request_terminate_timeout and nginx's
+        // fastcgi_read_timeout, so this is the limit that fires first and the
+        // teacher gets a real message instead of a dead gateway.
+        'timeout' => (int) env('WHISPER_TIMEOUT', 300),
+
+        // The placeholder transcript ("I have a dog his name is Max...") is a
+        // development aid. Scoring it would store an assessment that describes
+        // nothing, so it is refused unless this is explicitly allowed. Null
+        // means "local and testing only" (see SpeechToTextService).
+        'allow_mock' => env('STT_ALLOW_MOCK'),
     ],
 
     // Google Cloud Speech-to-Text (alternative)

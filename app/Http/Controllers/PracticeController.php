@@ -275,7 +275,17 @@ class PracticeController extends Controller
         $path = $file->storeAs('practice/audio', $filename, 'public');
 
         $sttService = app(SpeechToTextService::class);
-        $transcription = $sttService->transcribe($file->getRealPath(), $material->language);
+
+        try {
+            $transcription = $sttService->transcribe($file->getRealPath(), $material->language);
+        } catch (\App\Exceptions\SpeechServiceUnavailable $e) {
+            // Practice is not recorded as an assessment, but scoring the
+            // placeholder transcript would still show the learner invented
+            // feedback about words they never read.
+            \Illuminate\Support\Facades\Log::error('Practice analysis: ' . $e->getMessage());
+
+            return response()->json(['success' => false, 'message' => $e->forTeacher()], 503);
+        }
 
         $analyzer = app(ReadingAnalyzerService::class);
         $analysis = $analyzer->analyze(
@@ -287,18 +297,13 @@ class PracticeController extends Controller
         $mlService = app(MLClassificationService::class);
         $classification = $mlService->classify($analysis['ml_features']);
 
-        $weaknessMap = [
-            '0' => 0, 'Independent Reader' => 0,
-            '1' => 1, 'Phonemic Awareness' => 1,
-            '2' => 2, 'Decoding Accuracy' => 2,
-            '3' => 3, 'Oral Reading Fluency' => 3,
-            '4' => 4, 'Comprehension' => 4, 'Reading Comprehension' => 4,
-        ];
-
-        $predictedString = (string) ($classification['primary'] ?? '');
-        $primaryWeaknessId = $weaknessMap[$predictedString] ?? null;
-
-        $analysis['primary_weakness'] = $primaryWeaknessId ?? $analysis['primary_weakness'];
+        // Practice asks no comprehension questions, so that skill has no evidence
+        // behind it here; the rest is judged from this reading like anywhere else.
+        $analysis['primary_weakness'] = MLClassificationService::resolveWeaknessId(
+            $classification,
+            \App\Services\WeaknessEvidence::statuses($analysis, $learner->grade_level, null),
+            $analysis['primary_weakness'] ?? null
+        );
         $analysis['confidence_score'] = $classification['confidence'] ?? $analysis['confidence_score'];
 
         return response()->json([

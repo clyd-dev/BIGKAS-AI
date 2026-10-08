@@ -17,12 +17,23 @@ let timerInterval = null;
 let audioStream = null;
 let analyserNode = null;
 let animationFrameId = null;
+let analyzeInFlight = false;
+
+// Set once this page drives the assessment itself (the teacher records or
+// analyses here). The page also polls the server to notice a *remote* learner
+// recording, and that poller reloads on a status change — which would throw
+// away the teacher's recording mid-analysis, since analysing sets the status
+// to "processing". While this flag is up, the poller stands down.
+window.BIGKAS_LOCAL_FLOW = false;
 
 // ============================================================
 // RECORDING CONTROLS
 // ============================================================
 
 async function startRecording() {
+    // From here on this page owns the flow, not a remote learner.
+    window.BIGKAS_LOCAL_FLOW = true;
+
     try {
         // Request microphone access
         audioStream = await navigator.mediaDevices.getUserMedia({
@@ -219,9 +230,34 @@ function updateAnalyzeGate() {
 // AI ANALYSIS
 // ============================================================
 
+/**
+ * Report a failed analysis in the page itself.
+ *
+ * Nothing was scored, but the recording is saved on the server, so the teacher
+ * should be pointed at Analyze again — never left to assume the session is lost
+ * and the learner has to read the whole passage a second time.
+ */
+function showAnalysisProblem(message) {
+    const panel = document.getElementById('analysisProblem');
+    const msg = document.getElementById('analysisProblemMsg');
+
+    if (!panel || !msg) {
+        alert(message); // No panel on this page; a dialog is better than silence.
+        return;
+    }
+
+    msg.textContent = message;
+    panel.classList.remove('d-none');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 async function analyzeRecording() {
+    // A second tap while the first run is still going would analyse the same
+    // assessment twice. On a slow server that window is tens of seconds wide.
+    if (analyzeInFlight) return;
+
     const hasExistingAudio = document.getElementById('audioPlayback') && document.getElementById('audioPlayback').src && document.getElementById('audioPlayback').src !== window.location.href;
-    
+
     if (!audioBlob && !hasExistingAudio) {
         alert('No recording found. Please record first.');
         return;
@@ -235,6 +271,11 @@ async function analyzeRecording() {
 
     const assessmentId = document.getElementById('assessmentId').value;
     const csrfToken = window.BIGKAS_CSRF || document.querySelector('meta[name="csrf-token"]')?.content;
+
+    // Analysing sets the server status to "processing"; keep the status poller
+    // from reading that back and reloading the page out from under us.
+    analyzeInFlight = true;
+    window.BIGKAS_LOCAL_FLOW = true;
 
     // Show processing status
     showStatus('processing');
@@ -266,10 +307,19 @@ async function analyzeRecording() {
             }
         });
 
-        const result = await response.json();
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            // A crash or a gateway timeout answers with HTML, not JSON.
+            throw new Error(
+                `The server did not answer properly (HTTP ${response.status}). ` +
+                'Your recording is saved — tap Analyze to try again.'
+            );
+        }
 
         if (!result.success) {
-            throw new Error(result.message || 'Analysis failed');
+            throw new Error(result.message || 'The analysis could not be completed.');
         }
 
         // Show complete status
@@ -286,7 +336,12 @@ async function analyzeRecording() {
         showStatus('idle');
         btnAnalyze.innerHTML = originalText;
         btnAnalyze.disabled = false;
-        alert('Analysis failed: ' + error.message + '\n\nPlease try again.');
+        analyzeInFlight = false;
+
+        // The recording is already saved server-side, so leave Analyze enabled
+        // and explain the way forward in the page rather than in a dialog the
+        // teacher has to dismiss.
+        showAnalysisProblem(error.message || 'The analysis could not be completed.');
     }
 }
 

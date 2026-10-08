@@ -3,10 +3,8 @@
 @section('title', 'Assessment - ' . ($assessment->learner?->full_name ?? 'N/A'))
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-mic me-2"></i>Reading Assessment</h4>
-        <a href="{{ route('assessments.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back</a>
-    </div>
+    <x-page-header title="Reading Assessment" icon="bi-mic"
+                   :back="route('assessments.index')" back-label="Assessments" />
 
     <div class="row g-3">
         {{-- Assessment Info --}}
@@ -28,8 +26,10 @@
                 </div>
             </div>
 
-            {{-- Audio Upload --}}
-            @if($assessment->status === 'pending' || $assessment->status === 'processing')
+            {{-- Audio Upload. "failed" is included on purpose: an attempt that
+                 never produced a score must stay recoverable, or the saved
+                 recording becomes unreachable and the learner has to read again. --}}
+            @if(in_array($assessment->status, ['pending', 'processing', 'failed'], true))
                 <div class="card border-0 shadow-sm mt-3">
                     <div class="card-header bg-white"><h6 class="mb-0">Audio Recording</h6></div>
                     <div class="card-body">
@@ -37,7 +37,7 @@
                         <div id="audioRecorder" class="text-center mb-3">
                             <input type="hidden" id="assessmentId" value="{{ $assessment->id }}">
                             
-                            @if($assessment->status === 'pending')
+                            @if($assessment->status === 'pending' || ($assessment->status === 'failed' && ! $assessment->audio_file))
                                 <button id="btnStartRecording" class="btn btn-danger btn-lg rounded-pill px-4">
                                     <i class="bi bi-mic-fill me-2"></i> Start Reading
                                 </button>
@@ -56,19 +56,45 @@
                                     <audio id="audioPlayback" controls class="w-100 d-none mb-2"></audio>
                                 @endif
                                 
-                                @if($assessment->status === 'processing')
+                                {{--
+                                    An attempt that produced no score. The recording is already
+                                    saved, so the way forward is to analyse it again — not to ask
+                                    the learner to read the passage a second time. The JS fills
+                                    #analysisProblemMsg with the server's reason on a live failure.
+                                --}}
+                                <div id="analysisProblem"
+                                     class="alert alert-warning text-start small mb-2 {{ $assessment->analysisFailed() ? '' : 'd-none' }}">
+                                    <div class="fw-semibold mb-1">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>This reading has not been scored yet
+                                    </div>
+                                    <div id="analysisProblemMsg">
+                                        The last analysis did not finish, so nothing was saved for
+                                        {{ $assessment->learner?->first_name ?? 'this learner' }}.
+                                        The recording above is safe — tap <strong>Analyze</strong> to try again.
+                                    </div>
+                                    <div class="text-muted mt-1">
+                                        Still failing? The speech service is probably down. Ask your administrator
+                                        to check it, then come back to this assessment — the recording keeps
+                                        waiting here. Only record again if the audio itself is unusable.
+                                    </div>
+                                </div>
+
+                                @php $canAnalyzeSaved = $assessment->status === 'processing' || $assessment->awaitingAnalysis(); @endphp
+
+                                <button id="btnAnalyze" class="btn btn-success btn-sm {{ $canAnalyzeSaved ? '' : 'd-none' }}">
+                                    <i class="bi bi-cpu me-1"></i> Analyze
+                                </button>
+                                <button id="btnRetry" class="btn btn-outline-secondary btn-sm d-none">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Record again
+                                </button>
+                                @if($assessment->audio_file)
                                     <form method="POST" action="{{ route('assessments.retry', $assessment) }}" class="d-inline">
                                         @csrf
-                                        <button type="submit" class="btn btn-outline-secondary btn-sm" onclick="return confirm('Are you sure you want to discard this recording and retry?')">Retry</button>
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm"
+                                                onclick="return confirm('Discard this recording and start over? {{ $assessment->learner?->first_name ?? 'The learner' }} will have to read the passage again.')">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Record again
+                                        </button>
                                     </form>
-                                    <button id="btnAnalyze" class="btn btn-success btn-sm">
-                                        <i class="bi bi-cpu me-1"></i> Analyze
-                                    </button>
-                                @else
-                                    <button id="btnRetry" class="btn btn-outline-secondary btn-sm d-none">Retry</button>
-                                    <button id="btnAnalyze" class="btn btn-success btn-sm d-none">
-                                        <i class="bi bi-cpu me-1"></i> Analyze
-                                    </button>
                                 @endif
                             </div>
                         </div>
@@ -127,7 +153,7 @@
                     portal, it renders read-only instead.
                 --}}
                 <div id="comprehensionPanel"
-                     class="card border-0 shadow-sm mb-3 {{ $submittedAnswers->isEmpty() && $assessment->status !== 'processing' ? 'd-none' : '' }}"
+                     class="card border-0 shadow-sm mb-3 {{ $submittedAnswers->isEmpty() && ! $assessment->awaitingAnalysis() ? 'd-none' : '' }}"
                      data-prefilled="{{ $submittedAnswers->isNotEmpty() ? '1' : '0' }}">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h6 class="mb-0"><i class="bi bi-patch-question me-1"></i> Comprehension Questions</h6>
@@ -206,6 +232,14 @@
 
         if (currentStatus === 'pending' || currentStatus === 'recording') {
             let checkInterval = setInterval(() => {
+                // This poller only exists to notice a learner recording on their
+                // own device. Once this page is doing the recording or the
+                // analysis, a reload here would discard the teacher's work.
+                if (window.BIGKAS_LOCAL_FLOW) {
+                    clearInterval(checkInterval);
+                    return;
+                }
+
                 fetch(`/assessments/${assessmentId}/status`, {
                     headers: { 'Accept': 'application/json' }
                 })

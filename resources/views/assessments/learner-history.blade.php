@@ -3,12 +3,8 @@
 @section('title', $learner->getFullName() . ' — Assessment History')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0"><i class="bi bi-clock-history me-2"></i>{{ $learner->getFullName() }} — Assessment History</h4>
-        <a href="{{ route('assessments.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Back to Assessments
-        </a>
-    </div>
+    <x-page-header :title="$learner->getFullName()" icon="bi-clock-history" subtitle="Assessment history"
+                   :back="route('assessments.index')" back-label="Assessments" />
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
@@ -38,6 +34,10 @@
                                         <span class="badge bg-primary-subtle text-primary-emphasis d-block mt-1">Teacher-edited</span>
                                     @elseif($assessment->result && !$assessment->isReviewed())
                                         <span class="badge bg-warning-subtle text-warning-emphasis d-block mt-1">Pending review</span>
+                                    @elseif($assessment->awaitingAnalysis())
+                                        {{-- The reading happened but produced no score, so it needs
+                                             analysing again, not re-recording. --}}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis d-block mt-1">Not scored — recording saved</span>
                                     @endif
                                 </td>
                                 <td>{{ $assessment->assessor?->name ?? '—' }}</td>
@@ -70,6 +70,10 @@
                                         </a>
                                     @elseif(auth()->user()->isAdmin())
                                         <span class="badge bg-secondary">In progress</span>
+                                    @elseif($assessment->awaitingAnalysis())
+                                        <a href="{{ route('assessments.show', $assessment) }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-cpu me-1"></i> Analyze again
+                                        </a>
                                     @elseif($assessment->status === 'audio_uploaded')
                                         <form method="POST" action="{{ route('assessments.analyze', $assessment) }}" class="d-inline">
                                             @csrf

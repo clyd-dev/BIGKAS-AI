@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 from flask import Flask, request, jsonify
@@ -28,6 +29,17 @@ scaler = None
 NEW_MODEL_PATH = os.path.join(BASE_DIR, 'weakness_classifier.joblib')
 OLD_MODEL_PATH = os.path.join(BASE_DIR, 'bigkas_rf_model.pkl')
 SCALER_PATH = os.path.join(BASE_DIR, 'feature_scaler.joblib')
+METADATA_PATH = os.path.join(BASE_DIR, 'model_metadata.json')
+
+# Report the version the model file actually carries. This used to be a
+# hardcoded "2.0-12feature", which made /api/health claim a different model
+# from the one being served and sent a real diagnosis down the wrong path.
+MODEL_VERSION = '(unknown)'
+try:
+    with open(METADATA_PATH, encoding='utf-8') as fh:
+        MODEL_VERSION = json.load(fh).get('version', '(unknown)')
+except Exception as exc:
+    print(f"No model metadata read ({exc}); version will report as unknown.")
 
 if os.path.exists(NEW_MODEL_PATH):
     try:
@@ -246,7 +258,7 @@ def transcribe():
 def health():
     return jsonify({
         'status': 'ok',
-        'model_version': '2.0-12feature' if model is not None else '(no model loaded — using rule-based fallback)',
+        'model_version': MODEL_VERSION if model is not None else '(no model loaded — using rule-based fallback)',
         'feature_columns': FEATURE_COLUMNS,
         'scaler_loaded': scaler is not None,
         'whisper_loaded': whisper_model is not None,

@@ -192,8 +192,15 @@ class AssessmentApiController extends Controller
             // features the analyzer prepares, not raw counts.
             $classification = $this->mlService->classify($analysis['ml_features']);
 
-            $analysis['primary_weakness'] = MLClassificationService::mapWeaknessToId($classification['primary'] ?? '')
-                ?? $analysis['primary_weakness'];
+            $analysis['primary_weakness'] = MLClassificationService::resolveWeaknessId(
+                $classification,
+                \App\Services\WeaknessEvidence::statuses(
+                    $analysis,
+                    $assessment->learner?->grade_level,
+                    $comprehensionScore ?? $assessment->comprehensionScore()
+                ),
+                $analysis['primary_weakness'] ?? null
+            );
             $analysis['confidence_score'] = $classification['confidence'] ?? $analysis['confidence_score'];
 
             if ($comprehensionScore !== null) {
@@ -229,10 +236,19 @@ class AssessmentApiController extends Controller
                 'classification' => $classification,
                 'recommendations' => $recommendations,
             ], 'Analysis completed successfully');
+        } catch (\App\Exceptions\SpeechServiceUnavailable $e) {
+            // Nothing was transcribed, so nothing is stored. The saved
+            // recording can be analysed again once the engine is back.
+            $assessment->markFailed($e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Assessment #{$assessment->id}: " . $e->getMessage());
+
+            return $this->error($e->forTeacher(), 503);
         } catch (\Exception $e) {
             $assessment->markFailed($e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Assessment #{$assessment->id} analysis failed: " . $e->getMessage(), ['exception' => $e]);
 
-            return $this->error('Analysis failed: ' . $e->getMessage(), 500);
+            return $this->error('The recording was saved, but the analysis could not be completed. '
+                . 'Please try again — if it keeps failing, report assessment #' . $assessment->id . '.', 500);
         }
     }
 

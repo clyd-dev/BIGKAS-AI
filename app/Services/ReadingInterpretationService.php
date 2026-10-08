@@ -564,11 +564,15 @@ class ReadingInterpretationService
         $share = $slips > 0 ? $soundAlike / $slips : 0;
         $example = !empty($examples['mispronunciation']) ? ' (' . implode(', ', array_slice($examples['mispronunciation'], 0, 2)) . ')' : '';
 
+        // Status comes from WeaknessEvidence so these rows and the stored primary
+        // weakness are decided by one rule; only the wording lives here.
+        $phonemicStatus = WeaknessEvidence::phonemicStatus($soundAlike, $slips);
+
         if (!$usable) {
             $phonemic = $row(1, 'unknown', $noSpeech);
-        } elseif ($soundAlike >= 3 && $share >= 0.4) {
+        } elseif ($phonemicStatus === 'concern') {
             $phonemic = $row(1, 'concern', sprintf('%d of %d slips sounded like the right word%s. That pattern points to trouble matching letters to sounds.', $soundAlike, $slips, $example));
-        } elseif ($soundAlike >= 1 && $share >= 0.4) {
+        } elseif ($phonemicStatus === 'watch') {
             $phonemic = $row(1, 'watch', sprintf('%d of %d slips sounded like the right word%s — a small hint of trouble with letter sounds.', $soundAlike, $slips, $example));
         } elseif ($slips === 0) {
             $phonemic = $row(1, 'ok', 'No words were misread, so there are no sound mix-ups.');
@@ -590,9 +594,9 @@ class ReadingInterpretationService
 
             $base = sprintf('%d of the %d words attempted were read correctly (%s%%)', $correct, $attempted, $this->number($attemptedAccuracy));
 
-            $decoding = match (true) {
-                $attemptedAccuracy < PhilIriLevels::WORD_INSTRUCTIONAL_FROM => $row(2, 'concern', sprintf('%s — below the %d%% needed even for Instructional.%s', $base, PhilIriLevels::WORD_INSTRUCTIONAL_FROM, $note)),
-                $attemptedAccuracy < PhilIriLevels::WORD_INDEPENDENT_FROM => $row(2, 'watch', sprintf('%s — in the Instructional range, with %d wrong.%s', $base, $attempted - $correct, $note)),
+            $decoding = match (WeaknessEvidence::decodingStatus($attemptedAccuracy)) {
+                'concern' => $row(2, 'concern', sprintf('%s — below the %d%% needed even for Instructional.%s', $base, PhilIriLevels::WORD_INSTRUCTIONAL_FROM, $note)),
+                'watch' => $row(2, 'watch', sprintf('%s — in the Instructional range, with %d wrong.%s', $base, $attempted - $correct, $note)),
                 default => $row(2, 'ok', $base . '.' . $note),
             };
         }
@@ -609,25 +613,7 @@ class ReadingInterpretationService
         if (!$usable) {
             $fluency = $row(3, 'unknown', $noSpeech);
         } else {
-            $rank = ['ok' => 0, 'watch' => 1, 'concern' => 2];
-            $status = 'ok';
-            $raise = function (string $to) use (&$status, $rank) {
-                if ($rank[$to] > $rank[$status]) {
-                    $status = $to;
-                }
-            };
-
-            if ($bench) {
-                $raise($wpm < $bench['min'] ? 'concern' : ($wpm < $bench['target'] ? 'watch' : 'ok'));
-            }
-            if ($longPauses >= 3) {
-                $raise('concern');
-            } elseif ($longPauses >= 1 || $hesitations >= 3) {
-                $raise('watch');
-            }
-            if ($repeats >= 3) {
-                $raise('watch');
-            }
+            $status = WeaknessEvidence::fluencyStatus($wpm, $bench, $longPauses, $hesitations, $repeats);
 
             $parts = [sprintf(
                 'Read at %s words per minute%s.',
@@ -666,7 +652,7 @@ class ReadingInterpretationService
             $answers = $assessment->comprehensionAnswers;
             $right = $answers->where('is_correct', true)->count();
 
-            $status = ['independent' => 'ok', 'instructional' => 'watch', 'frustration' => 'concern'][PhilIriLevels::comprehension($score)];
+            $status = WeaknessEvidence::comprehensionStatus($score);
             $comprehension = $row(4, $status, sprintf('%d of %d comprehension questions were answered correctly (%s%%).', $right, $answers->count(), $this->number($score)));
         }
 

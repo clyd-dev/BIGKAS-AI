@@ -221,6 +221,28 @@ class Assessment extends Model
         ]);
     }
 
+    /**
+     * A saved recording that was never scored.
+     *
+     * The teacher can analyse it again without bringing the learner back to
+     * read the passage a second time, so the recording page keeps offering
+     * Analyze in this state instead of becoming a dead end.
+     */
+    public function awaitingAnalysis(): bool
+    {
+        return $this->audio_file !== null
+            && in_array($this->status, [self::STATUS_PROCESSING, self::STATUS_FAILED], true)
+            && ! $this->result()->exists();
+    }
+
+    /** As above, but specifically after an attempt that failed. */
+    public function analysisFailed(): bool
+    {
+        return $this->status === self::STATUS_FAILED
+            && $this->audio_file !== null
+            && ! $this->result()->exists();
+    }
+
     public function markFailed(?string $errorMessage = null): void
     {
         $data = ['status' => self::STATUS_FAILED];
@@ -230,9 +252,20 @@ class Assessment extends Model
         $this->update($data);
     }
 
+    /**
+     * Store the analysis for this assessment.
+     *
+     * assessment_results.assessment_id is unique, and re-analysing is normal:
+     * a slow run, a reloaded page or a plain retry all land here again. So the
+     * newer numbers replace the old row rather than attempting a second insert
+     * that the database would reject.
+     */
     public function createResult(array $analysisData): AssessmentResult
     {
-        $result = $this->result()->create([
+        $result = $this->result()->firstOrNew();
+        $isFirstAnalysis = ! $result->exists;
+
+        $result->fill([
             'accuracy_rate' => $analysisData['accuracy_rate'] ?? 0,
             'words_per_minute' => $analysisData['words_per_minute'] ?? 0,
             'error_count' => $analysisData['error_count'] ?? 0,
@@ -249,17 +282,20 @@ class Assessment extends Model
             'secondary_weakness' => $analysisData['secondary_weakness'] ?? null,
             'confidence_score' => $analysisData['confidence_score'] ?? 0.50,
             'ml_analysis_json' => $analysisData,
-        ]);
+        ])->save();
 
         // Recompute from the learner's assessments so a teacher verdict or an
         // invalidated result is respected rather than blindly trusting this one.
         $this->markCompleted();
         $this->refresh()->learner?->updateReadingLevel();
 
-        // Notify linked parent(s)
-        $parents = $this->learner->users()->wherePivot('relationship', 'parent')->get();
-        foreach ($parents as $parent) {
-            $parent->notify(new NewAssessmentCompleted($this));
+        // Notify linked parent(s) — only for the first analysis, so a re-run
+        // doesn't tell parents the same assessment finished all over again.
+        if ($isFirstAnalysis) {
+            $parents = $this->learner->users()->wherePivot('relationship', 'parent')->get();
+            foreach ($parents as $parent) {
+                $parent->notify(new NewAssessmentCompleted($this));
+            }
         }
 
         return $result;

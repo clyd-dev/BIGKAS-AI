@@ -115,14 +115,16 @@ enough. Set both:
 # /etc/php/8.3/fpm/php.ini
 upload_max_filesize = 20M
 post_max_size = 25M
-# Transcription runs synchronously inside web requests (Flask allows up
-# to 120s per call) — PHP's 30s default would kill the worker mid-wait:
-max_execution_time = 180
+# Transcription runs synchronously inside the web request and is slower
+# than real time on a small VPS. These must outlast WHISPER_TIMEOUT (.env,
+# 300s) so Laravel's own limit fires first and the teacher gets a real
+# message instead of a 504. Budget: 300 (app) < 360 (php) < 390 (nginx).
+max_execution_time = 360
 ```
 
 ```ini
 # /etc/php/8.3/fpm/pool.d/www.conf (add at the end)
-request_terminate_timeout = 180s
+request_terminate_timeout = 360s
 ```
 
 ```bash
@@ -147,8 +149,8 @@ server {
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/run/php/php8.3-fpm.sock;
-        # Match PHP: transcription API calls allow up to 120s
-        fastcgi_read_timeout 180s;
+        # Outermost limit in the chain (see max_execution_time above)
+        fastcgi_read_timeout 390s;
     }
 
     location ~ /\.ht { deny all; }
@@ -224,7 +226,7 @@ After=network.target
 [Service]
 User=www-data
 WorkingDirectory=/var/www/bigkas/ml-service
-ExecStart=/var/www/bigkas/ml-service/venv/bin/python app.py
+ExecStart=/var/www/bigkas/ml-service/venv/bin/gunicorn --workers 1 --threads 2 --timeout 420 --bind 127.0.0.1:5000 app:app
 Restart=always
 RestartSec=5
 
@@ -235,6 +237,7 @@ WantedBy=multi-user.target
 ```bash
 systemctl daemon-reload && systemctl enable --now bigkas-ml
 # then in .env: ML_API_ENABLED=true, ML_API_URL=http://127.0.0.1:5000
+#               WHISPER_TIMEOUT=300, STT_ALLOW_MOCK=false
 php artisan config:cache
 ```
 
@@ -248,6 +251,39 @@ Verify with: `curl -s http://127.0.0.1:5000/api/health`.
 RAM guidance: 2 GB is fine with `ML_API_ENABLED=false`; run local
 Whisper on 4 GB, or keep 2 GB with the OpenAI fallback
 (`WHISPER_USE_LOCAL=false`).
+
+### No speech engine = no assessment
+
+If no engine transcribes the audio, the app refuses to score the
+recording rather than fall back to its placeholder transcript ("I have a
+dog his name is Max..."). Analyze returns 503 with a message telling the
+teacher the recording was saved and to try again; the real cause is in
+`storage/logs/laravel.log`. Scoring the placeholder would store an
+assessment, a reading level and an intervention plan that describe
+nothing, so this is deliberate.
+
+`STT_ALLOW_MOCK=true` re-enables the placeholder. Use it only for a demo
+with no speech engine, never on a server collecting real assessments.
+Results already stored from the placeholder stay flagged as "not a
+measurement of the learner" on the results page.
+
+### Transcription timeout budget
+
+Transcription is synchronous, slower than real time on a small VPS, and
+the recorder allows up to 3 minutes of audio. Each limit must outlast the
+one inside it, so the app's own limit fires first and the teacher gets a
+real message instead of a dead gateway:
+
+| Limit | Where | Value |
+|---|---|---|
+| `WHISPER_TIMEOUT` | `.env` (Laravel waits on Flask) | 300s |
+| `max_execution_time`, `request_terminate_timeout` | php-fpm | 360s |
+| `fastcgi_read_timeout` | nginx | 390s |
+| `--timeout` | gunicorn (`bigkas-ml.service`) | 420s |
+
+Gunicorn is highest on purpose: Laravel gives up first, so the worker is
+never killed mid-transcription (which would drop the loaded model and
+make the next assessment slow).
 
 No queue worker is needed: all notifications
 (`NewInterventionAssigned`, `NewAssessmentCompleted`,

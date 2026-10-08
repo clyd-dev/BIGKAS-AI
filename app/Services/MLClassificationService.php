@@ -46,6 +46,55 @@ class MLClassificationService
         return $map[(string) $predicted] ?? null;
     }
 
+    /**
+     * The weakness id to store for a classification.
+     *
+     * A prediction is only kept when the measured evidence backs it up, so the
+     * stored weakness can never contradict the per-skill rows the teacher is
+     * shown. Two reasons this matters:
+     *
+     *  - The three pattern features are shares of a reader's errors, so one
+     *    vowel-ish slip reads as a maximal phonics signal and the classifier
+     *    (and the older hand-written rules) answered "Phonemic Awareness" for
+     *    readers whose real trouble was decoding or pace.
+     *  - Comprehension is never measured by the classifier at all; without
+     *    comprehension questions there is nothing behind such a prediction.
+     *
+     * When the top class is unsupported, the next most likely supported class
+     * is used; if the evidence supports nothing, no weakness is stored.
+     *
+     * @param array<int, string> $statuses from WeaknessEvidence::statuses()
+     * @param int|null           $fallbackId used when the classifier gave no usable answer
+     */
+    public static function resolveWeaknessId(array $classification, array $statuses, ?int $fallbackId = null): ?int
+    {
+        $id = self::mapWeaknessToId($classification['primary'] ?? '') ?? $fallbackId;
+
+        // 0 means "no weakness found", which needs no supporting evidence.
+        if ($id === null || $id === 0 || WeaknessEvidence::showsProblem($statuses[$id] ?? null)) {
+            return $id;
+        }
+
+        // all_scores are probabilities in class order 0-4 (RF classes_).
+        $scores = $classification['all_scores'] ?? [];
+
+        if (count($scores) === 5) {
+            arsort($scores);
+
+            foreach (array_keys($scores) as $candidate) {
+                $candidate = (int) $candidate;
+
+                if ($candidate === 0 || WeaknessEvidence::showsProblem($statuses[$candidate] ?? null)) {
+                    return $candidate;
+                }
+            }
+        }
+
+        // The classifier offered nothing the evidence backs, so go with the
+        // clearest measured problem instead of inventing one.
+        return WeaknessEvidence::clearestProblem($statuses);
+    }
+
     public function classify(array $features): array
     {
         if (!$this->enabled) {
@@ -91,17 +140,24 @@ class MLClassificationService
 
         $primary = 'Instructional (Mixed)';
 
+        // Order matters. The phonemic test comes after the two that read real
+        // magnitudes (accuracy, substitutions, pace), because phonetic/vowel/
+        // blend are shares of this reader's own errors: one slip bucketed as a
+        // vowel confusion makes them 1.0. Tested first, as they used to be, they
+        // labelled every inaccurate reader "Phonemic Awareness". The share must
+        // now be overwhelming, and WeaknessEvidence still has to back the answer
+        // before it is stored against a learner.
         if ($accuracy >= 95 && $wpm >= 60 && $fluency >= 8) {
             $primary = '0';
-        } elseif (($phoneticRate + $vowelRate + $blendRate) > 0.5 && $accuracy < 85) {
-            // More than half of all errors are phonemic in nature
-            $primary = '1';
         } elseif ($subRate > 0.1 && $accuracy < 90) {
             // High substitution rate + low accuracy = decoding problem
             $primary = '2';
         } elseif ($accuracy >= 90 && ($wpm < 80 || $fluency < 6 || $pauseFreq > 0.1)) {
             // Can decode but reads slowly/haltingly
             $primary = '3';
+        } elseif (($phoneticRate + $vowelRate + $blendRate) > 0.8 && $accuracy < 85) {
+            // Nearly every error this reader made sounds like the target word
+            $primary = '1';
         } elseif ($omRate > 0.1 && $accuracy >= 85) {
             // Skipping words despite being able to decode = possible comprehension issue
             $primary = '4';

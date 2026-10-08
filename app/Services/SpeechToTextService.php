@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\SpeechServiceUnavailable;
 use Illuminate\Support\Facades\Http;
 
 class SpeechToTextService
@@ -18,18 +19,39 @@ class SpeechToTextService
         $this->timeout = $config['timeout'] ?? 60;
     }
 
+    /**
+     * May this run fall back to the placeholder transcript?
+     *
+     * Only where a fake result is harmless. Unset config means local and
+     * testing only; STT_ALLOW_MOCK=true forces it on (for a demo without a
+     * speech engine), STT_ALLOW_MOCK=false forces it off everywhere.
+     */
+    protected function mockAllowed(): bool
+    {
+        $configured = config('services.whisper.allow_mock');
+
+        if ($configured !== null && $configured !== '') {
+            return filter_var($configured, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        return app()->environment('local', 'testing');
+    }
+
     public function transcribe(string $audioPath, string $language = 'en'): array
     {
         if (!file_exists($audioPath)) {
             throw new \Exception("Audio file not found: {$audioPath}");
         }
 
+        $lastError = null;
+
         // Priority 1: Local Whisper via Python Flask (self-hosted, no API cost)
         if (config('services.whisper.use_local', true)) {
             try {
                 return $this->callLocalWhisper($audioPath, $language);
             } catch (\Exception $e) {
-                \Log::warning('Local Whisper failed, trying fallbacks: ' . $e->getMessage());
+                $lastError = $e->getMessage();
+                \Log::warning('Local Whisper failed, trying fallbacks: ' . $lastError);
                 // Fall through to next option
             }
         }
@@ -39,7 +61,18 @@ class SpeechToTextService
             return $this->callWhisperApi($audioPath, $language);
         }
 
-        // Priority 3: Mock transcription (for development/testing only)
+        // Priority 3: the placeholder transcript. Scoring it would store an
+        // assessment that measured nothing, so outside development we stop
+        // here and let the caller report a service problem instead.
+        if (! $this->mockAllowed()) {
+            \Log::error('No STT engine available and mock transcription is not allowed here.', [
+                'audio' => basename($audioPath),
+                'last_error' => $lastError,
+            ]);
+
+            throw SpeechServiceUnavailable::becauseNoEngineAnswered($lastError);
+        }
+
         \Log::info('No STT service available. Using mock transcription.');
         return $this->mockTranscribe($audioPath, $language);
     }
@@ -53,7 +86,9 @@ class SpeechToTextService
     {
         $mlApiUrl = config('services.ml_api.url', 'http://127.0.0.1:5000');
 
-        $response = Http::timeout(120) // Local CPU inference can be slow
+        // Local CPU inference is slower than real time on a small VPS, so this
+        // waits minutes, not seconds (see config/services.php whisper.timeout).
+        $response = Http::timeout(config('services.whisper.timeout', 300))
             ->attach('audio', file_get_contents($audioPath), basename($audioPath))
             ->post($mlApiUrl . '/api/transcribe', [
                 'language' => $language,

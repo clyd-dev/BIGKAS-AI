@@ -32,7 +32,13 @@ class SpeechApiController extends Controller
         $fullPath = storage_path('app/public/' . $path);
 
         // Transcribe
-        $result = $this->sttService->transcribe($fullPath, $language);
+        try {
+            $result = $this->sttService->transcribe($fullPath, $language);
+        } catch (\App\Exceptions\SpeechServiceUnavailable $e) {
+            \Illuminate\Support\Facades\Log::error('Speech API: ' . $e->getMessage());
+
+            return $this->error($e->forTeacher(), 503);
+        }
 
         if (! ($result['success'] ?? false)) {
             return $this->error('Transcription failed: ' . ($result['error'] ?? 'Unknown error'), 500);

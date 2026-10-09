@@ -25,9 +25,15 @@
 /* Tables: scroll sideways inside their own box, never the whole page. */
 .pp-main .table-responsive { -webkit-overflow-scrolling: touch; }
 .pp-main .table td, .pp-main .table th { vertical-align: middle; }
+/* Cells keep whole words (the page-wide "anywhere" wrap below would otherwise let a
+   squeezed column break letter by letter and read as a vertical strip). */
+.pp-main .table td, .pp-main .table th { overflow-wrap: normal; word-break: normal; }
+.pp-main .table th { white-space: nowrap; }
 @media (max-width: 767.98px) {
-    .pp-main .table-responsive { font-size: .85rem; }
-    .pp-main .table-responsive > .table { min-width: 560px; }
+    .pp-main .table-responsive { font-size: .85rem; overflow-x: auto; }
+    .pp-main .table-responsive .table { min-width: 640px; }
+    .pp-main .table-responsive .table td { min-width: 5.5rem; }
+    .pp-main .table-responsive .table td:first-child { min-width: 9rem; }
 }
 
 /* Button groups and filter rows wrap rather than overflow. */

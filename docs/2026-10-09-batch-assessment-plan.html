@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Batch Assessment Plan</title>
+<style>
+  :root{
+    --ink:#1b1f24; --muted:#5b6672; --line:#d8dee6; --soft:#f4f6f9;
+    --accent:#1d4ed8; --accent-soft:#eaf0ff;
+    --warn:#9a4a05; --warn-soft:#fff4e6;
+    --stop:#9c1c22; --stop-soft:#fdeded;
+    --go:#1d6b3f; --go-soft:#e9f6ee;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:#fff; color:var(--ink);
+    font:15px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  .page{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+
+  h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+  h2{font-size:21px;margin:40px 0 12px;padding-bottom:7px;border-bottom:2px solid var(--ink);letter-spacing:-.01em}
+  h3{font-size:16px;margin:26px 0 8px}
+  h4{font-size:14px;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  p{margin:0 0 12px}
+  ul,ol{margin:0 0 12px;padding-left:22px}
+  li{margin:0 0 5px}
+  code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.88em;background:var(--soft);padding:1px 5px;border-radius:3px;border:1px solid var(--line)}
+  pre{background:var(--soft);border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:4px;padding:12px 14px;overflow-x:auto;margin:0 0 14px}
+  pre code{background:none;border:none;padding:0;font-size:12.5px;line-height:1.55}
+  strong{font-weight:600}
+  a{color:var(--accent)}
+
+  .sub{color:var(--muted);font-size:14px;margin:0 0 4px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 28px;margin:18px 0 0;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+  .meta b{color:var(--ink);font-weight:600}
+
+  table{width:100%;border-collapse:collapse;margin:0 0 16px;font-size:13.5px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--soft);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:2px solid var(--line)}
+  td code{font-size:12px}
+  .nowrap{white-space:nowrap}
+
+  .callout{border-radius:5px;padding:13px 16px;margin:0 0 16px;border:1px solid;font-size:14px}
+  .callout p:last-child{margin-bottom:0}
+  .callout .lbl{display:block;font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+  .c-stop{background:var(--stop-soft);border-color:#f0c2c4;color:#5d1114}
+  .c-stop .lbl{color:var(--stop)}
+  .c-warn{background:var(--warn-soft);border-color:#f3d9b5;color:#5c2d03}
+  .c-warn .lbl{color:var(--warn)}
+  .c-go{background:var(--go-soft);border-color:#bcdfc9;color:#13472a}
+  .c-go .lbl{color:var(--go)}
+  .c-info{background:var(--accent-soft);border-color:#c5d4fb;color:#152a66}
+  .c-info .lbl{color:var(--accent)}
+
+  .decisions{list-style:none;padding:0;margin:0 0 8px}
+  .decisions li{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);margin:0}
+  .decisions .k{flex:0 0 190px;font-weight:600;font-size:13.5px}
+  .decisions .v{flex:1;font-size:13.5px}
+
+  /* pipeline */
+  .pipe{margin:0 0 20px}
+  .step{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:4px;padding:11px 14px;margin:0 0 6px;background:#fff;page-break-inside:avoid}
+  .step .n{display:inline-block;min-width:22px;font-weight:700;color:var(--accent);font-size:13px}
+  .step .t{font-weight:600;font-size:14px}
+  .step .d{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.5}
+  .step .d b{color:var(--ink)}
+  .step.fail{border-left-color:var(--stop)}
+  .step.fail .n{color:var(--stop)}
+  .arrow{text-align:center;color:var(--line);font-size:15px;line-height:1;margin:0 0 6px}
+
+  .phase{border:1px solid var(--line);border-radius:5px;padding:0;margin:0 0 18px;overflow:hidden;page-break-inside:avoid}
+  .phase-h{background:var(--soft);padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .phase-h .name{font-weight:700;font-size:15px}
+  .phase-h .gate{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:right}
+  .phase-b{padding:13px 14px}
+  .phase-b p:last-child,.phase-b ul:last-child{margin-bottom:0}
+
+  figure{margin:0 0 20px}
+  figcaption{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+  svg{max-width:100%;height:auto;display:block}
+
+  .foot{margin-top:46px;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+
+  @media print{
+    @page{size:A4;margin:14mm 13mm}
+    body{font-size:10.5pt}
+    .page{max-width:none;padding:0}
+    h1{font-size:21pt}
+    h2{font-size:14pt;margin-top:22pt;page-break-after:avoid}
+    h3{font-size:11.5pt;page-break-after:avoid}
+    h4{page-break-after:avoid}
+    table,pre,figure,.callout,.phase,.step{page-break-inside:avoid}
+    thead{display:table-header-group}
+    pre{white-space:pre-wrap}
+    .no-print{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Batch Assessment</h1>
+<p class="sub">Implementation plan &amp; pipeline specification — BIGKAS&#8209;AI</p>
+
+<div class="meta">
+  <span><b>Date</b> 9 October 2026</span>
+  <span><b>Status</b> Awaiting go signal — not implemented</span>
+  <span><b>Branch</b> master @ 72b0f9d</span>
+  <span><b>Approach</b> A (delegate)</span>
+</div>
+
+<h2>1. What this builds</h2>
+
+<p>A teacher sets up <strong>one batch covering up to 15 children</strong>. Each child's recording is captured either on their own device or by the teacher one at a time. Every recording is queued for analysis, and the teacher tracks the whole group from a single board that reports honest progress and a real time estimate.</p>
+
+<h4>Decisions locked</h4>
+<ul class="decisions">
+  <li><span class="k">Recording mode</span><span class="v">Batch holds a roster; each child is <code>self</code> (own device) or <code>teacher</code> (teacher-led), set per child.</span></li>
+  <li><span class="k">Material</span><span class="v">One batch default, overridable per child. Grade policy runs per child, unchanged.</span></li>
+  <li><span class="k">Assessment type</span><span class="v">All three supported — <code>oral_reading</code>, <code>comprehension</code>, <code>combined</code> — one type per batch.</span></li>
+  <li><span class="k">Analysis</span><span class="v">Everything queued. Live progress board with polling. Teacher may close the laptop and return.</span></li>
+  <li><span class="k">Guardrail</span><span class="v">Hard roster cap of <strong>15</strong>, plus a wait estimate computed from measured job durations.</span></li>
+  <li><span class="k">Single-child flow</span><span class="v">Behaviour frozen. Batch is a separate route and view; the only change to the existing screen is one added link.</span></li>
+  <li><span class="k">Verdict</span><span class="v">Stays per child. No bulk-accept button.</span></li>
+</ul>
+
+<h2>2. Capacity: why the design looks like this</h2>
+
+<p>The shape of this feature is dictated by one measurement: <strong>local Whisper is CPU-bound and strictly serial.</strong> The Random Forest, by contrast, is free.</p>
+
+<table>
+  <thead><tr><th>Stage</th><th>Cost</th><th>Runs in parallel?</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Whisper <code>small</code></b>, int8, <code>device="cpu"</code><br><span class="nowrap"><code>ml-service/app.py:87</code></span></td>
+      <td>≈1–3 min per 1-minute reading on the VPS CPU; ≈1&nbsp;GB resident</td>
+      <td><b>No.</b> Running ten at once thrashes the CPU and slows all ten. This is the bottleneck.</td>
+    </tr>
+    <tr>
+      <td>Flask host<br><code>app.py:269</code></td>
+      <td><code>app.run(debug=True)</code> — dev server, reloader on</td>
+      <td>Single process; not a production server</td>
+    </tr>
+    <tr>
+      <td>STT request ceiling</td>
+      <td><code>WHISPER_TIMEOUT=300</code> (5 min)</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>RF classify<br><code>weakness_classifier.joblib</code></td>
+      <td><b>milliseconds</b></td>
+      <td>Irrelevant to capacity</td>
+    </tr>
+    <tr>
+      <td>Alignment &amp; miscue analysis (PHP)</td>
+      <td>fast</td>
+      <td>Fine</td>
+    </tr>
+    <tr>
+      <td>Host</td>
+      <td>4&nbsp;GB RAM with local Whisper (<code>docs/deployment-vps.md:9</code>)</td>
+      <td>Headroom for <b>one</b> model in memory</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Two consequences follow, and they are not negotiable by UI design:</p>
+<ol>
+  <li>Analysis must leave the HTTP request and run as a <strong>queued job on exactly one worker</strong>. Ten synchronous analyses would also pin ten PHP&#8209;FPM workers for minutes and gateway-timeout anyway.</li>
+  <li>"Assess ten at once" is true for <strong>recording</strong> and false for <strong>analysis</strong>. Results trickle in over 25–45 minutes. The board must say so rather than spin.</li>
+</ol>
+
+<figure>
+<svg viewBox="0 0 780 320" role="img" aria-label="Timeline showing ten children recording simultaneously, then their analyses running strictly one after another">
+  <rect x="0" y="0" width="780" height="320" fill="#fff"/>
+  <!-- phase bands -->
+  <rect x="90" y="36" width="48" height="246" fill="#eaf0ff"/>
+  <text x="114" y="30" text-anchor="middle" font-size="10.5" font-family="Segoe UI,sans-serif" fill="#1d4ed8" font-weight="600">record</text>
+  <text x="360" y="30" text-anchor="middle" font-size="10.5" font-family="Segoe UI,sans-serif" fill="#9a4a05" font-weight="600">analysis — one lane, strictly sequential</text>
+
+  <!-- axis -->
+  <line x1="90" y1="282" x2="740" y2="282" stroke="#d8dee6" stroke-width="1"/>
+  <g font-size="10" font-family="Segoe UI,sans-serif" fill="#5b6672" text-anchor="middle">
+    <line x1="90"  y1="282" x2="90"  y2="287" stroke="#d8dee6"/><text x="90"  y="300">0</text>
+    <line x1="234" y1="282" x2="234" y2="287" stroke="#d8dee6"/><text x="234" y="300">10</text>
+    <line x1="379" y1="282" x2="379" y2="287" stroke="#d8dee6"/><text x="379" y="300">20</text>
+    <line x1="523" y1="282" x2="523" y2="287" stroke="#d8dee6"/><text x="523" y="300">30</text>
+    <line x1="668" y1="282" x2="668" y2="287" stroke="#d8dee6"/><text x="668" y="300">40</text>
+    <text x="415" y="316" font-size="10.5">minutes after the batch starts</text>
+  </g>
+
+  <g font-size="10.5" font-family="Segoe UI,sans-serif" fill="#5b6672" text-anchor="end">
+    <text x="80" y="54">child 1</text>
+    <text x="80" y="76">child 2</text>
+    <text x="80" y="98">child 3</text>
+    <text x="80" y="120">child 4</text>
+    <text x="80" y="142">child 5</text>
+    <text x="80" y="164">child 6</text>
+    <text x="80" y="186">child 7</text>
+    <text x="80" y="208">child 8</text>
+    <text x="80" y="230">child 9</text>
+    <text x="80" y="252">child 10</text>
+  </g>
+
+  <!-- recording bars (overlapping) -->
+  <g fill="#1d4ed8" opacity="0.75">
+    <rect x="90"  y="44"  width="36" height="13" rx="2.5"/>
+    <rect x="94"  y="66"  width="36" height="13" rx="2.5"/>
+    <rect x="99"  y="88"  width="36" height="13" rx="2.5"/>
+    <rect x="103" y="110" width="36" height="13" rx="2.5"/>
+    <rect x="108" y="132" width="36" height="13" rx="2.5"/>
+    <rect x="112" y="154" width="36" height="13" rx="2.5"/>
+    <rect x="116" y="176" width="36" height="13" rx="2.5"/>
+    <rect x="121" y="198" width="36" height="13" rx="2.5"/>
+    <rect x="125" y="220" width="36" height="13" rx="2.5"/>
+    <rect x="130" y="242" width="36" height="13" rx="2.5"/>
+  </g>
+
+  <!-- queued waiting (hairlines) -->
+  <g stroke="#d8dee6" stroke-width="1" stroke-dasharray="2 3">
+    <line x1="130" y1="72.5"  x2="177" y2="72.5"/>
+    <line x1="135" y1="94.5"  x2="220" y2="94.5"/>
+    <line x1="139" y1="116.5" x2="263" y2="116.5"/>
+    <line x1="144" y1="138.5" x2="307" y2="138.5"/>
+    <line x1="148" y1="160.5" x2="350" y2="160.5"/>
+    <line x1="152" y1="182.5" x2="393" y2="182.5"/>
+    <line x1="157" y1="204.5" x2="437" y2="204.5"/>
+    <line x1="161" y1="226.5" x2="480" y2="226.5"/>
+    <line x1="166" y1="248.5" x2="523" y2="248.5"/>
+  </g>
+
+  <!-- analysis bars (sequential) -->
+  <g fill="#c2691a">
+    <rect x="133" y="44"  width="43" height="13" rx="2.5"/>
+    <rect x="177" y="66"  width="43" height="13" rx="2.5"/>
+    <rect x="220" y="88"  width="43" height="13" rx="2.5"/>
+    <rect x="263" y="110" width="43" height="13" rx="2.5"/>
+    <rect x="307" y="132" width="43" height="13" rx="2.5"/>
+    <rect x="350" y="154" width="43" height="13" rx="2.5"/>
+    <rect x="393" y="176" width="43" height="13" rx="2.5"/>
+    <rect x="437" y="198" width="43" height="13" rx="2.5"/>
+    <rect x="480" y="220" width="43" height="13" rx="2.5"/>
+    <rect x="523" y="242" width="43" height="13" rx="2.5"/>
+  </g>
+
+  <!-- last-result marker -->
+  <line x1="567" y1="40" x2="567" y2="276" stroke="#9c1c22" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="573" y="268" font-size="10.5" font-family="Segoe UI,sans-serif" fill="#9c1c22" font-weight="600">last result ≈33 min</text>
+</svg>
+<figcaption><strong>The core constraint.</strong> Recording overlaps freely — ten children can read at the same time on ten devices. Analysis cannot: each dashed hairline is a child waiting in the queue. The classroom is finished reading in about three minutes; the last result lands roughly half an hour later. Bar widths assume ≈3 min of analysis per child, the midpoint of the measured range.</figcaption>
+</figure>
+
+<div class="callout c-warn">
+  <span class="lbl">Model quality — why there is no bulk-accept</span>
+  <p>The shipped RF reports <code>cv_accuracy</code> <strong>0.4993</strong> (±0.105) and <code>test_accuracy</code> 0.625, and class&nbsp;4 (<i>Reading Comprehension</i>) was trained on <strong>3 samples</strong>. Batch assessment multiplies how many of these predictions a teacher sees at once. The board therefore presents RF output as a <em>suggestion awaiting the teacher</em>, keeps the existing per-child verdict step (<code>AssessmentVerdictController</code>) mandatory, and offers no "accept all" control. Ten unreviewed predictions accepted in one click is the single thing this feature must not make easy.</p>
+</div>
+
+<h2>3. The tension, and the resolution</h2>
+
+<p>Single-child behaviour must not change. But <code>AssessmentController::analyze()</code> (<code>app/Http/Controllers/AssessmentController.php:242–372</code>) is ~130 lines of pipeline living inside a controller method that returns HTTP responses, and <strong>a queued job cannot call a controller action</strong>. There were only two routes forward:</p>
+
+<table>
+  <thead><tr><th>Option</th><th>Effect on single-child</th><th>Cost</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Delegate</b><br><span style="color:#1d6b3f;font-weight:600;font-size:12px">SELECTED</span></td>
+      <td>Route, request shape, JSON responses, status codes and side effects stay <b>identical</b>. The method body becomes ~30 lines calling a new service. Behaviour untouched; the file is edited.</td>
+      <td>One careful refactor, guarded by tests written <i>before</i> it.</td>
+    </tr>
+    <tr>
+      <td>Zero-touch</td>
+      <td><code>AssessmentController.php</code> never opened. The job carries its own copy of the 130 lines.</td>
+      <td>Two divergent copies of the RF, weakness-evidence and provenance logic. A fix in one silently misses the other — and <code>WeaknessEvidence::statuses()</code> is exactly the rule that must never fork. <b>Rejected.</b></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout c-go">
+  <span class="lbl">How "untouched" is proven, not claimed</span>
+  <p>Before anything is refactored, characterization tests pin the current behaviour of <code>analyze()</code>. Most of that net already exists — <code>ReanalyzeAssessmentTest</code>, <code>SpeechEngineRequiredTest</code>, <code>RecordingKeptTest</code>, <code>WeaknessMatchesEvidenceTest</code>, <code>MiscueDetectionTest</code>, <code>ComprehensionTestTest</code>, <code>DecisionSupportTest</code>. All must pass after the refactor <strong>with no edits to the test files</strong>. If a test needs changing to go green, behaviour changed, and the refactor is wrong.</p>
+</div>
+
+<h2>4. The new pipeline, in detail</h2>
+
+<h3>4.1 Today — synchronous, inside the request</h3>
+
+<pre><code>POST /assessments/{id}/analyze
+  └─ AssessmentController::analyze()        ← validation + 130 lines of pipeline + 3 HTTP branches
+       teacher's browser waits 1–3 minutes, holding one PHP-FPM worker</code></pre>
+
+<h3>4.2 After — one pipeline, two callers</h3>
+
+<pre><code>  SINGLE-CHILD (unchanged for the teacher)        BATCH (new)
+  POST /assessments/{id}/analyze                  POST .../upload-audio  →  queue
+       │                                                │
+       ▼                                                ▼
+  AssessmentController::analyze()                  AnalyzeAssessmentJob
+   • validate, keepRecording()                      • queue: analysis, concurrency 1
+   • 3 HTTP response branches                       • tries 2, timeout 420s
+   • returns JSON, as it does today                 • ShouldBeUnique on assessment id
+       │                                                │
+       └──────────────────┬─────────────────────────────┘
+                          ▼
+            App\Services\AssessmentAnalysisPipeline
+              run(Assessment $a, ?array $answers = null): AssessmentResult
+              • knows nothing about HTTP
+              • throws on failure; callers decide what that means</code></pre>
+
+<p>The pipeline is the <strong>single source of truth</strong> for how a reading is scored. Both callers get identical results because there is only one implementation.</p>
+
+<h3>4.3 Inside <code>AssessmentAnalysisPipeline::run()</code></h3>
+
+<p>Moved <em>verbatim</em> from <code>analyze()</code> — same order, same rules. The ordering is not incidental: comprehension answers are recorded first so that a Whisper failure can never cost the learner's answers.</p>
+
+<div class="pipe">
+
+  <div class="step">
+    <span class="n">1</span><span class="t">Record comprehension answers</span>
+    <div class="d">Via <code>ComprehensionService::record()</code> when the assessment needs a test. Answers already submitted from the learner's own portal are kept as-is. <b>Runs before any transcription</b> — a failure further down never discards them. Missing answers abort the run here, before a minute of CPU is spent.</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <span class="n">2</span><span class="t">Stamp <code>analysis_started_at</code></span>
+    <div class="d"><b>New, additive.</b> Starts the duration clock. Invisible to the single-child flow; feeds the batch estimator.</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <span class="n">3</span><span class="t">Speech to text</span>
+    <div class="d"><code>SpeechToTextService::transcribe()</code> against the <b>saved</b> audio copy, so what the teacher plays back is what was analysed. Priority order unchanged: local Whisper → OpenAI cloud (if keyed) → placeholder (local/testing only). <b>This is the 1–3 minutes.</b> Throws <code>SpeechServiceUnavailable</code> when no engine answers.</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <span class="n">4</span><span class="t">Alignment &amp; reading metrics</span>
+    <div class="d"><code>ReadingAnalyzerService::analyze()</code> — transcript vs. reference text. Produces accuracy, WPM, fluency, the miscue breakdown and the 12-feature ML vector. Pure PHP, fast.</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <span class="n">5</span><span class="t">RF classification</span>
+    <div class="d"><code>MLClassificationService::classify()</code> posts the 12 features to Flask <code>/api/classify</code>. Milliseconds. Falls back to the rule-based classifier when the model is absent — recorded in provenance either way.</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <span class="n">6</span><span class="t">Reconcile prediction against measured evidence</span>
+    <div class="d"><code>resolveWeaknessId()</code> + <code>WeaknessEvidence::statuses()</code>. A weakness is only stored when the measured numbers support it, so a result never names a skill the teacher's own rows call fine. <b>The rule that must never be duplicated</b> — the whole reason for delegate over zero-touch.</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <span class="n">7</span><span class="t">Merge comprehension score</span>
+    <div class="d">The real score from the question set replaces the estimate when a test was taken. <b>The ML feature vector is deliberately left untouched.</b></div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <span class="n">8</span><span class="t">Build provenance</span>
+    <div class="d">Which STT engine ran, whether it was mock, mean word confidence, whether the classifier was ML or rule-based, model version (read from the shipped <code>model_metadata.json</code>, not a second service call), timestamp. This is what <code>AnalysisAdvisorService</code> uses to tell the teacher how far to trust the result.</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step">
+    <span class="n">9</span><span class="t">Persist result + stamp <code>analysis_duration_ms</code></span>
+    <div class="d"><code>$assessment-&gt;createResult()</code>, status → <code>completed</code>, <code>ActivityLog</code> entry. The duration stamp is <b>new and additive</b>, written on <b>every</b> run including single-child — so the batch estimator is fed by real measurements from day one instead of a guessed constant.</div>
+  </div>
+  <div class="arrow">▼</div>
+
+  <div class="step fail">
+    <span class="n">✕</span><span class="t">On failure — the pipeline throws; the caller decides</span>
+    <div class="d">
+      <b>Single-child:</b> unchanged — <code>markFailed()</code>, then <code>503</code> with <code>$e-&gt;forTeacher()</code> for a dead engine, or <code>500</code> with the actionable generic message. Detail goes to the log only.<br>
+      <b>Batch:</b> <code>SpeechServiceUnavailable</code> → <b>fail immediately, no retry</b>; retrying into a dead engine would burn 10&nbsp;×&nbsp;5&nbsp;min for nothing. The batch is marked <code>engine_unavailable</code> and the board says so once: <i>"speech engine offline — your recordings are saved, retry when it's back."</i> Any other exception → one retry, then <code>markFailed()</code>. <b>A failed child never stops the batch.</b> The recording always survives; re-analysing is all it takes.
+    </div>
+  </div>
+
+</div>
+
+<h3>4.4 Batch state machine, per child</h3>
+
+<pre><code>waiting ──recording captured──▶ recorded ──enqueued──▶ queued
+                                                          │
+                                              worker picks it up
+                                                          ▼
+                                                    transcribing
+                                        ┌─────────────────┴─────────────────┐
+                                     success                            failure
+                                        ▼                                  ▼
+                                 needs verdict                          failed
+                                        │                         (retry → queued)
+                            teacher decides (per child)
+                                        ▼
+                                      done
+
+Batch status: collecting ─▶ analyzing ─▶ completed
+                   └──────────────────────▶ cancelled
+                   └──────────────────────▶ engine_unavailable (recoverable)
+</code></pre>
+
+<p>The batch reaches <code>completed</code> when every entry is terminal (<code>done</code> or <code>failed</code>). A failed entry does not block completion — it is reported, retryable, and the batch moves on.</p>
+
+<h3>4.5 Wait estimate</h3>
+
+<p>New <code>App\Services\AnalysisQueueEstimator</code>. Takes the <strong>median of the last 20</strong> <code>analysis_duration_ms</code> values (seeded at 150&nbsp;s until data exists), multiplies by queue depth ahead of the given child, and returns a per-child ETA, a batch ETA, and how many jobs ahead belong to other teachers. Median, not mean, so one 5-minute outlier does not distort every estimate on screen.</p>
+
+<p>The board shows this as <i>"about 18 min remaining · 4 ahead of you from other classes"</i>. Teachers self-regulate when they can see the truth, and a slow queue becomes distinguishable from a broken one.</p>
+
+<h2>5. Schema</h2>
+
+<h4>New table: <code>assessment_batches</code></h4>
+<table>
+  <thead><tr><th>Column</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>teacher_id</code></td><td>Owner. Batches are per-teacher.</td></tr>
+    <tr><td><code>school_class_id</code></td><td>Nullable — a batch may be hand-picked learners instead of a class.</td></tr>
+    <tr><td><code>title</code></td><td>Nullable, teacher's own label.</td></tr>
+    <tr><td><code>language</code>, <code>assessment_type</code></td><td>Batch-wide. One type per batch.</td></tr>
+    <tr><td><code>default_material_id</code></td><td>The batch default; each child may override.</td></tr>
+    <tr><td><code>status</code></td><td><code>collecting</code> / <code>analyzing</code> / <code>completed</code> / <code>cancelled</code> / <code>engine_unavailable</code></td></tr>
+    <tr><td><code>created_at</code>, <code>completed_at</code>, <code>cancelled_at</code></td><td>Lifecycle timestamps.</td></tr>
+  </tbody>
+</table>
+
+<h4>Added to <code>assessments</code> — all nullable, all additive</h4>
+<table>
+  <thead><tr><th>Column</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>batch_id</code></td><td>Nullable FK, indexed. <b><code>NULL</code> means single-child.</b> Every existing row stays <code>NULL</code>; every existing query keeps working; the single-child flow never writes it.</td></tr>
+    <tr><td><code>recording_mode</code></td><td><code>self</code> / <code>teacher</code>. Batch-only.</td></tr>
+    <tr><td><code>queued_at</code>, <code>analysis_started_at</code>, <code>analysis_duration_ms</code></td><td>Queue and timing telemetry; feeds the estimator.</td></tr>
+  </tbody>
+</table>
+
+<h4>Deliberately <em>not</em> added</h4>
+<ul>
+  <li><b>No roster-entry table.</b> A roster entry <i>is</i> an <code>Assessment</code>. Per-child material override is simply that child's existing <code>material_id</code>.</li>
+  <li><b>No join-code table.</b> Self-record reuses one <code>AssessmentSession</code> per entry, with the existing <code>generateCode()</code> and student join flow.</li>
+</ul>
+
+<div class="callout c-warn">
+  <span class="lbl">New status constant — the one place to be careful</span>
+  <p><code>Assessment::STATUS_QUEUED</code> joins the existing five. The single-child flow never sets it, so no existing check changes meaning — but that must be <b>verified, not assumed</b>. Before this ships, every <code>status</code> comparison and every <code>whereIn([...])</code> in the codebase gets grepped and read, to confirm the new value cannot fall through a condition written when there were only five states. <code>Assessment::canRetry()</code> and <code>needsAnalysis()</code> are the first two to check.</p>
+</div>
+
+<h2>6. Teacher-facing UI</h2>
+
+<p>Built on the existing staff shell and <code>&lt;x-page-header&gt;</code>. The board is a nav page, so <b>no</b> back link; each child drills down to the existing results screen with a back link labelled "Batch", per the house rule that <code>PageHeaderTest</code> enforces.</p>
+
+<h4>Entry point</h4>
+<p><code>/assessments/new</code> gains <strong>one added link</strong> — "Assess a group" — pointing at the new <code>assessments/batch/create</code>. The existing single-learner screen is otherwise not modified.</p>
+
+<h4>Batch setup — <code>/assessments/batch/create</code></h4>
+<p>Pick a class or hand-pick learners → language → type → default material → a roster table where each row can override the material and choose <code>self</code> or <code>teacher</code>. The cap comes from <code>config('assessment.batch_max_learners')</code>, default <strong>15</strong>, enforced in validation with a clear message. Grade policy runs per child under today's rules: a cross-grade child must be ticked individually, never silently.</p>
+
+<h4>Batch board — <code>/assessments/batch/{batch}</code></h4>
+<p>The roster, polling <code>/batch/{batch}/poll</code> — the same polling pattern as the existing <code>pollSession</code>, so no new transport. Each row shows a state chip (<code>waiting</code> / <code>recorded</code> / <code>queued</code> / <code>transcribing</code> / <code>needs verdict</code> / <code>done</code> / <code>failed</code>), the ETA, and one action.</p>
+<ul>
+  <li><b>Teacher-led rows</b> record inline, reusing <code>_audio_capture.blade.php</code>.</li>
+  <li><b>Self-record rows</b> display the child's join code.</li>
+  <li><b>Comprehension</b> answers come from the child's own device in <code>self</code> mode, or from an inline per-child panel in teacher-led mode — posted through the existing <code>ComprehensionService</code> path <i>before</i> the job is queued.</li>
+  <li><b>Failed rows</b> offer per-child Retry, with today's retry semantics.</li>
+</ul>
+
+<h2>7. Build order</h2>
+
+<p>Each phase is independently green and independently revertible. <strong>A phase does not start until the one before it is proven.</strong></p>
+
+<div class="phase">
+  <div class="phase-h"><span class="name">Phase 0 — Safety net</span><span class="gate">no production code</span></div>
+  <div class="phase-b">
+    <p>Pin the current behaviour of <code>analyze()</code>: the success JSON (<code>redirect_url</code>), the <code>503</code> on a dead engine, the <code>500</code> on generic failure, the <code>markFailed</code> side effect, the comprehension-before-STT ordering, and the recording surviving a failed analysis. Fill whatever gap the existing seven tests leave. <b>These tests are never edited afterwards.</b></p>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-h"><span class="name">Phase 1 — Extract the pipeline</span><span class="gate">gate: all Phase 0 tests green,<br>zero test-file edits</span></div>
+  <div class="phase-b">
+    <p>Create <code>AssessmentAnalysisPipeline</code>; move the nine steps and <code>buildProvenance()</code> into it verbatim. <code>analyze()</code> keeps its validation, <code>keepRecording()</code>, status transition and all three response branches, and calls the pipeline in the middle.</p>
+    <p><strong>Phase 1 ships with zero new features.</strong> It is a pure, behaviour-neutral refactor — and the gate before anything else begins.</p>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-h"><span class="name">Phase 2 — Schema</span><span class="gate">gate: <code>migrate:rollback</code> verified clean</span></div>
+  <div class="phase-b">
+    <p><code>assessment_batches</code> + the nullable columns on <code>assessments</code> + <code>STATUS_QUEUED</code>, plus the status-check audit described in §5. Every migration carries a working, tested <code>down()</code>.</p>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-h"><span class="name">Phase 3 — Queue</span><span class="gate">gate: 15 jobs run serially on the VPS<br>without a timeout kill</span></div>
+  <div class="phase-b">
+    <p><code>AnalyzeAssessmentJob</code> (the app's first job), <code>AnalysisQueueEstimator</code>, and the systemd fix in §8. Verified with a real 15-recording run against local Whisper, not just in tests.</p>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-h"><span class="name">Phase 4 — Teacher UI</span><span class="gate">gate: one real classroom batch end to end</span></div>
+  <div class="phase-b">
+    <p>Setup screen, batch board, polling, inline recording, per-child comprehension panel, retry.</p>
+  </div>
+</div>
+
+<div class="phase">
+  <div class="phase-h"><span class="name">Phase 5 — Tests</span><span class="gate">gate: full suite green</span></div>
+  <div class="phase-b">
+    <p>Batch creation, cap enforcement, per-child grade policy, <code>batch_id</code> null-safety across existing queries, job enqueued on <i>upload</i> rather than on create, serial execution, a failed child leaving the batch alive, engine-offline pausing without burning retries, estimator maths, poll payload, and authorization — teacher A cannot see teacher B's batch; admin stays read-only, per the <code>LearnerAdminReadOnlyTest</code> precedent. Plus the entire Phase 0 suite still green.</p>
+  </div>
+</div>
+
+<h2>8. Latent bug this work exposes</h2>
+
+<div class="callout c-stop">
+  <span class="lbl">The installed queue worker would kill every Whisper job</span>
+  <p><code>bigkas_first_day_setup.sh:285</code> installs:</p>
+  <pre style="margin:8px 0;background:#fff"><code>ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --max-time=3600</code></pre>
+  <p>Laravel's default per-job timeout is <strong>60 seconds</strong>. A 300-second Whisper transcription would be killed mid-run, every time. The unit needs <code>--queue=analysis --timeout=420 --tries=2</code>.</p>
+  <p>Nobody has hit this because the worker is installed but <code>app/Jobs/</code> is empty — it has never run a job. Batch assessment is what first puts work on that queue, so the fix belongs to Phase&nbsp;3, and <code>docs/deployment-vps.md</code> must carry it too.</p>
+</div>
+
+<h2>9. Backup &amp; rollback</h2>
+
+<p>Six independent ways back, strongest first. The first two mean that in the common case <strong>nothing has to be rolled back at all.</strong></p>
+
+<h3>9.1 Feature flag — the instant off switch</h3>
+<p><code>BATCH_ASSESSMENT_ENABLED=false</code> behind <code>config('assessment.batch_enabled')</code> hides the "Assess a group" link and makes every batch route <code>404</code>. The single-child flow is untouched code either way, so it keeps working.</p>
+<p>This ships <strong>off</strong>. It is turned on deliberately, and turning it back off takes one <code>.env</code> edit — <b>no code rollback, no migration rollback, no downtime.</b> Remember that an <code>.env</code> edit does nothing until <code>config:cache</code> runs again.</p>
+
+<h3>9.2 Branch + tag</h3>
+<p>Before any work starts:</p>
+<pre><code># on the dev machine, from clean master
+git tag -a pre-batch-assessment -m "Last state before batch assessment work"
+git push origin pre-batch-assessment
+git switch -c feat/batch-assessment</code></pre>
+<p><code>master</code> is never committed to during the build. The tag is a permanent, named return point — the repo has no tags today, so this is also the project's first.</p>
+
+<h3>9.3 One commit per phase</h3>
+<p>Each phase lands as its own commit, each independently green. Rollback granularity is therefore <strong>a phase, not the whole feature</strong>. Phase&nbsp;1 in particular — the pipeline extraction — is behaviour-neutral and committed alone, so if anything about it smells, that single commit reverts without touching the schema or the queue.</p>
+
+<h3>9.4 Database</h3>
+<p>Every schema change is <strong>additive</strong>: one new table, and nullable columns on <code>assessments</code>. Nothing is renamed, retyped or dropped, so no existing data can be lost and <code>down()</code> is genuinely safe. Each migration's <code>down()</code> is written <em>and exercised</em> (<code>migrate:rollback</code>) before the phase is called done.</p>
+<p>On the VPS, before migrating:</p>
+<pre><code># dump first — takes seconds, and is the thing you will wish you had
+mysqldump -u &lt;user&gt; -p &lt;database&gt; &gt; ~/backups/bigkas-$(date +%F-%H%M).sql
+
+php artisan migrate
+# if it goes wrong:
+php artisan migrate:rollback --step=1</code></pre>
+<p>Recorded audio under <code>storage/app/public/assessments/audio</code> is only ever <em>added</em> to by this work, never deleted or rewritten, so it needs no special handling. A routine copy alongside the dump costs nothing if you want belt and braces.</p>
+
+<h3>9.5 Full VPS rollback procedure</h3>
+<p>If the feature flag is not enough and the deployment itself has to go back:</p>
+<pre><code>cd /var/www/bigkas-ai
+
+php artisan down                      # maintenance mode
+
+git checkout pre-batch-assessment     # or: git checkout master
+php artisan migrate:rollback --step=&lt;n&gt;   # only if migrations had run
+
+# all THREE caches, always — not the subset the change looks like it needs
+php artisan config:clear && php artisan config:cache
+php artisan route:clear  && php artisan route:cache
+php artisan view:clear   && php artisan view:cache
+
+sudo systemctl restart bigkas-queue   # drop any job referencing removed code
+sudo systemctl restart php8.3-fpm
+
+php artisan up</code></pre>
+<div class="callout c-warn">
+  <span class="lbl">Do not skip a cache rebuild</span>
+  <p>On 8 October 2026 a pull was deployed with only <code>config:cache</code> and <code>view:clear</code>. A new route was missing from the stale <code>bootstrap/cache/routes-v7.php</code>, so <code>route()</code> threw inside a Blade view and the admin dashboard 500'd — with a stack trace pointing at <code>View-&gt;renderContents()</code>, which reads like a view bug and sends you hunting in the wrong file. A rollback <em>removes</em> routes, which is exactly the same trap in reverse. <code>php artisan optimize</code> does all three; <code>optimize:clear</code> is the inverse.</p>
+  <p>To read a 500 there, <code>tail</code> is useless (Laravel writes one long line):<br><code>grep -oE '(local|production)\.(ERROR|CRITICAL):.{0,500}' storage/logs/laravel.log | tail -2</code></p>
+</div>
+
+<h3>9.6 Draining the queue before a rollback</h3>
+<p>Jobs are serialized with a class name. Rolling back code while <code>analyze</code> jobs sit in the <code>jobs</code> table leaves rows referencing a class that no longer exists, and the worker will fail them in a loop.</p>
+<pre><code># before checking out the older code:
+php artisan queue:pause        # stop taking new work (or: systemctl stop bigkas-queue)
+
+php artisan queue:clear analysis   # discard pending jobs — recordings are SAFE,
+                                   # they stay on disk and can be re-analysed later</code></pre>
+<p>This loses no learner data. The audio and the comprehension answers are already persisted; only the <em>pending instruction to analyse</em> is discarded, and the single-child Analyze button can re-run any of them.</p>
+
+<h2>10. Out of scope</h2>
+
+<p>Each of these is a clean follow-up once the queue is proven in a real classroom — none is blocked by this design.</p>
+<ul>
+  <li><b>Parallel Whisper.</b> CPU-bound, ≈1&nbsp;GB resident per model, 4&nbsp;GB host. Concurrency 1 is the correct setting, not a limitation to work around.</li>
+  <li><b>GPU inference.</b> Different hosting conversation entirely.</li>
+  <li><b>Websockets / live push.</b> Polling matches the existing <code>pollSession</code> and needs no new infrastructure.</li>
+  <li><b>Batch-level PDF or Form 3 export.</b> Per-child export already works.</li>
+  <li><b>Cross-batch analytics and trend comparison.</b></li>
+  <li><b>Bulk verdict acceptance.</b> Excluded on purpose — see §2.</li>
+</ul>
+
+<div class="callout c-info">
+  <span class="lbl">The expectation to set with teachers</span>
+  <p>A 15-child batch is roughly <strong>25–45 minutes of transcription after the last child stops reading</strong>. This design makes that wait <em>visible, interruptible and safe to walk away from</em>. It does not make it shorter — on this hardware, nothing in software can.</p>
+</div>
+
+<p class="foot">BIGKAS&#8209;AI · Batch Assessment implementation plan · 9 October 2026 · plan only, no code written · awaiting go signal</p>
+
+</div>
+</body>
+</html>

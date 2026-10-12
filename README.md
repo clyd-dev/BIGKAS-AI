@@ -37,18 +37,21 @@ An intelligent, bilingual (English/Filipino) reading assessment platform for Gra
 
 ### The Problem
 
-The Philippines faces a severe reading literacy crisis. According to EDCOM 2, **70% of Grade 3 learners struggle with basic phonemic awareness**, resulting in a learning gap equivalent to over five years of schooling by adolescence. Traditional assessment tools like the paper-based Phil-IRI are too slow to catch specific error patterns before they become ingrained habits.
+The Philippines faces a severe reading literacy crisis. National reviews, including the EDCOM 2 study, describe a serious foundational-literacy gap among Filipino learners. (Quote the exact EDCOM 2 figure from the source document when presenting; it is not reproduced here.) Traditional assessment tools like the paper-based Phil-IRI are too slow to catch specific error patterns before they become ingrained habits.
 
 ### What BIGKAS Does
 
-BIGKAS automates the oral reading assessment process. A teacher records a student reading a passage aloud, and the system:
+BIGKAS supports the oral reading assessment process. A teacher records a learner reading a grade-matched passage aloud (or the learner reads on their own device with a PIN), and the system:
 
-1. Transcribes the audio using a local `faster-whisper` model (speech-to-text; not yet fine-tuned for Filipino classroom audio)
-2. Compares the spoken words against the reference passage word-by-word
-3. Computes reading metrics (accuracy %, words per minute, fluency score, error types)
-4. Classifies the student's primary reading weakness using a Random Forest ML model
-5. Recommends targeted intervention activities for teacher and parent use
-6. Tracks progress over time with visual dashboards
+1. Saves the recording, checks its quality (speech vs. background noise) and transcribes it with a local `faster-whisper` model (stock pre-trained, not yet fine-tuned for Filipino classroom audio)
+2. Aligns the spoken words with the reference passage and labels each miscue (mispronunciation, substitution, omission, insertion, repetition, self-correction, off-passage talk, not reached)
+3. Computes accuracy %, words per minute, a fluency score and the Phil-IRI reading level
+4. Scores the comprehension questions, when the assessment includes them
+5. Suggests the main reading weakness with a Random Forest model, and only keeps it when the measured evidence supports it (see [How the system identifies each weakness](#how-the-system-identifies-fluency-phonemic-decoding-and-comprehension-weaknesses))
+6. Shows the teacher the result with its explanation and warnings; the teacher accepts, overrides (with a reason) or invalidates it
+7. Recommends activities for teacher and parent use, tracks progress, and prints the DepEd Phil-IRI forms
+
+The system is **decision support**: the teacher always has the final say, and the AI's original values are stored beside the teacher's decision.
 
 ### Who It's For
 
@@ -65,7 +68,9 @@ BIGKAS automates the oral reading assessment process. A teacher records a studen
 - **Phil-IRI Aligned** — Three reading levels: Frustration, Instructional, Independent
 - **ML-Powered Classification** — Five weakness categories: Independent Reader, Phonemic Awareness, Decoding Accuracy, Oral Reading Fluency, Reading Comprehension
 - **Gamified Student Portal** — XP points, streaks, badges, and class leaderboard
-- **Graceful Degradation** — Falls back to rule-based classification if the ML service is unavailable
+- **Teacher in the loop** — Every AI result can be accepted, overridden or invalidated, with a recorded reason
+- **Trust signals** — Recording-quality check, speech-recognition confidence and plain-language warnings on each result
+- **Graceful Degradation** — Falls back to rule-based classification (clearly labelled) if the ML service is unavailable
 - **Scope** — Designed for Grade 3–6 learners in Sagay City Division
 
 ---
@@ -117,7 +122,7 @@ BIGKAS automates the oral reading assessment process. A teacher records a studen
 - **MVC (Model-View-Controller)** — Laravel enforces MVC. Controllers handle HTTP, Models handle data, Blade templates handle views.
 - **Service Layer** — Complex business logic (reading analysis, ML calls, gamification) lives in `app/Services/`, keeping controllers thin.
 - **Dual Authentication** — Standard Laravel session auth for teachers/parents/admins. A completely separate PIN-based session system (`StudentAuth` middleware) for child-friendly student access.
-- **ML-First with Rule-Based Fallback** — The system always tries the Python ML API first. If it's unreachable or throws an error, `MLClassificationService` catches the exception and falls back to a deterministic rule-based classifier in `ReadingAnalyzerService`, ensuring zero downtime for assessments.
+- **ML-First with Rule-Based Fallback** — The system always tries the Python ML API first. If it is unreachable or throws an error, `MLClassificationService::classify()` catches the exception and uses `fallbackClassification()`, a deterministic rule list, and the result is labelled rule-based. A prediction is then only stored if it passes the evidence check in `WeaknessEvidence`.
 - **Dual Speech-to-Text** — `faster-whisper` installed locally in `ml-service/venv` is the **primary** transcription engine (offline, no API key required, not yet fine-tuned on BIGKAS classroom audio); the OpenAI Whisper API is available as an optional cloud alternative.
 - **REST API Layer** — A full Sanctum-authenticated API enables future mobile app integrations.
 
@@ -135,8 +140,12 @@ MLClassificationService.php   →   POST /api/classify
                               ←   JSON { primary_weakness, confidence, scores }
 
 On exception (service down):
-ReadingAnalyzerService.php
-→ ruleBasedClassification()   (no crash, system continues)
+MLClassificationService.php
+→ fallbackClassification()    (no crash, labelled "rule-based")
+
+Then, either way:
+MLClassificationService::resolveWeaknessId() + WeaknessEvidence
+→ keep the prediction only if the measured evidence backs it
 ```
 
 **Configuration in `.env`:**
@@ -221,7 +230,8 @@ bigkas/
 │
 ├── ml-service/             # Python ML microservice (CANONICAL — use this one)
 │   ├── app.py              # Flask REST API (3 endpoints: /classify, /transcribe, /health)
-│   ├── weakness_classifier.joblib  # Trained Random Forest (currently: synthetic data)
+│   ├── audio_quality.py    # Recording-quality measurement (speech ratio, SNR, background events)
+│   ├── weakness_classifier.joblib  # Trained Random Forest (519 teacher-validated clips)
 │   ├── feature_scaler.joblib       # StandardScaler fitted on training data
 │   ├── model_metadata.json         # Accuracy, feature list, trained_with field
 │   ├── requirements.txt    # Python dependencies (includes faster-whisper, the primary STT engine)
@@ -325,32 +335,24 @@ bigkas/
 ### Assessment Pipeline (Core Feature)
 
 ```
-Step 1 → Teacher selects learner + reading material
-Step 2 → Audio recorded in browser OR file uploaded
-Step 3 → SpeechToTextService sends audio to the local faster-whisper
-          model (primary, not yet fine-tuned); OpenAI Whisper API is an
-          optional cloud alternative (mock transcription used if neither is available)
-Step 4 → ReadingAnalyzerService tokenizes & aligns text
-          using Levenshtein dynamic programming algorithm
-Step 5 → Error analysis:
-          - Substitutions (wrong word)
-          - Omissions (skipped word)
-          - Insertions (added word)
-          - Pattern detection (phonetic confusion, vowel errors, blend errors)
-Step 6 → Metrics computed:
-          - Accuracy rate (% correct words)
-          - Words per minute (WPM)
-          - Fluency score (0–10, based on pause frequency)
-          - Reading level (Frustration / Instructional / Independent)
-Step 7 → MLClassificationService calls Python Flask /api/classify
-          → 12 pre-computed rate features sent (not raw counts)
-          → Returns primary weakness (0–4) + confidence score
-          → Falls back to rule-based if Flask unavailable
-          → primary_weakness = 0 → Independent Reader; skip interventions
-Step 8 → AssessmentResult saved to database
-Step 9 → Learner.reading_level updated
-Step 10 → InterventionRecommenderService ranks & returns top 7 activities
-Step 11 → BadgeService.checkAndAward() evaluates all badge criteria
+Step 1  → Teacher selects learner, language, assessment type and a grade-matched passage
+Step 2  → Audio recorded in the browser (auto-stops at 3 min) or the learner records on their own device
+Step 3  → Comprehension answers (if the type needs them) are saved first; the recording is kept on disk
+Step 4  → SpeechToTextService → Flask /api/transcribe: recording-quality check, then local
+          faster-whisper (OpenAI Whisper API only if configured; mock only in local/testing)
+Step 5  → ReadingAnalyzerService aligns spoken words with the passage (edit-distance DP)
+Step 6  → MiscueClassifierService labels every word: correct, mispronunciation, substitution,
+          omission, not reached, insertion, repetition, self-correction, off-passage, pauses
+Step 7  → Metrics: accuracy %, WPM, fluency 0–10, prosody estimate, Phil-IRI reading level
+Step 8  → MLClassificationService → Flask /api/classify with 12 rate features
+          (rule-based fallback if Flask is unavailable)
+Step 9  → WeaknessEvidence: the prediction is stored only if the measured evidence supports it
+Step 10 → Assessment::createResult(): result + full analysis JSON + provenance saved;
+          learner reading level updated; linked parents notified
+Step 11 → Results page: explanation, recording quality, warnings, recommended activities
+Step 12 → Teacher verdict (accept / override / invalidate) is stored beside the AI result
+Step 13 → Interventions are assigned; BadgeService.checkAndAward() runs on practice and
+          student-portal activity
 ```
 
 ---
@@ -390,41 +392,38 @@ Student visits /student/login
 ### 3. Reading Assessment End-to-End
 
 ```
-Teacher                    Laravel                   External Services
-───────                    ───────                   ─────────────────
+Teacher                    Laravel                       Flask / external
+───────                    ───────                       ────────────────
 Select learner + material
-                    →  Assessment::create()
-                    →  AssessmentSession::create()
-                    →  Redirect to monitor page
+                    →  Assessment::create() (status: pending)
 
 [Browser records audio]
-Upload audio file
-                    →  Store to storage/audio/
-                    →  assessment.status = 'recording'
-
 Click "Analyze"
+                    →  ComprehensionService::record()   (answers saved first)
+                    →  keepRecording()                  (audio stored, status: processing)
                     →  SpeechToTextService::transcribe()
-                                              → Local faster-whisper (primary,
-                                                not yet fine-tuned); OpenAI
-                                                Whisper API optional fallback
-                                              ← { text, words[], duration }
+                                              → Flask POST /api/transcribe
+                                                 · audio_quality.measure()
+                                                 · faster-whisper (word timestamps)
+                                              ← { text, words[], segments[], duration, audio_quality }
                     →  ReadingAnalyzerService::analyze()
-                       - tokenizeText()
-                       - alignTexts() (Levenshtein DP)
-                       - analyzeErrors()
-                       - calculateFluencyScore()
-                       - classifyWeakness()
-                                              → MLClassificationService
+                       - extractSpokenTokens(), tokenizeText()
+                       - alignTexts() (edit-distance DP)
+                       - MiscueClassifierService::classify()
+                       - fluency, prosody, reading level, 12 ml_features
+                    →  MLClassificationService::classify()
                                               → Flask POST /api/classify
-                                              ← { primary: 2, confidence: 0.85 }
+                                              ← { primary_weakness, confidence, scores[5] }
                                               (or rule-based fallback)
+                    →  resolveWeaknessId() + WeaknessEvidence::statuses()
                     →  Assessment::createResult()
-                    →  Learner::update(reading_level)
-                    →  InterventionRecommenderService::getRecommendations()
-                    →  BadgeService::checkAndAward()
+                    →  Learner::updateReadingLevel(); parents notified
                     ←  Redirect to /assessments/{id}/results
 
-View results page   ←  Metrics + charts + recommended interventions
+View results page   ←  Level and why, miscues, recording quality, warnings,
+                       weakness and its evidence, recommended interventions
+Accept / override / invalidate
+                    →  AssessmentVerdictController::store()
 ```
 
 ### 4. Badge Award Flow
@@ -544,13 +543,15 @@ InterventionLog
 
 ### Weakness Categories
 
-| ID | Name | Indicators |
+| ID | Name | How it is identified (summary) |
 |---|---|---|
-| 0 | Independent Reader | Accuracy ≥ 95%, WPM ≥ 60, fluency ≥ 8 — no weakness; no intervention assigned |
-| 1 | Phonemic Awareness | High phonetic/vowel/blend error rates |
-| 2 | Decoding Accuracy | Low accuracy, many substitutions |
-| 3 | Oral Reading Fluency | Slow WPM, high pause frequency, low fluency score |
-| 4 | Reading Comprehension | Accurate but many omissions, low prosody |
+| 0 | Independent Reader | No weakness. Accurate and smooth reading; no intervention assigned |
+| 1 | Phonemic Awareness | Several sound-alike mispronunciations that make up a large share of the child's errors |
+| 2 | Decoding Accuracy | Word-reading accuracy on attempted words below the Phil-IRI cut-offs (< 97% watch, < 90% concern) |
+| 3 | Oral Reading Fluency | WPM below the grade benchmark, long pauses, hesitations or repetitions |
+| 4 | Reading Comprehension | Comprehension-question score at or below the Phil-IRI cut-offs (measured by questions, not by the voice) |
+
+The full method is described in [How the system identifies each weakness](#how-the-system-identifies-fluency-phonemic-decoding-and-comprehension-weaknesses).
 
 > **Note:** `primary_weakness = 0` means the learner reads at an independent level. The system skips intervention lookup and does not assign activities for class 0.
 
@@ -771,9 +772,9 @@ pip install -r requirements.txt
 #   ml-service/feature_scaler.joblib        ← StandardScaler
 #   ml-service/model_metadata.json          ← metadata (check trained_with field)
 #
-# WARNING: The current model was trained on SYNTHETIC data (trained_with: "synthetic_data").
-# It will be retrained on real student assessment data after teacher review is complete.
-# See the ML Training Pipeline section below for details.
+# The model was trained on 519 teacher-validated Grade 3-4 clips; see the
+# Machine Learning Component section for its measured accuracy and limits.
+# Do NOT run training/train_model_real_data.py unless you intend to replace these files.
 
 # Start the Flask API
 python app.py
@@ -787,9 +788,11 @@ Expected health check response:
 ```json
 {
   "status": "ok",
-  "model_loaded": true,
-  "classifier_loaded": true,
-  "service": "bigkas-ml"
+  "model_version": "3.0.0-12feature-5class-combo-aware",
+  "feature_columns": ["accuracy_rate", "words_per_minute", "..."],
+  "scaler_loaded": true,
+  "whisper_loaded": true,
+  "classifier_loaded": true
 }
 ```
 
@@ -804,7 +807,7 @@ php artisan serve
 cd ml-service/ && venv\Scripts\activate && python app.py
 # → http://localhost:5000
 
-# Terminal 3 — Queue worker (for background jobs)
+# Terminal 3 — Queue worker (optional: notifications are sent synchronously)
 php artisan queue:listen --tries=1
 ```
 
@@ -815,13 +818,20 @@ composer run dev
 # Runs: Laravel + queue worker + log watcher + Vite dev server concurrently
 ```
 
+### Running the tests
+
+```bash
+php artisan test    # 371 tests, SQLite in-memory
+```
+
 ### Production Notes
 
 - Set `APP_ENV=production` and `APP_DEBUG=false`
-- Run `php artisan config:cache && php artisan route:cache`
 - Use a process manager (Supervisor) to keep the Flask service running
 - Configure a proper web server (Nginx/Apache) pointing to `/public`
-- Set `OPENAI_API_KEY` for real speech-to-text transcription
+- Speech-to-text is local by default (`WHISPER_USE_LOCAL=true`); set `OPENAI_API_KEY` only if you want the cloud fallback
+- Run the ML service with gunicorn (see `docs/deployment-vps.md`), not `python app.py`
+- Rebuild all caches after every pull: `php artisan config:cache && php artisan route:cache && php artisan view:cache`
 - Switch `DB_CONNECTION=mysql` with proper credentials
 
 ---
@@ -882,33 +892,132 @@ composer run dev
 
 ## 🤖 Machine Learning Component
 
+BIGKAS uses two models and a set of transparent rules. Keeping them apart matters when explaining the system:
+
+| Stage | Technique | Trained by us? |
+|---|---|---|
+| Speech-to-text | `faster-whisper` **small** (pre-trained, int8, CPU) | No (a LoRA fine-tuning script exists, see below) |
+| Word alignment and miscue labelling | Edit-distance dynamic programming + hand-written rules | n/a (deterministic) |
+| Weakness suggestion | **Random Forest** on 12 numeric features | Yes, on 519 teacher-validated clips |
+| Evidence check | Rules over measured miscue counts (`WeaknessEvidence`) | n/a (deterministic) |
+| Final decision | The teacher (`AssessmentVerdictController`) | n/a |
+
+### How the system identifies fluency, phonemic, decoding and comprehension weaknesses
+
+Identification is a **two-step process**: the Random Forest *proposes* a category from 12 measurements, then the **evidence check** only lets a category be stored if the recording's own measured counts support it. Comprehension is the exception: it is measured by questions, not by the voice.
+
+```
+audio ─► Whisper (words + timestamps) ─► alignment with the passage ─► miscue labels
+                                                   │
+                                  12 features ─────┤──────────────► Random Forest ─► proposed class + probabilities
+                                                   │                                   │
+                              miscue counts ───────┴─► WeaknessEvidence (ok/watch/concern per skill)
+                                                                                       │
+                       comprehension questions ─► Phil-IRI comprehension score ────────┤
+                                                                                       ▼
+                                                       stored primary weakness (only if evidence-backed)
+                                                                                       ▼
+                                                              teacher accepts / overrides / invalidates
+```
+
+#### 1. Oral reading fluency (class 3)
+
+*Does the child read at a pace and smoothness expected for their grade?*
+
+| Evidence | How it is measured | Where |
+|---|---|---|
+| Speed | Words per minute = correct words ÷ recording seconds × 60, compared with the grade benchmark in `config/bigkas.php` (`wpm_benchmarks`, e.g. Grade 3: minimum 70, target 110) | `ReadingAnalyzerService::analyze()` |
+| Pauses | Gap between consecutive words from Whisper timestamps: ≥ 1 s is a **hesitation**, ≥ 3 s a **long pause** | `MiscueClassifierService::markPauses()` |
+| Repetitions | Repeated words, repeated phrases, false starts such as "ma-mabilis" | `MiscueClassifierService` |
+| Smoothness score | `fluency_score` 0–10: starts at 10, loses points for a long average gap, many long gaps, and very slow (< 50 WPM) or rushed (> 150 WPM) reading | `ReadingAnalyzerService::calculateFluencyScore()` |
+
+**Evidence status** (`WeaknessEvidence::fluencyStatus`): WPM below the grade minimum → *concern*; below the grade target → *watch*; 3 or more long pauses → *concern*; 1 long pause or 3 hesitations → *watch*; 3 or more repetitions → *watch*. Features that carry most of the model's weight for this area: `words_per_minute` and `fluency_score` (`pause_frequency` is one of the least influential features).
+
+#### 2. Phonemic awareness (class 1)
+
+*Are the child's errors sound-alike attempts, suggesting trouble linking letters to sounds?*
+
+| Evidence | How it is measured | Where |
+|---|---|---|
+| Mispronunciations | A wrong word that **sounds like the target**: string similarity ≥ 0.5, or matching soundex / metaphone | `MiscueClassifierService::markReplacements()` |
+| Error-pattern shares | Each substitution is bucketed as phonetic confusion, vowel confusion or consonant-blend error; the model receives each bucket as a *share of the child's errors* (`phonetic_error_rate`, `vowel_error_rate`, `blend_error_rate`) | `ReadingAnalyzerService::identifySubstitutionPattern()` |
+
+**Evidence status** (`WeaknessEvidence::phonemicStatus`): at least 3 sound-alike slips **and** they are at least 40% of all slips → *concern*; at least 1 and ≥ 40% → *watch*; otherwise *ok*. This guard exists because the pattern features are shares: a single vowel-like slip would otherwise read as a "100% phonics problem".
+
+> Limit: there is no phoneme-level or pronunciation model. "Sounds like the target word" is judged on the transcribed text.
+
+#### 3. Decoding accuracy (class 2)
+
+*Does the child read the words on the page correctly?*
+
+| Evidence | How it is measured | Where |
+|---|---|---|
+| Word-reading accuracy | Correct words ÷ words in the passage × 100 (omissions, substitutions and unread words lower it; insertions do not) | `ReadingAnalyzerService::analyze()` |
+| Substitution and omission rates | Counts ÷ passage length from the word alignment | `compareTexts()` / `alignTexts()` |
+
+**Evidence status** (`WeaknessEvidence::decodingStatus`), judged on the words actually attempted, using the Phil-IRI cut-offs in `PhilIriLevels`: below 90% → *concern*; below 97% → *watch*; otherwise *ok*. Features the model uses most: `accuracy_rate`, `omission_rate`, `substitution_rate`.
+
+#### 4. Reading comprehension (class 4)
+
+*Does the child understand what was read?*
+
+Comprehension **cannot be heard in a voice recording**, so BIGKAS does not infer it from the voice:
+
+- Each passage has **four comprehension questions**. The learner answers them (from the teacher's screen or the student portal) before analysis.
+- `ComprehensionService::record()` scores them as a percentage, and `PhilIriLevels::comprehension()` applies the Phil-IRI cut-offs: **≥ 80% independent, 59–79% instructional, ≤ 58% frustration**.
+- `WeaknessEvidence::comprehensionStatus` maps those levels to ok / watch / concern, and returns **unknown** if the questions were not taken, in which case comprehension can never be stored as the weakness.
+- The overall reading level is the **lower** of the word-reading level and the comprehension level when both exist (`Assessment::readingLevels()`).
+
+The Random Forest has class 4 in its output only because the schema follows the Phil-IRI skill areas; the training data contains just **3** such examples, so its class-4 output is not used as evidence.
+
+#### Independent reader (class 0)
+
+No weakness. A model prediction of 0 needs no supporting evidence. (In the rule-based fallback: accuracy ≥ 95%, WPM ≥ 60 and fluency ≥ 8.)
+
+#### What happens when the model and the evidence disagree
+
+`MLClassificationService::resolveWeaknessId()`:
+
+1. Take the model's top class. Keep it if it is 0, or if its skill status is *watch* or *concern*.
+2. Otherwise walk the model's probabilities from highest to lowest and take the first class that the evidence supports.
+3. If none is supported, take the clearest measured problem (red before amber; ties go to the lowest skill id: phonemic, then decoding, then fluency, then comprehension).
+
+So a stored weakness always matches a flagged skill row on the results page (`tests/Feature/WeaknessMatchesEvidenceTest.php`). The teacher can still override it with a written reason.
+
 ### Algorithm
 
-**Random Forest Classifier** — selected over Decision Tree and Gradient Boosting based on highest test accuracy on synthetic data.
+**Random Forest Classifier** (scikit-learn): 100 trees, `max_depth=8`, `min_samples_split=5`, `min_samples_leaf=3`, `class_weight='balanced'`, `random_state=42`. Inputs are standardised with a `StandardScaler` fitted on the training split only. The prediction **confidence** shown to teachers is `max(predict_proba)`, i.e. the vote share of the winning class. It is not a calibrated probability of being right.
 
 ### Training Data
 
-- Current model: **synthetic data** — 2,000 samples (500 per class, 4 original classes)
-- `model_metadata.json` `trained_with` field reads `"synthetic_data"` — confirms this
-- Real-data training pipeline is **in progress**: reading experts are reviewing annotated transcripts via the 5-step pipeline (`validate_dataset.py` → `parse_annotations.py` → `generate_provisional_labels.py` → teacher review CSVs → `train_model_real_data.py`)
-- Once real data is validated, rerun `train_model_real_data.py` to replace the current model
+| Item | Value |
+|---|---|
+| Source | Grade 3 and 4 learners reading scripted passages, in Filipino and English; annotated by the team, labels confirmed by teachers |
+| Learners | 36 distinct learner IDs |
+| Rows in the training snapshot | 527 loaded, **519 usable** (415 train / 104 test) |
+| Language | 419 Filipino, 108 English (of the 527 loaded) |
+| Grades | 3 and 4 only. Grades 5 and 6 are not yet represented |
+| Label source | `teacher_confirmed_label`. Combined labels such as `1,3` are reduced to the first number |
+| Class counts | 0 Independent: 68 · 1 Phonemic: 145 · 2 Decoding: 86 · 3 Fluency: 217 · 4 Comprehension: **3** |
+
+How the labelled features are produced (`ml-service/training/`): annotators tag each transcript (`[om_word]`, `[sub: target > spoken]`, `[mis: ...]`, `[ins: ...]`, `[pause]`) → `parse_annotations.py` converts the tags to the 12 features → `generate_provisional_labels.py` proposes a rule-based label → teachers confirm it and give a 0–10 prosody rating → `merge_teacher_labels.py` → `train_model_real_data.py`.
 
 ### Feature Inputs (12 Features)
 
 | Feature | Description | Range |
 |---|---|---|
-| `accuracy_rate` | % of words read correctly | 0–100 |
-| `words_per_minute` | Reading speed | 0–200 |
-| `fluency_score` | Pause/rhythm score | 0–10 |
-| `substitution_rate` | Wrong word rate | 0–1 |
-| `omission_rate` | Skipped word rate | 0–1 |
-| `insertion_rate` | Extra word rate | 0–1 |
-| `phonetic_error_rate` | Sound confusion rate | 0–1 |
-| `vowel_error_rate` | Vowel mistake rate | 0–1 |
-| `blend_error_rate` | Consonant blend error rate | 0–1 |
-| `self_correction_rate` | Self-fix rate | 0–1 |
-| `pause_frequency` | Pause density | 0–1 |
-| `prosody_score` | Expression/intonation score | 0–10 |
+| `accuracy_rate` | % of passage words read correctly | 0–100 |
+| `words_per_minute` | Correct words per minute | 0–200 |
+| `fluency_score` | Pause and pace score | 0–10 |
+| `substitution_rate` | Wrong words ÷ passage words | 0–1 |
+| `omission_rate` | Skipped words ÷ passage words | 0–1 |
+| `insertion_rate` | Extra words ÷ passage words | 0–1 |
+| `phonetic_error_rate` | Share of substitutions that are sound-alike | 0–1 |
+| `vowel_error_rate` | Share that are vowel confusions | 0–1 |
+| `blend_error_rate` | Share that are consonant-blend errors | 0–1 |
+| `self_correction_rate` | Repetitions / false starts ÷ passage words | 0–1 |
+| `pause_frequency` | Gaps > 1 s ÷ passage words | 0–1 |
+| `prosody_score` | Expression score (teacher rating in training; heuristic estimate live) | 0–10 |
 
 ### Output Classes
 
@@ -918,65 +1027,92 @@ composer run dev
 | `1` | Phonemic Awareness | |
 | `2` | Decoding Accuracy | |
 | `3` | Oral Reading Fluency | |
-| `4` | Reading Comprehension | |
+| `4` | Reading Comprehension | 3 training examples; comprehension is measured by questions |
 
 ### Model Performance
 
-- **Accuracy:** ~99% on synthetic test set
-- **Note:** This figure is inflated because the model was trained on generated data. It is expected to decrease when retrained on real student recordings — this is by design and reflects a more honest measurement.
+Measured on the saved model with `ml-service/model_metadata.json` (version `3.0.0-12feature-5class-combo-aware`) and re-computed from the training CSV:
+
+| Measure | Value |
+|---|---|
+| Test accuracy (104 held-out clips) | **62.5%** (65 / 104) |
+| Majority-class baseline on the same clips | 41.3% |
+| 5-fold cross-validation accuracy | 49.9% ± 10.5 points |
+| Training accuracy | 83.6% (the model overfits) |
+| Teacher's label within the model's top 2 classes | 85.6% |
+| Macro F1 / weighted F1 | 0.51 / 0.63 |
+
+| Class | Precision | Recall | F1 | Test clips |
+|---|---|---|---|---|
+| 0 Independent | 0.85 | 0.79 | 0.81 | 14 |
+| 1 Phonemic | 0.54 | 0.52 | 0.53 | 29 |
+| 2 Decoding | 0.45 | 0.59 | 0.51 | 17 |
+| 3 Fluency | 0.74 | 0.67 | 0.71 | 43 |
+| 4 Comprehension | 0.00 | 0.00 | 0.00 | 1 |
+
+Read these numbers with the following in mind:
+
+- The test set is small (104 clips): the 95% interval around 62.5% is roughly 53–72%.
+- The split is by clip, and 25 of the 26 test learners also appear in training, so the figure is optimistic for a new child. A learner-grouped re-run gave about 57%.
+- Features in training come from human annotation tags, while live features come from Whisper output and automatic rules. Several of the 12 features are computed by different procedures in the two places, so field performance is expected to be lower until the model is retrained on live-extracted features.
+- No end-to-end validation against a teacher's own Phil-IRI marking has been run yet.
+
+Feature importance of the saved model: `words_per_minute` 0.19, `accuracy_rate` 0.18, `omission_rate` 0.16, `substitution_rate` 0.12, `prosody_score` 0.10, `fluency_score` 0.08, the rest below 0.07 each.
 
 ### Flask API Endpoints (`ml-service/app.py`)
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/health` | Health check — reports model loaded status |
+| `GET` | `/api/health` | Reports `model_version`, `scaler_loaded`, `whisper_loaded`, `classifier_loaded` |
 | `POST` | `/api/classify` | Classify weakness from 12 pre-computed rate features |
-| `POST` | `/api/transcribe` | Transcribe audio locally using `faster-whisper` |
+| `POST` | `/api/transcribe` | Measure recording quality, then transcribe locally with `faster-whisper` |
+
+Speech-to-text details: language `fil` is sent to Whisper as `tl`; by default a disfluent prompt and `condition_on_previous_text=False` keep repeats and hesitations in the transcript (`WHISPER_VERBATIM=0` turns this off); a voice-activity check (`audio_quality.py`) returns an empty transcript for silence instead of letting Whisper invent words, and reports signal-to-noise, background sounds and a clean / moderate / noisy rating.
 
 ### ML Training Pipeline (Real Data)
 
-The system includes a full 4-step training pipeline under `ml-service/training/`:
+Scripts live under `ml-service/training/`:
 
 ```bash
 # Step 0: Validate and clean the raw metadata export
-python training/validate_dataset.py
-# → produces metadata_clean.csv
+python training/validate_dataset.py          # → metadata_clean.csv
 
 # Step 1: Parse annotated transcripts, compute 12 features
-python training/parse_annotations.py
-# → produces labeled_features_for_review.csv
+python training/parse_annotations.py         # → extracted_features.csv
 
-# Step 2: Apply provisional labels (rule-based, classes 0–4)
-python training/generate_provisional_labels.py
-# → updates labeled_features_for_review.csv with provisional_weakness_label
+# Step 2: Apply provisional rule-based labels (classes 0–4)
+python training/generate_provisional_labels.py   # → labeled_features_for_review.csv
 
-# Step 3: Split by language for expert review, add transcript context
+# Step 3: Split by language for teacher review, add transcript context
 python training/split_features_by_language.py
 python training/add_transcript_context.py
-# → produces labeled_features_for_review_fil.csv + labeled_features_for_review_en.csv
+# [Teachers fill teacher_confirmed_label and prosody_score_teacher]
 
-# [Reading experts fill in teacher_confirmed_label column in Google Sheets]
+# Step 3c: Merge confirmed labels
+python training/merge_teacher_labels.py      # → labeled_features_master_confirmed.csv
 
-# Step 3c: Merge confirmed labels back
-python training/merge_teacher_labels.py
-# → produces labeled_features_master_confirmed.csv
-
-# Step 4: Train 5-class Random Forest on confirmed data
+# Step 4: Train the 5-class Random Forest
 python training/train_model_real_data.py
-# → overwrites ml-service/weakness_classifier.joblib + feature_scaler.joblib
+# ⚠ OVERWRITES ml-service/weakness_classifier.joblib, feature_scaler.joblib
+#   and model_metadata.json. Back them up first.
 ```
+
+To check the saved model without retraining, load `weakness_classifier.joblib` and `feature_scaler.joblib`, rebuild the same split (`test_size=0.2`, `random_state=42`, stratified) and call `accuracy_score`.
+
+Optional Whisper fine-tuning: `ml-service/training/prepare_whisper_manifest.py` builds the manifest and `ml-service/training/bigkas_whisper_data/train_whisper_lora.py` trains a LoRA adapter on whisper-small (speaker-level splits, WER via `jiwer`) and converts it to CTranslate2. If a folder `ml-service/bigkas-whisper-ct2/` exists, `app.py` loads it instead of the stock model. It has not been run yet, and no WER has been measured.
 
 ### Rule-Based Fallback
 
-When the Flask service is unavailable, `MLClassificationService` falls back to a deterministic classifier implemented in `ReadingAnalyzerService`. It scores each category using the same 12 features:
+When the Flask service is unavailable, `MLClassificationService::fallbackClassification()` applies this ordered rule list to the same 12 features (the first rule that matches wins) and returns confidence 0.5 with `is_fallback = true`. The results page then shows that the weakness came from a rule, not the model:
 
-- **Independent (0):** accuracy ≥ 95% AND WPM ≥ 60 AND fluency ≥ 8
-- **Phonemic (1):** Weighted sum of phonetic/vowel/blend error rates
-- **Decoding (2):** Accuracy below 90% + substitution rate
-- **Fluency (3):** WPM below grade threshold + fluency score below 6 + pause frequency
-- **Comprehension (4):** Omission count + accurate-but-low-prosody pattern
+1. **Independent (0):** accuracy ≥ 95% and WPM ≥ 60 and fluency ≥ 8
+2. **Decoding (2):** substitution rate > 0.1 and accuracy < 90%
+3. **Fluency (3):** accuracy ≥ 90% and (WPM < 80 or fluency < 6 or pause frequency > 0.1)
+4. **Phonemic (1):** phonetic + vowel + blend shares > 0.8 and accuracy < 85%
+5. **Comprehension (4):** omission rate > 0.1 and accuracy ≥ 85%
+6. Otherwise "Instructional (Mixed)", stored as class 2
 
-The fallback returns string integers (`'0'`–`'4'`) that `AssessmentController` maps to integer class IDs.
+The same evidence check and teacher verdict apply to a fallback result. Setting `ML_API_ENABLED=false` forces this path.
 
 ---
 
@@ -986,35 +1122,46 @@ The fallback returns string integers (`'0'`–`'4'`) that `AssessmentController`
 
 | Limitation | Details |
 |---|---|
-| **Synthetic ML training data** | Current model trained on generated data, not real student recordings. `model_metadata.json` confirms `trained_with: "synthetic_data"`. Real-data retraining is in progress. |
-| **No Hiligaynon support** | Reading assessment only supports English and Filipino. The `assessments.language` column and `config/bigkas.php` still list `hil` as a schema/locale value, but Hiligaynon transcription/assessment is not supported in practice — the local `faster-whisper` model is not fine-tuned for it. |
-| **Local STT not yet fine-tuned** | The primary transcription engine, local `faster-whisper`, is running the stock pre-trained model (not fine-tuned on BIGKAS classroom audio), so accuracy on Filipino and noisy classroom recordings is limited. The OpenAI Whisper API remains available as an optional cloud alternative. |
-| **Polling-based live sessions** | Live teacher↔student sessions use HTTP polling every 3 seconds instead of WebSockets, introducing minor latency. |
-| **Comprehension scoring is inferred** | Comprehension weakness is detected from reading behavior patterns (omissions, prosody), not direct comprehension testing. |
-| **No open-ended auto-scoring** | Comprehension questions are displayed, but open-ended answer evaluation is not automated. |
+| **Modest classifier accuracy** | 62.5% on a 104-clip test set (41% majority baseline, about 50% in cross-validation, about 57% when split by learner). It is a suggestion for the teacher to confirm, not a diagnosis. |
+| **Small, narrow training set** | 519 usable clips from 36 Grade 3 and 4 learners. Grades 5 and 6 are not represented, and English has no examples of the fluency or comprehension classes. |
+| **Comprehension class not learnable** | Only 3 training examples. Comprehension is measured with the comprehension questions and Phil-IRI cut-offs, not predicted from the voice. |
+| **Train/serve feature skew** | Training features come from human annotation; live features come from Whisper output and automatic rules (fluency, error-pattern shares, pause threshold and prosody are computed differently). |
+| **Local STT not fine-tuned** | `faster-whisper` runs the stock pre-trained `small` model. Accuracy on Filipino and noisy classroom recordings has not been measured (no WER). A LoRA fine-tuning script exists but has not been run. |
+| **No end-to-end validation** | The whole pipeline has not yet been compared against a teacher's manual Phil-IRI marking in a classroom. |
+| **Prosody is an estimate** | Training used a teacher's 0–10 rating; the live value is a heuristic from word confidence and timing, not an acoustic measure. |
+| **No Hiligaynon support** | Reading assessment supports English and Filipino only. `hil` still appears as a schema/locale value but is not supported in practice. |
+| **Synchronous analysis** | Analysis runs inside the request (seconds to minutes on a small CPU server). There is no job queue. |
+| **Polling-based live sessions** | Live teacher↔student sessions poll every 3 seconds instead of using WebSockets. |
+| **Open-ended answers not auto-scored** | Comprehension questions are scored as multiple choice; open-ended answer evaluation is not automated. |
+| **Recordings on the public disk** | Audio is stored under `storage/app/public/assessments/audio` with predictable names. Moving it to a private disk behind an authorised route is recommended. |
+| **No parental consent workflow** | See Future Enhancements. No formal Data Privacy Act review has been done. |
 
 ### Technical Debt / Code Observations
 
-- `dashboard/admin.blade.php` extends `layouts.app` but is included as a partial — double-extending pattern should be resolved.
-- `SchoolClass` uses `$table = 'classes'` (reserved word in some SQL contexts) — consider renaming to `school_classes`.
-- Assessment results use both `$assessment->results->first()` and `$assessment->result` (hasOne) inconsistently across views.
-- The `InterventionApiController` references methods (`recommend()`) that don't match the `InterventionRecommenderService` public interface.
-- Missing `$learners` variable in some Practice Center views that expect it (e.g., `practice/phonemic.blade.php`).
+- `SchoolClass` uses `$table = 'classes'` (reserved word in some SQL contexts); consider renaming to `school_classes`.
+- `MLClassificationService::submitTrainingData()`, `getModelInfo()` and `analyze()` call endpoints the Flask app does not implement (`/api/training-data`, `/api/model-info`, `/api/analyze`). There is no online learning; retraining is offline.
+- `InterventionRecommenderService` (priority, impact, weekly plan) is used by the REST API controllers; the web results page uses `Assessment::getRecommendedInterventions()`.
+- `ml-service/app.py` runs Flask with `debug=True` when started directly; production uses gunicorn (see `docs/deployment-vps.md`).
+- The legacy `ml/` directory is not canonical; use `ml-service/`.
 
 ---
 
 ## 🔮 Future Enhancements
 
-- [ ] **WebSocket-based live sessions** — Replace HTTP polling with Laravel Echo + Pusher for true real-time teacher↔student communication
-- [x] **Real-data training pipeline** — 4-step annotation pipeline (validate → parse → label → train) is implemented; blocked on teacher review completion
-- [ ] **Retrain ML with real data** — Pipeline is ready; waiting for reading expert sign-off on reviewed CSVs
-- [ ] **Dedicated Filipino STT model** — Fine-tune Whisper on Filipino children's speech (LoRA script exists in `bigkas-ai vault/`; requires GPU via Google Colab)
+- [ ] **Retrain on live-extracted features** — Re-extract the 12 features from Whisper output for the training clips so training matches serving
+- [ ] **Learner-level evaluation and more data** — Split by learner, add Grade 5 and 6 and comprehension cases (annotated clips exist in `metadata_clean.csv` that are not in the current training snapshot)
+- [ ] **Measure and improve speech-to-text** — Compute WER on BIGKAS audio, then run `train_whisper_lora.py` on a GPU (e.g. Google Colab)
+- [ ] **Classroom validation** — Blinded comparison with teachers' manual Phil-IRI marking
+- [ ] **Private audio storage and parental consent** — Authorised audio streaming and an in-app consent workflow
+- [ ] **WebSocket-based live sessions** — Replace HTTP polling with Laravel Echo + Pusher
+- [ ] **Background analysis queue** — Move transcription to a queue for batch assessments (see `docs/2026-10-09-batch-assessment-plan.html`)
 - [ ] **Mobile app** — Flutter or React Native app using the existing Sanctum REST API
-- [ ] **Digital parental consent** — In-app consent workflow before linking a learner to a parent account
-- [ ] **PDF export** — Generate printable Phil-IRI-style reports (already has a print view at `/reports/learner/{id}/print`)
-- [ ] **Offline PWA** — Service worker for offline reading practice and queued assessment submission
-- [ ] **Direct comprehension scoring** — Natural language processing for evaluating open-ended comprehension answers
-- [ ] **Consolidate ml/ and ml-service/** — Decide whether to delete the legacy `ml/` directory or merge it into `ml-service/`
+- [ ] **Offline PWA** — Service worker for offline reading practice and queued submission
+- [ ] **Direct comprehension scoring** — NLP for open-ended comprehension answers
+- [ ] **Consolidate ml/ and ml-service/** — Delete or merge the legacy `ml/` directory
+- [x] **Real-data training pipeline** — Implemented and used to train the current model on teacher-validated clips
+- [x] **Teacher verdict and audit trail** — Accept, override or invalidate any AI result with a recorded reason
+- [x] **Phil-IRI forms** — Group Screening Test records, Form 2, Form 3A/3B and Form 4
 
 ---
 

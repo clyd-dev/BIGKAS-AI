@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIGKAS-AI Developer Defense Guide</title>
+<style>
+  :root{
+    --ink:#1b1f24; --muted:#555f6b; --line:#cfd6de; --soft:#f3f5f8;
+    --accent:#1d4ed8; --accent-soft:#e8efff;
+    --warn:#8a4300; --warn-soft:#fff3e0;
+    --stop:#9c1c22; --stop-soft:#fdecec;
+    --go:#1b6b3c; --go-soft:#e8f6ee;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#fff;color:var(--ink);font:14.5px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+  .page{max-width:940px;margin:0 auto;padding:36px 22px 70px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+  h2{font-size:21px;margin:38px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--ink);break-after:avoid}
+  h3{font-size:16px;margin:22px 0 6px;break-after:avoid}
+  h4{font-size:12.5px;margin:14px 0 4px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);break-after:avoid}
+  p{margin:0 0 10px}
+  ul,ol{margin:0 0 11px;padding-left:22px}
+  li{margin:0 0 4px}
+  code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.87em;background:var(--soft);padding:0 4px;border-radius:3px;border:1px solid var(--line);overflow-wrap:anywhere}
+  pre{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:12.3px;line-height:1.45;background:var(--soft);border:1px solid var(--line);border-radius:5px;padding:10px 12px;overflow:auto;margin:8px 0 14px;break-inside:avoid;white-space:pre-wrap;overflow-wrap:anywhere}
+  pre code{background:none;border:0;padding:0;font-size:inherit}
+  .sub{color:var(--muted);font-size:16px;margin:0 0 16px}
+  .meta{font-size:13px;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 0;margin:14px 0 20px}
+  .box{border:1px solid var(--line);border-left:5px solid var(--accent);background:var(--accent-soft);padding:11px 15px;margin:12px 0;border-radius:4px;break-inside:avoid}
+  .box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+  .box.stop{border-left-color:var(--stop);background:var(--stop-soft)}
+  .box.go{border-left-color:var(--go);background:var(--go-soft)}
+  .box p:last-child,.box ul:last-child{margin-bottom:0}
+  .box b.t{display:block;margin-bottom:3px}
+  table{border-collapse:collapse;width:100%;margin:8px 0 16px;font-size:13.2px}
+  th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft);font-weight:700}
+  tr{break-inside:avoid}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  .tw{overflow-x:auto}
+  .faq{border:1px solid var(--line);border-radius:6px;margin:0 0 11px;padding:11px 14px;break-inside:avoid}
+  .faq .q{font-weight:700;margin:0 0 5px}
+  .faq .q span{color:var(--accent);margin-right:6px}
+  .faq p{margin:0 0 6px}
+  .faq .hon{font-size:13px;background:var(--warn-soft);border-radius:3px;padding:6px 10px;margin:6px 0 0}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:0 7px;border-radius:99px;border:1px solid currentColor;vertical-align:middle}
+  .tag.g{color:var(--go)} .tag.o{color:var(--warn)} .tag.r{color:var(--stop)} .tag.b{color:var(--accent)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .cols>div{border:1px solid var(--line);border-radius:6px;padding:11px 14px;break-inside:avoid}
+  .cols h4{margin-top:0}
+  figure{margin:14px 0;break-inside:avoid}
+  figcaption{font-size:12.5px;color:var(--muted);margin-top:4px}
+  svg{max-width:100%;height:auto;display:block}
+  .toc{columns:2;column-gap:30px;font-size:13.5px;padding-left:20px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 16px}
+  .kpi{border:1px solid var(--line);border-radius:6px;padding:9px 11px;break-inside:avoid}
+  .kpi .v{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .kpi small{display:block;color:var(--muted);font-size:11.8px;margin-top:3px;line-height:1.35}
+  @media (max-width:700px){
+    .cols{grid-template-columns:1fr}
+    .kpis{grid-template-columns:1fr 1fr}
+    .toc{columns:1}
+  }
+  @media print{
+    @page{size:A4;margin:13mm 12mm}
+    body{font-size:10.4pt;line-height:1.42;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .page{max-width:none;padding:0}
+    h2{margin-top:20px}
+    .pb{break-before:page}
+    pre{font-size:8.8pt}
+    table{font-size:9.4pt}
+    a{color:inherit;text-decoration:none}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>BIGKAS-AI: Developer Defense Guide</h1>
+<p class="sub">Back-end workflow, architecture, ML pipeline, model results (with how every number is computed), UI-to-code map, and counter-answers.</p>
+<div class="meta">For: the developer &nbsp;·&nbsp; System defense 13 Oct 2026 &nbsp;·&nbsp; Code state: working tree of 12 Oct 2026 on <code>master</code> (includes uncommitted changes) &nbsp;·&nbsp; All numbers below were re-computed from the files in this repository, not copied from the README.</div>
+
+<div class="box warn">
+  <b class="t">Read this first: the 8 things the panel can hurt you with, and the honest position on each</b>
+  <ol>
+    <li><b>Headline accuracy is 62.5%</b> (65/104 clips, 5 classes). Majority-class baseline is 41.3% on that test set. 5-fold CV is 49.9% &plusmn; 10.5%. Say all three.</li>
+    <li><b>Split is by clip, not by learner.</b> 25 of the 26 test learners also appear in training, so 62.5% is optimistic. My learner-grouped re-run gave about 57%.</li>
+    <li><b>Class 4 (Comprehension) has 3 samples in 519.</b> The model effectively cannot predict it. Comprehension is measured by questions, not by the classifier.</li>
+    <li><b>Train/serve skew.</b> Training features come from human annotation tags; live features come from Whisper output plus automatic rules. Several of the 12 features are computed by different formulas in the two places (table in section 7).</li>
+    <li><b>Whisper is stock <code>small</code>, int8, CPU.</b> The fine-tuned folder <code>bigkas-whisper-ct2/</code> does not exist in this repo. No WER has been measured on our own audio.</li>
+    <li><b>Grades 3 and 4 only</b> in training clips (306 and 221). Grades 5 and 6 are not represented. 36 distinct learners, 419 Filipino and 108 English rows.</li>
+    <li><b>No end-to-end validation</b> (live recording to final weakness versus a teacher's blind marking) has been run. Components were validated; the chain was not.</li>
+    <li><b>The README was rewritten on 12 Oct 2026</b> to match the code (real-data model, evidence gate, teacher verdict, honest limits, how each weakness is identified). Re-read it once so the written document and your spoken answers agree.</li>
+  </ol>
+</div>
+
+<ol class="toc">
+  <li>Technology stack</li>
+  <li>System architecture</li>
+  <li>The assessment pipeline, function by function</li>
+  <li>Algorithms in the Laravel back-end</li>
+  <li>The Python microservice</li>
+  <li>The ML pipeline (data to deployed model)</li>
+  <li>The 12 features: training vs. live</li>
+  <li>The model and its results, and how they are computed</li>
+  <li>After the model: evidence gate, fallback, advisor, verdict</li>
+  <li>Data model</li>
+  <li>UI screen to back-end map (11A: the results page, partial by partial)</li>
+  <li>Security</li>
+  <li>Testing</li>
+  <li>Deployment and operations</li>
+  <li>Known issues and honest discrepancies</li>
+  <li>FAQ with counter-answers</li>
+  <li>Appendix: commands to reproduce live</li>
+</ol>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">62.5%</div><small>test accuracy of the saved model, 65 of 104 clips</small></div>
+  <div class="kpi"><div class="v">49.9%</div><small>5-fold CV accuracy, std 10.5 points</small></div>
+  <div class="kpi"><div class="v">41.3%</div><small>always predicting "Fluency" on the same test set</small></div>
+  <div class="kpi"><div class="v">0.51</div><small>macro F1 on the test set (per-class table in section 8)</small></div>
+  <div class="kpi"><div class="v">519</div><small>usable training rows (415 train / 104 test)</small></div>
+  <div class="kpi"><div class="v">12</div><small>features, 5 classes, 100 trees, depth 8</small></div>
+  <div class="kpi"><div class="v">371</div><small>PHPUnit tests, 1968 assertions, all pass (about 21 s)</small></div>
+  <div class="kpi"><div class="v">86%</div><small>teacher label is within the model's top-2 classes</small></div>
+</div>
+
+<!-- ============================================================ -->
+<h2>1. Technology stack</h2>
+<div class="tw"><table>
+  <tr><th style="width:18%">Layer</th><th style="width:32%">Technology (version source)</th><th>Role and where</th></tr>
+  <tr><td>Web back-end</td><td>PHP &ge;8.2 (dev: 8.2.12), Laravel 12 (<code>composer.json</code>)</td><td>MVC app: routes, middleware, controllers, services, Eloquent models. Entry <code>public/index.php</code>, config <code>bootstrap/app.php</code>.</td></tr>
+  <tr><td>Front-end</td><td>Blade templates, Bootstrap 5.3.3, Bootstrap Icons 1.11.3, Chart.js 4.4.4 (CDN, <code>layouts/app.blade.php</code>), vanilla JS</td><td>Server-rendered pages. Recorder in <code>public/js/audio-recorder.js</code>. Student portal <code>public/js/student.js</code>. PWA manifest <code>public/manifest.webmanifest</code>.</td></tr>
+  <tr><td>API</td><td>Laravel Sanctum (token auth with abilities)</td><td><code>routes/api.php</code> and <code>app/Http/Controllers/Api/*</code>, for future mobile clients.</td></tr>
+  <tr><td>Database</td><td>MySQL 8 in production, SQLite (<code>:memory:</code>) in tests</td><td>35 tables created by migrations in <code>database/migrations</code>.</td></tr>
+  <tr><td>PDF / import</td><td>barryvdh/laravel-dompdf, phpoffice/phpspreadsheet, PHPMailer</td><td>DepEd form PDFs, GST spreadsheet import, OTP emails (<code>OtpMailer</code>).</td></tr>
+  <tr><td>ML microservice</td><td>Python 3.10+, Flask &ge;3.1, gunicorn (prod)</td><td><code>ml-service/app.py</code>: <code>/api/classify</code>, <code>/api/transcribe</code>, <code>/api/health</code>.</td></tr>
+  <tr><td>Speech-to-text</td><td>faster-whisper &ge;1.2 (CTranslate2), model <code>small</code>, <code>device="cpu"</code>, <code>compute_type="int8"</code></td><td>Local, offline. Optional OpenAI <code>whisper-1</code> API if <code>WHISPER_USE_LOCAL=false</code> and a key exist.</td></tr>
+  <tr><td>Voice activity detection</td><td>Silero VAD as bundled in <code>faster_whisper.vad</code></td><td>Used by <code>audio_quality.py</code> and to gate silence.</td></tr>
+  <tr><td>Classifier</td><td>scikit-learn &ge;1.5 (venv has 1.9.0), pandas, numpy, joblib</td><td><code>RandomForestClassifier</code> + <code>StandardScaler</code>, saved with joblib.</td></tr>
+  <tr><td>Hosting</td><td>Ubuntu 24.04 VPS, nginx + php-fpm 8.3, systemd unit <code>bigkas-ml.service</code>: gunicorn 1 worker, 2 threads, timeout 420 s</td><td>Runbook: <code>docs/deployment-vps.md</code>.</td></tr>
+  <tr><td>Tests</td><td>PHPUnit 11</td><td><code>tests/Feature/*</code> (58 files).</td></tr>
+</table></div>
+
+<!-- ============================================================ -->
+<h2 class="pb">2. System architecture</h2>
+
+<figure>
+<svg viewBox="0 0 900 470" role="img" aria-label="Architecture">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1b1f24"/></marker></defs>
+  <g font-size="12" text-anchor="middle">
+    <rect x="10" y="10" width="880" height="62" rx="8" fill="#e8efff" stroke="#1d4ed8"/>
+    <text x="450" y="32" font-size="14" font-weight="700">Client: browser (Teacher / Parent / Admin session auth, Student PIN session)</text>
+    <text x="450" y="52">Blade views, Bootstrap, Chart.js, audio-recorder.js (MediaRecorder, 16 kHz mono, auto-stop at 180 s)</text>
+
+    <rect x="10" y="100" width="560" height="250" rx="8" fill="#fff" stroke="#1b1f24"/>
+    <text x="290" y="122" font-size="14" font-weight="700">Laravel 12 application (PHP-FPM)</text>
+    <rect x="25" y="134" width="530" height="40" rx="5" fill="#f3f5f8" stroke="#cfd6de"/>
+    <text x="290" y="159">routes/web.php &rarr; Middleware (auth, verified, role, teacher.assigned, student.auth, throttle, headers)</text>
+    <rect x="25" y="182" width="530" height="40" rx="5" fill="#f3f5f8" stroke="#cfd6de"/>
+    <text x="290" y="207">Controllers: AssessmentController, Student\*, Parent\*, AdminController, ...</text>
+    <rect x="25" y="230" width="530" height="62" rx="5" fill="#fff8e8" stroke="#cfa04a"/>
+    <text x="290" y="250" font-weight="700">Services</text>
+    <text x="290" y="267">SpeechToTextService &middot; ReadingAnalyzerService &middot; MiscueClassifierService</text>
+    <text x="290" y="283">MLClassificationService &middot; WeaknessEvidence &middot; AnalysisAdvisorService &middot; ReadingInterpretationService</text>
+    <rect x="25" y="300" width="530" height="40" rx="5" fill="#f3f5f8" stroke="#cfd6de"/>
+    <text x="290" y="325">Eloquent models: Assessment, AssessmentResult, AssessmentVerdict, Learner, ...</text>
+
+    <rect x="620" y="100" width="270" height="250" rx="8" fill="#e8f6ee" stroke="#1b6b3c"/>
+    <text x="755" y="122" font-size="14" font-weight="700">Flask ML service (127.0.0.1:5000)</text>
+    <text x="755" y="148">POST /api/transcribe</text>
+    <text x="755" y="166" fill="#555f6b">audio_quality.measure()</text>
+    <text x="755" y="182" fill="#555f6b">faster-whisper small (int8, CPU)</text>
+    <text x="755" y="214">POST /api/classify</text>
+    <text x="755" y="232" fill="#555f6b">StandardScaler.transform</text>
+    <text x="755" y="248" fill="#555f6b">RandomForest.predict_proba</text>
+    <text x="755" y="280">GET /api/health</text>
+    <text x="755" y="298" fill="#555f6b">model_version, scaler_loaded,</text>
+    <text x="755" y="314" fill="#555f6b">whisper_loaded, classifier_loaded</text>
+
+    <rect x="10" y="385" width="270" height="70" rx="8" fill="#f3f5f8" stroke="#555f6b"/>
+    <text x="145" y="410" font-size="14" font-weight="700">MySQL</text>
+    <text x="145" y="430">assessments, assessment_results,</text>
+    <text x="145" y="446">verdicts, learners, interventions ...</text>
+    <rect x="310" y="385" width="260" height="70" rx="8" fill="#f3f5f8" stroke="#555f6b"/>
+    <text x="440" y="410" font-size="14" font-weight="700">Public disk</text>
+    <text x="440" y="430">storage/app/public/assessments/audio</text>
+    <text x="440" y="446">(recordings kept for replay)</text>
+    <rect x="620" y="385" width="270" height="70" rx="8" fill="#fff" stroke="#555f6b" stroke-dasharray="5 4"/>
+    <text x="755" y="410" font-size="14" font-weight="700">Optional: OpenAI Whisper API</text>
+    <text x="755" y="430">used only if local STT fails and</text>
+    <text x="755" y="446">OPENAI_API_KEY is set</text>
+  </g>
+  <g stroke="#1b1f24" stroke-width="1.7" marker-end="url(#a)">
+    <line x1="290" y1="72" x2="290" y2="98"/>
+    <line x1="570" y1="200" x2="618" y2="200"/>
+    <line x1="145" y1="350" x2="145" y2="383"/>
+    <line x1="440" y1="350" x2="440" y2="383"/>
+    <line x1="755" y1="350" x2="755" y2="383" stroke-dasharray="5 4"/>
+  </g>
+  <text x="594" y="192" font-size="10.5" text-anchor="middle">HTTP</text>
+  <text x="594" y="214" font-size="10.5" text-anchor="middle">JSON</text>
+</svg>
+<figcaption>Laravel is the only component the browser talks to. Flask listens on localhost only; Laravel calls it with <code>Http::timeout()</code> (transcribe 300 s, classify 30 s).</figcaption>
+</figure>
+
+<h3>Architecture decisions to defend</h3>
+<table>
+  <tr><th style="width:26%">Decision</th><th>Reason</th><th style="width:30%">Trade-off to admit</th></tr>
+  <tr><td>Two processes (PHP + Python)</td><td>Python owns the ML ecosystem (Whisper, scikit-learn); PHP owns the product. HTTP/JSON contract between them; the app degrades if Flask is down.</td><td>Two runtimes to deploy and monitor; one extra network hop; a single gunicorn worker serialises heavy transcriptions.</td></tr>
+  <tr><td>Service layer</td><td>Controllers stay thin; analysis logic is unit-testable without HTTP.</td><td>Some services are large (<code>ReadingAnalyzerService</code> 925 lines).</td></tr>
+  <tr><td>Synchronous analysis (no queue)</td><td>Simple; teacher waits on one screen. <code>docs/deployment-vps.md</code> notes no queue worker is needed.</td><td>Long request (up to minutes on a small CPU). Timeouts are layered so Laravel gives up first (300 s) before php-fpm (360 s), nginx (390 s) and gunicorn (420 s).</td></tr>
+  <tr><td>Local Whisper first</td><td>No per-use fee, no child audio leaves the server by default.</td><td>CPU inference is slower than real time on a small VPS.</td></tr>
+  <tr><td>Teacher verdict stored beside the AI result</td><td>Audit trail; AI numbers are never overwritten (<code>assessment_verdicts</code> table).</td><td>"Effective" values need helper methods (<code>Assessment::effective*()</code>).</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 class="pb">3. The assessment pipeline, function by function</h2>
+<p>Trace of one teacher-recorded assessment. Each row is a place you can open the file and point at the line.</p>
+
+<div class="tw"><table>
+  <tr><th style="width:4%">#</th><th style="width:22%">What happens</th><th style="width:34%">File &middot; function</th><th>Input &rarr; output</th></tr>
+  <tr><td>1</td><td>Teacher picks learner / language / type / passage</td><td><code>AssessmentController::start()</code>, <code>store()</code>; <code>MaterialController::options()</code>; view <code>assessments/start.blade.php</code></td><td>Validates: language in <code>en,fil</code>; type in <code>oral_reading,comprehension,combined</code>; passage language must match; grade gap 0 (or &plusmn;1 only with <code>allow_fallback</code>); comprehension types require questions. Creates <code>Assessment</code> with status <code>pending</code>.</td></tr>
+  <tr><td>2</td><td>Browser records audio</td><td><code>public/js/audio-recorder.js</code>: <code>startRecording()</code>, <code>stopTimer()</code>; view <code>assessments/show.blade.php</code>, partial <code>_audio_capture.blade.php</code></td><td><code>getUserMedia</code> (mono, 16 kHz, echo cancellation, noise suppression), <code>MediaRecorder</code> at 128 kbps, auto-stop at 180 s. Produces a webm/ogg/wav blob.</td></tr>
+  <tr><td>3</td><td>Comprehension answers recorded first</td><td><code>AssessmentController::analyze()</code> &rarr; <code>ComprehensionService::record()</code> (DB transaction)</td><td>Stored before STT so a failure never loses answers. Returns score %.</td></tr>
+  <tr><td>4</td><td>Recording saved</td><td><code>AssessmentController::keepRecording()</code> (private)</td><td>Extension allow-listed (<code>webm weba ogg oga wav mp3 m4a mp4</code>), stored on disk <code>public</code> at <code>assessments/audio/</code>; old file deleted. Status &rarr; <code>processing</code>.</td></tr>
+  <tr><td>5</td><td>Speech-to-text</td><td><code>SpeechToTextService::transcribe()</code> &rarr; <code>callLocalWhisper()</code> &rarr; <code>formatWhisperResponse()</code></td><td>POST multipart to <code>{ML_API_URL}/api/transcribe</code>. Chain: local Whisper &rarr; OpenAI API &rarr; mock (only in local/testing or <code>STT_ALLOW_MOCK=true</code>) &rarr; throws <code>SpeechServiceUnavailable</code> (HTTP 503 to the teacher).</td></tr>
+  <tr><td>6</td><td>Python: quality + transcription</td><td><code>ml-service/app.py::transcribe()</code>, <code>measure_audio_quality()</code>; <code>audio_quality.py::measure()</code></td><td>Returns <code>text, words[{word,start,end,confidence}], segments[{no_speech_prob,avg_logprob,...}], duration, audio_quality{...}, verbatim_mode</code>. If rating is <code>no_speech</code>, returns empty text without calling Whisper.</td></tr>
+  <tr><td>7</td><td>Alignment and miscues</td><td><code>ReadingAnalyzerService::analyze()</code> &rarr; <code>extractSpokenTokens()</code>, <code>tokenizeText()</code>, <code>compareTexts()</code>, <code>alignTexts()</code>; <code>MiscueClassifierService::classify()</code></td><td>Word-level alignment (DP) then fine-grained miscue labels.</td></tr>
+  <tr><td>8</td><td>Metrics and 12-feature vector</td><td><code>analyze()</code>; <code>calculateFluencyScore()</code>, <code>determineReadingLevel()</code>, <code>analyzeErrors()</code>, <code>identifySubstitutionPattern()</code>, <code>detectLongPauses()</code>, <code>detectRepetitions()</code>, <code>estimateProsody()</code></td><td>Returns array incl. <code>ml_features</code> (12 keys, exact names of <code>FEATURE_COLUMNS</code>).</td></tr>
+  <tr><td>9</td><td>ML classification</td><td><code>MLClassificationService::classify()</code> &rarr; <code>makeRequest('/api/classify')</code>; Python <code>classify_reading()</code></td><td>JSON features in; <code>{primary_weakness, confidence=max(proba), scores[5]}</code> out. On any exception &rarr; <code>fallbackClassification()</code> with <code>is_fallback=true</code>, confidence 0.5.</td></tr>
+  <tr><td>10</td><td>Evidence gate</td><td><code>MLClassificationService::resolveWeaknessId()</code> + <code>WeaknessEvidence::statuses()</code></td><td>Keeps the prediction only if its skill row is amber/red; else next-best supported class; else clearest measured problem; class 0 needs no evidence.</td></tr>
+  <tr><td>11</td><td>Provenance</td><td><code>AssessmentController::buildProvenance()</code></td><td>STT engine, mock flag, mean word confidence, classifier (<code>ml</code>/<code>rule_based</code>), model version read from <code>ml-service/model_metadata.json</code>.</td></tr>
+  <tr><td>12</td><td>Persist</td><td><code>Assessment::createResult()</code></td><td>Upserts <code>assessment_results</code> (<code>ml_analysis_json</code> holds the whole analysis), marks completed, <code>Learner::updateReadingLevel()</code>, notifies linked parents on first analysis (<code>NewAssessmentCompleted</code>).</td></tr>
+  <tr><td>13</td><td>Results page</td><td><code>AssessmentController::results()</code>; <code>AnalysisAdvisorService::for()</code>; <code>ReadingInterpretationService::for()</code> and <code>weakness()</code>; <code>Assessment::getRecommendedInterventions()</code>; <code>AssessmentResult::getComparisonWithPrevious()</code></td><td>View <code>assessments/results.blade.php</code> and partials <code>_interpretation</code>, <code>_reading_comparison</code>, <code>_weakness_why</code>, <code>_ai_analysis</code>, <code>_verdict</code>.</td></tr>
+  <tr><td>14</td><td>Teacher decision</td><td><code>AssessmentVerdictController::store()</code></td><td><code>decision</code> in <code>accepted|overridden|invalidated</code>; reason required unless accepted; optional manual scoring; stored in <code>assessment_verdicts</code>.</td></tr>
+</table></div>
+
+<h3>Student-device variant (live session)</h3>
+<p>Teacher creates a session (<code>AssessmentController::createSession</code>, <code>assessment_sessions</code> table), learner logs in with a PIN (<code>Student\StudentAuthController</code>, middleware <code>StudentAuth</code>), reads on <code>student/assessment/reading.blade.php</code>, and <code>StudentAssessmentController::uploadAudio()</code> stores the audio and sets status <code>processing</code>. The teacher then runs <code>analyze()</code> as above (<code>pollSession</code> is polled by the monitor page).</p>
+
+<h3>Shape of the speech-to-text payload (Flask &rarr; Laravel)</h3>
+<pre><code>{
+  "text": "Tatlo ang bituin ...",
+  "words": [{"word":" Tatlo","start":0.52,"end":0.94,"confidence":0.91}, ...],
+  "segments": [{"start":0.0,"end":6.4,"text":"...","no_speech_prob":0.02,"avg_logprob":-0.31,"compression_ratio":1.2}],
+  "language": "tl", "duration": 18.7, "verbatim_mode": true,
+  "audio_quality": {"measured":true,"speech_ratio":0.78,"snr_db":24.1,"rating":"clean","background_events":[...]}
+}</code></pre>
+
+<h3>Shape of the classification call</h3>
+<pre><code>POST /api/classify
+{"accuracy_rate":81.8,"words_per_minute":27.0,"fluency_score":4.5,"substitution_rate":0.182,
+ "omission_rate":0,"insertion_rate":0,"phonetic_error_rate":0,"vowel_error_rate":0,
+ "blend_error_rate":0.5,"self_correction_rate":0.091,"pause_frequency":0.091,"prosody_score":5.2}
+--&gt; {"status":"success","primary_weakness":"3","secondary_weakness":null,
+     "confidence":0.55,"scores":[0.05,0.2,0.15,0.55,0.05]}</code></pre>
+<p>Note: <code>primary_weakness</code> is the class id as a string. <code>secondary_weakness</code> is always <code>null</code> (the model is single-label), and the controller sets it to <code>null</code> too.</p>
+
+<!-- ============================================================ -->
+<h2 class="pb">4. Algorithms in the Laravel back-end</h2>
+
+<h3>4.1 Tokenisation</h3>
+<p><code>ReadingAnalyzerService::tokenizeText()</code>: <code>mb_strtolower</code>, strip everything that is not a Unicode letter, number or whitespace (<code>/[^\p{L}\p{N}\s]/u</code>), split on whitespace. Unicode-safe for Filipino. Apostrophes are removed, so "Siya'y" becomes "siyay" (this mirrors <code>clean_token()</code> in <code>parse_annotations.py</code>).</p>
+
+<h3>4.2 Word alignment (dynamic programming)</h3>
+<p><code>alignTexts()</code> is a Levenshtein-style alignment on <em>words</em>, O(m&times;n) time and memory (passages are &le;50 words, so trivial).</p>
+<ul>
+  <li>Cost per edit (insert, delete, substitute) is <code>$edit = m + n + 1</code>; a match costs <code>-1</code>. Because <code>$edit</code> exceeds the maximum possible total of matches, a match can only break ties between equal-edit alignments, never justify an extra edit.</li>
+  <li>Backtrack from the end, preferring omission when tied. This pushes unread words to the end of the passage and matches to the start, which matches how a child reads (forward from the start). That tie-break is what makes "stopped early" detectable.</li>
+  <li>Output pairs: <code>{reference, spoken, position}</code>; <code>reference=null</code> is an insertion, <code>spoken=null</code> an omission.</li>
+</ul>
+
+<h3>4.3 Miscue classification</h3>
+<p><code>MiscueClassifierService::classify()</code> post-processes the alignment in this order (constants at the top of the file):</p>
+<table>
+  <tr><th style="width:24%">Step</th><th>Rule</th></tr>
+  <tr><td><code>markNotReached</code></td><td>Trailing unread words become <code>not_reached</code> if there are &ge;3 of them (<code>NOT_REACHED_MIN_WORDS</code>); they still count against accuracy.</td></tr>
+  <tr><td><code>markOffPassageAndPhraseRepetitions</code></td><td>A run of consecutive insertions &ge;3 at an edge or &ge;4 in the middle is either a re-read phrase (&ge;60% of its words occur nearby &rarr; <code>repetition</code>) or <code>off_passage</code> (talking to the teacher, not reading).</td></tr>
+  <tr><td><code>markSingleInsertions</code></td><td>Isolated extra word: same word within &plusmn;2 positions &rarr; <code>repetition</code>; word is a prefix of the next ("ma" before "mabilis") &rarr; false-start <code>repetition</code>; sounds like the next correctly-read target &rarr; <code>self_correction</code> (not a miscue); else stays <code>insertion</code>.</td></tr>
+  <tr><td><code>markReplacements</code></td><td>Substitution whose Levenshtein similarity &ge;0.5, or soundex/metaphone match (plain a-z only) &rarr; <code>mispronunciation</code>; otherwise <code>substitution</code>.</td></tr>
+  <tr><td><code>markPauses</code></td><td>Gap before a word from the previous word's end: &ge;1.0 s &rarr; <code>hesitation</code>, &ge;3.0 s &rarr; <code>long_pause</code>. Words with Whisper confidence &lt;0.5 are flagged <code>unclear</code>.</td></tr>
+</table>
+<div class="box warn"><b class="t">Limit to admit</b><p>It works on what Whisper wrote. If Whisper silently tidied a stumble away, it cannot be recovered. "Mispronunciation" only means "sounds like the target word"; there is no pronunciation/phoneme model.</p></div>
+
+<h3>4.4 Metrics</h3>
+<table>
+  <tr><th style="width:20%">Metric</th><th>Formula (function)</th></tr>
+  <tr><td>Accuracy %</td><td><code>correct / totalReferenceWords * 100</code>, rounded to 0.1 (<code>analyze()</code>). Omissions, substitutions and not-reached words all reduce it; insertions do not.</td></tr>
+  <tr><td>WPM</td><td><code>correct / durationSeconds * 60</code> where duration is the audio length reported by Whisper (<code>$transcription['duration']</code>, default 60). It is <em>correct</em> words per minute, over the whole clip including silence.</td></tr>
+  <tr><td>Fluency 0-10</td><td><code>calculateFluencyScore()</code>: start 10; if mean inter-word gap &gt;0.5 s subtract <code>min(2, (avg-0.5)*2)</code>; subtract <code>3 &times; (share of gaps &gt;1 s)</code>; WPM term uses <em>all spoken words</em>/duration: below 50 subtract <code>(50-wpm)/20</code>, above 150 subtract <code>(wpm-150)/50</code>. Clamp 0-10. Default 5.0 with no words.</td></tr>
+  <tr><td>Prosody 0-10</td><td><code>estimateProsody()</code>: start 10; &minus;3 if mean word confidence &lt;0.6 (&minus;1.5 if &lt;0.75); &minus;1 if confidence variance &lt;0.005 and mean &gt;0.8; &minus;2 if inter-word-gap std &gt;1.5; &minus;1 if gap std &lt;0.05 and mean gap &lt;0.15; then <code>0.6*score + 0.4*fluency</code>. <b>A heuristic, not an acoustic prosody measure.</b></td></tr>
+  <tr><td>Reading level</td><td><code>determineReadingLevel()</code>: &ge;97 independent, &ge;90 instructional, else frustration. <code>PhilIriLevels</code> holds the same constants (fixed to the DepEd workbook, not the editable settings). Comprehension: &ge;80 / &ge;59 / below.</td></tr>
+  <tr><td>Overall level</td><td><code>Assessment::readingLevels()</code>: the lower of word-reading and comprehension when both exist.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>5. The Python microservice</h2>
+<p><code>ml-service/app.py</code> (268 lines). Load order at import time: read <code>model_metadata.json</code> for the version string; load <code>weakness_classifier.joblib</code> (an older <code>bigkas_rf_model.pkl</code> 5-feature prototype is deliberately disabled); load <code>feature_scaler.joblib</code>; load Whisper (fine-tuned <code>bigkas-whisper-ct2/</code> if the folder exists, else <code>WhisperModel("small", device="cpu", compute_type="int8")</code>).</p>
+
+<table>
+  <tr><th style="width:18%">Endpoint</th><th>Behaviour</th></tr>
+  <tr><td><code>POST /api/classify</code></td><td>Builds a one-row DataFrame in <code>FEATURE_COLUMNS</code> order (missing keys default to 0), <code>scaler.transform</code>, <code>model.predict</code> and <code>predict_proba</code>; <code>confidence = max(proba)</code>; <code>scores</code> is the full probability vector in class order 0-4. 503 if the model is not loaded.</td></tr>
+  <tr><td><code>POST /api/transcribe</code></td><td>Saves upload to a temp file; language map <code>en&rarr;en, fil&rarr;tl, hil&rarr;tl</code>; measures quality; stops at <code>no_speech</code>; else <code>transcribe(word_timestamps=True)</code>. In verbatim mode (<code>WHISPER_VERBATIM</code>, default on): <code>condition_on_previous_text=False</code> and a disfluent <code>initial_prompt</code> ("Umm, the, the dog... ra- ran to the, uh..." / the Filipino equivalent) so repeats and stumbles are not tidied away. Temp file always removed.</td></tr>
+  <tr><td><code>GET /api/health</code></td><td>Reports <code>model_version</code> (from metadata, not hard-coded), feature list, scaler/whisper/classifier loaded flags. Read by <code>SystemStatus</code> for the admin status page.</td></tr>
+</table>
+
+<h3>Recording-quality measurement (<code>audio_quality.py</code>)</h3>
+<ul>
+  <li>Audio decoded to 16 kHz mono; 30 ms frames; RMS in dBFS per frame (floor &minus;80 dB).</li>
+  <li>Speech mask from the VAD timestamps. <code>speech_ratio = speech seconds / total</code>; &lt;0.05 &rarr; <code>no_speech</code>.</li>
+  <li>Noise floor = median dB of non-speech frames (fallback: 5th percentile of all frames). Speech level = 75th percentile of speech frames. <code>snr_db = speech_db - noise_db</code>.</li>
+  <li>Rating: SNR &ge;20 <code>clean</code>; &ge;10 <code>moderate_noise</code>; else <code>noisy</code>.</li>
+  <li>Background events: non-speech stretches louder than <code>max(noise+12 dB, -45 dB)</code> lasting &ge;0.25 s, top 20 by peak.</li>
+  <li>Also <code>clipping_ratio</code> (share of samples &ge;0.99), leading and trailing silence.</li>
+</ul>
+<p><b>Why the gate exists:</b> given silence, Whisper invents words (different each run). The gate prevents scoring invented text.</p>
+
+<!-- ============================================================ -->
+<h2 class="pb">6. The ML pipeline (data to deployed model)</h2>
+
+<figure>
+<svg viewBox="0 0 900 250" role="img" aria-label="ML pipeline">
+  <defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1b1f24"/></marker></defs>
+  <g font-size="11" text-anchor="middle">
+    <rect x="5" y="10" width="140" height="68" rx="6" fill="#e8efff" stroke="#1d4ed8"/><text x="75" y="30" font-weight="700">Collect</text><text x="75" y="46">learners read scripted</text><text x="75" y="60">passages (EN/FIL)</text>
+    <rect x="160" y="10" width="140" height="68" rx="6" fill="#e8efff" stroke="#1d4ed8"/><text x="230" y="30" font-weight="700">Annotate</text><text x="230" y="46">tags: [om] [sub] [mis]</text><text x="230" y="60">[ins] [pause] in Sheets</text>
+    <rect x="315" y="10" width="140" height="68" rx="6" fill="#fff" stroke="#1b1f24"/><text x="385" y="30" font-weight="700">validate_dataset.py</text><text x="385" y="46">drop incomplete rows</text><text x="385" y="60">&rarr; metadata_clean.csv</text>
+    <rect x="470" y="10" width="140" height="68" rx="6" fill="#fff" stroke="#1b1f24"/><text x="540" y="30" font-weight="700">parse_annotations.py</text><text x="540" y="46">tags &rarr; 12 features</text><text x="540" y="60">&rarr; extracted_features.csv</text>
+    <rect x="625" y="10" width="140" height="68" rx="6" fill="#fff" stroke="#1b1f24"/><text x="695" y="30" font-weight="700">generate_provisional</text><text x="695" y="46">_labels.py: rule label</text><text x="695" y="60">for teacher review</text>
+    <rect x="760" y="100" width="135" height="68" rx="6" fill="#e8efff" stroke="#1d4ed8"/><text x="827" y="120" font-weight="700">Teacher review</text><text x="827" y="136">confirm label, prosody</text><text x="827" y="150">(split by language)</text>
+    <rect x="610" y="170" width="140" height="68" rx="6" fill="#fff" stroke="#1b1f24"/><text x="680" y="190" font-weight="700">merge_teacher_labels</text><text x="680" y="206">.py &rarr; master_confirmed</text><text x="680" y="220">.csv (527 rows)</text>
+    <rect x="455" y="170" width="140" height="68" rx="6" fill="#fff" stroke="#1b1f24"/><text x="525" y="190" font-weight="700">train_model_real_</text><text x="525" y="206">data.py: split, scale,</text><text x="525" y="220">RF, metrics, save</text>
+    <rect x="300" y="170" width="140" height="68" rx="6" fill="#e8f6ee" stroke="#1b6b3c"/><text x="370" y="190" font-weight="700">Artifacts</text><text x="370" y="206">weakness_classifier</text><text x="370" y="220">.joblib, scaler, metadata</text>
+    <rect x="145" y="170" width="140" height="68" rx="6" fill="#e8f6ee" stroke="#1b6b3c"/><text x="215" y="190" font-weight="700">Serve</text><text x="215" y="206">Flask app.py loads them;</text><text x="215" y="220">Laravel calls /api/classify</text>
+  </g>
+  <g stroke="#1b1f24" stroke-width="1.5" marker-end="url(#b)">
+    <line x1="145" y1="44" x2="159" y2="44"/><line x1="300" y1="44" x2="314" y2="44"/><line x1="455" y1="44" x2="469" y2="44"/>
+    <line x1="610" y1="44" x2="624" y2="44"/><line x1="765" y1="60" x2="800" y2="99"/><line x1="800" y1="168" x2="750" y2="200"/>
+    <line x1="610" y1="204" x2="596" y2="204"/><line x1="455" y1="204" x2="441" y2="204"/><line x1="300" y1="204" x2="286" y2="204"/>
+  </g>
+</svg>
+<figcaption>Scripts live in <code>ml-service/training/</code>. Run order: validate_dataset &rarr; parse_annotations &rarr; generate_provisional_labels &rarr; split_features_by_language &rarr; add_transcript_context &rarr; (teachers review) &rarr; merge_teacher_labels &rarr; train_model_real_data.</figcaption>
+</figure>
+
+<h3>6.1 Dataset funnel (counted from the CSVs)</h3>
+<table>
+  <tr><th>Stage</th><th class="n">Rows</th><th>Source</th></tr>
+  <tr><td>Training snapshot extracted from the annotation sheet</td><td class="n">527</td><td><code>extracted_features.csv</code> = <code>labeled_features_master_confirmed.csv</code> (419 Filipino, 108 English)</td></tr>
+  <tr><td>After dropping rows with no label (1) or no prosody score (8)</td><td class="n"><b>519</b></td><td><code>total_samples</code> in <code>model_metadata.json</code></td></tr>
+  <tr><td>Train / test (80/20, stratified, <code>random_state=42</code>)</td><td class="n">415 / 104</td><td><code>training_samples</code>, <code>test_samples</code></td></tr>
+  <tr><td>For reference: the sheet today</td><td class="n">1,017 raw; 673 complete</td><td><code>metadata.csv</code>, <code>metadata_clean.csv</code> (344 incomplete rows in <code>skipped_rows_report.csv</code>; 14 more are <code>[unintelligible]</code>)</td></tr>
+</table>
+<div class="box"><p><b>Be precise about this if asked.</b> <code>metadata_clean.csv</code> has been updated since the 527-row snapshot was extracted: 158 of its file names are not in the training snapshot, and 12 snapshot file names are not in it (re-chunked or renamed). So the model was trained on an earlier export, and there are annotated clips that have not yet been used. That is spare data for the next training round, but I have not verified how many of those 158 carry teacher-confirmed labels.</p></div>
+
+<h3>6.2 What the data looks like (computed from the 519 usable rows)</h3>
+<div class="cols">
+<div>
+  <h4>Class distribution (primary label)</h4>
+  <table>
+    <tr><th>Class</th><th class="n">n</th><th class="n">%</th></tr>
+    <tr><td>0 Independent</td><td class="n">68</td><td class="n">13.1</td></tr>
+    <tr><td>1 Phonemic awareness</td><td class="n">145</td><td class="n">27.9</td></tr>
+    <tr><td>2 Decoding accuracy</td><td class="n">86</td><td class="n">16.6</td></tr>
+    <tr><td>3 Oral reading fluency</td><td class="n">217</td><td class="n">41.8</td></tr>
+    <tr><td>4 Reading comprehension</td><td class="n"><b>3</b></td><td class="n">0.6</td></tr>
+  </table>
+</div>
+<div>
+  <h4>Composition</h4>
+  <ul>
+    <li>Language (527 rows loaded): Filipino 419, English 108.</li>
+    <li>Grade: 3 &rarr; 306, 4 &rarr; 221. No grade 5 or 6.</li>
+    <li>Distinct learner IDs in file names (<code>stdNNN</code>): 36; mean 14.4 clips each, max 56.</li>
+    <li>English has no class 3 or 4 rows (37 / 48 / 23 for classes 0 / 1 / 2).</li>
+    <li>All 3 class-4 rows are Filipino, Grade 3.</li>
+    <li>253 loaded rows carry a combined label such as "1,3" or "1,4,2"; only the first number is used.</li>
+  </ul>
+</div>
+</div>
+
+<h3>6.3 Labelling process and its weakness</h3>
+<ol>
+  <li>Team members listened to each clip and typed an annotated transcript with the tag scheme (<code>[om_word]</code>, <code>[sub: target &gt; spoken]</code>, <code>[mis: target &gt; spoken]</code>, <code>[ins: word]</code>, <code>[pause]</code>, <code>[unintelligible]</code>).</li>
+  <li><code>parse_annotations.py::build_feature_row()</code> converts tags to the 12 numbers.</li>
+  <li><code>generate_provisional_labels.py::rule_based_label()</code> scores the five classes with hand rules and writes a <b>provisional</b> label for the teacher.</li>
+  <li>Teachers filled <code>teacher_confirmed_label</code> (single or combo) and <code>prosody_score_teacher</code> (0-10) in Google Sheets (<code>labeled_features_reviewed_fil.csv</code>, <code>_en.csv</code>); <code>merge_teacher_labels.py</code> merged them.</li>
+</ol>
+<div class="box warn"><b class="t">Honest caveat on the labels</b><p>Teachers reviewed a sheet that already showed a rule-based provisional label (anchoring bias is possible). The provisional label equals the teacher's primary label for 64.9% of the 519 rows, so teachers changed about a third. There is no inter-rater agreement measure (a single reviewer per clip, no kappa). The label is a human judgement about a 10-40 second clip, not a clinical diagnosis.</p></div>
+
+<h3>6.4 Training procedure (<code>train_model_real_data.py</code>)</h3>
+<table>
+  <tr><th style="width:26%">Step</th><th>Code behaviour</th></tr>
+  <tr><td>Parse label</td><td><code>parse_combo_label()</code>: <code>re.findall(r'\d+')</code>; <code>primary = nums[0]</code>. Out-of-range class aborts the run.</td></tr>
+  <tr><td>Clean</td><td><code>dropna(subset=FEATURE_COLUMNS + ['primary_label'])</code>. Aborts if &lt;20 rows, warns if &lt;50.</td></tr>
+  <tr><td>Split</td><td><code>train_test_split(test_size=0.2, random_state=42, stratify=y)</code> (stratified only if every class has &ge;2 rows).</td></tr>
+  <tr><td>Scale</td><td><code>StandardScaler().fit_transform(X_train)</code>; test uses <code>transform</code> only (no test leakage into scaler).</td></tr>
+  <tr><td>Model</td><td><code>RandomForestClassifier(n_estimators=100, max_depth=8, min_samples_split=5, min_samples_leaf=3, class_weight='balanced', random_state=42, n_jobs=-1)</code>. No hyper-parameter search was run; these are hand-set regularising values.</td></tr>
+  <tr><td>Evaluate</td><td><code>accuracy_score(y_test, predict(X_test_scaled))</code>; <code>classification_report</code>; <code>cross_val_score(rf, scaler.transform(X), y, cv=5, scoring='accuracy')</code>; <code>feature_importances_</code>.</td></tr>
+  <tr><td>Save</td><td><code>joblib.dump</code> model and scaler; <code>model_metadata.json</code> with version <code>3.0.0-12feature-5class-combo-aware</code>.</td></tr>
+</table>
+<div class="box stop"><b class="t">Danger when demonstrating</b><p>Running <code>train_model_real_data.py</code> <b>overwrites</b> <code>weakness_classifier.joblib</code>, <code>feature_scaler.joblib</code> and <code>model_metadata.json</code> in <code>ml-service/</code>. My re-run with the venv's newer scikit-learn gave 56.7% on the same split, not 62.5%. Do not retrain before the defense. Use the read-only script in section 17.</p></div>
+
+<!-- ============================================================ -->
+<h2 class="pb">7. The 12 features: training vs. live</h2>
+<p>The names, order and count are identical in <code>app.py</code>, <code>train_model_real_data.py</code>, <code>parse_annotations.py</code> and <code>ReadingAnalyzerService::analyze()</code>. The <em>procedures</em> that produce several of them are not identical. This is train/serve skew; it has not been quantified.</p>
+<div class="tw"><table>
+  <tr><th style="width:15%">Feature</th><th style="width:30%">Training (<code>parse_annotations.py</code>)</th><th style="width:30%">Live (<code>ReadingAnalyzerService.php</code>)</th><th>Skew risk</th></tr>
+  <tr><td>accuracy_rate</td><td>(words &minus; sub &minus; mis &minus; om)/words &times;100 from tags</td><td>correct/words &times;100 from alignment of Whisper text</td><td><span class="tag o">depends on STT</span></td></tr>
+  <tr><td>words_per_minute</td><td>correct words / librosa duration &times;60</td><td>correct words / Whisper duration &times;60</td><td><span class="tag g">same formula</span>. Note training mean is 43.5 WPM (max 141), well below the grade benchmarks in <code>config/bigkas.php</code> (Grade 3 min 70).</td></tr>
+  <tr><td>fluency_score</td><td><code>compute_fluency_score()</code>: &minus;1.5 per <code>[pause]</code> (max 4), &minus;0.5 per stutter (max 2), grade-specific WPM tiers, &minus;1.5 if error rate &gt;0.3</td><td><code>calculateFluencyScore()</code>: gap-based and WPM 50/150 rules (see 4.4)</td><td><span class="tag r">different formula</span></td></tr>
+  <tr><td>substitution_rate</td><td>(<code>[sub]</code> + <code>[mis]</code>)/words</td><td>raw alignment substitutions / words</td><td><span class="tag o">similar</span></td></tr>
+  <tr><td>omission_rate</td><td><code>[om]</code> tags / words</td><td>raw alignment omissions / words (includes trailing unread words)</td><td><span class="tag o">similar</span></td></tr>
+  <tr><td>insertion_rate</td><td><code>[ins]</code> tags / words</td><td>raw alignment insertions / words (before the miscue reclassification)</td><td><span class="tag o">similar</span></td></tr>
+  <tr><td>phonetic / vowel / blend error rate</td><td><code>classify_error_pattern()</code>: blend first, then syllable drop (&ge;3 chars shorter &rarr; phonetic), vowel mismatch, then soundex-lite. Share of pattern errors.</td><td><code>identifySubstitutionPattern()</code>: PHP <code>soundex</code> first, then initial/ending match, then blend, then vowel. Share over phonetic+vowel+blend+other.</td><td><span class="tag r">different order and rules</span>. These are <em>shares</em>: one slip makes a share 1.0.</td></tr>
+  <tr><td>self_correction_rate</td><td>hyphenated stutter tokens flagged against the prompt, / words</td><td>consecutive duplicates or short prefix stutters / words</td><td><span class="tag o">approximation</span> (documented in the PHP comment)</td></tr>
+  <tr><td>pause_frequency</td><td><code>[pause]</code> tag count / words (annotation guideline text says &gt;3 s in the docstring)</td><td>inter-word gaps &gt;1.0 s / words</td><td><span class="tag r">threshold mismatch to verify</span> against the written annotation guideline</td></tr>
+  <tr><td>prosody_score</td><td>Teacher's 0-10 rating</td><td><code>estimateProsody()</code> heuristic</td><td><span class="tag r">human vs. heuristic</span>. Importance 10%.</td></tr>
+</table></div>
+<p><b>Honest framing:</b> "We kept the same feature names and used the training pipeline as the specification for the live pipeline, but several live features are automatic approximations of human annotation. Closing this gap, by training on features extracted from Whisper output of the same clips, is the single most valuable next step."</p>
+
+<!-- ============================================================ -->
+<h2 class="pb">8. The model and its results, and how every number is computed</h2>
+
+<h3>8.1 Headline numbers (saved model, reproduced 12 Oct 2026)</h3>
+<table>
+  <tr><th>Quantity</th><th class="n">Value</th><th>How it is computed</th></tr>
+  <tr><td>Test accuracy</td><td class="n"><b>0.625</b></td><td><code>accuracy_score(y_test, y_pred)</code> = correct / total = 65 / 104. Correct = diagonal of the confusion matrix = 11+15+10+29+0.</td></tr>
+  <tr><td>95% interval for that accuracy</td><td class="n">&asymp; 53% to 72%</td><td>Normal approximation: &plusmn;1.96&times;&radic;(0.625&times;0.375/104) = &plusmn;9.3 points. Shows how little 104 clips can pin down.</td></tr>
+  <tr><td>Majority baseline (test)</td><td class="n">0.413</td><td>43 of the 104 test clips are class 3. Always answering "3" scores 43/104.</td></tr>
+  <tr><td>Majority baseline (all)</td><td class="n">0.418</td><td>217 / 519.</td></tr>
+  <tr><td>5-fold CV accuracy</td><td class="n">0.4993 &plusmn; 0.1049</td><td><code>cross_val_score(cv=5)</code>: integer <code>cv</code> with a classifier is stratified <b>without shuffling</b>, and the CSV is Filipino rows then English rows, so folds are blocks of the file. High variance (my re-run: 0.356 to 0.592 by fold).</td></tr>
+  <tr><td>Training accuracy</td><td class="n">0.836</td><td>Accuracy on the 415 training rows. The 21-point gap to test indicates overfitting despite depth 8 and leaf size 3.</td></tr>
+  <tr><td>Top-2 accuracy</td><td class="n">0.856</td><td>Teacher's class is among the 2 highest <code>predict_proba</code> entries. My own extra metric, not in the metadata.</td></tr>
+  <tr><td>Mean max-probability</td><td class="n">0.549</td><td>The "confidence" shown to teachers is <code>max(predict_proba)</code>; its average on the test set is 0.55. It is a vote share of 100 trees, not a calibrated probability of being right.</td></tr>
+  <tr><td>Macro F1 / weighted F1</td><td class="n">0.51 / 0.63</td><td><code>classification_report</code>. Macro is dragged down by class 4 (F1 = 0).</td></tr>
+</table>
+
+<h3>8.2 Per-class results (test set, n = 104)</h3>
+<table>
+  <tr><th>Class</th><th class="n">Precision</th><th class="n">Recall</th><th class="n">F1</th><th class="n">Support</th><th>Reading</th></tr>
+  <tr><td>0 Independent</td><td class="n">0.85</td><td class="n">0.79</td><td class="n">0.81</td><td class="n">14</td><td>Best class; clear signal (high accuracy, fast, smooth).</td></tr>
+  <tr><td>1 Phonemic awareness</td><td class="n">0.54</td><td class="n">0.52</td><td class="n">0.53</td><td class="n">29</td><td>Often confused with fluency (8 of 29) and decoding (5).</td></tr>
+  <tr><td>2 Decoding accuracy</td><td class="n">0.45</td><td class="n">0.59</td><td class="n">0.51</td><td class="n">17</td><td>Over-predicted: 7 fluency clips were called decoding.</td></tr>
+  <tr><td>3 Oral reading fluency</td><td class="n">0.74</td><td class="n">0.67</td><td class="n">0.71</td><td class="n">43</td><td>Majority class; best-supported.</td></tr>
+  <tr><td>4 Comprehension</td><td class="n">0.00</td><td class="n">0.00</td><td class="n">0.00</td><td class="n">1</td><td>3 samples in total. Not learnable.</td></tr>
+</table>
+
+<h3>8.3 Confusion matrix (rows: teacher label, columns: model)</h3>
+<table style="width:auto">
+  <tr><th></th><th class="n">pred 0</th><th class="n">pred 1</th><th class="n">pred 2</th><th class="n">pred 3</th><th class="n">pred 4</th></tr>
+  <tr><th>true 0</th><td class="n"><b>11</b></td><td class="n">3</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+  <tr><th>true 1</th><td class="n">1</td><td class="n"><b>15</b></td><td class="n">5</td><td class="n">8</td><td class="n">0</td></tr>
+  <tr><th>true 2</th><td class="n">0</td><td class="n">4</td><td class="n"><b>10</b></td><td class="n">1</td><td class="n">2</td></tr>
+  <tr><th>true 3</th><td class="n">1</td><td class="n">6</td><td class="n">7</td><td class="n"><b>29</b></td><td class="n">0</td></tr>
+  <tr><th>true 4</th><td class="n">0</td><td class="n">0</td><td class="n">0</td><td class="n">1</td><td class="n"><b>0</b></td></tr>
+</table>
+
+<h3>8.4 Feature importance (<code>rf_model.feature_importances_</code>, saved model)</h3>
+<p>Mean decrease in impurity averaged over the 100 trees; sums to 1.</p>
+<table style="width:auto">
+  <tr><th>Feature</th><th class="n">Importance</th><th>Feature</th><th class="n">Importance</th></tr>
+  <tr><td>words_per_minute</td><td class="n">0.194</td><td>vowel_error_rate</td><td class="n">0.061</td></tr>
+  <tr><td>accuracy_rate</td><td class="n">0.177</td><td>insertion_rate</td><td class="n">0.040</td></tr>
+  <tr><td>omission_rate</td><td class="n">0.160</td><td>phonetic_error_rate</td><td class="n">0.025</td></tr>
+  <tr><td>substitution_rate</td><td class="n">0.119</td><td>self_correction_rate</td><td class="n">0.020</td></tr>
+  <tr><td>prosody_score</td><td class="n">0.104</td><td>blend_error_rate</td><td class="n">0.014</td></tr>
+  <tr><td>fluency_score</td><td class="n">0.077</td><td>pause_frequency</td><td class="n">0.010</td></tr>
+</table>
+<p>Interpretation: the model leans on speed, accuracy and omissions, i.e. largely the same quantities the provisional rule used to propose the labels. That is expected (the label is a human judgement about the same behaviours) but it means the model largely reproduces the logic of the rubric rather than discovering new structure. Impurity importance also favours continuous features and is not causal.</p>
+
+<h3>8.5 Comparison with the hand-written fallback</h3>
+<p>The PHP fallback (<code>MLClassificationService::fallbackClassification()</code>) re-implemented in Python and applied to the same 104 test clips scored <b>33.7%</b> (40.1% on all 519), below the majority baseline. So on this data the Random Forest does beat the shipped rules. The result must be stated carefully: the rules were not tuned to this data, and this comparison does not measure the full live system.</p>
+
+<h3>8.6 Additional checks I ran (not in the metadata)</h3>
+<table>
+  <tr><th>Check</th><th>Result</th><th>Meaning</th></tr>
+  <tr><td>Learner overlap between train and test</td><td>25 of the 26 test learners also appear in training</td><td>The split is by clip. Same-child clips are correlated, so 62.5% is optimistic for a new child.</td></tr>
+  <tr><td>Re-train, 5-fold <code>GroupKFold</code> by learner ID</td><td>mean 0.567 (folds 0.48 to 0.61)</td><td>Closer to what a new child would see. Indicative only: the venv's scikit-learn differs from the one that built the saved model.</td></tr>
+  <tr><td>Re-train with the script as-is, same split</td><td>0.567 test accuracy</td><td>Same data and seed, different library version/RNG gives &minus;5.8 points. Shows run-to-run noise on 104 clips; the saved model's 62.5% is one draw.</td></tr>
+  <tr><td>Saved model on the same split</td><td>0.625 (65/104)</td><td>Reproduces <code>test_accuracy</code> in the metadata exactly.</td></tr>
+</table>
+
+<h3>8.7 What you may and may not claim</h3>
+<div class="cols">
+<div><h4>You may say</h4><ul>
+  <li>"On a held-out test set of 104 teacher-labelled clips the 5-class model reached 62.5%, versus a 41% majority baseline; cross-validated accuracy was about 50%."</li>
+  <li>"Its top-2 suggestions contain the teacher's label 86% of the time."</li>
+  <li>"The classes with enough data (independent, fluency) are best; comprehension has 3 examples and is handled by questions."</li>
+  <li>"It beats our hand-written rules on the same clips (62.5% vs 33.7%)."</li>
+</ul></div>
+<div><h4>You may not say</h4><ul>
+  <li>"The system is 62.5% accurate." (It is one component on pre-annotated features.)</li>
+  <li>"Validated on real classrooms" or "validated end to end".</li>
+  <li>"Works for Grades 3 to 6" for the classifier.</li>
+  <li>"Fine-tuned Whisper" or "WER of X".</li>
+  <li>"Confidence 0.55 means 55% likely correct."</li>
+</ul></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="pb">9. After the model: evidence gate, fallback, advisor, verdict</h2>
+
+<h3>9.1 Evidence gate (<code>WeaknessEvidence</code>)</h3>
+<p>Why it exists: the three pattern features are <em>shares</em>, so one vowel-ish slip reads as a maximal phonics signal and the model (and the older rules) answered "Phonemic Awareness" for readers whose real trouble was decoding or pace. The gate checks the prediction against counts measured from the miscue classifier. Feature definitions were left alone because the shipped forest was trained on them.</p>
+<table>
+  <tr><th style="width:22%">Skill (id)</th><th>Status rule (<code>statuses()</code>)</th></tr>
+  <tr><td>1 Phonemic</td><td><code>phonemicStatus(mispronunciations, slips)</code>: share &ge;0.4 and count &ge;3 &rarr; concern; count &ge;1 &rarr; watch; else ok. (slips = mispron + subst + omission + insertion + repetition)</td></tr>
+  <tr><td>2 Decoding</td><td>accuracy on attempted words: &lt;90 &rarr; concern, &lt;97 &rarr; watch.</td></tr>
+  <tr><td>3 Fluency</td><td>WPM below grade <code>min</code> &rarr; concern, below <code>target</code> &rarr; watch; &ge;3 long pauses &rarr; concern; &ge;1 long pause or &ge;3 hesitations &rarr; watch; &ge;3 repeats &rarr; watch.</td></tr>
+  <tr><td>4 Comprehension</td><td>Only from the comprehension-question score (Phil-IRI cut-offs); <code>unknown</code> if not taken.</td></tr>
+</table>
+<p><code>resolveWeaknessId()</code>: take the model's class &rarr; keep if 0 or its status is watch/concern &rarr; otherwise walk the probability vector in descending order and take the first supported class &rarr; otherwise <code>clearestProblem()</code> (red before amber; ties go to the lower id, the more foundational skill). Test: <code>tests/Feature/WeaknessMatchesEvidenceTest.php</code>.</p>
+<div class="box warn"><b class="t">Be ready for this</b><p>"So the stored weakness is partly rules, not the model?" Yes: the model proposes and ranks; evidence rules veto. The rate at which the gate overrides the model has not been measured. Also the gate and the model use different inputs (miscue counts versus the 12 features), so they can disagree by design.</p></div>
+
+<h3>9.2 Fallback</h3>
+<p>When Flask is down or errors: <code>MLClassificationService::classify()</code> catches the exception, logs a warning, and returns the rule result with confidence 0.5 and <code>is_fallback</code>. <code>buildProvenance()</code> then records <code>classifier = rule_based</code>, and <code>AnalysisAdvisorService</code> raises a warning on the result page. <code>ML_API_ENABLED=false</code> forces this path (<code>.env.example</code> ships with it false).</p>
+
+<h3>9.3 Advisor findings (<code>AnalysisAdvisorService::findings()</code>)</h3>
+<table>
+  <tr><th>Finding</th><th>Trigger</th></tr>
+  <tr><td>Critical: not the child's audio</td><td>STT engine <code>mock</code></td></tr>
+  <tr><td>Audio findings</td><td><code>audio_quality.rating</code> noisy / no speech / background events</td></tr>
+  <tr><td>Weakness from a rule</td><td>classifier <code>rule_based</code></td></tr>
+  <tr><td>Speech recognition unsure</td><td>mean word confidence &lt;0.70</td></tr>
+  <tr><td>Accuracy unusually low</td><td>&lt;40%</td></tr>
+  <tr><td>Only part captured</td><td>captured words / passage words &lt;0.60</td></tr>
+  <tr><td>Recording very short</td><td>&lt;10 s</td></tr>
+  <tr><td>Implausible speed</td><td>&gt;250 WPM</td></tr>
+  <tr><td>Model not confident</td><td>confidence &lt;0.60</td></tr>
+</table>
+
+<h3>9.4 Recommendations</h3>
+<p>The web results page uses <code>Assessment::getRecommendedInterventions()</code>: active interventions for the primary weakness whose grade range contains the learner's grade, ordered by <code>effectiveness_score</code>, top 5, with a fallback to the most advanced available for that weakness. <code>InterventionRecommenderService</code> (priority, estimated impact, weekly plan) is used by the REST API controllers, not by the web results page. <code>effectiveness_score</code> is a seeded/curated number, not learned from outcomes.</p>
+
+<!-- ============================================================ -->
+<h2>10. Data model</h2>
+<table>
+  <tr><th style="width:26%">Table (model)</th><th>Purpose and key columns / relations</th></tr>
+  <tr><td><code>users</code> (<code>User</code>)</td><td>admin / teacher / parent. Email and name are encrypted with blind-index columns for lookup; lockout columns; <code>learner_user</code> pivot links parents (relationship) to learners.</td></tr>
+  <tr><td><code>schools</code>, <code>classes</code> (<code>School</code>, <code>SchoolClass</code>)</td><td>School, grade, section, school year, assigned teacher.</td></tr>
+  <tr><td><code>learners</code> (<code>Learner</code>)</td><td>LRN (encrypted + blind index), grade, language, encrypted <code>pin</code> (<code>EncryptedPin</code> cast), <code>pin_created_at</code>, XP/streak, <code>reading_level</code>.</td></tr>
+  <tr><td><code>reading_materials</code>, <code>comprehension_questions</code></td><td>Passage, language, grade, word count, type; 4 questions per passage (test enforces &le;50 words and 4 valid questions).</td></tr>
+  <tr><td><code>assessments</code> (<code>Assessment</code>)</td><td>learner, material, assessor, language, <code>assessment_type</code>, <code>status</code> (pending / recording / processing / completed / failed), <code>audio_file</code>, <code>transcription</code> (JSON).</td></tr>
+  <tr><td><code>assessment_results</code> (<code>AssessmentResult</code>)</td><td>accuracy, WPM, fluency, prosody, level, primary/secondary weakness, <code>confidence_score</code>, <code>comprehension_score</code>, counts, and <code>ml_analysis_json</code> (full analysis incl. features, miscues, provenance, audio quality).</td></tr>
+  <tr><td><code>assessment_verdicts</code> (<code>AssessmentVerdict</code>)</td><td>teacher decision, reason, final level/weakness, manual scoring fields, <code>decided_by</code>, <code>decided_at</code>.</td></tr>
+  <tr><td><code>comprehension_answers</code></td><td>learner answers per assessment.</td></tr>
+  <tr><td><code>interventions</code>, <code>intervention_logs</code></td><td>Activity library (target weakness, grade range, effectiveness) and assignments (status, parent/teacher actions, rating).</td></tr>
+  <tr><td><code>practice_sessions</code>, <code>practice_items</code>, <code>badges</code>, <code>learner_badges</code></td><td>Practice center and gamification.</td></tr>
+  <tr><td><code>gst_results</code>, <code>class_reports</code>, <code>deped_submissions</code></td><td>Phil-IRI Group Screening Test scores, teacher section reports, admin Form 2 submissions.</td></tr>
+  <tr><td><code>messages</code>, <code>notifications</code>, <code>activity_logs</code>, <code>progress_snapshots</code></td><td>Messaging, in-app notifications, audit log, progress history.</td></tr>
+  <tr><td><code>email_verification_codes</code>, <code>personal_access_tokens</code>, <code>sessions</code>, <code>system_settings</code></td><td>OTP codes (hashed, expiry), Sanctum tokens, sessions, key-value settings.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 class="pb">11. UI screen to back-end map</h2>
+<p>If the panel points at a screen, this is the route &rarr; controller &rarr; logic &rarr; view chain.</p>
+<div class="tw"><table>
+  <tr><th style="width:17%">Screen (role)</th><th style="width:22%">Route (<code>routes/web.php</code>)</th><th style="width:30%">Controller::method &rarr; services/models</th><th>View</th></tr>
+  <tr><td>Home</td><td><code>GET /</code></td><td>closure</td><td><code>home.blade.php</code></td></tr>
+  <tr><td>Login / register / verify code</td><td><code>/login</code>, <code>/register</code>, <code>/verify-code</code></td><td><code>AuthController</code>, <code>VerificationCodeController</code>, <code>OtpMailer</code>, <code>BlindIndexUserProvider</code></td><td><code>auth/*</code></td></tr>
+  <tr><td>Student login (PIN)</td><td><code>/student/login</code></td><td><code>Student\StudentAuthController::login</code>, <code>Learner::checkPin</code></td><td><code>student/auth/login</code></td></tr>
+  <tr><td>Dashboard (teacher / admin / student)</td><td><code>GET /dashboard</code></td><td><code>DashboardController::index</code> &rarr; <code>ClassWatchlistService::build</code> (needs-attention list), <code>adminDashboard</code>, <code>studentDashboard</code></td><td><code>dashboard/teacher|admin|student</code></td></tr>
+  <tr><td>Learners</td><td><code>/learners</code>, <code>/learners/{id}/progress</code></td><td><code>LearnerController</code>, <code>LearnerImportController</code> (spreadsheet import)</td><td><code>learners/*</code></td></tr>
+  <tr><td>Materials</td><td><code>/materials</code></td><td><code>MaterialController</code> (+ <code>ComprehensionQuestion</code>)</td><td><code>materials/*</code></td></tr>
+  <tr><td>New assessment, record, analyze</td><td><code>/assessments/new</code>, <code>/assessments/{id}</code>, <code>POST .../analyze</code></td><td><code>AssessmentController::create, store, show, uploadAudio, analyze</code> &rarr; <code>SpeechToTextService</code>, <code>ReadingAnalyzerService</code>, <code>MLClassificationService</code>, <code>WeaknessEvidence</code></td><td><code>assessments/start</code>, <code>show</code></td></tr>
+  <tr><td>Results</td><td><code>GET /assessments/{id}/results</code></td><td><code>AssessmentController::results</code> &rarr; <code>AnalysisAdvisorService</code>, <code>ReadingInterpretationService</code></td><td><code>assessments/results</code> + partials (incl. <code>_how_to_read</code>, see 11A)</td></tr>
+  <tr><td>Teacher decision</td><td><code>POST /assessments/{id}/verdict</code></td><td><code>AssessmentVerdictController::store</code></td><td><code>assessments/_verdict</code></td></tr>
+  <tr><td>Live session monitor</td><td><code>/assessments/session/{id}/monitor</code>, <code>/poll</code></td><td><code>AssessmentController::monitorSession, pollSession</code></td><td><code>assessments/monitor</code></td></tr>
+  <tr><td>Interventions</td><td><code>/interventions</code>, <code>POST /interventions/assign</code></td><td><code>InterventionController</code> &rarr; <code>InterventionLog</code>, <code>NewInterventionAssigned</code></td><td><code>interventions/*</code></td></tr>
+  <tr><td>Practice center</td><td><code>/practice/*</code></td><td><code>PracticeController</code> (phonemic, sight words, guided reading)</td><td><code>practice/*</code></td></tr>
+  <tr><td>Reports</td><td><code>/reports/learner/{id}</code>, <code>/reports/class/{id}</code>, <code>.../pdf</code></td><td><code>ReportController</code> (DomPDF)</td><td><code>reports/*</code></td></tr>
+  <tr><td>Phil-IRI forms</td><td><code>/learners/{id}/form4</code>, <code>/assessments/{id}/form3</code>, <code>/screening</code>, <code>/reports/form2</code></td><td><code>LearnerForm4Controller</code>/<code>Form4Builder</code>, <code>AssessmentForm3Controller</code>/<code>Form3Builder</code>, <code>GstScreeningController</code>/<code>GstScoring</code>, <code>Form2Controller</code>/<code>Form2Builder</code>, <code>ClassReportController</code></td><td><code>learners/form4*</code>, <code>assessments/form3-print</code>, <code>screening/*</code>, <code>reports/form2/*</code></td></tr>
+  <tr><td>Parent</td><td><code>/parent/*</code></td><td><code>Parent\ParentDashboardController</code>, <code>ParentMessageController</code>, <code>ParentFriendly</code> (plain-language wording)</td><td><code>parent/*</code></td></tr>
+  <tr><td>Student activities, badges</td><td><code>/student/*</code></td><td><code>Student\StudentActivityController</code>, <code>StudentBadgeController</code> &rarr; <code>BadgeService</code></td><td><code>student/*</code></td></tr>
+  <tr><td>Admin: users, schools, classes, logs, settings</td><td><code>/admin/*</code></td><td><code>AdminController</code></td><td><code>admin/*</code></td></tr>
+  <tr><td>Admin: system status</td><td><code>/admin/system-status</code></td><td><code>AdminController::systemStatus</code> &rarr; <code>SystemStatus::all()</code> (probes Flask <code>/api/health</code>, cached 30 s)</td><td><code>dashboard/admin</code> widgets</td></tr>
+  <tr><td>Messages, notifications</td><td><code>/messages</code>, <code>/notifications</code></td><td><code>MessageController</code>, <code>NotificationController</code></td><td><code>messages/*</code>, <code>notifications/*</code></td></tr>
+</table></div>
+
+
+<h3>11A. The results page, partial by partial</h3>
+<p>The page is composed of Blade partials under <code>resources/views/assessments/</code>. All variables are prepared once in <code>AssessmentController::results()</code>.</p>
+<div class="tw"><table>
+  <tr><th style="width:20%">Section on screen</th><th style="width:22%">Partial</th><th>Data source</th></tr>
+  <tr><td>Tiles (accuracy, WPM, comprehension, errors, levels)</td><td><code>results.blade.php</code></td><td><code>Assessment::effectiveAccuracy()</code>, <code>effectiveWordsPerMinute()</code>, <code>readingLevels()</code>; the teacher's verdict wins when present.</td></tr>
+  <tr><td>Teacher decision</td><td><code>_verdict</code></td><td><code>AssessmentVerdict</code>; posts to <code>AssessmentVerdictController::store</code>.</td></tr>
+  <tr><td>Why this level</td><td><code>_interpretation</code></td><td><code>ReadingInterpretationService::for()</code>: scale, sums, reasons.</td></tr>
+  <tr><td>Word-by-word comparison</td><td><code>_reading_comparison</code></td><td><code>AssessmentResult::word_comparison_data</code> (stored alignment rows).</td></tr>
+  <tr><td>Weakness classification and skill rows</td><td><code>_weakness_why</code></td><td><code>ReadingInterpretationService::weakness()</code> &rarr; <code>skillSigns()</code>, <code>primaryExplanation()</code>.</td></tr>
+  <tr><td>AI/ML Analysis (pipeline, checks)</td><td><code>_ai_analysis</code></td><td><code>AnalysisAdvisorService::for()</code>: stage states, findings, model metadata.</td></tr>
+  <tr><td><b>How to read this result</b></td><td><code>_how_to_read</code></td><td>Static explanation plus live values: <code>effectiveAccuracy()</code>, <code>effectiveWordsPerMinute()</code>, <code>readingLevels()['comprehension']</code>, <code>config('bigkas.wpm_benchmarks.{grade}')</code>, <code>result->weakness_confidence</code>, <code>$advisor['model']['test_accuracy']</code>.</td></tr>
+</table></div>
+
+<h3>What the "How to read this result" card claims, and where each claim comes from</h3>
+<div class="tw"><table>
+  <tr><th style="width:24%">Claim on the card</th><th>Backed by</th><th style="width:22%">Caveat</th></tr>
+  <tr><td>Accuracy = correct / passage words</td><td><code>ReadingAnalyzerService::analyze()</code>: <code>round(correctWords / totalWords * 100, 1)</code></td><td>Verdict re-scoring can replace it (<code>effectiveAccuracy()</code>).</td></tr>
+  <tr><td>WPM = correct words / recording seconds x 60</td><td><code>ReadingAnalyzerService::analyze()</code> (<code>$correctWords / $durationSeconds * 60</code>)</td><td>Uses <i>correct</i> words and the whole recording, so silence and errors lower it. This is a design choice, not Phil-IRI's definition.</td></tr>
+  <tr><td>Word-reading cut-offs 97 / 90</td><td><code>ReadingAnalyzerService::determineReadingLevel()</code> (<code>&gt;= 97</code>, <code>&gt;= 90</code>; <code>config/bigkas.php</code> lists the same bands for display)</td><td>The cut-offs live in code, config and the card copy as three separate copies. Changing them means editing all three.</td></tr>
+  <tr><td>Comprehension cut-offs 80 / 59</td><td><code>ReadingInterpretationService::comprehensionScale()</code></td><td>Same: typed into the copy.</td></tr>
+  <tr><td>Grade WPM minimum and target</td><td><code>config('bigkas.wpm_benchmarks')</code> keyed by <code>learners.grade_level</code></td><td>Read from config. Hidden if the grade has no entry.</td></tr>
+  <tr><td>Model confidence = tree agreement</td><td><code>app.py::classify_reading()</code> returns the top class probability of the forest; stored as <code>weakness_confidence</code></td><td>RandomForest probabilities are vote shares, not calibrated. The card says so.</td></tr>
+  <tr><td>Model accuracy shown</td><td><code>model_metadata.json::test_accuracy</code> via <code>AnalysisAdvisorService</code> (62.5)</td><td>The "about four in ten" sentence is fixed copy. If the model is retrained and the figure moves, update that sentence.</td></tr>
+  <tr><td>"Can't tell" for comprehension</td><td><code>ReadingInterpretationService::skillSigns()</code>: comprehension is judged only when answers exist</td><td>By design (section 9).</td></tr>
+</table></div>
+<p>Tests: <code>ResultsPresentationTest</code> asserts the card's headings, that this learner's accuracy appears, that the grade-4 minimum comes from config, that the FAQ is present, and that the comprehension row is absent when no questions were answered.</p>
+
+<!-- ============================================================ -->
+<h2>12. Security</h2>
+<table>
+  <tr><th style="width:24%">Control</th><th>Implementation (file)</th></tr>
+  <tr><td>Roles and ownership</td><td><code>RoleMiddleware</code> (<code>role:admin,teacher,...</code>), <code>EnsureTeacherAssigned</code>, <code>AuthorizesLearnerAccess</code> trait on controllers, parent access through <code>learner_user</code>.</td></tr>
+  <tr><td>Passwords</td><td>Laravel hashing; <code>StrongPassword</code> rule and <code>PasswordPolicy</code>.</td></tr>
+  <tr><td>Brute force</td><td>Route throttles (<code>throttle:5,1</code> login, 10/min student login, 3/min register and reset); account lock after 5 failures for 15 min (<code>AuthController</code>, lockout columns); tests <code>AccountLockoutTest</code>, <code>AuthRateLimitingTest</code>.</td></tr>
+  <tr><td>Email verification</td><td>6-digit code, hashed, expiring, 5 wrong tries void it (<code>VerificationCodeController</code>, <code>EmailVerificationCode</code>).</td></tr>
+  <tr><td>Identity at rest</td><td>Encrypted casts (<code>EncryptedPin</code>, <code>EncryptedDate</code>, encrypted name/email/LRN) and HMAC-SHA256 blind index for exact lookup (<code>App\Support\BlindIndex</code>, key derived from <code>APP_KEY</code> by HKDF). Migrations <code>2026_10_09_*</code>, <code>2026_10_10_*</code>.</td></tr>
+  <tr><td>Student PIN</td><td>6 digits, avoids common PINs and duplicates, stored encrypted, expiring (<code>pin_created_at</code>), session regenerated on login (tests).</td></tr>
+  <tr><td>HTTP hardening</td><td><code>SecurityHeadersMiddleware</code>: X-Frame-Options DENY, nosniff, no-referrer, Permissions-Policy (microphone self only), <code>Cache-Control: no-store</code>; <code>HttpsEnforcementMiddleware</code>; CSRF on web forms; CORS config tested.</td></tr>
+  <tr><td>Upload safety</td><td>Size limit 25 MB, extension allow-list (<code>keepRecording</code>), file named by id and timestamp, never by client name.</td></tr>
+  <tr><td>API</td><td>Sanctum tokens with abilities (<code>ApiTokenAbilitiesTest</code>), throttled auth routes, mass-assignment protections (<code>MassAssignmentTest</code>).</td></tr>
+  <tr><td>Audit</td><td><code>ActivityLog::log()</code> on key actions; verdict table records who/when/why.</td></tr>
+</table>
+<div class="box warn"><b class="t">Gaps to admit</b><ul>
+  <li>Recordings are stored in the <code>public</code> disk (served through the storage link). File names are guessable (<code>assessment_{id}_{timestamp}</code>). Mitigation to propose: move to a private disk and serve through an authorised controller.</li>
+  <li>No parent-consent workflow (listed under future work in the README) and no retention policy for child voice recordings. A short Privacy Notice exists at <code>/privacy</code>, but it is a prototype notice and not a formal Data Privacy Act assessment.</li>
+  <li>Teacher can see and decrypt the learner PIN by design (so they can hand it to the child).</li>
+</ul></div>
+
+<!-- ============================================================ -->
+<h2>13. Testing</h2>
+<p>Run on 12 Oct 2026: <code>php artisan test</code> &rarr; <b>371 passed, 1968 assertions, about 21 s</b> (SQLite in-memory). Test groups most relevant to the defense:</p>
+<table>
+  <tr><th style="width:32%">Test file</th><th>What it protects</th></tr>
+  <tr><td><code>MiscueDetectionTest</code></td><td>Repetition, self-correction, off-passage, not-reached, pause classification.</td></tr>
+  <tr><td><code>WeaknessMatchesEvidenceTest</code></td><td>Stored weakness never contradicts the skill rows.</td></tr>
+  <tr><td><code>ReadingInterpretationTest</code>, <code>ResultsPresentationTest</code>, <code>DecisionSupportTest</code></td><td>Explanations, results page content, advisor findings, verdict.</td></tr>
+  <tr><td><code>SpeechEngineRequiredTest</code></td><td>No fake transcript is scored outside development.</td></tr>
+  <tr><td><code>RecordingKeptTest</code>, <code>ReanalyzeAssessmentTest</code></td><td>Recording survives failure; re-analyze works.</td></tr>
+  <tr><td><code>ComprehensionTestTest</code></td><td>Question flow and scoring.</td></tr>
+  <tr><td><code>PhilIriFormsTest</code>, <code>Form2Test</code>, <code>Form4Test</code>, <code>GstScreeningTest</code></td><td>DepEd form rules and calculations.</td></tr>
+  <tr><td>Security tests (lockout, rate limiting, headers, session, PIN, encrypted identity, password reset)</td><td>Section 12.</td></tr>
+</table>
+<p><b>Not covered by tests:</b> the Python service (no pytest), the model's behaviour, and real audio through Whisper. Tests mock or skip the speech engine.</p>
+
+<!-- ============================================================ -->
+<h2>14. Deployment and operations</h2>
+<ul>
+  <li><b>Server:</b> Ubuntu 24.04, nginx, php-fpm 8.3, MySQL 8, ffmpeg (for <code>av</code>), Node 20 for the Vite build. 2 GB RAM minimum; 4 GB recommended with local Whisper.</li>
+  <li><b>ML service:</b> <code>bigkas-ml.service</code> under systemd, gunicorn <code>--workers 1 --threads 2 --timeout 420</code> on 127.0.0.1:5000. One worker keeps one copy of the Whisper model in memory.</li>
+  <li><b>Timeout chain:</b> Laravel Whisper call 300 s &lt; php-fpm 360 s &lt; nginx <code>fastcgi_read_timeout</code> 390 s &lt; gunicorn 420 s, so Laravel gives the teacher a real message first and the worker is never killed mid-transcription.</li>
+  <li><b>After every pull:</b> rebuild all three caches (<code>config:cache</code>, <code>route:cache</code>, <code>view:cache</code>) or a stale route cache can 500 inside a Blade view.</li>
+  <li><b>Config switches:</b> <code>ML_API_ENABLED</code>, <code>ML_API_URL</code>, <code>WHISPER_USE_LOCAL</code>, <code>WHISPER_TIMEOUT</code>, <code>STT_ALLOW_MOCK</code>, <code>OPENAI_API_KEY</code>, <code>WHISPER_VERBATIM</code> (Python env).</li>
+  <li><b>Health:</b> admin "System status" page and <code>GET /api/ml/health</code>.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 class="pb">15. Known issues and honest discrepancies</h2>
+<table>
+  <tr><th style="width:4%">#</th><th style="width:37%">Issue</th><th>Impact / what to say</th></tr>
+  <tr><td>1</td><td>Training features come from human tags; live features from Whisper text (section 7).</td><td>Largest technical risk. Expected performance in the field is lower than 62.5% until retrained on pipeline-extracted features.</td></tr>
+  <tr><td>2</td><td>Split by clip, 25/26 test learners seen in training.</td><td>Optimistic estimate. Use CV and grouped numbers as well.</td></tr>
+  <tr><td>3</td><td>Class 4 has 3 samples; English has no class 3 or 4 rows.</td><td>The model cannot predict comprehension; language and class are confounded in the data.</td></tr>
+  <tr><td>4</td><td>Single reviewer, no inter-rater agreement; provisional labels shown to reviewers.</td><td>Label noise unknown.</td></tr>
+  <tr><td>5</td><td>Training WPM averages 43.5 versus benchmark minimums of 70-110 WPM.</td><td>Clips are short scripted chunks with silence; the benchmark-based fluency status will often read "concern". Worth explaining if asked why WPM is low.</td></tr>
+  <tr><td>6</td><td>Pause threshold: PHP uses &gt;1 s for the feature, miscue classifier uses &ge;1 s hesitation and &ge;3 s long pause, training docstring says &gt;3 s for <code>[pause]</code>.</td><td>Verify against the annotation guideline before the defense so you can state one consistent definition.</td></tr>
+  <tr><td>7</td><td>Whisper small, not fine-tuned; no WER measured. LoRA script exists (<code>train_whisper_lora.py</code>, speaker-level splits, jiwer WER) but no model folder is present.</td><td>State as future work; confirm what is actually deployed on the VPS. <code>app.py</code> prints at start-up whether it loaded <code>bigkas-whisper-ct2</code> or stock <code>small</code> (service log); <code>/api/health</code> only reports <code>whisper_loaded</code> true/false.</td></tr>
+  <tr><td>8</td><td><span class="tag g">Fixed 12 Oct</span> Dead footer links (<code>#</code>) and a missing mobile nav toggler on the public pages.</td><td>Footer now has only a working Privacy Notice link (<code>/privacy</code>, <code>resources/views/privacy.blade.php</code>); the navbar has a toggler and a "For Students" anchor. The notice is a prototype notice: consent workflow and retention period are still open.</td></tr>
+  <tr><td>9</td><td><span class="tag g">Fixed 12 Oct</span> Home page overclaims ("Forms 1-4 automatically", "diagnoses exactly", "replacing manual tallying completely").</td><td>Copy now says "prepares printable Phil-IRI records ... ready for the teacher to review and complete", and the hero states that results are suggestions the teacher confirms. <code>HomePageContentTest</code> asserts the overclaims are absent. Changes are uncommitted: commit them.</td></tr>
+  <tr><td>10</td><td>Two parallel counts: <code>ml_features</code> use raw alignment counts; displayed counts use the miscue classifier (repetition and self-correction removed from insertions).</td><td>They can differ by a few words on the same recording. Explain: features match training definitions, display follows Phil-IRI miscue types.</td></tr>
+  <tr><td>11</td><td><code>app.py</code> <code>__main__</code> runs Flask with <code>debug=True</code>.</td><td>Only for local runs; production uses gunicorn. Do not demo on the debug server exposed to a network.</td></tr>
+  <tr><td>12</td><td><code>ml/</code> (legacy) and <code>bigkas_ai/</code> folders in the repo are not canonical.</td><td><code>ml-service/</code> is the live one.</td></tr>
+  <tr><td>13</td><td><code>MLClassificationService::submitTrainingData()</code> and <code>getModelInfo()</code> call endpoints (<code>/api/training-data</code>, <code>/api/model-info</code>, <code>/api/analyze</code>) that the Flask app does not implement.</td><td>No online learning exists. Say "retraining is an offline process with teacher-confirmed labels".</td></tr>
+  <tr><td>14a</td><td>The results-page explainer card hard-codes the 97/90 and 80/59 cut-offs and the "four in ten" model-accuracy sentence in Blade copy.</td><td>They match the rules today. If cut-offs or the model change, edit <code>_how_to_read.blade.php</code>; only the WPM benchmark is read from config.</td></tr>
+  <tr><td>14</td><td>Uncommitted working-tree changes (dashboard watchlist, results presentation, interventions).</td><td>Commit before the defense so the demo matches a known revision; suite is green on this tree.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 class="pb">16. FAQ with counter-answers</h2>
+<p>Panel question, then a defensible answer. <span class="tag o">Honest note</span> marks what you should concede.</p>
+
+<div class="faq"><p class="q"><span>Q1</span>62.5% is low. Why should we accept this model?</p>
+<p>"Because the claim is modest and measured. It's a five-class problem with an imbalanced, small dataset; always guessing the majority class scores 41%. The model adds 21 points over that, and the correct class is in its top two 86% of the time. It is also not the final authority: the evidence gate vetoes unsupported predictions, and the teacher decides. For the use it has (ranking likely weaknesses for a teacher to confirm) top-2 is the relevant number. We do not claim it is a clinical-grade classifier."</p>
+<p class="hon">Honest note: concede that 104 test clips give a &plusmn;9-point interval and that CV is 50%.</p></div>
+
+<div class="faq"><p class="q"><span>Q2</span>Is the model overfitting?</p>
+<p>"Yes, moderately: 83.6% on training versus 62.5% on test. We regularised (depth 8, min leaf 3, balanced class weights) but we have not tuned or used more data. With 415 training rows that gap is expected, and the main remedy is more labelled data."</p></div>
+
+<div class="faq"><p class="q"><span>Q3</span>Did you leak information between train and test?</p>
+<p>"Not through preprocessing: the scaler is fitted on training data only. But the split is by clip, and 25 of the 26 test learners appear in training, so same-child correlation inflates the number. A learner-grouped re-run was about 57%. We report both."</p></div>
+
+<div class="faq"><p class="q"><span>Q4</span>How can you predict comprehension from 3 examples?</p>
+<p>"We can't, and we say so. Class 4 exists in the schema because it is one of the Phil-IRI skill areas. Comprehension is measured by the comprehension questions and scored with Phil-IRI cut-offs; the voice-feature model has no real basis to predict it and the evidence gate does not let a voice-based prediction store it without a measured comprehension problem."</p></div>
+
+<div class="faq"><p class="q"><span>Q5</span>Where does the 62.5% come from exactly?</p>
+<p>"<code>train_model_real_data.py</code>: 519 usable rows, stratified 80/20 split with seed 42, StandardScaler fitted on the 415 training rows, RandomForest with 100 trees; predictions on the 104 held-out clips; accuracy_score = 65 correct / 104. The same value is stored in <code>model_metadata.json</code> and I can reproduce it live from the saved model with a read-only script."</p></div>
+
+<div class="faq"><p class="q"><span>Q6</span>Who labelled the data? How do you know labels are right?</p>
+<p>"Teachers confirmed each label after our rule-based proposal; combined labels like '1,3' were reduced to the first. We do not have an inter-rater agreement figure; that is a limitation. The teacher review is why we call them teacher-validated, not ground truth."</p></div>
+
+<div class="faq"><p class="q"><span>Q7</span>Why Random Forest? Why not a neural network or XGBoost?</p>
+<p>"Small tabular data (519 rows, 12 features): forests are robust, need little tuning, run in milliseconds on CPU, and give importances we can explain. Deep models need much more data. Gradient boosting would be a reasonable comparison; we did not run it, and with this data volume we would expect a similar ceiling."</p></div>
+
+<div class="faq"><p class="q"><span>Q8</span>Why StandardScaler for a tree model?</p>
+<p>"Trees don't need it. It was kept so the preprocessing contract is explicit and a different model family could be swapped in; it doesn't hurt. Both artifacts are loaded together and <code>/api/health</code> reports <code>scaler_loaded</code>."</p></div>
+
+<div class="faq"><p class="q"><span>Q9</span>Why class_weight='balanced'? Did you try SMOTE or tuning?</p>
+<p>"Classes are imbalanced (217 vs 68 vs 3), so balanced weights stop the forest from only learning the majority. We did not run SMOTE or a hyper-parameter search; with 3 minority samples, oversampling would only duplicate them."</p></div>
+
+<div class="faq"><p class="q"><span>Q10</span>Your features differ between training and live. Doesn't that invalidate the model?</p>
+<p>"It reduces how much we should trust the 62.5% in the field, and we say that. Names and order are identical and several features are the same formula (accuracy, WPM, error rates); fluency, pattern shares and prosody are approximations. That is why the evidence gate uses independently measured miscue counts and why the teacher confirms. The next step is retraining on features extracted by the live pipeline from the same recordings."</p>
+<p class="hon">Honest note: don't claim they are equivalent. The pause threshold is the item to verify against the annotation guideline.</p></div>
+
+<div class="faq"><p class="q"><span>Q11</span>Whisper small is weak on Filipino children. How accurate is your transcription?</p>
+<p>"We have not measured WER on our own audio, so I won't quote one. Mitigations in the design: verbatim prompting so disfluencies aren't tidied away, a silence gate so noise isn't scored, per-word confidence surfaced to the teacher, audio replay, and teacher override. A LoRA fine-tuning script with speaker-level splits is ready; it needs a GPU run."</p></div>
+
+<div class="faq"><p class="q"><span>Q12</span>Whisper can hallucinate. What happens on silence?</p>
+<p>"<code>audio_quality.measure()</code> runs the VAD first; if speech ratio is below 5% the service returns an empty transcript and the advisor reports 'No voice heard' instead of scoring invented words. Segment <code>no_speech_prob</code> &ge;0.5 is also surfaced as unreliable."</p></div>
+
+<div class="faq"><p class="q"><span>Q13</span>How does the alignment handle repeated words, self-corrections, skipped lines?</p>
+<p>"Alignment is an edit-distance DP over words, with tie-breaking toward matches and toward pushing unread words to the end. A second pass (<code>MiscueClassifierService</code>) names the extra words: repetition, false start, self-correction, off-passage talk; trailing unread words are 'not reached'. Rules and thresholds are in constants at the top of the file and covered by tests."</p></div>
+
+<div class="faq"><p class="q"><span>Q14</span>Is the Phil-IRI computation correct?</p>
+<p>"Word-reading cut-offs are 97 / 90 and comprehension 80 / 59, fixed in <code>PhilIriLevels</code> from the DepEd workbook, independent of editable settings. One caveat: Phil-IRI counts specific miscue types in specific ways; our accuracy treats every non-matching reference word as an error and ignores insertions, which is the standard word-reading percentage but may differ by a word or two from a hand-scored sheet. The teacher can re-score manually in the verdict."</p></div>
+
+<div class="faq"><p class="q"><span>Q15</span>Why did the system say Phonemic Awareness when the child only made one slip?</p>
+<p>"It wouldn't be stored now. Pattern features are shares of errors, so one slip is a share of 1.0. <code>WeaknessEvidence</code> requires at least one sound-alike slip and a share of 0.4, and 3 for 'concern', before phonemic can be stored. That fix and its test are <code>WeaknessMatchesEvidenceTest</code>."</p></div>
+
+<div class="faq"><p class="q"><span>Q16</span>What if the ML service is down in the middle of an assessment?</p>
+<p>"The recording is saved before anything else. The classification falls back to rules at 0.5 confidence and the result is labelled rule-based with a warning; if speech-to-text is down, nothing is scored and the teacher can re-analyze later. Provenance is stored with every result."</p></div>
+
+<div class="faq"><p class="q"><span>Q17</span>How do you protect children's data and voices?</p>
+<p>"Role- and ownership-based access, encrypted PIN and identity fields with blind indexes for lookup, hashed one-time codes, rate limiting and lockout, security headers and no-store caching, audit logs. Honest gaps: recordings sit on the public disk with guessable names (moving them to a private disk behind an authorised route is straightforward), no parent consent workflow, and no formal privacy impact assessment yet."</p></div>
+
+<div class="faq"><p class="q"><span>Q18</span>Does child audio leave the server?</p>
+<p>"Not by default: faster-whisper runs locally. Only if <code>WHISPER_USE_LOCAL=false</code> or local transcription fails and an <code>OPENAI_API_KEY</code> is configured does audio go to the OpenAI API. That is an operator decision and can be disabled by leaving the key empty."</p></div>
+
+<div class="faq"><p class="q"><span>Q19</span>How would this scale to a division with many schools?</p>
+<p>"Web tier scales horizontally in the usual Laravel way. The bottleneck is CPU transcription: one gunicorn worker, minutes per clip on a small VPS. Options: more workers or a bigger CPU, a GPU, a job queue (the app is synchronous today), or batch analysis. The batch plan is drafted in <code>docs/2026-10-09-batch-assessment-plan.html</code>."</p></div>
+
+<div class="faq"><p class="q"><span>Q20</span>How is the model updated? Is there continuous learning?</p>
+<p>"No online learning. Retraining is offline: add annotated and teacher-confirmed rows, run the pipeline, review metrics, deploy new joblib files; the version string comes from the metadata and appears on every result for traceability. (The Laravel client has an unused <code>submitTrainingData()</code> stub; there is no such endpoint.)"</p></div>
+
+<div class="faq"><p class="q"><span>Q21</span>Why Grades 3 to 6 if you trained on 3 and 4?</p>
+<p>"Materials, forms and benchmarks cover 3 to 6 because Phil-IRI does. The classifier's training clips only covered Grades 3 and 4 so far; the 12 features are grade-agnostic rates, but we do not claim validated performance on 5 and 6. WPM and fluency judgements for display use per-grade benchmarks from config, not the model."</p></div>
+
+<div class="faq"><p class="q"><span>Q22</span>How do you know the teacher's override helps? Are you measuring it?</p>
+<p>"Overrides are stored with reasons (<code>assessment_verdicts</code>), so the override rate and the model-teacher disagreement are available as a dataset. We have not analysed them yet; they are the natural source of new labelled data for retraining."</p></div>
+
+<div class="faq"><p class="q"><span>Q23</span>What is the confidence number? Is it a probability?</p>
+<p>"It is <code>max(predict_proba)</code>: the fraction of trees voting for the winning class. It is not a calibrated probability of correctness (mean on the test set is 0.55 while accuracy is 0.625). We use it as a relative signal and warn when it is below 0.6."</p></div>
+
+<div class="faq"><p class="q"><span>Q24</span>Why are WPM values so low in your data?</p>
+<p>"WPM here is <em>correct</em> words over the full clip length, including lead-in and silence, on short scripted chunks read by Grade 3 and 4 learners; the training mean is 43.5. Benchmarks in config are the usual oral-reading-fluency norms. The model learns from the data's own scale, but a benchmark comparison for display will flag many clips, so teachers should read it together with accuracy and pauses."</p></div>
+
+<div class="faq"><p class="q"><span>Q25</span>Prosody: how can software measure expression?</p>
+<p>"It doesn't, fully. In training prosody was a teacher's 0-10 rating; live it is a heuristic from word-confidence variance, gap regularity and fluency. It carries 10% of the model's importance and is labelled an estimate. A proper acoustic prosody measure (pitch and energy contours) is future work."</p></div>
+
+<div class="faq"><p class="q"><span>Q26</span>What is original in your work versus off-the-shelf?</p>
+<p>"The off-the-shelf parts are Whisper, scikit-learn and Laravel. Our contribution is the end-to-end assessment pipeline: Phil-IRI-aligned miscue classification over word alignment, the audio-quality and evidence safeguards, a teacher-verdict audit trail, DepEd form generation, the annotated bilingual dataset and its labelling process, and the integration into a working multi-role system."</p></div>
+
+<div class="faq"><p class="q"><span>Q27</span>How do you know the system works on real audio from a classroom?</p>
+<p>"Training clips are real learner recordings, and the quality module is built for classroom noise. But we have not run a blinded comparison of the full system against a teacher's own Phil-IRI marking in a classroom; that validation is the next phase and the verdict workflow produces the data for it."</p>
+<p class="hon">Honest note: don't imply a pilot happened unless you have records.</p></div>
+
+<div class="faq"><p class="q"><span>Q28</span>Show me the code that classifies. Show me the model file.</p>
+<p>"<code>ml-service/app.py::classify_reading()</code> for serving, <code>app/Services/MLClassificationService.php::classify()</code> for the Laravel client, <code>ml-service/training/train_model_real_data.py</code> for training. Artifacts: <code>weakness_classifier.joblib</code> (RandomForest, 100 trees, 12 features), <code>feature_scaler.joblib</code>, <code>model_metadata.json</code>."</p></div>
+
+<div class="faq"><p class="q"><span>Q29</span>Is the system vulnerable to SQL injection or XSS?</p>
+<p>"Eloquent/Query Builder use bound parameters; Blade escapes output by default; CSRF tokens on state-changing web routes; validation on every write request; mass-assignment tests exist. We have not had an external penetration test."</p></div>
+
+<div class="faq"><p class="q"><span>Q30</span>What would you change first with another month?</p>
+<p>"1) Re-extract features from Whisper output for all 519 clips and retrain, so training matches serving. 2) Split by learner and add Grade 5 and 6 and comprehension cases. 3) Measure WER and fine-tune Whisper. 4) A teacher-blinded classroom validation. 5) Private audio storage and a consent workflow."</p></div>
+
+<div class="faq"><p class="q"><span>Q31</span>The page shows "confidence 78%". Doesn't that mean the model is 78% likely to be right?</p>
+<p>"No. It is the forest's class probability, an average of tree votes, and Random Forest outputs are not calibrated. On held-out clips accuracy is 62.5%, which is the number that describes how often it agrees with a teacher. The card on the results page says this explicitly, and the teacher verdict is the safeguard."</p>
+<p class="hon">Honest note: we did not measure calibration (no reliability diagram), so don't claim that high confidence means higher accuracy.</p></div>
+
+<div class="faq"><p class="q"><span>Q32</span>Your WPM only counts correct words. That is not the Phil-IRI definition.</p>
+<p>"Correct. We count correctly read words over total recording time, so errors and silence lower it. It is documented in <code>ReadingAnalyzerService::analyze()</code> and in the results card. The Phil-IRI level itself is decided by accuracy and comprehension, not by WPM, and WPM is used for the fluency sign against a grade benchmark."</p>
+<p class="hon">Honest note: because the clock is the whole recording, a long silence before the reading starts depresses WPM. That is a known approximation.</p></div>
+
+<div class="faq"><p class="q"><span>Q33</span>Where are the explanation texts on the results page generated: by the model?</p>
+<p>"No. They are deterministic. <code>ReadingInterpretationService</code> builds the sentences from the stored numbers with fixed rules, and <code>_how_to_read.blade.php</code> is static copy with live values filled in. There is no generative model writing explanations, so the same inputs always give the same text."</p></div>
+
+<!-- ============================================================ -->
+<h2 class="pb">17. Appendix: commands to reproduce live</h2>
+
+<h3>A. Verify the saved model's accuracy (read-only, safe)</h3>
+<p>Run from <code>F:\MyApp\BIGKAS-AI\ml-service</code> with the venv's Python. Reproduces 0.625 (65/104), the per-class report and the confusion matrix. Does not write any file.</p>
+<pre><code>import re, warnings, joblib, pandas as pd
+warnings.filterwarnings("ignore")
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+F = ['accuracy_rate','words_per_minute','fluency_score','substitution_rate','omission_rate',
+     'insertion_rate','phonetic_error_rate','vowel_error_rate','blend_error_rate',
+     'self_correction_rate','pause_frequency','prosody_score']
+
+d = pd.read_csv('training/labeled_features_master_confirmed.csv')
+d['prosody_score'] = pd.to_numeric(d['prosody_score_teacher'], errors='coerce')
+first = lambda v: (re.findall(r'\d+', str(v)) or [None])[0]      # "1,3" -> 1 (primary class)
+d['y'] = pd.to_numeric(d['teacher_confirmed_label'].map(first))
+d = d.dropna(subset=F + ['y'])                                   # 519 usable rows
+X, y = d[F], d['y'].astype(int)
+
+_, Xte, _, yte = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)   # same 104-clip test set
+model  = joblib.load('weakness_classifier.joblib')
+scaler = joblib.load('feature_scaler.joblib')
+pred = model.predict(scaler.transform(Xte))
+
+print('usable rows:', len(d), '| test clips:', len(yte))
+print('TEST ACCURACY: %.4f  (%d / %d correct)' % (accuracy_score(yte, pred), (pred == yte).sum(), len(yte)))
+print(classification_report(yte, pred, zero_division=0))
+print(confusion_matrix(yte, pred, labels=[0,1,2,3,4]))</code></pre>
+<p>PowerShell: <code>cd F:\MyApp\BIGKAS-AI\ml-service; .\venv\Scripts\python.exe verify.py</code> (save the snippet as a file outside the repo, or paste into <code>python -</code>).</p>
+
+<h3>B. Show metadata and model facts</h3>
+<pre><code>type ml-service\model_metadata.json
+.\venv\Scripts\python.exe -c "import joblib;m=joblib.load('weakness_classifier.joblib');print(m.n_estimators,m.max_depth,m.classes_,m.n_features_in_)"</code></pre>
+
+<h3>C. Show that the service is live and which model/engine loaded</h3>
+<pre><code>curl http://127.0.0.1:5000/api/health
+# -&gt; model_version 3.0.0-12feature-5class-combo-aware, scaler_loaded, whisper_loaded, classifier_loaded</code></pre>
+
+<h3>D. Run the test suite</h3>
+<pre><code>php artisan test                       # 371 passed (1968 assertions)
+php artisan test --filter=WeaknessMatchesEvidenceTest
+php artisan test --filter=MiscueDetectionTest</code></pre>
+
+<h3>E. Do NOT run during the defense</h3>
+<pre><code>python training\train_model_real_data.py   # overwrites the three model artifacts
+php artisan migrate:fresh                    # wipes the database</code></pre>
+
+<h3>F. File cheat sheet</h3>
+<table>
+  <tr><th style="width:42%">File</th><th>Why open it</th></tr>
+  <tr><td><code>app/Http/Controllers/AssessmentController.php</code> (<code>analyze</code>)</td><td>The whole orchestration in one function.</td></tr>
+  <tr><td><code>app/Services/ReadingAnalyzerService.php</code></td><td>Alignment, metrics, 12-feature vector.</td></tr>
+  <tr><td><code>app/Services/MiscueClassifierService.php</code></td><td>Miscue types.</td></tr>
+  <tr><td><code>app/Services/MLClassificationService.php</code></td><td>HTTP client, fallback, <code>resolveWeaknessId</code>.</td></tr>
+  <tr><td><code>app/Services/WeaknessEvidence.php</code></td><td>Evidence thresholds.</td></tr>
+  <tr><td><code>app/Services/SpeechToTextService.php</code></td><td>Engine chain and mock protection.</td></tr>
+  <tr><td><code>ml-service/app.py</code>, <code>ml-service/audio_quality.py</code></td><td>Flask endpoints, Whisper options, quality metrics.</td></tr>
+  <tr><td><code>ml-service/training/train_model_real_data.py</code></td><td>Training and metrics.</td></tr>
+  <tr><td><code>ml-service/training/parse_annotations.py</code></td><td>How training features were derived from tags.</td></tr>
+  <tr><td><code>ml-service/model_metadata.json</code></td><td>Reported results.</td></tr>
+  <tr><td><code>app/Services/PhilIriLevels.php</code>, <code>config/bigkas.php</code></td><td>Level cut-offs, benchmarks, category names.</td></tr>
+</table>
+
+<p style="margin-top:26px;font-size:12.5px;color:var(--muted)">Provenance: every numeric result in sections 6 and 8 was recomputed on 12 Oct 2026 from <code>ml-service/training/labeled_features_master_confirmed.csv</code>, <code>weakness_classifier.joblib</code>, <code>feature_scaler.joblib</code> and <code>model_metadata.json</code>, using the project's venv. The test count comes from <code>php artisan test</code> on the same day.</p>
+
+</div>
+</body>
+</html>

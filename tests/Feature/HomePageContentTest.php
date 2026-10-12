@@ -20,14 +20,30 @@ class HomePageContentTest extends TestCase
         $response = $this->get('/');
         
         $response->assertSee('AN INTELLIGENT READING PROGRESS ASSESSMENT AND INTERVENTION SYSTEM', false);
-        $response->assertSee('Save Hours of Grading');
+        $response->assertSee('Streamlined Reading Assessment');
+        $response->assertSee('suggestions that the teacher reviews and confirms');
     }
 
     public function test_home_page_how_it_works_and_portals()
     {
         $response = $this->get('/');
         
-        $response->assertSee('Instant AI Analysis');
+        $response->assertSee('AI-Assisted Reading Analysis');
         $response->assertSee('For Parents');
+    }
+
+    public function test_home_page_does_not_overclaim_forms_or_diagnosis()
+    {
+        $response = $this->get('/');
+
+        $response->assertDontSee('diagnoses exactly');
+        $response->assertDontSee('replacing manual Phil-IRI tallying completely');
+        $response->assertDontSee('Forms 1–4');
+    }
+
+    public function test_privacy_page_is_reachable_and_linked_from_the_footer()
+    {
+        $this->get('/')->assertSee(route('privacy'), false);
+        $this->get(route('privacy'))->assertStatus(200)->assertSee('Privacy Notice');
     }
 }

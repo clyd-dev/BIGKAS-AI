@@ -150,27 +150,62 @@ class InterventionController extends Controller
         return back()->with('success', 'Intervention assigned successfully.');
     }
 
+    /**
+     * Record progress on an assigned intervention: started, done, or skipped.
+     * Called from the learner's intervention list and from the dashboard
+     * Action Center, which posts the same three actions.
+     */
     public function updateLog(Request $request, InterventionLog $interventionLog)
     {
-        $action = $request->input('action');
+        // Nothing here checked that the log belonged to this teacher's class.
+        $this->authorizeLearnerAccess($interventionLog->learner);
+
+        $validated = $request->validate([
+            'action'               => 'required|in:start,complete,skip',
+            'effectiveness_rating' => 'nullable|integer|min:1|max:10',
+            'notes'                => 'nullable|string|max:1000',
+            'reason'               => 'required_if:action,skip|nullable|string|max:1000',
+        ], [
+            'action.required'    => 'Choose what to record for this intervention.',
+            'reason.required_if' => 'Please say briefly why this intervention is being skipped.',
+        ]);
+
+        $action = $validated['action'];
 
         match ($action) {
             'start' => $interventionLog->start(),
             'complete' => $interventionLog->complete(
-                $request->input('effectiveness_rating'),
-                $request->input('notes')
+                $validated['effectiveness_rating'] ?? null,
+                $validated['notes'] ?? null
             ),
-            'skip' => $interventionLog->skip($request->input('reason')),
-            default => null,
+            'skip' => $interventionLog->skip($validated['reason'] ?? null),
         };
 
         ActivityLog::log('update_intervention_log', "Updated intervention status to {$interventionLog->status} for learner #{$interventionLog->learner_id}", 'intervention_log', $interventionLog->id);
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => "Intervention {$action}ed."]);
+            return response()->json([
+                'success' => true,
+                'status'  => $interventionLog->status,
+                'message' => $this->logActionMessage($action, $interventionLog),
+            ]);
         }
 
-        return back()->with('success', "Intervention status updated.");
+        return back()->with('success', $this->logActionMessage($action, $interventionLog));
+    }
+
+    /** Confirmation wording that names what actually changed. */
+    private function logActionMessage(string $action, InterventionLog $log): string
+    {
+        $name    = $log->intervention?->name ?? 'Intervention';
+        $learner = $log->learner?->getFullName() ?? 'the learner';
+
+        return match ($action) {
+            'start'    => "Started '{$name}' for {$learner}.",
+            'complete' => "Marked '{$name}' complete for {$learner}.",
+            'skip'     => "Skipped '{$name}' for {$learner}.",
+            default    => 'Intervention updated.',
+        };
     }
 
     public function learnerInterventions(Learner $learner)

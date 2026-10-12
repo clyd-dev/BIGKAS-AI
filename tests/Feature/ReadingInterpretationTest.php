@@ -229,13 +229,14 @@ class ReadingInterpretationTest extends TestCase
 
         $this->actingAs($this->teacher)->get(route('assessments.results', $assessment))
             ->assertOk()
-            ->assertSee('Why this level?')
+            ->assertSee('Why this word reading level?')
             ->assertSee('Instructional')
             ->assertSee('What the microphone picked up')
             ->assertSee('Clear recording')
             ->assertSee('teacher can i start now')
-            ->assertSee('Mispronounced <b>1</b>', false)
-            ->assertSee('Self-corrected <b>1</b>', false)
+            // Phil-IRI miscue names; 'Not reading' is not a Phil-IRI term and keeps its plain wording.
+            ->assertSee('Mispronunciation <b>1</b>', false)
+            ->assertSee('Self-correction <b>1</b>', false)
             ->assertSee('Not reading <b>5</b>', false);
     }
 
@@ -255,7 +256,7 @@ class ReadingInterpretationTest extends TestCase
 
         $this->actingAs($this->teacher)->get(route('assessments.results', $assessment))
             ->assertOk()
-            ->assertSee('Why this level?')
+            ->assertSee('Why this word reading level?')
             ->assertSee('Independent')
             ->assertSee('Reading Comparison');
     }

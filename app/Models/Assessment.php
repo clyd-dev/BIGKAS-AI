@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\PhilIriLevels;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -119,6 +121,112 @@ class Assessment extends Model
     public function wasEdited(): bool
     {
         return $this->verdict?->isOverridden() ?? false;
+    }
+
+    /**
+     * The Phil-IRI levels this assessment actually measured, each labelled by
+     * what produced it.
+     *
+     * Word reading and comprehension are scored on different scales and answer
+     * different questions, so a bare "Reading Level" is only honest when both
+     * were measured. Whichever halves exist are returned; `overall` appears
+     * only when both do, and is the lower of the two - a child who decodes
+     * well but understands nothing is not reading the passage.
+     *
+     * @return array{word: ?array, comprehension: ?array, overall: ?array}
+     */
+    public function readingLevels(): array
+    {
+        $word = $this->wordReadingLevel();
+        $comprehension = $this->comprehensionLevel();
+        $overall = $this->overallReadingLevel($word, $comprehension);
+
+        // When word reading is the only measure, the level the teacher set in
+        // their verdict IS this assessment's level - there is no overall tile
+        // for it to land on, and the learner's record reads it from here.
+        // With both halves present the verdict applies to the combined level,
+        // and the two halves stay as the evidence behind it.
+        if ($overall === null && $word && $this->verdict?->final_reading_level) {
+            $word['level'] = $this->verdict->final_reading_level;
+            $word['from_teacher'] = true;
+        }
+
+        return [
+            'word' => $word,
+            'comprehension' => $comprehension,
+            'overall' => $overall,
+        ];
+    }
+
+    /** Level from word accuracy, respecting a teacher's re-score. */
+    private function wordReadingLevel(): ?array
+    {
+        $accuracy = $this->effectiveAccuracy();
+
+        if ($accuracy === null || ! $this->result) {
+            return null;
+        }
+
+        $verdict = $this->verdict;
+        $ml = $this->result->ml_analysis_json ?? [];
+
+        $total = (int) ($verdict?->words_read ?: ($ml['total_words'] ?? 0));
+        $correct = $total > 0 ? (int) round((float) $accuracy / 100 * $total) : null;
+
+        return [
+            'level' => PhilIriLevels::wordReading((float) $accuracy),
+            'score' => (float) $accuracy,
+            'correct' => $correct,
+            'total' => $total ?: null,
+            'label' => 'Word Reading Level',
+        ];
+    }
+
+    /** Level from the comprehension questions, when they were administered. */
+    private function comprehensionLevel(): ?array
+    {
+        $score = $this->comprehensionScore();
+
+        if ($score === null) {
+            return null;
+        }
+
+        $answers = $this->relationLoaded('comprehensionAnswers')
+            ? $this->comprehensionAnswers
+            : $this->comprehensionAnswers()->get();
+
+        return [
+            'level' => PhilIriLevels::comprehension($score),
+            'score' => $score,
+            'correct' => $answers->where('is_correct', true)->count(),
+            'total' => $answers->count(),
+            'label' => 'Comprehension Level',
+        ];
+    }
+
+    /**
+     * One level for the passage as a whole. Only meaningful when both halves
+     * were measured; the teacher's verdict outranks the calculation.
+     */
+    private function overallReadingLevel(?array $word, ?array $comprehension): ?array
+    {
+        if (! $word || ! $comprehension) {
+            return null;
+        }
+
+        $rank = ['frustration' => 0, 'instructional' => 1, 'independent' => 2];
+        $lower = ($rank[$comprehension['level']] ?? 0) < ($rank[$word['level']] ?? 0)
+            ? $comprehension['level']
+            : $word['level'];
+
+        $final = $this->verdict?->final_reading_level ?? $lower;
+
+        return [
+            'level' => $final,
+            'label' => 'Reading Level',
+            'from_teacher' => $this->verdict?->final_reading_level !== null,
+            'basis' => 'The lower of word reading and comprehension, which is how the passage reads as a whole.',
+        ];
     }
 
     /**

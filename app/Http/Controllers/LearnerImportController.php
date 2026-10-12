@@ -168,7 +168,12 @@ class LearnerImportController extends Controller
             $map = [];
 
             foreach ($cells as $col => $cell) {
-                $normalized = strtolower(trim((string) $cell));
+                // Collapse newlines/repeated spaces so a merged header cell like
+                // "NAME\n(Last Name, First Name, Middle Name)" normalizes to
+                // "name (last name, first name, middle name)" and matches the
+                // combined-name alias instead of being shadowed by the
+                // "middle name" alias found inside it.
+                $normalized = preg_replace('/\s+/', ' ', strtolower(trim((string) $cell)));
                 if ($normalized === '') {
                     continue;
                 }
@@ -231,6 +236,12 @@ class LearnerImportController extends Controller
                 continue;
             }
 
+            // Subtotal rows ("10  <=== TOTAL MALE", "34  <=== COMBINED") and
+            // the trailing legend/signature block are not learners.
+            if (str_contains($joined, 'total') || str_contains($joined, 'combined') || str_contains($joined, 'list and code of indicators')) {
+                continue;
+            }
+
             $get = fn($field) => isset($columnMap[$field]) ? ($rowValues[$columnMap[$field]] ?? '') : '';
 
             [$lastName, $firstName, $middleName] = $this->resolveName($get, $rowValues);
@@ -239,7 +250,14 @@ class LearnerImportController extends Controller
                 continue;
             }
 
+            // SF1's "Sex (M/F)" column holds single-letter codes, not the
+            // full word a MALE/FEMALE section-divider row would carry.
             $gender = strtolower($get('gender'));
+            $gender = match ($gender) {
+                'm' => 'male',
+                'f' => 'female',
+                default => $gender,
+            };
             if (!in_array($gender, ['male', 'female'], true)) {
                 $gender = $currentGender;
             }
@@ -273,12 +291,23 @@ class LearnerImportController extends Controller
             return ['', '', ''];
         }
 
-        $parts = array_map('trim', explode(',', $combined, 2));
+        // DepEd SF1 names are "Last Name, First Name, Middle Name" — three
+        // comma-separated parts. A first name that is itself two words (e.g.
+        // "LUKE YZEKYEL") means we can't assume the middle name is everything
+        // after the first space, so split on comma first and only fall back
+        // to a space split when the sheet omitted the middle-name comma.
+        $parts = array_map('trim', explode(',', $combined, 3));
         $lastName = $parts[0] ?? '';
-        $rest = trim($parts[1] ?? '');
-        $restParts = preg_split('/\s+/', $rest);
-        $firstName = $restParts[0] ?? '';
-        $middleName = implode(' ', array_slice($restParts, 1));
+
+        if (isset($parts[2])) {
+            $firstName = $parts[1] ?? '';
+            $middleName = $parts[2];
+        } else {
+            $rest = trim($parts[1] ?? '');
+            $restParts = preg_split('/\s+/', $rest);
+            $firstName = $restParts[0] ?? '';
+            $middleName = implode(' ', array_slice($restParts, 1));
+        }
 
         return [$lastName, $firstName, $middleName];
     }
@@ -295,6 +324,19 @@ class LearnerImportController extends Controller
                 return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $value)->format('Y-m-d');
             } catch (\Throwable $e) {
                 return null;
+            }
+        }
+
+        // SF1 birth dates are labeled "mm/dd/yyyy" but often exported with
+        // dashes ("08-12-2014"). Carbon::parse() reads a dashed date as
+        // day-month-year, which silently swaps the day and month (or throws
+        // when the day exceeds 12, e.g. "01-15-2015"). Try the SF1's own
+        // month-first formats before falling back to generic parsing.
+        foreach (['m-d-Y', 'm/d/Y', 'Y-m-d'] as $format) {
+            try {
+                return \Carbon\Carbon::createFromFormat($format, $value)->format('Y-m-d');
+            } catch (\Throwable $e) {
+                // try the next format
             }
         }
 

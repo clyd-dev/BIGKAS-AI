@@ -110,29 +110,50 @@
         @endphp
 
         {{-- ── Summary tiles ──────────────────────────────────────────── --}}
-        <div class="row g-3 mb-4">
-            @php
-                // Tiles show what stands as the learner's record, which is the
-                // teacher's verdict when one exists.
-                $shownAccuracy = $assessment->effectiveAccuracy();
-                $shownWpm = $assessment->effectiveWordsPerMinute();
-                $shownLevel = $assessment->effectiveReadingLevel();
-                $edited = $assessment->wasEdited();
-            @endphp
-            <div class="{{ $hasComprehension ? 'col-6 col-lg' : 'col-6 col-lg-3' }}">
+        @php
+            // Tiles show what stands as the learner's record, which is the
+            // teacher's verdict when one exists.
+            $shownAccuracy = $assessment->effectiveAccuracy();
+            $shownWpm = $assessment->effectiveWordsPerMinute();
+            $edited = $assessment->wasEdited();
+
+            // Word reading and comprehension are different scales answering
+            // different questions, so each level says which one produced it.
+            // "Reading Level" appears only when both halves were measured.
+            $levels = $assessment->readingLevels();
+            $levelTiles = array_values(array_filter([
+                $levels['word'], $levels['comprehension'], $levels['overall'],
+            ]));
+
+            $levelBadge = fn ($level) => match ($level) {
+                'independent' => ['bg-success', 'Independent'],
+                'instructional' => ['bg-warning text-dark', 'Instructional'],
+                'frustration' => ['bg-danger', 'Frustration'],
+                default => ['bg-secondary', 'Not assessed'],
+            };
+        @endphp
+
+        {{-- What was measured --}}
+        <div class="row g-3 mb-3">
+            <div class="{{ $hasComprehension ? 'col-6 col-lg-3' : 'col-6 col-lg-4' }}">
                 <div class="card border-0 shadow-sm h-100 text-center">
                     <div class="card-body">
-                        <h2 class="mb-0 {{ $shownAccuracy >= 90 ? 'text-success' : ($shownAccuracy >= 75 ? 'text-warning' : 'text-danger') }}">
+                        <h2 class="mb-0 {{ $shownAccuracy >= 97 ? 'text-success' : ($shownAccuracy >= 90 ? 'text-warning' : 'text-danger') }}">
                             {{ number_format((float) $shownAccuracy, 1) }}%
                         </h2>
-                        <small class="text-muted">Accuracy</small>
+                        <small class="text-muted">Word Accuracy</small>
+                        @if($levels['word'] && $levels['word']['total'])
+                            <div class="small text-muted mt-1">
+                                {{ $levels['word']['correct'] }} of {{ $levels['word']['total'] }} words
+                            </div>
+                        @endif
                         @if($edited && $assessment->verdict->manual_scoring)
                             <span class="badge bg-primary-subtle text-primary-emphasis d-block mt-1">Re-scored</span>
                         @endif
                     </div>
                 </div>
             </div>
-            <div class="{{ $hasComprehension ? 'col-6 col-lg' : 'col-6 col-lg-3' }}">
+            <div class="{{ $hasComprehension ? 'col-6 col-lg-3' : 'col-6 col-lg-4' }}">
                 <div class="card border-0 shadow-sm h-100 text-center">
                     <div class="card-body">
                         <h2 class="mb-0 text-primary">{{ number_format((float) $shownWpm, 0) }}</h2>
@@ -140,41 +161,21 @@
                     </div>
                 </div>
             </div>
-            <div class="{{ $hasComprehension ? 'col-6 col-lg' : 'col-6 col-lg-3' }}">
-                <div class="card border-0 shadow-sm h-100 text-center">
-                    <div class="card-body">
-                        @if($shownLevel === 'independent')
-                            <span class="badge bg-success fs-6 px-3 py-2">Independent</span>
-                        @elseif($shownLevel === 'instructional')
-                            <span class="badge bg-warning text-dark fs-6 px-3 py-2">Instructional</span>
-                        @else
-                            <span class="badge bg-danger fs-6 px-3 py-2">Frustration</span>
-                        @endif
-                        <small class="text-muted mt-2 d-block">Reading Level</small>
-                        @if($edited)
-                            <span class="badge bg-primary-subtle text-primary-emphasis">Teacher-set</span>
-                        @endif
-                    </div>
-                </div>
-            </div>
             @if($hasComprehension)
-                @php
-                    $correctCount = $comprehensionAnswers->where('is_correct', true)->count();
-                    $totalCount   = $comprehensionAnswers->count();
-                    $scorePct     = round(($correctCount / $totalCount) * 100, 1);
-                @endphp
-                <div class="col-6 col-lg">
+                @php $comp = $levels['comprehension']; @endphp
+                <div class="col-6 col-lg-3">
                     <div class="card border-0 shadow-sm h-100 text-center">
                         <div class="card-body">
-                            <h2 class="mb-0 {{ $scorePct >= 80 ? 'text-success' : ($scorePct >= 60 ? 'text-warning' : 'text-danger') }}">
-                                {{ $correctCount }}/{{ $totalCount }}
+                            <h2 class="mb-0 {{ $comp['score'] >= 80 ? 'text-success' : ($comp['score'] >= 59 ? 'text-warning' : 'text-danger') }}">
+                                {{ $comp['correct'] }}/{{ $comp['total'] }}
                             </h2>
                             <small class="text-muted">Comprehension</small>
+                            <div class="small text-muted mt-1">{{ rtrim(rtrim(number_format($comp['score'], 1), '0'), '.') }}% correct</div>
                         </div>
                     </div>
                 </div>
             @endif
-            <div class="{{ $hasComprehension ? 'col-6 col-lg' : 'col-6 col-lg-3' }}">
+            <div class="{{ $hasComprehension ? 'col-6 col-lg-3' : 'col-6 col-lg-4' }}">
                 <div class="card border-0 shadow-sm h-100 text-center">
                     <div class="card-body">
                         <h2 class="mb-0 text-secondary">{{ $result->error_count }}</h2>
@@ -182,6 +183,33 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        {{-- The level each measure puts the learner at --}}
+        <div class="row g-3 mb-4">
+            @foreach($levelTiles as $tile)
+                @php [$badgeClass, $badgeText] = $levelBadge($tile['level']); @endphp
+                <div class="col-12 col-md">
+                    <div class="card border-0 shadow-sm h-100 text-center {{ isset($tile['basis']) ? 'border-top border-3 border-primary-subtle' : '' }}">
+                        <div class="card-body">
+                            <span class="badge {{ $badgeClass }} fs-6 px-3 py-2">{{ $badgeText }}</span>
+                            <div class="small text-muted mt-2 fw-semibold">{{ $tile['label'] }}</div>
+                            @if(isset($tile['score']))
+                                <div class="small text-muted">
+                                    from {{ rtrim(rtrim(number_format($tile['score'], 1), '0'), '.') }}%
+                                </div>
+                            @elseif(isset($tile['basis']))
+                                <div class="small text-muted" title="{{ $tile['basis'] }}">
+                                    word reading &amp; comprehension together
+                                </div>
+                            @endif
+                            @if(!empty($tile['from_teacher']) || ($edited && count($levelTiles) === 1))
+                                <span class="badge bg-primary-subtle text-primary-emphasis mt-1">Teacher-set</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endforeach
         </div>
 
         {{-- ── Teacher decision: the authoritative answer ─────────────── --}}
@@ -238,8 +266,9 @@
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h6 class="mb-0"><i class="bi bi-patch-question me-1"></i> Comprehension Test</h6>
-                    <span class="badge fs-6 {{ $scorePct >= 80 ? 'bg-success' : ($scorePct >= 60 ? 'bg-warning text-dark' : 'bg-danger') }}">
-                        {{ $correctCount }}/{{ $totalCount }} &middot; {{ $scorePct }}%
+                    @php $comp = $levels['comprehension']; @endphp
+                    <span class="badge fs-6 {{ $comp['score'] >= 80 ? 'bg-success' : ($comp['score'] >= 59 ? 'bg-warning text-dark' : 'bg-danger') }}">
+                        {{ $comp['correct'] }}/{{ $comp['total'] }} &middot; {{ rtrim(rtrim(number_format($comp['score'], 1), '0'), '.') }}%
                     </span>
                 </div>
                 <div class="card-body p-0">
@@ -279,10 +308,37 @@
             </div>
         @endif
 
+        {{-- ── Weakness Classification ───────────────────────────────── --}}
+        {{-- Full width: the skill rows and their explanations were unreadable
+             squeezed into a third of the page. --}}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h6 class="mb-0"><i class="bi bi-clipboard-pulse me-1"></i> Weakness Classification</h6>
+                @php $weaknessLabels = config('bigkas.weakness_categories', []); @endphp
+                @if($result->primary_weakness !== null && $result->primary_weakness !== 0)
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-6">
+                            Primary: {{ $weaknessLabels[$result->primary_weakness]['name'] ?? 'Unknown' }}
+                        </span>
+                        @if($result->weakness_confidence)
+                            <span class="small text-muted">{{ number_format($result->weakness_confidence * 100, 0) }}% confidence</span>
+                        @endif
+                    </div>
+                @else
+                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle fs-6">
+                        <i class="bi bi-check-circle me-1"></i> No significant weakness detected
+                    </span>
+                @endif
+            </div>
+            <div class="card-body">
+                @include('assessments._weakness_why', ['weaknessWhy' => $weaknessWhy])
+            </div>
+        </div>
+
         {{-- ── Diagnosis ─────────────────────────────────────────────── --}}
         <div class="row g-3">
             {{-- Error Breakdown --}}
-            <div class="col-lg-4">
+            <div class="col-lg-5">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white"><h6 class="mb-0">Error Breakdown</h6></div>
                     <div class="card-body">
@@ -339,33 +395,8 @@
                 </div>
             </div>
 
-            {{-- Weakness Classification --}}
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white"><h6 class="mb-0">Weakness Classification</h6></div>
-                    <div class="card-body">
-                        @php $weaknessLabels = config('bigkas.weakness_categories', []); @endphp
-
-                        @if($result->primary_weakness !== null && $result->primary_weakness !== 0)
-                            <div class="alert alert-warning mb-3">
-                                <strong>Primary:</strong> {{ $weaknessLabels[$result->primary_weakness]['name'] ?? 'Unknown' }}
-                                @if($result->weakness_confidence)
-                                    <br><small>Confidence: {{ number_format($result->weakness_confidence * 100, 0) }}%</small>
-                                @endif
-                            </div>
-                        @else
-                            <div class="alert alert-success mb-3">
-                                <i class="bi bi-check-circle me-1"></i> No significant weakness detected
-                            </div>
-                        @endif
-
-                        @include('assessments._weakness_why', ['weaknessWhy' => $weaknessWhy])
-                    </div>
-                </div>
-            </div>
-
             {{-- Details + Recommendations --}}
-            <div class="col-lg-4">
+            <div class="col-lg-7">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white"><h6 class="mb-0">Details</h6></div>
                     <div class="card-body">
@@ -418,6 +449,9 @@
 
         {{-- ── How the AI produced this (below Weakness Classification) ── --}}
         @include('assessments._ai_analysis', ['advisor' => $advisor])
+
+        {{-- ── How to read it: the process, the numbers, a short FAQ ──── --}}
+        @include('assessments._how_to_read', ['assessment' => $assessment, 'result' => $result, 'advisor' => $advisor])
     @else
         <div class="alert alert-info">
             <i class="bi bi-info-circle me-1"></i> This assessment has not been analyzed yet.

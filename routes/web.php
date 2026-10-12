@@ -44,6 +44,8 @@ Route::get('/', function () {
     return view('home');
 })->name('home');
 
+Route::view('/privacy', 'privacy')->name('privacy');
+
 // Authentication Routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

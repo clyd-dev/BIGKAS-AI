@@ -6,7 +6,9 @@ use App\Support\Directory;
 
 use App\Models\Assessment;
 use App\Models\AssessmentResult;
+use App\Models\InterventionLog;
 use App\Models\Learner;
+use App\Services\ClassWatchlistService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -72,26 +74,27 @@ class DashboardController extends Controller
             ->limit(5) // Reduced from 10 to keep dashboard clean
             ->get();
 
-        // 4. Actionable Intelligence: At-Risk Students (Frustration level + ML Deficiencies)
-        $atRiskLearners = (clone $learnersQuery)
-            ->where('reading_level', 'frustration')
-            ->with(['assessments' => function($query) {
-                // Get the latest assessment result which contains the ML primary weakness
-                $query->latest()->limit(1)->with('result');
-            }])
-            ->take(5)
+        // 4. Who needs attention, and why. Frustration level is only one of the
+        //    signals; see ClassWatchlistService for the rest.
+        $watchlist = app(ClassWatchlistService::class)->build($learnersQuery, 5);
+
+        // 5. Action Center: every intervention still open, oldest activity first.
+        //    In-progress logs belong here too - those are the ones being tracked.
+        $openInterventions = InterventionLog::whereIn('learner_id', $learnerIds)
+            ->whereIn('status', [InterventionLog::STATUS_PENDING, InterventionLog::STATUS_IN_PROGRESS])
+            ->with(['learner', 'intervention'])
+            ->orderByRaw('COALESCE(started_at, created_at) asc')
+            ->limit(6)
             ->get();
 
-        // 5. Actionable Intelligence: Pending Interventions for teacher's action center
-        $pendingInterventions = \App\Models\InterventionLog::whereIn('learner_id', $learnerIds)
-            ->where('status', 'pending')
-            ->with(['learner', 'intervention'])
-            ->latest()
-            ->limit(5)
-            ->get();
+        $interventionCounts = InterventionLog::whereIn('learner_id', $learnerIds)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
         return view('dashboard.index', compact(
-            'stats', 'learners', 'recentAssessments', 'distribution', 'atRiskLearners', 'pendingInterventions'
+            'stats', 'learners', 'recentAssessments', 'distribution',
+            'watchlist', 'openInterventions', 'interventionCounts'
         ));
     }
 

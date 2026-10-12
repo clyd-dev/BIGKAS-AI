@@ -28,22 +28,41 @@
                                 <td><strong>{{ $log->intervention?->name ?? 'N/A' }}</strong></td>
                                 <td>{{ $weaknessLabels[$log->intervention?->target_weakness]['name'] ?? 'General' }}</td>
                                 <td>
-                                    <span class="badge {{ $log->status === 'completed' ? 'bg-success' : ($log->status === 'in_progress' ? 'bg-primary' : ($log->status === 'skipped' ? 'bg-secondary' : 'bg-warning text-dark')) }}">
-                                        {{ ucfirst(str_replace('_', ' ', $log->status)) }}
-                                    </span>
+                                    <span class="badge bg-{{ $log->getStatusColor() }}">{{ $log->getStatusDisplay() }}</span>
+                                    <div class="small text-muted mt-1">{{ $log->trackingSummary() }}</div>
+                                    @if($log->effectiveness_rating)
+                                        <div class="small text-success mt-1">
+                                            <i class="bi bi-star-fill me-1"></i>Rated {{ $log->effectiveness_rating }}/10
+                                        </div>
+                                    @endif
                                 </td>
                                 <td>{{ $log->created_at ? \Carbon\Carbon::parse($log->created_at)->format('M d, Y') : '-' }}</td>
                                 <td>{{ $log->completed_at ? \Carbon\Carbon::parse($log->completed_at)->format('M d, Y') : '-' }}</td>
                                 <td>{{ Str::limit($log->notes, 40) }}</td>
                                 <td class="text-end">
-                                    @if($log->status !== 'completed')
-                                        <form method="POST" action="{{ route('intervention-logs.update', $log) }}" class="d-inline">
-                                            @csrf @method('PUT')
-                                            <input type="hidden" name="status" value="completed">
-                                            <button type="submit" class="btn btn-sm btn-success" title="Mark Complete">
-                                                <i class="bi bi-check-lg"></i>
-                                            </button>
-                                        </form>
+                                    {{-- These post `action`, which is what updateLog() reads. The old
+                                         form posted `status` and silently did nothing. --}}
+                                    @if($log->isOpen())
+                                        <div class="btn-group btn-group-sm">
+                                            @if($log->status === 'pending')
+                                                <form method="POST" action="{{ route('intervention-logs.update', $log) }}" class="d-inline">
+                                                    @csrf @method('PUT')
+                                                    <input type="hidden" name="action" value="start">
+                                                    <button type="submit" class="btn btn-outline-primary" title="Mark as started">
+                                                        <i class="bi bi-play-fill"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            <form method="POST" action="{{ route('intervention-logs.update', $log) }}" class="d-inline">
+                                                @csrf @method('PUT')
+                                                <input type="hidden" name="action" value="complete">
+                                                <button type="submit" class="btn btn-success" title="Mark complete">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @else
+                                        <span class="text-muted small">&mdash;</span>
                                     @endif
                                 </td>
                             </tr>

@@ -10,15 +10,19 @@
     before that existed only have the four-way `status`, used as the fallback.
 --}}
 @php
+    // Phil-IRI miscue names, with the plain-English meaning kept on the tooltip
+    // so the official term is the label and the explanation is a hover away.
+    // Transposition and reversal are absent because the engine never reports
+    // them; a permanent zero would read as "the child made none".
     $types = [
-        'mispronunciation' => ['label' => 'Mispronounced',   'class' => 'w-mis',  'hint' => 'Said a word that sounds like the right one'],
-        'substitution'     => ['label' => 'Different word',  'class' => 'w-sub',  'hint' => 'Said a different word instead'],
-        'omission'         => ['label' => 'Skipped',         'class' => 'w-omit', 'hint' => 'Left the word out'],
-        'not_reached'      => ['label' => 'Not reached',     'class' => 'w-nr',   'hint' => 'The reading stopped before these words'],
-        'insertion'        => ['label' => 'Added',           'class' => 'w-ins',  'hint' => 'Said a word that is not in the passage'],
-        'repetition'       => ['label' => 'Repeated',        'class' => 'w-rep',  'hint' => 'Said the word again, or started it twice'],
-        'self_correction'  => ['label' => 'Self-corrected',  'class' => 'w-sc',   'hint' => 'Made a mistake and fixed it — not counted as an error'],
-        'off_passage'      => ['label' => 'Not reading',     'class' => 'w-off',  'hint' => 'Talking, a title, or another voice — not counted as an error'],
+        'mispronunciation' => ['label' => 'Mispronunciation', 'class' => 'w-mis',  'hint' => 'Said a word that sounds like the right one'],
+        'substitution'     => ['label' => 'Substitution',     'class' => 'w-sub',  'hint' => 'Said a different word instead'],
+        'omission'         => ['label' => 'Omission',         'class' => 'w-omit', 'hint' => 'Left the word out'],
+        'not_reached'      => ['label' => 'Not reached',      'class' => 'w-nr',   'hint' => 'The reading stopped before these words'],
+        'insertion'        => ['label' => 'Insertion',        'class' => 'w-ins',  'hint' => 'Said a word that is not in the passage'],
+        'repetition'       => ['label' => 'Repetition',       'class' => 'w-rep',  'hint' => 'Said the word again, or started it twice'],
+        'self_correction'  => ['label' => 'Self-correction',  'class' => 'w-sc',   'hint' => 'Made a mistake and fixed it — not counted as an error'],
+        'off_passage'      => ['label' => 'Not reading',      'class' => 'w-off',  'hint' => 'Talking, a title, or another voice — not counted as an error'],
     ];
 
     $tally = array_fill_keys(array_merge(array_keys($types), ['correct', 'hesitation', 'long_pause', 'unclear']), 0);
@@ -118,28 +122,28 @@
 
                         @switch($kind)
                             @case('omission')
-                                <span class="w w-omit" title="Skipped — the child left this word out">{{ $word['reference'] }}</span>
+                                <span class="w w-omit" title="Omission — the child left this word out">{{ $word['reference'] }}</span>
                                 @break
                             @case('not_reached')
                                 <span class="w w-nr" title="Not reached — the reading stopped before this word">{{ $word['reference'] }}</span>
                                 @break
                             @case('mispronunciation')
-                                <span class="w w-mis{{ $unclear }}" title="Mispronounced — the passage says “{{ $word['reference'] }}”{{ $unsureTip }}">{{ $heard }}</span>
+                                <span class="w w-mis{{ $unclear }}" title="Mispronunciation — the passage says “{{ $word['reference'] }}”{{ $unsureTip }}">{{ $heard }}</span>
                                 @break
                             @case('substitution')
-                                <span class="w w-sub{{ $unclear }}" title="Different word — the passage says “{{ $word['reference'] }}”{{ $unsureTip }}">{{ $heard }}</span>
+                                <span class="w w-sub{{ $unclear }}" title="Substitution — the passage says “{{ $word['reference'] }}”{{ $unsureTip }}">{{ $heard }}</span>
                                 @break
                             @case('repetition')
-                                <span class="w w-rep{{ $unclear }}" title="Repeated{{ $unsureTip }}">{{ $heard }}</span>
+                                <span class="w w-rep{{ $unclear }}" title="Repetition{{ $unsureTip }}">{{ $heard }}</span>
                                 @break
                             @case('self_correction')
-                                <span class="w w-sc{{ $unclear }}" title="Self-corrected to “{{ $word['corrected_to'] ?? '' }}” — not counted as an error{{ $unsureTip }}">{{ $heard }}</span>
+                                <span class="w w-sc{{ $unclear }}" title="Self-correction — corrected to “{{ $word['corrected_to'] ?? '' }}” — not counted as an error{{ $unsureTip }}">{{ $heard }}</span>
                                 @break
                             @case('off_passage')
                                 <span class="w w-off{{ $unclear }}" title="Not part of the passage — not counted as an error{{ $unsureTip }}">{{ $heard }}</span>
                                 @break
                             @case('insertion')
-                                <span class="w w-ins{{ $unclear }}" title="Added — not in the passage{{ $unsureTip }}">{{ $heard }}</span>
+                                <span class="w w-ins{{ $unclear }}" title="Insertion — not in the passage{{ $unsureTip }}">{{ $heard }}</span>
                                 @break
                             @default
                                 <span class="w{{ $unclear }}" @if($unclear) title="The speech engine was unsure it heard this correctly" @endif>{{ $heard }}</span>

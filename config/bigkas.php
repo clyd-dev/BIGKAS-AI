@@ -108,4 +108,21 @@ return [
         11 => ['min' => 130, 'target' => 170, 'advanced' => 195],
         12 => ['min' => 130, 'target' => 175, 'advanced' => 200],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Class watchlist thresholds
+    |--------------------------------------------------------------------------
+    |
+    | These drive the teacher dashboard's "Students Needing Attention" list and
+    | the stalled-intervention warning. They are practical defaults, not
+    | Phil-IRI values, so adjust them to how your interventions actually run.
+    |
+    */
+
+    // A pending intervention this many days old counts as stalled.
+    'intervention_stalled_days' => 14,
+
+    // A drop of this many accuracy points between assessments counts as declining.
+    'accuracy_decline_points' => 3,
 ];

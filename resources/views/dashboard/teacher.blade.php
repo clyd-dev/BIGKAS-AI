@@ -42,78 +42,202 @@
     </div>
 </div>
 
-{{-- ACTIONABLE INTELLIGENCE ROW (New) --}}
+{{-- ATTENTION & ACTION ROW --}}
 <div class="row g-3 mb-4">
-    {{-- At-Risk Students Widget --}}
-    <div class="col-md-6">
+    {{-- Students Needing Attention: four signals, most urgent first --}}
+    <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
-                <h6 class="mb-0 text-danger fw-bold"><i class="bi bi-exclamation-triangle me-1"></i> Students Needing Attention</h6>
-                <small class="text-muted">Frustration level readers & ML Diagnosis</small>
+            <div class="card-header bg-white border-bottom-0 pt-3 pb-2 d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-0 text-danger fw-bold"><i class="bi bi-exclamation-triangle me-1"></i> Students Needing Attention</h6>
+                    <small class="text-muted">Frustration, falling accuracy, stalled help, or never assessed</small>
+                </div>
+                @if($watchlist->isNotEmpty())
+                    <span class="badge bg-danger-subtle text-danger">{{ $watchlist->count() }}</span>
+                @endif
             </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    @forelse($atRiskLearners as $learner)
-                        @php $latestResult = $learner->assessments->first()?->result; @endphp
-                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong class="d-block">{{ $learner->getFullName() }}</strong>
+            <div class="card-body pt-2">
+                <div class="d-flex flex-column gap-3">
+                    @forelse($watchlist as $entry)
+                        @php
+                            $wLearner = $entry['learner'];
+                            $trend    = $entry['trend'];
+                            $primary  = $entry['signals']->first();
+                        @endphp
+                        <div class="border rounded-3 p-3 position-relative">
+                            {{-- Name, level and where the accuracy is heading --}}
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                <div class="flex-grow-1" style="min-width:0;">
+                                    <a href="{{ route('learners.show', $wLearner) }}" class="fw-semibold text-decoration-none d-block text-truncate">
+                                        {{ $wLearner->getFullName() }}
+                                    </a>
+                                    <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+                                        @if($entry['level'] === 'frustration')
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Frustration</span>
+                                        @elseif($entry['level'] === 'instructional')
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Instructional</span>
+                                        @elseif($entry['level'] === 'independent')
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">Independent</span>
+                                        @else
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Not assessed</span>
+                                        @endif
+
+                                        @if($trend['direction'] === 'down')
+                                            <span class="small text-danger fw-semibold">
+                                                <i class="bi bi-arrow-down-right"></i> {{ number_format($trend['delta'], 1) }} pts
+                                            </span>
+                                        @elseif($trend['direction'] === 'up')
+                                            <span class="small text-success fw-semibold">
+                                                <i class="bi bi-arrow-up-right"></i> +{{ number_format($trend['delta'], 1) }} pts
+                                            </span>
+                                        @elseif($trend['direction'] === 'flat')
+                                            <span class="small text-muted fw-semibold">
+                                                <i class="bi bi-arrow-right"></i> Holding steady
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                                @if($trend['latest'] !== null)
+                                    <div class="text-end flex-shrink-0">
+                                        <div class="fw-bold fs-5 lh-1">{{ round($trend['latest'], 1) }}%</div>
+                                        <div class="small text-muted">accuracy</div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Why this learner is on the list --}}
+                            <div class="bg-light rounded p-2 mb-2">
+                                @foreach($entry['signals'] as $signal)
+                                    <div class="d-flex gap-2 {{ !$loop->last ? 'mb-2' : '' }}">
+                                        <span class="badge bg-{{ $signal['tone'] }}-subtle text-{{ $signal['tone'] === 'secondary' ? 'secondary' : $signal['tone'] }} flex-shrink-0 align-self-start">
+                                            {{ $signal['label'] }}
+                                        </span>
+                                        <span class="small text-muted">{{ $signal['explanation'] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            {{-- What is already assigned, so nobody double-assigns --}}
+                            <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                                 <small class="text-muted">
-                                    ML Flag: 
-                                    @if($latestResult && $latestResult->getPrimaryWeaknessInfo())
-                                        <span class="badge bg-danger-subtle text-danger">{{ $latestResult->getPrimaryWeaknessInfo()['name'] }}</span>
+                                    @if($entry['open_logs']->isEmpty())
+                                        <i class="bi bi-dash-circle me-1"></i> No intervention assigned yet
                                     @else
-                                        <span class="badge bg-secondary-subtle text-secondary">Awaiting Assessment</span>
+                                        <i class="bi bi-lightbulb me-1"></i>
+                                        {{ $entry['open_logs']->count() }}
+                                        {{ Str::plural('intervention', $entry['open_logs']->count()) }} open:
+                                        {{ $entry['open_logs']->first()->intervention?->name ?? 'Activity' }}@if($entry['open_logs']->count() > 1) +{{ $entry['open_logs']->count() - 1 }} more @endif
                                     @endif
                                 </small>
+                                <a href="{{ route('learners.interventions', $wLearner) }}"
+                                   class="btn btn-sm {{ $entry['open_logs']->isEmpty() ? 'btn-danger' : 'btn-outline-danger' }} rounded-pill">
+                                    {{ $entry['open_logs']->isEmpty() ? 'Assign Help' : 'Track Progress' }}
+                                </a>
                             </div>
-                            <a href="{{ route('learners.interventions', $learner) }}" class="btn btn-sm btn-outline-danger rounded-pill">
-                                Assign Help
-                            </a>
-                        </li>
+                        </div>
                     @empty
-                        <li class="list-group-item px-0 text-center py-4 text-muted border-0">
-                            <i class="bi bi-check-circle text-success fs-4 d-block mb-2"></i>
-                            Great job! No students are currently marked at frustration level.
-                        </li>
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-check-circle text-success fs-3 d-block mb-2"></i>
+                            <div class="fw-semibold">Nobody needs chasing right now</div>
+                            <small>No frustration readers, no falling scores, no stalled interventions.</small>
+                        </div>
                     @endforelse
-                </ul>
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- Pending Interventions Action Center --}}
-    <div class="col-md-6">
+    {{-- Action Center: open interventions the teacher can record against here --}}
+    <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
-                <h6 class="mb-0 text-primary fw-bold"><i class="bi bi-list-check me-1"></i> Action Center</h6>
-                <small class="text-muted">Pending interventions waiting for review</small>
+            <div class="card-header bg-white border-bottom-0 pt-3 pb-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-0 text-primary fw-bold"><i class="bi bi-list-check me-1"></i> Action Center</h6>
+                        <small class="text-muted">Interventions you are tracking</small>
+                    </div>
+                    @if(($interventionCounts['completed'] ?? 0) > 0)
+                        <span class="badge bg-success-subtle text-success">
+                            {{ $interventionCounts['completed'] }} completed
+                        </span>
+                    @endif
+                </div>
+                @php
+                    $notStarted = $interventionCounts['pending'] ?? 0;
+                    $underway   = $interventionCounts['in_progress'] ?? 0;
+                @endphp
+                @if($notStarted + $underway > 0)
+                    <div class="d-flex gap-3 mt-2 small">
+                        <span class="text-secondary"><i class="bi bi-circle me-1"></i>{{ $notStarted }} not started</span>
+                        <span class="text-primary"><i class="bi bi-play-circle me-1"></i>{{ $underway }} in progress</span>
+                    </div>
+                @endif
             </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    @forelse($pendingInterventions as $log)
-                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong class="d-block text-truncate" style="max-width: 200px;">
-                                    {{ $log->intervention->title ?? 'Recommended Activity' }}
-                                </strong>
-                                <small class="text-muted">For: {{ $log->learner->getFullName() }}</small>
+            <div class="card-body pt-2">
+                <div class="d-flex flex-column gap-2">
+                    @forelse($openInterventions as $log)
+                        <div class="border rounded-3 p-3 {{ $log->isStalled() ? 'border-warning bg-warning-subtle bg-opacity-10' : '' }}">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div class="flex-grow-1" style="min-width:0;">
+                                    <div class="fw-semibold text-truncate">
+                                        {{ $log->intervention?->name ?? 'Recommended Activity' }}
+                                    </div>
+                                    <div class="small text-muted text-truncate">
+                                        For <a href="{{ route('learners.show', $log->learner) }}" class="text-decoration-none">{{ $log->learner->getFullName() }}</a>
+                                    </div>
+                                </div>
+                                <span class="badge bg-{{ $log->getStatusColor() }}-subtle text-{{ $log->getStatusColor() === 'secondary' ? 'secondary' : $log->getStatusColor() }} flex-shrink-0">
+                                    {{ $log->getStatusDisplay() }}
+                                </span>
                             </div>
-                            <button class="btn btn-sm btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#reviewInterventionModal{{ $log->id }}">
-                                Review
-                            </button>
-                        </li>
+
+                            {{-- The tracking line: how long this has been sitting --}}
+                            <div class="small mt-2 {{ $log->isStalled() ? 'text-warning-emphasis fw-semibold' : 'text-muted' }}">
+                                @if($log->isStalled())
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                @else
+                                    <i class="bi bi-clock me-1"></i>
+                                @endif
+                                {{ $log->trackingSummary() }}
+                            </div>
+
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button"
+                                        class="btn btn-sm btn-primary rounded-pill"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#interventionActionModal"
+                                        data-url="{{ route('intervention-logs.update', $log) }}"
+                                        data-name="{{ $log->intervention?->name ?? 'Recommended Activity' }}"
+                                        data-learner="{{ $log->learner->getFullName() }}"
+                                        data-status="{{ $log->status }}"
+                                        data-tracking="{{ $log->trackingSummary() }}">
+                                    <i class="bi bi-pencil-square me-1"></i> Record progress
+                                </button>
+                                <a href="{{ route('learners.interventions', $log->learner) }}" class="btn btn-sm btn-light border rounded-pill">
+                                    History
+                                </a>
+                            </div>
+                        </div>
                     @empty
-                        <li class="list-group-item px-0 text-center py-4 text-muted border-0">
-                            <i class="bi bi-cup-hot fs-4 d-block mb-2"></i>
-                            All caught up! No pending actions required.
-                        </li>
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-cup-hot fs-3 d-block mb-2"></i>
+                            <div class="fw-semibold">Nothing open</div>
+                            <small>Every assigned intervention has been completed or skipped.</small>
+                        </div>
                     @endforelse
-                </ul>
+                </div>
+
+                @if($openInterventions->isNotEmpty())
+                    <a href="{{ route('interventions.index') }}" class="btn btn-sm btn-outline-primary w-100 mt-3">
+                        Browse all interventions
+                    </a>
+                @endif
             </div>
         </div>
     </div>
 </div>
+
+@include('dashboard._intervention_action_modal')
 
 {{-- Quick Actions & Chart --}}
 <div class="row g-3 mb-4">

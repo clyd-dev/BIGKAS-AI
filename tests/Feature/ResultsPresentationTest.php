@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Assessment;
+use App\Models\AssessmentVerdict;
 use App\Models\ComprehensionQuestion;
 use App\Models\Learner;
 use App\Models\ReadingMaterial;
@@ -457,6 +458,417 @@ class ResultsPresentationTest extends TestCase
         $html = $this->resultPage($assessment->fresh());
 
         $this->assertStringContainsString('Skill Scores', $html);
-        $this->assertStringContainsString('Why this level?', $html);
+        // The heading names which level it explains; this one has no comprehension test.
+        $this->assertStringContainsString('Why this word reading level?', $html);
+    }
+
+    // -- Level tiles: each number labelled by what produced it ---------
+
+    /** Gives an assessment a comprehension test with `$correct` of `$total` right. */
+    private function withComprehension(Assessment $assessment, int $correct, int $total): Assessment
+    {
+        $assessment->update(['assessment_type' => Assessment::TYPE_COMPREHENSION]);
+
+        foreach (range(1, $total) as $i) {
+            ComprehensionQuestion::create([
+                'material_id' => $assessment->material_id, 'question' => "Q{$i}?", 'question_type' => 'literal',
+                'correct_answer' => 'Right', 'option_a' => 'Right', 'option_b' => 'Wrong',
+                'option_c' => 'No', 'option_d' => 'Nope', 'sort_order' => $i,
+            ]);
+        }
+
+        $ids = $assessment->material->comprehensionQuestions()->pluck('id');
+        $answers = [];
+        foreach ($ids as $i => $id) {
+            $answers[$id] = $i < $correct ? 'A' : 'B';
+        }
+        app(ComprehensionService::class)->record($assessment, $answers);
+
+        return $assessment->fresh(['result', 'verdict', 'comprehensionAnswers', 'learner', 'material']);
+    }
+
+    public function test_word_reading_alone_is_not_called_a_reading_level(): void
+    {
+        $html = $this->resultPage($this->scored([
+            'accuracy_rate' => 91.5, 'reading_level' => 'instructional',
+        ]));
+
+        $this->assertStringContainsString('Word Reading Level', $html);
+        $this->assertStringNotContainsString('Comprehension Level', $html);
+        // The bare label would claim comprehension was measured when it was not.
+        $this->assertStringNotContainsString('>Reading Level<', $html);
+    }
+
+    public function test_both_halves_measured_gives_all_three_levels(): void
+    {
+        $assessment = $this->withComprehension(
+            $this->scored(['accuracy_rate' => 34.0, 'reading_level' => 'frustration'],
+                ['type' => ReadingMaterial::TYPE_COMPREHENSION]),
+            1, 5
+        );
+
+        $html = $this->resultPage($assessment);
+
+        $this->assertStringContainsString('Word Reading Level', $html);
+        $this->assertStringContainsString('Comprehension Level', $html);
+        $this->assertStringContainsString('>Reading Level<', $html);
+    }
+
+    public function test_each_level_follows_its_own_phil_iri_scale(): void
+    {
+        // 98% word reading is Independent; 60% comprehension is Instructional.
+        $assessment = $this->withComprehension(
+            $this->scored(['accuracy_rate' => 98.0, 'reading_level' => 'independent'],
+                ['type' => ReadingMaterial::TYPE_COMPREHENSION]),
+            3, 5
+        );
+
+        $levels = $assessment->readingLevels();
+
+        $this->assertSame('independent', $levels['word']['level']);
+        $this->assertSame('instructional', $levels['comprehension']['level']);
+        // The passage as a whole reads at the weaker of the two.
+        $this->assertSame('instructional', $levels['overall']['level']);
+    }
+
+    public function test_a_teacher_set_level_outranks_the_calculated_one(): void
+    {
+        $assessment = $this->withComprehension(
+            $this->scored(['accuracy_rate' => 34.0, 'reading_level' => 'frustration'],
+                ['type' => ReadingMaterial::TYPE_COMPREHENSION]),
+            1, 5
+        );
+
+        AssessmentVerdict::create([
+            'assessment_id' => $assessment->id,
+            'decision' => AssessmentVerdict::DECISION_OVERRIDDEN,
+            'final_reading_level' => 'instructional',
+            'reason' => 'The recording cut out; the child read far more than this.',
+            'decided_by' => $this->teacher->id,
+            'decided_at' => now(),
+        ]);
+
+        $levels = $assessment->fresh(['result', 'verdict', 'comprehensionAnswers'])->readingLevels();
+
+        $this->assertSame('instructional', $levels['overall']['level']);
+        $this->assertTrue($levels['overall']['from_teacher']);
+    }
+
+    // -- The arithmetic behind the headline number ---------------------
+
+    public function test_the_accuracy_sum_is_shown_not_just_the_percentage(): void
+    {
+        $assessment = $this->scored([
+            'accuracy_rate' => 34.0, 'reading_level' => 'frustration', 'total_words' => 47,
+            'miscues' => $this->counts(['correct' => 16, 'not_reached' => 31]),
+        ]);
+
+        $html = $this->resultPage($assessment);
+
+        // 16 of 47 words is where 34% comes from; a bare "34%" invites the question.
+        $this->assertStringContainsString('16 / 47 x 100 = 34%', $html);
+    }
+
+    public function test_unreached_words_are_explained_as_part_of_the_denominator(): void
+    {
+        $html = $this->resultPage($this->scored([
+            'accuracy_rate' => 34.0, 'reading_level' => 'frustration', 'total_words' => 47,
+            'miscues' => $this->counts(['correct' => 16, 'not_reached' => 31]),
+        ]));
+
+        $this->assertStringContainsString('31 of the 47 words were never reached', $html);
+        $this->assertStringContainsString('only 16 were actually attempted', $html);
+    }
+
+    public function test_the_comprehension_sum_is_shown_too(): void
+    {
+        $assessment = $this->withComprehension(
+            $this->scored(['accuracy_rate' => 34.0, 'reading_level' => 'frustration'],
+                ['type' => ReadingMaterial::TYPE_COMPREHENSION]),
+            1, 5
+        );
+
+        $this->assertStringContainsString('1 / 5 x 100 = 20%', $this->resultPage($assessment));
+    }
+
+    public function test_a_re_scored_result_shows_the_teachers_own_count(): void
+    {
+        $assessment = $this->scored([
+            'accuracy_rate' => 34.0, 'reading_level' => 'frustration', 'total_words' => 47,
+            'miscues' => $this->counts(['correct' => 16, 'not_reached' => 31]),
+        ]);
+
+        AssessmentVerdict::create([
+            'assessment_id' => $assessment->id,
+            'decision' => AssessmentVerdict::DECISION_OVERRIDDEN,
+            'manual_scoring' => true,
+            'words_read' => 20,
+            'final_accuracy_rate' => 90.0,
+            'final_reading_level' => 'instructional',
+            'reason' => 'Re-counted by hand against the recording.',
+            'decided_by' => $this->teacher->id,
+            'decided_at' => now(),
+        ]);
+
+        $html = $this->resultPage($assessment->fresh(['result', 'verdict']));
+
+        $this->assertStringContainsString('18 / 20 x 100 = 90%', $html);
+        $this->assertStringContainsString('Counted by the teacher during re-scoring.', $html);
+    }
+
+    // -- Phil-IRI miscue names -----------------------------------------
+
+    public function test_the_key_uses_phil_iri_miscue_names(): void
+    {
+        $html = $this->resultPage($this->scored([
+            'word_comparison' => $this->comparisonRows(),
+            'miscues' => $this->counts([
+                'correct' => 3, 'mispronunciation' => 1, 'omission' => 1,
+                'not_reached' => 2, 'unclear' => 1,
+            ]),
+        ]));
+
+        $key = $this->between($html, 'comparison-key', 'ORIGINAL PASSAGE');
+
+        $this->assertStringContainsString('Mispronunciation', $key);
+        $this->assertStringContainsString('Omission', $key);
+
+        // The old plain-English labels were not Phil-IRI terms.
+        $this->assertStringNotContainsString('Mispronounced', $key);
+        $this->assertStringNotContainsString('Skipped', $key);
+    }
+
+    public function test_plain_english_is_kept_as_the_hint_behind_each_term(): void
+    {
+        $html = $this->resultPage($this->scored([
+            'word_comparison' => $this->comparisonRows(),
+            'miscues' => $this->counts(['correct' => 3, 'omission' => 1, 'not_reached' => 2]),
+        ]));
+
+        // The official term labels it; the explanation is still a hover away.
+        $this->assertStringContainsString('Left the word out', $html);
+    }
+
+    public function test_terms_the_engine_cannot_detect_are_not_listed(): void
+    {
+        $html = $this->resultPage($this->scored([
+            'word_comparison' => $this->comparisonRows(),
+            'miscues' => $this->counts(['correct' => 3, 'omission' => 1, 'not_reached' => 2]),
+        ]));
+
+        // A permanent zero would read as "the child made none of these".
+        $this->assertStringNotContainsString('Transposition', $html);
+        $this->assertStringNotContainsString('Reversal', $html);
+    }
+
+    public function test_non_phil_iri_markers_keep_their_plain_wording(): void
+    {
+        $html = $this->resultPage($this->scored([
+            'word_comparison' => $this->comparisonRows(),
+            'miscues' => $this->counts(['correct' => 3, 'not_reached' => 2, 'unclear' => 1]),
+        ]));
+
+        $key = $this->between($html, 'comparison-key', 'ORIGINAL PASSAGE');
+
+        $this->assertStringContainsString('Not reached', $key);
+        $this->assertStringContainsString('Unsure how it sounded', $key);
+    }
+
+    // -- Weakness card keeps every piece of its content -----------------
+
+    public function test_the_weakness_card_still_shows_everything_after_the_relayout(): void
+    {
+        $assessment = $this->scored([
+            'accuracy_rate' => 62.0, 'reading_level' => 'frustration', 'primary_weakness' => 2,
+            'confidence_score' => 0.44,
+            'miscues' => $this->counts(['correct' => 9, 'mispronunciation' => 4, 'substitution' => 2]),
+        ]);
+
+        $html = $this->resultPage($assessment);
+
+        $this->assertStringContainsString('Weakness Classification', $html);
+        $this->assertStringContainsString('Skill Scores', $html);
+        $this->assertStringContainsString('the model', $html);
+        $this->assertStringContainsString('What the other skills show', $html);
+
+        // All four skills are still named.
+        foreach (['Phonemic Awareness', 'Decoding Accuracy', 'Oral Reading Fluency', 'Reading Comprehension'] as $skill) {
+            $this->assertStringContainsString($skill, $html);
+        }
+
+        // Confidence moved to the header but is still reported.
+        $this->assertStringContainsString('44% confidence', $html);
+    }
+
+    // -- The card explains the level the page actually presents ---------
+
+    public function test_the_card_explains_word_reading_when_that_is_all_there_is(): void
+    {
+        $html = $this->resultPage($this->scored([
+            'accuracy_rate' => 91.5, 'reading_level' => 'instructional',
+        ]));
+
+        $this->assertStringContainsString('Why this word reading level?', $html);
+        $this->assertStringNotContainsString('How the two halves combine', $html);
+    }
+
+    public function test_the_card_and_the_tile_never_disagree(): void
+    {
+        // Decodes the passage well, understands almost none of it.
+        $assessment = $this->withComprehension(
+            $this->scored(['accuracy_rate' => 98.0, 'reading_level' => 'independent'],
+                ['type' => ReadingMaterial::TYPE_COMPREHENSION]),
+            1, 5
+        );
+
+        $interpretation = app(ReadingInterpretationService::class)->for($assessment);
+        $tile = $assessment->readingLevels()['overall'];
+
+        // The card used to answer "Independent" beside a "Frustration" tile.
+        $this->assertSame($tile['level'], $interpretation['level']);
+        $this->assertSame('Frustration', $interpretation['label']);
+        $this->assertSame('Why this reading level?', $interpretation['scope']);
+    }
+
+    public function test_the_card_names_the_half_that_decided_the_level(): void
+    {
+        $assessment = $this->withComprehension(
+            $this->scored(['accuracy_rate' => 98.0, 'reading_level' => 'independent'],
+                ['type' => ReadingMaterial::TYPE_COMPREHENSION]),
+            1, 5
+        );
+
+        $decision = app(ReadingInterpretationService::class)->for($assessment)['decision'];
+
+        $this->assertSame('comprehension', $decision['decided_by']);
+        $this->assertStringContainsString('Word reading was Independent (98%)', $decision['text']);
+        $this->assertStringContainsString('comprehension at 20% is Frustration', $decision['text']);
+    }
+
+    public function test_weak_decoding_is_named_when_it_is_the_lower_half(): void
+    {
+        // Understands what little was read, but decoding collapsed.
+        $assessment = $this->withComprehension(
+            $this->scored(['accuracy_rate' => 55.0, 'reading_level' => 'frustration'],
+                ['type' => ReadingMaterial::TYPE_COMPREHENSION]),
+            5, 5
+        );
+
+        $decision = app(ReadingInterpretationService::class)->for($assessment)['decision'];
+
+        $this->assertSame('word', $decision['decided_by']);
+        $this->assertStringContainsString('Comprehension was Independent (100%)', $decision['text']);
+    }
+
+    public function test_the_comprehension_scale_is_shown_with_its_own_bands(): void
+    {
+        $assessment = $this->withComprehension(
+            $this->scored(['accuracy_rate' => 98.0, 'reading_level' => 'independent'],
+                ['type' => ReadingMaterial::TYPE_COMPREHENSION]),
+            3, 5
+        );
+
+        $html = $this->resultPage($assessment);
+
+        $this->assertStringContainsString('How the two halves combine', $html);
+        // Comprehension uses 59-79 / 80+, not the word-reading 90 / 97 bands.
+        $this->assertStringContainsString('80% and above', $html);
+        $this->assertStringContainsString('59–79%', $html);
+    }
+
+    public function test_the_rule_footer_covers_both_scales_when_both_were_measured(): void
+    {
+        $assessment = $this->withComprehension(
+            $this->scored(['accuracy_rate' => 98.0, 'reading_level' => 'independent'],
+                ['type' => ReadingMaterial::TYPE_COMPREHENSION]),
+            3, 5
+        );
+
+        $rule = app(ReadingInterpretationService::class)->for($assessment)['rule'];
+
+        $this->assertStringContainsString('Phil-IRI word reading', $rule);
+        $this->assertStringContainsString('Comprehension', $rule);
+    }
+
+    // -- Where a teacher's verdict lands --------------------------------
+
+    public function test_an_override_sets_the_word_level_when_that_is_the_only_level(): void
+    {
+        // 98% is Independent on the numbers; the teacher knows better.
+        $assessment = $this->scored(['accuracy_rate' => 98.0, 'reading_level' => 'independent']);
+
+        AssessmentVerdict::create([
+            'assessment_id' => $assessment->id,
+            'decision' => AssessmentVerdict::DECISION_OVERRIDDEN,
+            'final_reading_level' => 'instructional',
+            'reason' => 'Read accurately but word by word, without understanding.',
+            'decided_by' => $this->teacher->id,
+            'decided_at' => now(),
+        ]);
+
+        $levels = $assessment->fresh(['result', 'verdict'])->readingLevels();
+
+        // With no comprehension half there is no combined tile to carry the
+        // verdict, so it belongs on the only level there is.
+        $this->assertSame('instructional', $levels['word']['level']);
+        $this->assertTrue($levels['word']['from_teacher']);
+    }
+
+    public function test_an_override_does_not_rewrite_the_evidence_behind_it(): void
+    {
+        $assessment = $this->withComprehension(
+            $this->scored(['accuracy_rate' => 98.0, 'reading_level' => 'independent'],
+                ['type' => ReadingMaterial::TYPE_COMPREHENSION]),
+            1, 5
+        );
+
+        AssessmentVerdict::create([
+            'assessment_id' => $assessment->id,
+            'decision' => AssessmentVerdict::DECISION_OVERRIDDEN,
+            'final_reading_level' => 'instructional',
+            'reason' => 'The comprehension questions were read to the child badly.',
+            'decided_by' => $this->teacher->id,
+            'decided_at' => now(),
+        ]);
+
+        $levels = $assessment->fresh(['result', 'verdict', 'comprehensionAnswers'])->readingLevels();
+
+        // The teacher set the overall level; the two halves still report what
+        // was actually measured, which is what makes the override auditable.
+        $this->assertSame('instructional', $levels['overall']['level']);
+        $this->assertSame('independent', $levels['word']['level']);
+        $this->assertSame('frustration', $levels['comprehension']['level']);
+    }
+
+    // ── How to read this result ───────────────────────────────────────
+
+    public function test_the_page_explains_the_process_and_numbers_with_this_learners_figures(): void
+    {
+        $html = $this->resultPage($this->scored([
+            'accuracy_rate' => 93.3, 'words_per_minute' => 88.0, 'reading_level' => 'instructional',
+        ]));
+
+        $this->assertStringContainsString('How to read this result', $html);
+        $this->assertStringContainsString('How the result was produced', $html);
+        $this->assertStringContainsString('What each number means', $html);
+        $this->assertStringContainsString('93.3%', $html);
+        // Grade 4 benchmark comes from config, not from the copy.
+        $this->assertStringContainsString('<strong>' . config('bigkas.wpm_benchmarks.4.min') . '</strong>', $html);
+    }
+
+    public function test_the_faq_is_present_and_says_the_ai_does_not_decide_the_level(): void
+    {
+        $html = $this->resultPage($this->scored());
+
+        $this->assertStringContainsString('Frequently asked questions', $html);
+        $this->assertStringContainsString('Is the AI deciding the learner', $html);
+        $this->assertStringContainsString('only suggests which skill looks weakest', $html);
+    }
+
+    public function test_the_comprehension_row_appears_only_when_questions_were_answered(): void
+    {
+        $html = $this->resultPage($this->scored());
+
+        $this->assertStringNotContainsString('Questions answered correctly.', $html);
     }
 }

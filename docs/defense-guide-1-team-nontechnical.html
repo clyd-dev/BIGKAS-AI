@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIGKAS-AI Defense Guide for the Team</title>
+<style>
+  :root{
+    --ink:#1b1f24; --muted:#555f6b; --line:#cfd6de; --soft:#f3f5f8;
+    --accent:#1d4ed8; --accent-soft:#e8efff;
+    --warn:#8a4300; --warn-soft:#fff3e0;
+    --stop:#9c1c22; --stop-soft:#fdecec;
+    --go:#1b6b3c; --go-soft:#e8f6ee;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#fff;color:var(--ink);font:15px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+  .page{max-width:860px;margin:0 auto;padding:36px 22px 70px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+  h2{font-size:21px;margin:38px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--ink);break-after:avoid}
+  h3{font-size:16.5px;margin:22px 0 6px;break-after:avoid}
+  h4{font-size:12.5px;margin:14px 0 4px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);break-after:avoid}
+  p{margin:0 0 11px}
+  ul,ol{margin:0 0 12px;padding-left:22px}
+  li{margin:0 0 5px}
+  .sub{color:var(--muted);font-size:16px;margin:0 0 18px}
+  .meta{font-size:13px;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 0;margin:14px 0 22px}
+  .box{border:1px solid var(--line);border-left:5px solid var(--accent);background:var(--accent-soft);padding:12px 16px;margin:14px 0;border-radius:4px;break-inside:avoid}
+  .box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+  .box.stop{border-left-color:var(--stop);background:var(--stop-soft)}
+  .box.go{border-left-color:var(--go);background:var(--go-soft)}
+  .box p:last-child,.box ul:last-child{margin-bottom:0}
+  .box b.t{display:block;margin-bottom:3px}
+  table{border-collapse:collapse;width:100%;margin:10px 0 16px;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--soft);font-weight:700}
+  tr{break-inside:avoid}
+  .step{display:grid;grid-template-columns:44px 1fr;gap:14px;margin:0 0 14px;padding:14px;border:1px solid var(--line);border-radius:6px;break-inside:avoid}
+  .num{width:44px;height:44px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:19px;display:flex;align-items:center;justify-content:center}
+  .step h3{margin:0 0 4px}
+  .step p{margin:0 0 7px}
+  .say{background:var(--soft);border-left:4px solid var(--ink);padding:8px 12px;font-style:italic;margin:8px 0 0;border-radius:3px}
+  .see{font-size:13.5px;color:var(--muted)}
+  .faq{border:1px solid var(--line);border-radius:6px;margin:0 0 12px;padding:12px 15px;break-inside:avoid}
+  .faq .q{font-weight:700;margin:0 0 6px}
+  .faq .q span{color:var(--accent);margin-right:6px}
+  .faq .a{margin:0 0 6px}
+  .faq .pressed{font-size:13.5px;background:var(--warn-soft);border-radius:3px;padding:6px 10px;margin:6px 0 0}
+  .faq .dont{font-size:13.5px;background:var(--stop-soft);border-radius:3px;padding:6px 10px;margin:6px 0 0}
+  .pill{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 8px;border-radius:99px;border:1px solid currentColor;vertical-align:middle}
+  .pill.g{color:var(--go)} .pill.o{color:var(--warn)} .pill.r{color:var(--stop)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .cols>div{border:1px solid var(--line);border-radius:6px;padding:12px 14px;break-inside:avoid}
+  .cols h4{margin-top:0}
+  figure{margin:14px 0;break-inside:avoid}
+  figcaption{font-size:12.5px;color:var(--muted);margin-top:4px}
+  svg{max-width:100%;height:auto;display:block}
+  .toc{columns:2;column-gap:30px;font-size:14px;padding-left:20px}
+  .big{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 16px}
+  .kpi{border:1px solid var(--line);border-radius:6px;padding:10px 12px;break-inside:avoid}
+  .kpi small{display:block;color:var(--muted);font-size:12px;margin-top:4px;line-height:1.35}
+  .noprint{}
+  @media (max-width:640px){
+    .cols{grid-template-columns:1fr}
+    .kpis{grid-template-columns:1fr 1fr}
+    .toc{columns:1}
+    .step{grid-template-columns:34px 1fr;gap:10px}
+    .num{width:34px;height:34px;font-size:16px}
+  }
+  @media print{
+    @page{size:A4;margin:14mm 13mm}
+    body{font-size:11.2pt;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .page{max-width:none;padding:0}
+    h2{margin-top:22px}
+    .pb{break-before:page}
+    .noprint{display:none}
+    a{color:inherit;text-decoration:none}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>BIGKAS-AI: Team Defense Guide</h1>
+<p class="sub">Plain-language walkthrough of what the system does, how it works from start to finish, and how to answer the panel.</p>
+<div class="meta">For: non-technical team members &nbsp;·&nbsp; Prepared for the system defense, 13 Oct 2026 &nbsp;·&nbsp; Companion document: <i>Developer Defense Guide</i> (separate file). Every statement here was checked against the actual code and model files of this project.</div>
+
+<div class="box">
+  <b class="t">How to use this guide</b>
+  <p>Read sections 1 to 4 first (about 10 minutes). Then read section 5 (the step-by-step pipeline) twice. Then study the FAQ in section 9. If you only have 5 minutes, read the "60-second explanation" and the "Numbers to remember" box below, and section 8 (honest limits).</p>
+</div>
+
+<ol class="toc">
+  <li>The 60-second explanation</li>
+  <li>The problem and who it is for</li>
+  <li>The system in one picture</li>
+  <li>The five "workers" inside the system</li>
+  <li>The full pipeline, start to finish</li>
+  <li>Words you must be able to explain</li>
+  <li>What the screens show (7A: explaining the results page)</li>
+  <li>Honest limits (read before the defense)</li>
+  <li>FAQ the panel is likely to ask</li>
+  <li>Suggested demo order and team roles</li>
+  <li>Say / don't say cheat sheet</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2>1. The 60-second explanation</h2>
+
+<div class="box go">
+  <b class="t">Say this first</b>
+  <p><i>"BIGKAS-AI helps a teacher assess how well a Grade 3 to 6 learner reads aloud, in English or Filipino. The teacher or the learner records the child reading a short passage. The system listens, compares what the child said with the printed passage word by word, and computes accuracy, reading speed and fluency, and the Phil-IRI reading level. A machine-learning model then suggests the learner's main reading weakness, and the system recommends activities for teacher and parent. The teacher always reviews the result and makes the final decision. It does not replace the teacher; it saves the manual tallying time and keeps a record of progress."</i></p>
+</div>
+
+<h3>Numbers to remember</h3>
+<div class="kpis">
+  <div class="kpi"><span class="big">4</span><small>roles: Admin, Teacher, Parent, Student</small></div>
+  <div class="kpi"><span class="big">2</span><small>languages for reading assessment: English and Filipino</small></div>
+  <div class="kpi"><span class="big">3</span><small>Phil-IRI levels: Frustration, Instructional, Independent</small></div>
+  <div class="kpi"><span class="big">5</span><small>weakness categories (including "no weakness")</small></div>
+  <div class="kpi"><span class="big">519</span><small>teacher-validated voice clips used to train the model</small></div>
+  <div class="kpi"><span class="big">62.5%</span><small>model accuracy on its 104-clip test set (5 categories)</small></div>
+  <div class="kpi"><span class="big">41%</span><small>what you would get by always guessing the most common category</small></div>
+  <div class="kpi"><span class="big">371</span><small>automated tests, all passing on 12 Oct 2026</small></div>
+</div>
+
+<!-- ============================================================ -->
+<h2>2. The problem and who it is for</h2>
+
+<h3>The problem</h3>
+<p>In public elementary schools, a teacher listens to each learner read aloud, marks every mistake on paper, counts words and minutes by hand, and then looks up a reading level (the Phil-IRI procedure). This takes a lot of time per child, so many learners are assessed rarely, and the specific kind of reading difficulty a child has is often not recorded in a way that can be tracked over time.</p>
+
+<div class="box warn">
+  <b class="t">Caution about statistics</b>
+  <p>The project README quotes an EDCOM 2 figure that "70% of Grade 3 learners struggle with basic phonemic awareness". Do not quote this number unless you can name the exact source document. If asked, say "national reports describe a serious reading-literacy gap" and cite the source you can actually show.</p>
+</div>
+
+<h3>Who uses BIGKAS-AI</h3>
+<table>
+  <tr><th style="width:18%">Role</th><th>What they do in the system</th></tr>
+  <tr><td><b>Teacher</b></td><td>Registers learners, chooses a passage, records or monitors the reading, reviews the AI result, accepts or changes it, assigns activities, sees class progress, prepares DepEd forms and reports.</td></tr>
+  <tr><td><b>Learner (student)</b></td><td>Logs in with a personal PIN, reads the assigned passage aloud into the device, answers comprehension questions, does practice activities, earns points and badges.</td></tr>
+  <tr><td><b>Parent / guardian</b></td><td>Sees their child's results in plain language, does home activities assigned by the teacher, messages the teacher.</td></tr>
+  <tr><td><b>Administrator</b></td><td>Creates accounts, schools and classes, monitors the whole school, checks that the AI services are running, reviews class reports, prepares the school-level DepEd form.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>3. The system in one picture</h2>
+
+<figure>
+<svg viewBox="0 0 820 330" role="img" aria-label="System overview">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1b1f24"/></marker></defs>
+  <rect x="10" y="20" width="170" height="90" rx="8" fill="#e8efff" stroke="#1d4ed8"/>
+  <text x="95" y="48" text-anchor="middle" font-size="15" font-weight="700">1. People</text>
+  <text x="95" y="70" text-anchor="middle" font-size="12.5">Teacher · Learner</text>
+  <text x="95" y="88" text-anchor="middle" font-size="12.5">Parent · Admin</text>
+  <text x="95" y="104" text-anchor="middle" font-size="11" fill="#555f6b">(web browser, phone or PC)</text>
+
+  <rect x="245" y="20" width="200" height="90" rx="8" fill="#fff" stroke="#1b1f24"/>
+  <text x="345" y="48" text-anchor="middle" font-size="15" font-weight="700">2. The BIGKAS website</text>
+  <text x="345" y="70" text-anchor="middle" font-size="12.5">Screens, logins, rules,</text>
+  <text x="345" y="88" text-anchor="middle" font-size="12.5">reading checker, reports</text>
+  <text x="345" y="104" text-anchor="middle" font-size="11" fill="#555f6b">(Laravel / PHP)</text>
+
+  <rect x="510" y="20" width="200" height="90" rx="8" fill="#fff" stroke="#1b1f24"/>
+  <text x="610" y="48" text-anchor="middle" font-size="15" font-weight="700">3. The AI helper</text>
+  <text x="610" y="70" text-anchor="middle" font-size="12.5">Listens to the voice (speech-</text>
+  <text x="610" y="88" text-anchor="middle" font-size="12.5">to-text) and suggests the</text>
+  <text x="610" y="104" text-anchor="middle" font-size="12.5">weakness (machine learning)</text>
+
+  <rect x="245" y="200" width="200" height="90" rx="8" fill="#f3f5f8" stroke="#555f6b"/>
+  <text x="345" y="228" text-anchor="middle" font-size="15" font-weight="700">4. The filing cabinet</text>
+  <text x="345" y="250" text-anchor="middle" font-size="12.5">Database: learners, results,</text>
+  <text x="345" y="268" text-anchor="middle" font-size="12.5">recordings, activities, messages</text>
+
+  <rect x="510" y="200" width="200" height="90" rx="8" fill="#e8f6ee" stroke="#1b6b3c"/>
+  <text x="610" y="228" text-anchor="middle" font-size="15" font-weight="700">5. The safety net</text>
+  <text x="610" y="250" text-anchor="middle" font-size="12.5">If the AI helper is off, simple</text>
+  <text x="610" y="268" text-anchor="middle" font-size="12.5">rules still give an estimate</text>
+
+  <line x1="180" y1="65" x2="243" y2="65" stroke="#1b1f24" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="445" y1="55" x2="508" y2="55" stroke="#1b1f24" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="508" y1="80" x2="447" y2="80" stroke="#1b1f24" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="345" y1="110" x2="345" y2="198" stroke="#1b1f24" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="610" y1="110" x2="610" y2="198" stroke="#1b6b3c" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ar)"/>
+  <text x="620" y="160" font-size="12" fill="#1b6b3c">only when needed</text>
+</svg>
+<figcaption>Everything the panel sees on screen is part 2. Part 3 runs on the same server (nothing is sent to an outside company by default).</figcaption>
+</figure>
+
+<!-- ============================================================ -->
+<h2>4. The five "workers" inside the system</h2>
+<p>A simple way to explain the technology without jargon: think of a small office with five workers.</p>
+
+<table>
+  <tr><th style="width:21%">Worker</th><th>What it does (everyday words)</th><th style="width:26%">Technical name (only if asked)</th></tr>
+  <tr><td><b>The Recorder</b></td><td>Captures the child's voice through the device microphone, up to 3 minutes, and saves it so the teacher can replay it any time.</td><td>Browser recording (MediaRecorder)</td></tr>
+  <tr><td><b>The Listener</b></td><td>Turns the recording into written words and notes when each word was said. It also checks whether the recording was clear or noisy, and whether anyone was speaking at all.</td><td>Whisper speech-to-text (faster-whisper) and a voice-activity check</td></tr>
+  <tr><td><b>The Marker</b></td><td>Lines up what the child said against the printed passage word by word, like a teacher with a red pen: correct, skipped, added, wrong word, repeated, self-corrected, stopped early. Then it counts and computes accuracy, speed, fluency and the Phil-IRI level.</td><td>Text alignment (edit-distance) and miscue rules</td></tr>
+  <tr><td><b>The Pattern Spotter</b></td><td>Looks at 12 measurements of the reading and suggests which of 5 categories fits best. It learned from 519 recordings that teachers had already labelled.</td><td>Random Forest classifier</td></tr>
+  <tr><td><b>The Double-Checker</b></td><td>Before anything is saved against a child, it checks that the suggestion is supported by the measured evidence, flags unreliable recordings, and then hands the decision to the teacher.</td><td>Evidence gate, advisor, teacher verdict</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 class="pb">5. The full pipeline, start to finish</h2>
+<p>This is the journey of one reading assessment. Learn the ten steps in order. For each step: what happens, what the panel will see, and a sentence you can say.</p>
+
+<figure>
+<svg viewBox="0 0 860 150" role="img" aria-label="Ten step pipeline">
+  <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1b1f24"/></marker></defs>
+  <g font-size="11.5" text-anchor="middle">
+    <rect x="4" y="10" width="76" height="50" rx="6" fill="#e8efff" stroke="#1d4ed8"/><text x="42" y="30">1 Choose</text><text x="42" y="46">passage</text>
+    <rect x="90" y="10" width="76" height="50" rx="6" fill="#e8efff" stroke="#1d4ed8"/><text x="128" y="30">2 Child</text><text x="128" y="46">reads aloud</text>
+    <rect x="176" y="10" width="76" height="50" rx="6" fill="#e8efff" stroke="#1d4ed8"/><text x="214" y="30">3 Voice is</text><text x="214" y="46">saved</text>
+    <rect x="262" y="10" width="76" height="50" rx="6" fill="#fff" stroke="#1b1f24"/><text x="300" y="30">4 Voice to</text><text x="300" y="46">text</text>
+    <rect x="348" y="10" width="76" height="50" rx="6" fill="#fff" stroke="#1b1f24"/><text x="386" y="30">5 Compare</text><text x="386" y="46">with text</text>
+    <rect x="434" y="10" width="76" height="50" rx="6" fill="#fff" stroke="#1b1f24"/><text x="472" y="30">6 Compute</text><text x="472" y="46">measures</text>
+    <rect x="520" y="10" width="76" height="50" rx="6" fill="#fff" stroke="#1b1f24"/><text x="558" y="30">7 AI suggests</text><text x="558" y="46">weakness</text>
+    <rect x="606" y="10" width="76" height="50" rx="6" fill="#e8f6ee" stroke="#1b6b3c"/><text x="644" y="30">8 Evidence</text><text x="644" y="46">check</text>
+    <rect x="692" y="10" width="76" height="50" rx="6" fill="#e8f6ee" stroke="#1b6b3c"/><text x="730" y="30">9 Teacher</text><text x="730" y="46">decides</text>
+    <rect x="778" y="10" width="76" height="50" rx="6" fill="#e8efff" stroke="#1d4ed8"/><text x="816" y="30">10 Action</text><text x="816" y="46">and track</text>
+  </g>
+  <g stroke="#1b1f24" stroke-width="1.5" marker-end="url(#ar2)">
+    <line x1="80" y1="35" x2="89" y2="35"/><line x1="166" y1="35" x2="175" y2="35"/><line x1="252" y1="35" x2="261" y2="35"/>
+    <line x1="338" y1="35" x2="347" y2="35"/><line x1="424" y1="35" x2="433" y2="35"/><line x1="510" y1="35" x2="519" y2="35"/>
+    <line x1="596" y1="35" x2="605" y2="35"/><line x1="682" y1="35" x2="691" y2="35"/><line x1="768" y1="35" x2="777" y2="35"/>
+  </g>
+  <text x="42" y="95" font-size="11" fill="#555f6b">Blue = people and screens</text>
+  <text x="300" y="95" font-size="11" fill="#555f6b">White = automatic analysis</text>
+  <text x="644" y="95" font-size="11" fill="#555f6b">Green = safeguards</text>
+</svg>
+<figcaption>The analysis (steps 4 to 8) takes from several seconds to a few minutes depending on the server, because speech recognition runs on an ordinary CPU.</figcaption>
+</figure>
+
+<div class="step"><div class="num">1</div><div>
+  <h3>The teacher chooses the learner and a reading passage</h3>
+  <p>The teacher picks a learner, then the language (English or Filipino), then the type of assessment: oral reading only, comprehension only, or combined. The system offers passages that match the learner's grade. A passage from one grade above or below is allowed only if the teacher deliberately chooses that option. Passages are short (up to 50 words) and each has comprehension questions.</p>
+  <p class="see">On screen: <b>Assessments → New assessment</b>.</p>
+  <div class="say">"We follow the grade-level rule of Phil-IRI: the passage must match the learner's grade unless the teacher chooses otherwise."</div>
+</div></div>
+
+<div class="step"><div class="num">2</div><div>
+  <h3>The learner reads the passage aloud</h3>
+  <p>Two ways. (a) The teacher records the learner on the teacher's own device. (b) The learner opens their own student screen with a PIN, sees the passage, reads it, and answers the questions; the teacher can watch the live status. The microphone recording stops by itself at 3 minutes.</p>
+  <p class="see">On screen: record button, timer, sound-level bar; or the student's reading screen with a big passage.</p>
+  <div class="say">"The child reads normally. Nothing special is needed other than a microphone and a reasonably quiet place."</div>
+</div></div>
+
+<div class="step"><div class="num">3</div><div>
+  <h3>The recording is saved</h3>
+  <p>The voice recording is stored on the school's server first, before any analysis. If anything fails later, the recording is not lost and the teacher can press "Analyze" again without making the child read again. The teacher can also replay it to check the AI's work.</p>
+  <div class="say">"We save the recording first so a technical problem never costs the child another reading."</div>
+</div></div>
+
+<div class="step"><div class="num">4</div><div>
+  <h3>The Listener turns the voice into words</h3>
+  <p>Speech recognition writes down what was said, with the time each word started and ended. It is set up to keep hesitations and repeated words instead of "tidying them up", because those are exactly what a reading assessment needs to see. Before this, the system also measures the recording itself: how much of it was speech, how noisy the background was, and whether any sound was not the child reading. If nobody is speaking, it stops and says so instead of guessing words.</p>
+  <p class="see">On screen: <b>Results → Recording quality</b> ("Clear recording", "Some background noise", "Noisy recording", "No voice heard").</p>
+  <div class="say">"The system checks the recording quality and tells the teacher when the result may be unreliable because of noise."</div>
+</div></div>
+
+<div class="step"><div class="num">5</div><div>
+  <h3>The Marker compares what was said with the passage</h3>
+  <p>The words spoken are lined up against the printed passage in order. Each word is labelled the way a reading teacher would:</p>
+  <ul>
+    <li><b>Correct</b>: read as written.</li>
+    <li><b>Mispronunciation</b>: a different word that sounds like the target.</li>
+    <li><b>Substitution</b>: a different, unrelated word.</li>
+    <li><b>Omission</b>: a word skipped. <b>Not reached</b>: the child stopped before the end.</li>
+    <li><b>Insertion</b>: an extra word added.</li>
+    <li><b>Repetition</b> or false start (for example "ma-mabilis").</li>
+    <li><b>Self-correction</b>: a mistake the child fixed immediately (not counted as an error).</li>
+    <li><b>Off-passage</b>: talking that is not reading (not scored as reading errors).</li>
+  </ul>
+  <p class="see">On screen: <b>Results → word-by-word comparison</b> with colours.</p>
+  <div class="say">"This is the same thing a teacher does with a red pen, but automatically and consistently."</div>
+</div></div>
+
+<div class="step"><div class="num">6</div><div>
+  <h3>The system computes the reading measures</h3>
+  <table>
+    <tr><th style="width:24%">Measure</th><th>Plain meaning</th></tr>
+    <tr><td>Accuracy %</td><td>Words read correctly divided by words in the passage.</td></tr>
+    <tr><td>Words per minute (WPM)</td><td>Correct words divided by the recording length, scaled to one minute. Compared with a benchmark for the learner's grade.</td></tr>
+    <tr><td>Fluency (0 to 10)</td><td>How smooth the reading was: starts at 10 and loses points for long pauses and for very slow or rushed pace.</td></tr>
+    <tr><td>Prosody (0 to 10)</td><td>An estimate of expression and rhythm (see the honest limits section: this one is an estimate).</td></tr>
+    <tr><td>Phil-IRI level</td><td>Accuracy 97% and above is <b>Independent</b>; 90 to 96% is <b>Instructional</b>; below 90% is <b>Frustration</b>. Comprehension has its own cut-offs: 80% and above, 59 to 79%, and 58% and below.</td></tr>
+  </table>
+  <div class="say">"The reading level uses the official Phil-IRI cut-offs, not our own numbers, so the printed DepEd forms always follow the DepEd rule."</div>
+</div></div>
+
+<div class="step"><div class="num">7</div><div>
+  <h3>The Pattern Spotter suggests the main weakness</h3>
+  <p>Twelve measurements (accuracy, speed, fluency, error rates, pause rate, and so on) are sent to a trained machine-learning model. It answers with one of five categories and how sure it is:</p>
+  <table>
+    <tr><th style="width:8%">#</th><th style="width:30%">Category</th><th>Meaning</th></tr>
+    <tr><td>0</td><td>Independent reader / no weakness</td><td>Reads accurately and smoothly.</td></tr>
+    <tr><td>1</td><td>Phonemic awareness</td><td>Trouble linking letters to sounds; errors that sound like the target word.</td></tr>
+    <tr><td>2</td><td>Decoding accuracy</td><td>Reads words incorrectly; many wrong words.</td></tr>
+    <tr><td>3</td><td>Oral reading fluency</td><td>Reads slowly or haltingly, many pauses.</td></tr>
+    <tr><td>4</td><td>Reading comprehension</td><td>Understanding the text. Measured by the comprehension questions, not by the voice.</td></tr>
+  </table>
+  <div class="say">"The model suggests; it does not diagnose. It was trained on 519 voice clips of Grade 3 and 4 learners that teachers had reviewed and labelled."</div>
+</div></div>
+
+<div class="step"><div class="num">8</div><div>
+  <h3>The Double-Checker tests the suggestion against the evidence</h3>
+  <p>A suggestion is only saved if the measured evidence supports it. Example: if the model says "phonemic awareness" but the child made only one such slip, the system does not store that weakness. It picks the next most likely category that the evidence does support, or stores none. The system also raises plain-language warnings, for example "recording is very short", "speech recognition was unsure of many words", "accuracy is unusually low, which often means a poor recording". If the AI service is off, a simple rule gives an estimate and the result is clearly labelled as rule-based.</p>
+  <p class="see">On screen: <b>Results → "How this result was produced"</b> and the findings list.</p>
+  <div class="say">"We built in checks so that the system tells the teacher when not to trust it."</div>
+</div></div>
+
+<div class="step"><div class="num">9</div><div>
+  <h3>The teacher reviews and decides</h3>
+  <p>The teacher sees the result, the explanation of why the level was assigned, and the recording. Then they choose one of three decisions: <b>Accept</b>, <b>Override</b> (change the level or weakness, with a written reason, or re-score by hand), or <b>Invalidate</b> (discard a bad recording, with a reason). The AI's original numbers are always kept next to the teacher's decision, so there is a clear record of who decided what.</p>
+  <p class="see">On screen: <b>Results → Teacher decision</b>.</p>
+  <div class="say">"BIGKAS advises, the teacher decides. Every change needs a reason, and it is recorded."</div>
+</div></div>
+
+<div class="step"><div class="num">10</div><div>
+  <h3>Action and tracking</h3>
+  <p>The result drives what happens next: recommended activities for the weakness, assignment to the learner (and the parent for home activities), notifications to the parent, progress charts, class "needs attention" lists on the teacher dashboard, and printable DepEd forms (passage rating sheet, individual summary record, class reports, the school reading profile). Learners earn points, streaks and badges for practice.</p>
+  <p class="see">On screen: <b>Dashboard, Interventions, Learner progress, Reports, Parent dashboard, Student badges</b>.</p>
+  <div class="say">"The assessment is not the end. It triggers a plan and tracks whether the child improves."</div>
+</div></div>
+
+<!-- ============================================================ -->
+<h2>6. Words you must be able to explain</h2>
+<table>
+  <tr><th style="width:24%">Term</th><th>One-sentence explanation</th></tr>
+  <tr><td>Phil-IRI</td><td>The Philippine Informal Reading Inventory: DepEd's standard way to find a learner's reading level. We follow its levels and forms.</td></tr>
+  <tr><td>Frustration / Instructional / Independent</td><td>Too difficult / needs teacher guidance / can read alone.</td></tr>
+  <tr><td>Speech-to-text</td><td>Software that writes down spoken words. We use Whisper, an open-source model that runs on our own server.</td></tr>
+  <tr><td>Machine learning</td><td>A program that learns patterns from examples rather than from hand-written rules.</td></tr>
+  <tr><td>Random Forest</td><td>Many small decision trees that each vote; the majority answer wins. Easy to explain and works with small data.</td></tr>
+  <tr><td>Training data</td><td>The 519 labelled voice clips the model learned from. Labels were confirmed by teachers.</td></tr>
+  <tr><td>Test set</td><td>104 clips kept aside and never shown to the model while it learned; used to measure how well it does on new clips.</td></tr>
+  <tr><td>Accuracy of the model</td><td>Out of the 104 test clips, how many it put in the same category as the teacher: 65 of 104, which is 62.5%.</td></tr>
+  <tr><td>Confidence</td><td>How strongly the model favours its top answer. Not the same as being correct.</td></tr>
+  <tr><td>Miscue</td><td>Any departure from the printed text while reading aloud.</td></tr>
+  <tr><td>Prosody</td><td>Expression, stress and rhythm when reading.</td></tr>
+  <tr><td>Fallback</td><td>The simple back-up rule used if the AI service is unavailable.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>7. What the screens show (where to point during the demo)</h2>
+<table>
+  <tr><th style="width:24%">Screen</th><th>What to point out</th></tr>
+  <tr><td>Home page / login</td><td>One entry for staff and parents, a separate friendly PIN login for learners. Email verification code on registration.</td></tr>
+  <tr><td>Teacher dashboard</td><td>Class overview, "students needing attention" list, intervention status, recent assessments.</td></tr>
+  <tr><td>New assessment</td><td>Learner, language, assessment type, grade-matched passage.</td></tr>
+  <tr><td>Recording screen</td><td>Passage, recorder, timer, comprehension questions if the type requires them, "Analyze" button.</td></tr>
+  <tr><td>Results page</td><td>Reading level and why, accuracy, WPM, fluency, word-by-word comparison, weakness and the evidence behind it, recording quality, warnings, recommended activities, teacher decision, comparison with the previous assessment. At the bottom, a "How to read this result" card explains the process, each number and a short FAQ (see 7A).</td></tr>
+  <tr><td>Interventions</td><td>Library of activities per weakness and grade; assignment; status; effectiveness rating.</td></tr>
+  <tr><td>Learner progress and reports</td><td>Trend charts, class reports, printable PDF.</td></tr>
+  <tr><td>DepEd forms</td><td>Phil-IRI Group Screening Test records (Forms 1A/1B), Form 2 (School Reading Profile), Form 3A/3B (Grade Level Passage Rating Sheet, one per assessment), Form 4 (Individual Summary Record).</td></tr>
+  <tr><td>Parent dashboard</td><td>Child's results in plain language, home activities, messages to the teacher.</td></tr>
+  <tr><td>Student portal</td><td>PIN login, assigned reading, flash cards, guided reading, points, streaks, badges, class leaderboard.</td></tr>
+  <tr><td>Admin: system status</td><td>Shows whether the speech engine and the classifier are online. Good to show this to prove the AI really runs.</td></tr>
+</table>
+
+
+<!-- ============================================================ -->
+<h2 class="pb">7A. Explaining the results page (the "How to read this result" card)</h2>
+<p>The results page ends with a card that answers the panel's most likely question: <i>"What do these numbers mean, and how did the AI get them?"</i> You can scroll to it and read from it. It has three parts.</p>
+
+<h3>Part 1: how the result was produced (say it in six words each)</h3>
+<table>
+  <tr><th style="width:18%">Step</th><th>What the page says, in plain words</th></tr>
+  <tr><td>1. Listen</td><td>The recording is checked for speech versus noise, then the speech model writes down the words and when each was said.</td></tr>
+  <tr><td>2. Compare</td><td>The heard words are lined up against the passage. Each passage word is correct, mispronounced, substituted, skipped or not reached.</td></tr>
+  <tr><td>3. Count</td><td>Accuracy, words per minute, pauses and the comprehension score are simple arithmetic. <b>No AI in this step.</b></td></tr>
+  <tr><td>4. Suggest</td><td>The Random Forest looks at 12 rates together and suggests the one weakest skill. A suggestion, not a measurement.</td></tr>
+  <tr><td>5. Check</td><td>The suggestion is kept only if the measured evidence supports it; otherwise the page says so.</td></tr>
+  <tr><td>6. You decide</td><td>The teacher accepts, overrides or invalidates. The AI's original values are kept beside the decision.</td></tr>
+</table>
+
+<h3>Part 2: what each number means</h3>
+<table>
+  <tr><th style="width:20%">Number</th><th>What it is</th><th style="width:30%">Cut-offs / what to say</th></tr>
+  <tr><td>Word accuracy</td><td>Correct words divided by words in the passage. Counted by rules.</td><td>97% and above independent; 90 to 96% instructional; below 90% frustration (Phil-IRI).</td></tr>
+  <tr><td>Words per minute</td><td>Correctly read words divided by the length of the recording in minutes. Mistakes and long silences lower it.</td><td>Compared with a grade benchmark. Speed alone is not a diagnosis.</td></tr>
+  <tr><td>Comprehension</td><td>Questions answered correctly. Shown only when questions were asked.</td><td>80% and above independent; 59 to 79% instructional; below 59% frustration.</td></tr>
+  <tr><td>Total errors</td><td>Mispronunciations, substitutions, omissions, insertions, repetitions, words not reached.</td><td>Self-corrections, hesitations and pauses are shown but not counted as errors.</td></tr>
+  <tr><td>Model confidence</td><td>How strongly the model's trees agreed on the suggested skill.</td><td><b>Not</b> the chance that it is right. Say: "agreement, not accuracy".</td></tr>
+  <tr><td>Model accuracy</td><td>How often the model matched teachers on held-out clips in development (62.5%).</td><td>About four in ten suggestions can disagree with a teacher, which is why the teacher confirms every result.</td></tr>
+</table>
+
+<h3>Part 3: the ten questions on the card</h3>
+<p>The card carries its own FAQ, so a panelist can read the answer straight off the screen. In short:</p>
+<ul>
+  <li><b>Does the AI decide the level?</b> No. The level comes from counting against the Phil-IRI cut-offs. The AI only suggests the weakest skill.</li>
+  <li><b>Level versus weakness?</b> The level says how hard the passage was for the learner. The weakness says which skill is most likely behind it.</li>
+  <li><b>"No significant weakness detected"?</b> No skill was below its cut-off in this reading. It describes one reading of one passage, not a guarantee.</li>
+  <li><b>"Can't tell"?</b> There was not enough evidence, usually comprehension without questions. The system will not guess.</li>
+  <li><b>Confident model but fine numbers?</b> Trust the numbers and your own listening; confidence only means the trees agreed.</li>
+  <li><b>Word marked wrong but said correctly?</b> The speech model can mishear. Words it was unsure about carry a wavy underline. Play the audio and correct it in the verdict.</li>
+  <li><b>WPM differs from a stopwatch?</b> Only correct words count and the time is the whole recording.</li>
+  <li><b>Noisy audio or early stop?</b> See "What to check before you decide" above it; re-assess or use the verdict.</li>
+  <li><b>Filipino and English equal?</b> No. Training was Grades 3 and 4, more Filipino than English, with a stock speech model.</li>
+  <li><b>What happens to an override?</b> The AI's values stay stored beside it; the teacher's decision is the record.</li>
+</ul>
+<p style="border-left:3px solid #2b6cb0;padding:6px 10px;background:#eef4fb"><b>Tip:</b> during the demo, open this card last. After showing the level and the weakness, scroll down and say: "Everything you just saw is explained here, including how far to trust the AI."</p>
+
+<!-- ============================================================ -->
+<h2 class="pb">8. Honest limits (read before the defense)</h2>
+<p>Panelists respect a team that knows its limits. These are real and we should state them ourselves before being asked.</p>
+
+<div class="cols">
+<div>
+  <h4>What is solid</h4>
+  <ul>
+    <li>Complete working workflow from recording to result to action.</li>
+    <li>Reading level uses the official Phil-IRI cut-offs.</li>
+    <li>Teacher always has the final say, and it is recorded.</li>
+    <li>The system warns when a result may be unreliable.</li>
+    <li>Works even when the AI model is off (clearly labelled fallback).</li>
+    <li>Privacy and security measures built in; 371 automated tests pass.</li>
+  </ul>
+</div>
+<div>
+  <h4>What is weak (say it plainly)</h4>
+  <ul>
+    <li>The classifier is <b>62.5%</b> accurate on a 104-clip test set, and about 50% in cross-validation. It is useful, not definitive.</li>
+    <li>It was trained on <b>Grade 3 and 4 only</b>, from <b>36 learners</b>, not Grades 5 and 6.</li>
+    <li>Only <b>3</b> clips of "comprehension" weakness existed, so the model cannot learn that category. Comprehension is measured by the questions instead.</li>
+    <li>The speech engine is the standard pre-trained one, <b>not yet tuned</b> for Filipino children's voices.</li>
+    <li>We have <b>not</b> yet measured the whole system end to end against a teacher's marking in real classrooms.</li>
+  </ul>
+</div>
+</div>
+
+<div class="box warn">
+  <b class="t">The honest one-liner</b>
+  <p><i>"It is a decision-support tool. The measurements (accuracy, speed, level) are computed directly and transparently. The weakness suggestion comes from a model trained on a small, first-version dataset, so we treat it as a suggestion that the teacher confirms. Our next step is more data, more grades, and a classroom validation."</i></p>
+</div>
+
+<!-- ============================================================ -->
+<h2 class="pb">9. FAQ the panel is likely to ask, with defense answers</h2>
+<p>Each answer is short enough to say aloud. The <span class="pill o">If pressed</span> line is the follow-up if the panelist digs deeper. The <span class="pill r">Do not say</span> line is a trap to avoid.</p>
+
+<div class="faq"><p class="q"><span>Q1</span>What exactly does BIGKAS-AI do, in one sentence?</p>
+<p class="a">It listens to a learner read aloud in English or Filipino, scores the reading against the printed passage, determines the Phil-IRI level, suggests the main reading weakness, and recommends activities for the teacher and parent to act on.</p></div>
+
+<div class="faq"><p class="q"><span>Q2</span>Why is this needed when Phil-IRI already exists?</p>
+<p class="a">We do not replace Phil-IRI; we follow it. The levels and the forms are DepEd's. What we remove is the manual tallying, and we add a consistent record, trend tracking, and a specific next step for each child. Paper Phil-IRI tells you the level; it rarely tells you what to do next or whether the child improved.</p></div>
+
+<div class="faq"><p class="q"><span>Q3</span>Does it replace the teacher?</p>
+<p class="a">No. Every result goes to the teacher, who can accept it, override it with a written reason, or discard it. The AI's original numbers are kept next to the teacher's decision. The teacher is the assessor of record.</p></div>
+
+<div class="faq"><p class="q"><span>Q4</span>How does it know what the child said?</p>
+<p class="a">It uses Whisper, a widely used open-source speech-recognition model, running on our own server. It gives the words and the time of each word. We configured it to keep repeated and hesitant words so the mistakes are not cleaned away, and we check the recording quality first.</p>
+<p class="pressed"><span class="pill o">If pressed</span> Is it accurate on children's Filipino speech? &mdash; "It is the standard pre-trained model, not yet fine-tuned for our learners. That is why the system reports recording quality and speech-recognition confidence, lets the teacher replay the audio, and lets the teacher override. A fine-tuning script is prepared for when we have more data and a GPU."</p></div>
+
+<div class="faq"><p class="q"><span>Q5</span>How accurate is the system?</p>
+<p class="a">Two different things. The <b>measurements</b> (accuracy %, WPM, level) are direct calculations; their reliability depends on how well the speech was recognized, and we show that. The <b>weakness suggestion</b> comes from a machine-learning model that agreed with the teachers' label on 62.5% of its 104 test clips across five categories. Always guessing the most common category would score about 41%, so the model adds real signal, but it is a suggestion, not a diagnosis.</p>
+<p class="pressed"><span class="pill o">If pressed</span> Why not higher? &mdash; "Small first dataset (519 clips), five overlapping categories, labels that depend on human judgment, and a test set of only 104 clips. Its top-two suggestions contain the teacher's label about 86% of the time. More data is the main route to improving it."</p>
+<p class="dont"><span class="pill r">Do not say</span> "It is highly accurate", "it is 62.5% accurate at reading assessment", or "it diagnoses dyslexia/reading disorders". The 62.5% is only the weakness-category model on its test clips.</p></div>
+
+<div class="faq"><p class="q"><span>Q6</span>What data did you train it on? Who labelled it?</p>
+<p class="a">519 usable voice clips of Grade 3 and Grade 4 learners reading scripted passages in Filipino and English. Each clip was annotated word by word (what was skipped, replaced, added, paused), measurements were computed from those annotations, and teachers reviewed and confirmed the weakness label for each clip.</p>
+<p class="pressed"><span class="pill o">If pressed</span> How many learners? &mdash; "36 learners, several clips each. Most clips are Filipino (about 4 in 5)." Grade 5 and 6 are supported by the passages and screens but are not yet represented in the training clips.</p></div>
+
+<div class="faq"><p class="q"><span>Q7</span>What happens if the AI or the internet is down?</p>
+<p class="a">The recording is saved first, so nothing is lost. If the AI classifier is unreachable, a simple rule-based estimate is used and the result is clearly labelled "rule-based, ML service offline". If no speech engine is available, the system refuses to score instead of showing fake results, and the teacher can press Analyze again later.</p></div>
+
+<div class="faq"><p class="q"><span>Q8</span>Is the children's data safe?</p>
+<p class="a">Access is by role (a teacher sees their own class, a parent sees only their linked child). Student PINs and personal identity fields are stored encrypted. Logins are rate-limited and accounts lock after repeated failures. Passwords need to meet a strength policy. Email verification uses a one-time code. Every page is sent with security headers and is not cached after logout.</p>
+<p class="pressed"><span class="pill o">If pressed</span> Data Privacy Act? &mdash; "We applied privacy-by-design practices: restricted access, encryption of identifying fields, audit logs. A formal consent workflow for parents is on our future-work list and a formal compliance review would be done together with the school and division before wide deployment."</p>
+<p class="dont"><span class="pill r">Do not say</span> "We are fully compliant with the Data Privacy Act" or "DepEd approved".</p></div>
+
+<div class="faq"><p class="q"><span>Q9</span>Why only English and Filipino? What about Hiligaynon or other mother tongues?</p>
+<p class="a">Scope. The reading materials and the training clips are English and Filipino, which are the languages used for the Phil-IRI. The system is designed so more languages can be added when passages, recordings and labels exist for them.</p></div>
+
+<div class="faq"><p class="q"><span>Q10</span>Which grades does it cover?</p>
+<p class="a">The system, passages and DepEd forms cover Grades 3 to 6, matching the Phil-IRI range. The current classifier was trained on Grade 3 and 4 recordings; extending it to Grades 5 and 6 is the first item of future work.</p></div>
+
+<div class="faq"><p class="q"><span>Q11</span>How is the reading level decided?</p>
+<p class="a">By the official Phil-IRI word-reading cut-offs: 97% and above Independent, 90 to 96% Instructional, below 90% Frustration. When comprehension questions are taken, they are scored with the Phil-IRI comprehension cut-offs and the overall level is the lower of the two.</p></div>
+
+<div class="faq"><p class="q"><span>Q12</span>How do you measure comprehension? The voice can't tell that.</p>
+<p class="a">Correct, and we do not claim it can. Comprehension is measured by questions the learner answers after reading, scored against the Phil-IRI cut-offs. The voice-based model is never the source of a comprehension finding.</p></div>
+
+<div class="faq"><p class="q"><span>Q13</span>What if the room is noisy or the child is shy and speaks softly?</p>
+<p class="a">The system measures the recording itself and shows "clear", "some noise", "noisy" or "no voice heard", lists background sounds with times, and warns when speech recognition was unsure. For a poor recording the teacher can replay it, re-record, override the result, or invalidate it.</p></div>
+
+<div class="faq"><p class="q"><span>Q14</span>Can a teacher disagree with the AI?</p>
+<p class="a">Yes, and that is by design. An override requires a stated reason, can include manual re-scoring, and the AI's original result stays on record. Parents and DepEd forms use the teacher's final decision.</p></div>
+
+<div class="faq"><p class="q"><span>Q15</span>How do young learners log in safely?</p>
+<p class="a">With a personal 6-digit PIN issued by the teacher, on a separate kid-friendly login. The PIN is stored encrypted, expires, and attempts are rate-limited.</p></div>
+
+<div class="faq"><p class="q"><span>Q16</span>What does the parent see?</p>
+<p class="a">Their own child's results in plain language, progress over time, activities to do at home, and a message thread with the teacher. They cannot see other children.</p></div>
+
+<div class="faq"><p class="q"><span>Q17</span>What is new compared with existing reading apps?</p>
+<p class="a">Four things together: bilingual English and Filipino assessment aligned to Phil-IRI; official DepEd forms generated from the data; a teacher-in-the-loop decision record; and a speech engine that runs on the school's own server so there is no per-use cloud fee.</p></div>
+
+<div class="faq"><p class="q"><span>Q18</span>What hardware or internet does it need?</p>
+<p class="a">An ordinary small server (a 4 GB virtual server was our target) with no special graphics card, and a browser with a microphone on the teacher's or learner's device. Speech analysis is slower on a CPU (seconds to minutes), which is why the screen shows progress and the recording is saved first.</p></div>
+
+<div class="faq"><p class="q"><span>Q19</span>Did real teachers or learners test it?</p>
+<p class="a">Teachers validated the labels used for training and the recordings are from real learners. Be ready to describe exactly what testing or consultation your group actually did with teachers and learners.</p>
+<p class="dont"><span class="pill r">Do not say</span> anything about pilot testing or user feedback that you cannot back with a record. The project files do not contain a formal usability study, so only claim what you did.</p></div>
+
+<div class="faq"><p class="q"><span>Q20</span>Why a Random Forest and not deep learning?</p>
+<p class="a">Our data is small (hundreds of clips) and tabular (12 measurements). That is where Random Forests work well, are fast on ordinary hardware, and can show which measurements mattered. Deep learning needs far more data and is harder to explain to teachers.</p></div>
+
+<div class="faq"><p class="q"><span>Q21</span>What are the risks of mislabelling a child?</p>
+<p class="a">That is why the weakness is a suggestion, shown with its confidence and evidence, and always passes through the teacher. The system will not store a weakness that the measured evidence does not support, and an invalid recording can be discarded with a recorded reason.</p></div>
+
+<div class="faq"><p class="q"><span>Q22</span>What will you do next / how will it improve?</p>
+<ol>
+<li>Collect more recordings, especially Grade 5 and 6 and more comprehension cases.</li>
+<li>Tune the speech engine on Filipino learners' recordings (the preparation scripts exist).</li>
+<li>Validate end to end against teachers' manual Phil-IRI marking in real classrooms.</li>
+<li>Add a parent consent workflow and a formal privacy review.</li>
+</ol></div>
+
+<div class="faq"><p class="q"><span>Q23</span>Is it approved by DepEd?</p>
+<p class="a">No. It is a capstone prototype aligned to DepEd's Phil-IRI levels and forms. Adoption would require review and approval by the division and school authorities.</p></div>
+
+<div class="faq"><p class="q"><span>Q24</span>The home page talks about DepEd Phil-IRI forms. Are they filled in automatically?</p>
+<p class="a">They are pre-filled and then reviewed by the teacher. The system prepares printable records from the assessment data: the Group Screening Test records (Forms 1A/1B, from scores the teacher enters or imports), the Grade Level Passage Rating Sheet (Form 3A/3B), the Individual Summary Record (Form 4), and the School Reading Profile (Form 2, for the administrator). Some fields are left for the teacher to complete by hand.</p>
+<p class="dont"><span class="pill r">Do not say</span> "everything on every form is filled in automatically".</p></div>
+
+<div class="faq"><p class="q"><span>Q25</span>Is there a privacy policy?</p>
+<p class="a">Yes, a short Privacy Notice is linked in the footer of the home page (<code>/privacy</code>). It states what is collected, who can see it, how speech is processed and which safeguards exist. It also says plainly that parental consent and a retention period still have to be agreed with the school and division. It is a prototype notice, not a formal Data Privacy Act review.</p></div>
+
+<div class="faq"><p class="q"><span>Q26</span>What does the confidence percentage mean? Is the AI 80% sure?</p>
+<p class="a">It is how strongly the model's decision trees agreed on the suggested skill. It is not the chance the suggestion is right. On held-out clips the model matched teachers 62.5% of the time, so the result is a suggestion for the teacher to confirm.</p>
+<p class="dont"><span class="pill r">Do not say</span> "the AI is 80% accurate" or "there is an 80% chance it is correct".</p></div>
+
+<div class="faq"><p class="q"><span>Q27</span>Does the AI decide the reading level?</p>
+<p class="a">No. The level is counted: accuracy, and comprehension when questions were asked, against the Phil-IRI cut-offs. The AI only suggests which skill looks weakest, and the teacher accepts, overrides or invalidates it. The results page has a "How to read this result" card that says this on screen.</p></div>
+
+<div class="faq"><p class="q"><span>Q28</span>The page says "Can't tell" for comprehension. Is that a bug?</p>
+<p class="a">No, it is deliberate. Comprehension can only be judged from the questions, not from how a voice sounds. If no questions were answered, the system says it cannot tell rather than guess.</p></div>
+
+<div class="faq"><p class="q"><span>Q29</span>The words per minute is lower than what I timed. Why?</p>
+<p class="a">Only correctly read words are counted, and the time used is the whole recording. Silence at the start or end, long pauses and mistakes all lower it. It is a documented rule, and the teacher can re-score a result.</p></div>
+
+<!-- ============================================================ -->
+<h2 class="pb">10. Suggested demo order and team roles</h2>
+<ol>
+  <li><b>(30 s)</b> Home page and the two login paths (staff vs. learner PIN).</li>
+  <li><b>(30 s)</b> Admin: System status page showing the speech engine and the classifier online.</li>
+  <li><b>(60 s)</b> Teacher dashboard and starting a new assessment (choose learner, language, grade-matched passage).</li>
+  <li><b>(60 s)</b> Record a short reading. Make one deliberate mistake (skip a word) so the comparison has something to show.</li>
+  <li><b>(90 s)</b> Results page: level and why, word-by-word comparison, recording quality, weakness and evidence, recommended activities.</li>
+  <li><b>(30 s)</b> Teacher decision: accept or override with a reason.</li>
+  <li><b>(45 s)</b> Parent view of the same result and the student portal (badges).</li>
+  <li><b>(30 s)</b> DepEd form / report print.</li>
+</ol>
+<div class="box">
+  <b class="t">Demo safety tips</b>
+  <ul>
+    <li>Do a full rehearsal on the same device and network you will use. The first analysis after the server starts can be slow while the speech model loads.</li>
+    <li>Keep a <b>pre-recorded, already-analysed assessment</b> open in another tab as a backup in case the live analysis is slow.</li>
+    <li>Use a quiet spot and a headset microphone if possible.</li>
+    <li>If the live result looks odd, use it: show the warning panel and the teacher override. That demonstrates the safeguards.</li>
+  </ul>
+</div>
+
+<h3>Who answers what</h3>
+<table>
+  <tr><th style="width:30%">Topic</th><th>Suggested owner</th></tr>
+  <tr><td>Problem, purpose, users, Phil-IRI, DepEd forms</td><td>Non-technical team members (this guide)</td></tr>
+  <tr><td>Workflow and what the screens mean</td><td>Non-technical team members</td></tr>
+  <tr><td>How the model was built, accuracy numbers, architecture, security internals</td><td>Developer (see the Developer Guide)</td></tr>
+  <tr><td>Teacher validation of labels, classroom context</td><td>Whoever coordinated with the teachers</td></tr>
+</table>
+<p>If a question is technical beyond your comfort: "That is a good question for our developer. In simple terms, it works like this&hellip;" and pass it over.</p>
+
+<!-- ============================================================ -->
+<h2>11. Say / don't say cheat sheet</h2>
+<div class="cols">
+<div>
+  <h4>Say</h4>
+  <ul>
+    <li>"Decision support for the teacher."</li>
+    <li>"The teacher decides; every change has a reason."</li>
+    <li>"Aligned with Phil-IRI levels and forms."</li>
+    <li>"A first version trained on 519 teacher-validated clips."</li>
+    <li>"We know the limits and here is our plan."</li>
+    <li>"The system warns when a result may be unreliable."</li>
+  </ul>
+</div>
+<div>
+  <h4>Don't say</h4>
+  <ul>
+    <li>"It is very accurate" or "it is 100% reliable".</li>
+    <li>"It replaces teachers" or "it diagnoses".</li>
+    <li>"DepEd approved" or "fully Data-Privacy-Act compliant".</li>
+    <li>"Trained on Grades 3 to 6" (it was Grades 3 and 4).</li>
+    <li>"The AI understands comprehension from the voice."</li>
+    <li>Anything about pilot testing you cannot show a record for.</li>
+  </ul>
+</div>
+</div>
+
+<p style="margin-top:28px;font-size:12.5px;color:var(--muted)">Source of numbers: <code>ml-service/model_metadata.json</code> and the training data in <code>ml-service/training/</code>, re-checked on 12 Oct 2026 (test accuracy 62.5% on 104 clips, 519 training clips, 5 categories). The Developer Guide explains exactly how each number was computed.</p>
+
+</div>
+</body>
+</html>

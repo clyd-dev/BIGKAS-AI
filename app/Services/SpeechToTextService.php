@@ -160,7 +160,6 @@ class SpeechToTextService
         $mockTexts = [
             'en' => 'I have a dog his name is Max Max is brown he has a long tail Max likes to run he runs in the park I play with Max we play catch Max catches the ball he brings it back to me I love my dog Max',
             'fil' => 'Ako ay may pusa ang pangalan niya ay Muning si Muning ay puti mahaba ang buntot niya mahilig siyang matulog natutulog siya sa ilalim ng mesa pinapakain ko siya binibigyan ko siya ng gatas mahal ko ang pusa ko',
-            'hil' => 'May ido ako ang ngalan niya Max si Max kayumanggi mahaba ang ikog niya gusto ni Max magdalagan nagadalagan siya sa park nagahambal ako kay Max nagahampang kami catch ginakuha ni Max ang bola ginabalik niya ini sa akon palangga ko ang ido ko',
         ];
 
         $text = $mockTexts[$language] ?? $mockTexts['en'];

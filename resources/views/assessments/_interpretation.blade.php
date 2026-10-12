@@ -10,6 +10,9 @@
         $color = ['independent' => 'success', 'instructional' => 'warning', 'frustration' => 'danger'][$level] ?? 'secondary';
         $scale = $interpretation['scale'];
 
+        $sum = ($interpretation['computation'] ?? []) + ['word' => null, 'comprehension' => null, 'unread' => null, 'source' => null];
+        $decision = $interpretation['decision'] ?? null;
+
         $callouts = collect($interpretation['reasons'])->where('callout', true);
         $reasons = collect($interpretation['reasons'])->reject(fn ($r) => !empty($r['callout']));
 
@@ -56,6 +59,27 @@
             .level-scale__labels > div { flex: 1; text-align: center; font-size: .8rem; color: var(--bs-secondary-color); }
             .level-scale__labels .is-current { color: var(--bs-body-color); font-weight: 600; }
 
+            /* The arithmetic: monospaced so the figures line up and read as a sum. */
+            .why-sum {
+                display: inline-block;
+                font-family: var(--bs-font-monospace);
+                font-size: .9rem; font-weight: 600;
+                padding: .25rem .6rem; border-radius: .4rem;
+                background: var(--bs-secondary-bg); color: var(--bs-body-color);
+                white-space: nowrap;
+            }
+            .why-sum-note {
+                background: var(--bs-warning-bg-subtle);
+                border-left: 3px solid var(--bs-warning-border-subtle);
+                border-radius: .35rem; padding: .5rem .75rem;
+            }
+
+            .decision-note {
+                background: var(--bs-primary-bg-subtle);
+                border-left: 3px solid var(--bs-primary-border-subtle);
+                border-radius: .35rem; padding: .7rem .9rem;
+            }
+
             .why-list { list-style: none; padding: 0; margin: 0; }
             .why-list li { display: flex; gap: .85rem; padding: .85rem 0; }
             .why-list li + li { border-top: 1px solid var(--bs-border-color-translucent); }
@@ -72,18 +96,29 @@
             {{-- The answer --}}
             <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
                 <div class="flex-grow-1" style="min-width: 14rem;">
-                    <div class="small text-muted mb-1">Why this level?</div>
+                    <div class="small text-muted mb-1">{{ $interpretation['scope'] ?? 'Why this level?' }}</div>
                     <h4 class="mb-1 text-{{ $color }}-emphasis">{{ $interpretation['label'] }}</h4>
                     <p class="mb-0 text-body-secondary">{{ $interpretation['meaning'] }}</p>
                 </div>
                 <div class="text-sm-end">
                     <div class="why-number">{{ rtrim(rtrim(number_format($interpretation['accuracy'], 1), '0'), '.') }}%</div>
                     <div class="small text-muted">of words read correctly</div>
+                    {{-- The working, so the teacher can check the number rather
+                         than take it on faith. --}}
+                    @if($sum['word'])
+                        <div class="why-sum mt-2">{{ $sum['word'] }}</div>
+                        @if($sum['source'])
+                            <div class="small text-muted mt-1">{{ $sum['source'] }}</div>
+                        @endif
+                    @endif
                 </div>
             </div>
 
             {{-- Where that falls --}}
-            <div class="level-scale mt-3" role="img"
+            @if($interpretation['decision'] ?? null)
+                <div class="small text-muted mt-4 mb-1 fw-semibold">Word reading</div>
+            @endif
+            <div class="level-scale {{ ($interpretation['decision'] ?? null) ? '' : 'mt-3' }}" role="img"
                  aria-label="Accuracy {{ round($interpretation['accuracy']) }}%, which is in the {{ $scale['by_numbers'] }} band">
                 <div class="level-scale__marker" style="left: {{ $scale['position'] }}%">
                     <span class="level-scale__bubble">{{ rtrim(rtrim(number_format($interpretation['accuracy'], 1), '0'), '.') }}%</span>
@@ -101,6 +136,55 @@
                     @endforeach
                 </div>
             </div>
+
+            {{-- With both halves measured the headline is the combined level, so
+                 say which half settled it before anything else. --}}
+            @if($decision)
+                <div class="decision-note mt-3">
+                    <div class="fw-semibold mb-1">
+                        <i class="bi bi-diagram-2 me-1"></i>How the two halves combine
+                    </div>
+                    <div class="text-body-secondary">{{ $decision['text'] }}</div>
+                </div>
+
+                {{-- Comprehension sits on its own Phil-IRI scale --}}
+                @php $cs = $decision['comprehension']['scale']; @endphp
+                <div class="small text-muted mt-4 mb-1 fw-semibold">Comprehension</div>
+                <div class="level-scale" role="img"
+                     aria-label="Comprehension {{ round($decision['comprehension']['score']) }}%, which is in the {{ $cs['by_numbers'] }} band">
+                    <div class="level-scale__marker" style="left: {{ $cs['position'] }}%">
+                        <span class="level-scale__bubble">{{ rtrim(rtrim(number_format($decision['comprehension']['score'], 1), '0'), '.') }}%</span>
+                    </div>
+                    <div class="level-scale__track">
+                        @foreach($cs['bands'] as $band)
+                            <div class="level-scale__band band-{{ $band['key'] }} {{ $band['key'] === $cs['by_numbers'] ? 'is-current' : '' }}"></div>
+                        @endforeach
+                    </div>
+                    <div class="level-scale__labels">
+                        @foreach($cs['bands'] as $band)
+                            <div class="{{ $band['key'] === $cs['by_numbers'] ? 'is-current' : '' }}">
+                                {{ $band['label'] }}<br><span>{{ $band['range'] }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Why the denominator is bigger than the words attempted --}}
+            @if($sum['unread'])
+                <div class="why-sum-note small mt-3">
+                    <i class="bi bi-info-circle me-1"></i>{{ $sum['unread'] }}
+                </div>
+            @endif
+
+            {{-- Comprehension is scored on its own scale, so it shows its own sum --}}
+            @if($sum['comprehension'])
+                <div class="d-flex align-items-center gap-2 flex-wrap mt-3">
+                    <span class="small text-muted">Comprehension:</span>
+                    <span class="why-sum">{{ $sum['comprehension'] }}</span>
+                    <span class="small text-muted">of the questions answered correctly</span>
+                </div>
+            @endif
 
             {{-- The one thing to be careful about --}}
             @foreach($callouts as $callout)

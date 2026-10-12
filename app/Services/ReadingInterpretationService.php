@@ -77,23 +77,180 @@ class ReadingInterpretationService
             ]));
         }
 
+        // The card explains whichever level the page presents as the answer.
+        // With both halves measured that is the combined level, so the card
+        // must not go on explaining word reading alone - it would contradict
+        // the tile sitting directly above it.
+        $levels = $assessment->readingLevels();
+        $headline = $levels['overall'] ?? $levels['word'];
+        $headlineLevel = $headline['level'] ?? $level;
+        $combined = $levels['overall'] !== null;
+
         return [
-            'level' => $level,
-            'label' => self::LABELS[$level] ?? ucfirst((string) $level),
+            'level' => $headlineLevel,
+            'label' => self::LABELS[$headlineLevel] ?? ucfirst((string) $headlineLevel),
+            'scope' => $combined ? 'Why this reading level?' : 'Why this word reading level?',
             'meaning' => $unusable && !$verdict?->isOverridden()
                 ? 'This label was produced by the scoring rule, but it does not describe the learner — see below.'
-                : (self::MEANING[$level] ?? ''),
-            'rule' => sprintf(
-                'Phil-IRI word reading: Independent at %d%% and above, Instructional from %d%% to %d%%, Frustration below %d%%.',
-                PhilIriLevels::WORD_INDEPENDENT_FROM,
-                PhilIriLevels::WORD_INSTRUCTIONAL_FROM,
-                PhilIriLevels::WORD_INDEPENDENT_FROM - 1,
-                PhilIriLevels::WORD_INSTRUCTIONAL_FROM
-            ),
+                : (self::MEANING[$headlineLevel] ?? ''),
+            'rule' => $combined
+                ? sprintf(
+                    'Phil-IRI word reading: Independent at %d%% and above, Instructional %d–%d%%, Frustration below %d%%. Comprehension: Independent at %d%% and above, Instructional %d–%d%%, Frustration at or below %d%%.',
+                    PhilIriLevels::WORD_INDEPENDENT_FROM,
+                    PhilIriLevels::WORD_INSTRUCTIONAL_FROM,
+                    PhilIriLevels::WORD_INDEPENDENT_FROM - 1,
+                    PhilIriLevels::WORD_INSTRUCTIONAL_FROM,
+                    PhilIriLevels::COMP_INDEPENDENT_FROM,
+                    PhilIriLevels::COMP_INSTRUCTIONAL_FROM,
+                    PhilIriLevels::COMP_INDEPENDENT_FROM - 1,
+                    PhilIriLevels::COMP_INSTRUCTIONAL_FROM - 1
+                )
+                : sprintf(
+                    'Phil-IRI word reading: Independent at %d%% and above, Instructional from %d%% to %d%%, Frustration below %d%%.',
+                    PhilIriLevels::WORD_INDEPENDENT_FROM,
+                    PhilIriLevels::WORD_INSTRUCTIONAL_FROM,
+                    PhilIriLevels::WORD_INDEPENDENT_FROM - 1,
+                    PhilIriLevels::WORD_INSTRUCTIONAL_FROM
+                ),
             'accuracy' => $accuracy,
             'scale' => $this->scale($accuracy),
+            'decision' => $this->decision($levels, $verdict),
+            'computation' => $this->computation($assessment, $accuracy, $totalWords, $correctWords, $ml, $verdict),
             'reasons' => $reasons,
         ];
+    }
+
+    /**
+     * Which half settled the combined level, in a sentence.
+     *
+     * A teacher looking at "Frustration" above an Independent word-reading score
+     * needs to be told immediately that comprehension is what pulled it down,
+     * or the page looks like it is contradicting itself.
+     */
+    private function decision(array $levels, $verdict): ?array
+    {
+        if ($levels['overall'] === null) {
+            return null;
+        }
+
+        $word = $levels['word'];
+        $comp = $levels['comprehension'];
+        $rank = ['frustration' => 0, 'instructional' => 1, 'independent' => 2];
+
+        $wordRank = $rank[$word['level']] ?? 0;
+        $compRank = $rank[$comp['level']] ?? 0;
+
+        $decidedBy = match (true) {
+            $compRank < $wordRank => 'comprehension',
+            $wordRank < $compRank => 'word',
+            default => 'both',
+        };
+
+        $wordName = self::LABELS[$word['level']] ?? $word['level'];
+        $compName = self::LABELS[$comp['level']] ?? $comp['level'];
+
+        $text = match ($decidedBy) {
+            'comprehension' => sprintf(
+                'Word reading was %s (%s%%), but comprehension at %s%% is %s. A passage the learner can decode but not understand is not read, so the lower of the two stands.',
+                $wordName, $this->number($word['score']), $this->number($comp['score']), $compName
+            ),
+            'word' => sprintf(
+                'Comprehension was %s (%s%%), but word reading at %s%% is %s. The lower of the two stands.',
+                $compName, $this->number($comp['score']), $this->number($word['score']), $wordName
+            ),
+            default => sprintf(
+                'Word reading (%s%%) and comprehension (%s%%) both land at %s.',
+                $this->number($word['score']), $this->number($comp['score']), $wordName
+            ),
+        };
+
+        if ($verdict?->final_reading_level) {
+            $text .= sprintf(' The teacher set the final level to %s.', self::LABELS[$verdict->final_reading_level] ?? $verdict->final_reading_level);
+        }
+
+        return [
+            'decided_by' => $decidedBy,
+            'text' => $text,
+            'word' => ['level' => $word['level'], 'label' => $wordName, 'score' => $word['score']],
+            'comprehension' => ['level' => $comp['level'], 'label' => $compName, 'score' => $comp['score'], 'scale' => $this->comprehensionScale($comp['score'])],
+        ];
+    }
+
+    /** The comprehension equivalent of scale(), on the comprehension bands. */
+    private function comprehensionScale(float $score): array
+    {
+        $instructional = PhilIriLevels::COMP_INSTRUCTIONAL_FROM;
+        $independent = PhilIriLevels::COMP_INDEPENDENT_FROM;
+        $third = 100 / 3;
+
+        $position = match (true) {
+            $score >= $independent => 2 * $third + ($score - $independent) / (100 - $independent) * $third,
+            $score >= $instructional => $third + ($score - $instructional) / ($independent - $instructional) * $third,
+            default => max(0.0, $score) / $instructional * $third,
+        };
+
+        return [
+            'position' => round(min(100, max(0, $position)), 1),
+            'by_numbers' => PhilIriLevels::comprehension($score),
+            'bands' => [
+                ['key' => 'frustration', 'label' => 'Frustration', 'range' => sprintf('%d%% and below', $instructional - 1)],
+                ['key' => 'instructional', 'label' => 'Instructional', 'range' => sprintf('%d–%d%%', $instructional, $independent - 1)],
+                ['key' => 'independent', 'label' => 'Independent', 'range' => sprintf('%d%% and above', $independent)],
+            ],
+        ];
+    }
+
+    /**
+     * The arithmetic behind the headline percentage, so a teacher can check it
+     * rather than take it on faith. A bare "34%" invites the question this
+     * answers: 34% of what?
+     */
+    private function computation(Assessment $assessment, float $accuracy, int $totalWords, int $correctWords, array $ml, $verdict): array
+    {
+        $out = ['word' => null, 'comprehension' => null, 'unread' => null, 'source' => null];
+
+        if ($totalWords > 0) {
+            $out['word'] = sprintf(
+                '%d / %d x 100 = %s%%',
+                $correctWords,
+                $totalWords,
+                $this->number($accuracy)
+            );
+
+            $out['source'] = $verdict?->manual_scoring
+                ? 'Counted by the teacher during re-scoring.'
+                : 'Counted from the recording.';
+        }
+
+        // Words never reached still sit in the denominator, which is usually
+        // what surprises a teacher looking at a low percentage.
+        $notReached = (int) ($ml['miscues']['not_reached'] ?? 0);
+
+        if ($notReached > 0 && $totalWords > 0) {
+            $attempted = $totalWords - $notReached;
+            $out['unread'] = sprintf(
+                '%d of the %d words were never reached and count as unread, so only %d %s actually attempted.',
+                $notReached,
+                $totalWords,
+                $attempted,
+                $attempted === 1 ? 'was' : 'were'
+            );
+        }
+
+        $score = $assessment->comprehensionScore();
+
+        if ($score !== null) {
+            $answers = $assessment->comprehensionAnswers;
+            $correct = $answers->where('is_correct', true)->count();
+            $out['comprehension'] = sprintf(
+                '%d / %d x 100 = %s%%',
+                $correct,
+                $answers->count(),
+                $this->number($score)
+            );
+        }
+
+        return $out;
     }
 
     private function accuracyReason(string $level, ?string $measuredLevel, float $accuracy, int $totalWords, int $correctWords, $verdict): array

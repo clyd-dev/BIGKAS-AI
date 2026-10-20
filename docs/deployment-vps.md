@@ -243,7 +243,7 @@ WantedBy=multi-user.target
 ```bash
 systemctl daemon-reload && systemctl enable --now bigkas-ml
 # then in .env: ML_API_ENABLED=true, ML_API_URL=http://127.0.0.1:5000
-#               WHISPER_TIMEOUT=300, STT_ALLOW_MOCK=false
+#               WHISPER_TIMEOUT=300
 php artisan config:cache
 ```
 
@@ -261,17 +261,17 @@ Whisper on 4 GB, or keep 2 GB with the OpenAI fallback
 ### No speech engine = no assessment
 
 If no engine transcribes the audio, the app refuses to score the
-recording rather than fall back to its placeholder transcript ("I have a
-dog his name is Max..."). Analyze returns 503 with a message telling the
-teacher the recording was saved and to try again; the real cause is in
-`storage/logs/laravel.log`. Scoring the placeholder would store an
-assessment, a reading level and an intervention plan that describe
-nothing, so this is deliberate.
+recording. There is no placeholder transcript in any environment (it used
+to be allowed when `APP_ENV=local`, and scored as a flawless "independent"
+reading). Analyze returns 503 with a message telling the teacher the
+recording was saved and to try again; the real cause is in
+`storage/logs/laravel.log`.
 
-`STT_ALLOW_MOCK=true` re-enables the placeholder. Use it only for a demo
-with no speech engine, never on a server collecting real assessments.
-Results already stored from the placeholder stay flagged as "not a
-measurement of the learner" on the results page.
+Results that an earlier version stored from the placeholder stay on record
+but are treated as not measured: they show no numbers, cannot be accepted
+and do not count towards a learner's level. After upgrading, run
+`php artisan learners:recompute-levels` once so any level they set is
+corrected.
 
 ### Transcription timeout budget
 
@@ -296,6 +296,14 @@ No queue worker is needed: all notifications
 `NewMessageReceived`) send synchronously via the `database` channel.
 
 ## Phase 6 — Ops
+
+The scheduler heartbeat below is what keeps the engine safe to lose. Every minute it runs
+`health:check` (records when the speech engine or model stops, and alerts the admin if it
+stays down for 2 minutes) and every 5 minutes `assessments:rescore` (scores recordings that were
+saved during the outage, oldest first, up to 3 tries each). Set `HEALTH_ALERT_EMAIL` in `.env`
+for the email; with it blank the outage still shows on the admin dashboard and in the log.
+Run `php artisan migrate` after pulling, and check it by hand with `php artisan health:check`
+and `php artisan assessments:rescore`.
 
 ```bash
 # Laravel scheduler heartbeat

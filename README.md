@@ -70,7 +70,7 @@ The system is **decision support**: the teacher always has the final say, and th
 - **Gamified Student Portal** — XP points, streaks, badges, and class leaderboard
 - **Teacher in the loop** — Every AI result can be accepted, overridden or invalidated, with a recorded reason
 - **Trust signals** — Recording-quality check, speech-recognition confidence and plain-language warnings on each result
-- **Graceful Degradation** — Falls back to rule-based classification (clearly labelled) if the ML service is unavailable
+- **Honest when the model is down** — If the ML service cannot classify, the reading is still measured and saved, but no weakness is guessed. The result says so, offers **Re-analyze** from the saved recording, and the teacher can set the weakness themselves
 - **Scope** — Designed for Grade 3–6 learners in Sagay City Division
 
 ---
@@ -111,8 +111,8 @@ The system is **decision support**: the teacher always has the final say, and th
 │  MySQL /    │   │  faster-whisper │   │ Python Flask ML API │
 │  SQLite DB  │   │  (local,        │   │ localhost:5000       │
 │             │   │  primary, not   │   │ Random Forest Model  │
-│  18 tables  │   │  yet fine-tuned)│   │ Rule-based fallback  │
-│             │   │  -or- OpenAI    │   │ if unavailable       │
+│  18 tables  │   │  yet fine-tuned)│   │ No rule-based backup │
+│             │   │  -or- OpenAI    │   │ when model is down   │
 │             │   │  Whisper API    │   │                      │
 └─────────────┘   └────────────────┘   └─────────────────────┘
 ```
@@ -122,7 +122,7 @@ The system is **decision support**: the teacher always has the final say, and th
 - **MVC (Model-View-Controller)** — Laravel enforces MVC. Controllers handle HTTP, Models handle data, Blade templates handle views.
 - **Service Layer** — Complex business logic (reading analysis, ML calls, gamification) lives in `app/Services/`, keeping controllers thin.
 - **Dual Authentication** — Standard Laravel session auth for teachers/parents/admins. A completely separate PIN-based session system (`StudentAuth` middleware) for child-friendly student access.
-- **ML-First with Rule-Based Fallback** — The system always tries the Python ML API first. If it is unreachable or throws an error, `MLClassificationService::classify()` catches the exception and uses `fallbackClassification()`, a deterministic rule list, and the result is labelled rule-based. A prediction is then only stored if it passes the evidence check in `WeaknessEvidence`.
+- **Model-Only Weakness Labels** — Only the Random Forest may name a weakness. If the Python service is unreachable, has no model loaded or errors, `MLClassificationService::classify()` returns `available: false`, and `resolve()` stores no label, no confidence and the status `unavailable`. There is no rule-based stand-in: it was removed after a panel review, because its accuracy was never measured and a guessed label could reach a child's interventions and practice. The reading's measurements (accuracy, pace, levels, miscues) are unaffected.
 - **Dual Speech-to-Text** — `faster-whisper` installed locally in `ml-service/venv` is the **primary** transcription engine (offline, no API key required, not yet fine-tuned on BIGKAS classroom audio); the OpenAI Whisper API is available as an optional cloud alternative.
 - **REST API Layer** — A full Sanctum-authenticated API enables future mobile app integrations.
 
@@ -139,13 +139,13 @@ MLClassificationService.php   →   POST /api/classify
                                   ↓
                               ←   JSON { primary_weakness, confidence, scores }
 
-On exception (service down):
+On exception (service down, or no model loaded):
 MLClassificationService.php
-→ fallbackClassification()    (no crash, labelled "rule-based")
+→ available: false   (no crash, no label: status "unavailable")
 
-Then, either way:
-MLClassificationService::resolveWeaknessId() + WeaknessEvidence
-→ keep the prediction only if the measured evidence backs it
+When the model answered:
+MLClassificationService::resolve() + WeaknessEvidence
+→ keep the prediction only if the measured evidence backs it; keep what the model said beside it
 ```
 
 **Configuration in `.env`:**
@@ -345,7 +345,7 @@ Step 6  → MiscueClassifierService labels every word: correct, mispronunciation
           omission, not reached, insertion, repetition, self-correction, off-passage, pauses
 Step 7  → Metrics: accuracy %, WPM, fluency 0–10, prosody estimate, Phil-IRI reading level
 Step 8  → MLClassificationService → Flask /api/classify with 12 rate features
-          (rule-based fallback if Flask is unavailable)
+          (Flask or model unavailable: no weakness stored, status "unavailable")
 Step 9  → WeaknessEvidence: the prediction is stored only if the measured evidence supports it
 Step 10 → Assessment::createResult(): result + full analysis JSON + provenance saved;
           learner reading level updated; linked parents notified
@@ -414,8 +414,8 @@ Click "Analyze"
                     →  MLClassificationService::classify()
                                               → Flask POST /api/classify
                                               ← { primary_weakness, confidence, scores[5] }
-                                              (or rule-based fallback)
-                    →  resolveWeaknessId() + WeaknessEvidence::statuses()
+                                              (or unavailable: no label)
+                    →  resolve() + WeaknessEvidence::statuses()
                     →  Assessment::createResult()
                     →  Learner::updateReadingLevel(); parents notified
                     ←  Redirect to /assessments/{id}/results
@@ -972,7 +972,7 @@ The Random Forest has class 4 in its output only because the schema follows the 
 
 #### Independent reader (class 0)
 
-No weakness. A model prediction of 0 needs no supporting evidence. (In the rule-based fallback: accuracy ≥ 95%, WPM ≥ 60 and fluency ≥ 8.)
+No weakness. A model prediction of 0 needs no supporting evidence.
 
 #### What happens when the model and the evidence disagree
 
@@ -980,9 +980,9 @@ No weakness. A model prediction of 0 needs no supporting evidence. (In the rule-
 
 1. Take the model's top class. Keep it if it is 0, or if its skill status is *watch* or *concern*.
 2. Otherwise walk the model's probabilities from highest to lowest and take the first class that the evidence supports.
-3. If none is supported, take the clearest measured problem (red before amber; ties go to the lowest skill id: phonemic, then decoding, then fluency, then comprehension).
+3. If none is supported, **store no weakness** (status `model_unsupported`). No rule picks a label in the model's place.
 
-So a stored weakness always matches a flagged skill row on the results page (`tests/Feature/WeaknessMatchesEvidenceTest.php`). The teacher can still override it with a written reason.
+So a stored weakness is always one the model itself ranked and a flagged skill row backs (`tests/Feature/WeaknessMatchesEvidenceTest.php`, `tests/Unit/ResolveWeaknessTest.php`). The model's raw answer is stored beside it (`classifier_output`), so an adjusted label can be audited. The teacher can still override it with a written reason.
 
 ### Algorithm
 
@@ -1101,18 +1101,30 @@ To check the saved model without retraining, load `weakness_classifier.joblib` a
 
 Optional Whisper fine-tuning: `ml-service/training/prepare_whisper_manifest.py` builds the manifest and `ml-service/training/bigkas_whisper_data/train_whisper_lora.py` trains a LoRA adapter on whisper-small (speaker-level splits, WER via `jiwer`) and converts it to CTranslate2. If a folder `ml-service/bigkas-whisper-ct2/` exists, `app.py` loads it instead of the stock model. It has not been run yet, and no WER has been measured.
 
-### Rule-Based Fallback
+### When the model is unavailable
 
-When the Flask service is unavailable, `MLClassificationService::fallbackClassification()` applies this ordered rule list to the same 12 features (the first rule that matches wins) and returns confidence 0.5 with `is_fallback = true`. The results page then shows that the weakness came from a rule, not the model:
+There is no rule-based fallback. When the Flask service is down, has no model loaded, returns an error or is disabled (`ML_API_ENABLED=false`), the analysis still runs and is saved, but **no weakness is classified**:
 
-1. **Independent (0):** accuracy ≥ 95% and WPM ≥ 60 and fluency ≥ 8
-2. **Decoding (2):** substitution rate > 0.1 and accuracy < 90%
-3. **Fluency (3):** accuracy ≥ 90% and (WPM < 80 or fluency < 6 or pause frequency > 0.1)
-4. **Phonemic (1):** phonetic + vowel + blend shares > 0.8 and accuracy < 85%
-5. **Comprehension (4):** omission rate > 0.1 and accuracy ≥ 85%
-6. Otherwise "Instructional (Mixed)", stored as class 2
+| `classification_status` | Meaning | What is stored |
+|---|---|---|
+| `classified` | The model answered and the measurements back its label | Label, the model's confidence, the model's raw answer |
+| `model_unsupported` | The model answered, but none of its ranked choices is backed by the measurements | No label, no confidence |
+| `unavailable` | The model could not answer (down, not loaded, error, disabled) | No label, no confidence, the reason |
+| *(empty)* | Saved before this was tracked (legacy) | Keeps its label, shown with a warning about its source |
 
-The same evidence check and teacher verdict apply to a fallback result. Setting `ML_API_ENABLED=false` forces this path.
+- **Every page reads one answer.** `Assessment::weaknessOutcome()` returns `classified`, `teacher_set`, `unclassified` or `legacy`; no page or service reads the raw column (`tests/Feature/ClassificationPagesTest.php` fails if one does). Unclassified results recommend no interventions or practice and are left out of the admin chart, which reports how many are awaiting classification.
+- **Re-analyze, don't re-read.** The results page offers *Re-analyze*, which reruns the saved recording once the model is back. Results with no saved recording (anything before recordings were kept) can only be re-assessed.
+- **Told before, not after.** The assessment start page shows whether the analysis service can classify right now. Recording is never blocked.
+- **The teacher decides.** A teacher can set the weakness with *Override* on any result, including an unclassified one.
+- **Parents** see plain wording ("focus area not yet checked"), never the machinery.
+
+#### When the speech engine is down
+
+The speech engine (faster-whisper) and the classifier load separately inside the same Flask service, so either can be down alone. If Flask is off, both are.
+
+There is **no placeholder transcript**. With no speech engine, a recording is saved but **nothing is scored**: no result row, no accuracy, pace or level, and the teacher is told to tap *Analyze* once the engine is back. (An earlier version returned a canned transcript when `APP_ENV=local`; it scored as a flawless 100% "independent" reading and could be accepted as a child's record.)
+
+A reading that was never measured from the child's voice (a stored placeholder result, or a recording with no speech) shows "Nothing was measured" with no numbers, cannot be accepted, and does not count towards a learner's level, averages, reports, Form 3 or Form 4. The teacher can invalidate it or count the reading themselves with Override. After upgrading, run `php artisan learners:recompute-levels` once (add `--dry-run` to preview).
 
 ---
 

@@ -113,7 +113,9 @@
                                 read <em>{{ $assessment->material?->title ?? 'a story' }}</em>
                                 <div class="small text-muted">{{ $assessment->created_at?->format('F j, Y') }}</div>
                             </div>
-                            @if($r)
+                            @if($r && ! $assessment->isMeasured())
+                                <span class="pp-pill pp-none"><i class="bi bi-slash-circle"></i> Couldn't be scored</span>
+                            @elseif($r)
                                 <span class="pp-pill pp-{{ $rl['tone'] }}">{{ $rl['emoji'] }} {{ $rl['short'] }}</span>
                             @else
                                 <span class="pp-pill pp-none"><i class="bi bi-hourglass-split"></i> Waiting for results</span>

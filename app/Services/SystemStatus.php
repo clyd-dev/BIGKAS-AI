@@ -34,6 +34,25 @@ class SystemStatus
         return [
             'checked_at' => now()->toIso8601String(),
             'services'   => [self::classifier($flask), self::speech($flask)],
+            'backlog'    => self::backlog(),
+        ];
+    }
+
+    /**
+     * Recordings saved but not scored, waiting for the engine (see RescoreQueue).
+     * Given-up ones failed on their own, not for want of the engine, and need a
+     * person.
+     */
+    private static function backlog(): array
+    {
+        $queue = app(RescoreQueue::class);
+        $waiting = $queue->waiting();
+        $oldest = (clone $waiting)->oldest('updated_at')->value('updated_at');
+
+        return [
+            'waiting'  => (clone $waiting)->count(),
+            'given_up' => $queue->givenUp()->count(),
+            'oldest'   => $oldest?->toIso8601String(),
         ];
     }
 
@@ -64,15 +83,15 @@ class SystemStatus
 
         if (! config('services.ml_api.enabled')) {
             return $base + ['state' => 'disabled', 'headline' => 'Turned off',
-                'detail' => 'Reading weaknesses are worked out with the built-in rules only (ML_API_ENABLED=false).'];
+                'detail' => 'Turned off (ML_API_ENABLED=false). Readings are measured and saved, but no weakness is classified.'];
         }
         if (! ($flask['up'] ?? false)) {
             return $base + ['state' => 'offline', 'headline' => 'Offline',
-                'detail' => "The ML service at {$flask['url']} " . ($flask['error'] ?? 'could not be reached') . '. Assessments still work and use the built-in rules until it is started.'];
+                'detail' => "The ML service at {$flask['url']} " . ($flask['error'] ?? 'could not be reached') . '. Recordings are still saved, but no weakness is classified until it is started.'];
         }
         if (! ($flask['data']['classifier_loaded'] ?? false)) {
             return $base + ['state' => 'degraded', 'headline' => 'Running without a model',
-                'detail' => 'The service is up but no trained model is loaded, so the built-in rules are used.'];
+                'detail' => 'The service is up but no trained model is loaded, so no weakness is classified. Nothing stands in for the model.'];
         }
 
         return $base + ['state' => 'online', 'headline' => 'Online',
@@ -88,7 +107,7 @@ class SystemStatus
 
             if (! ($flask['up'] ?? false)) {
                 return $base + ['state' => 'offline', 'headline' => 'Offline',
-                    'detail' => "Local Whisper runs inside the ML service at {$flask['url']}, which " . ($flask['error'] ?? 'could not be reached') . '. Recorded readings cannot be transcribed until it is started.'];
+                    'detail' => "Local Whisper runs inside the ML service at {$flask['url']}, which " . ($flask['error'] ?? 'could not be reached') . '. Recorded readings cannot be scored until it is started; they are saved and scored automatically once it is back.'];
             }
             if (! ($flask['data']['whisper_loaded'] ?? false)) {
                 return $base + ['state' => 'degraded', 'headline' => 'Model not loaded',

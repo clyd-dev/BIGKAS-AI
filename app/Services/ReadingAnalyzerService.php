@@ -76,14 +76,6 @@ class ReadingAnalyzerService
         // Analyze error patterns
         $errorAnalysis = $this->analyzeErrors($comparison['errors'], $referenceWords);
 
-        // Classify primary weakness using ML or rules
-        $weaknessClassification = $this->classifyWeakness(
-            $accuracyRate,
-            $wordsPerMinute,
-            $fluencyScore,
-            $errorAnalysis
-        );
-
         // ── Compute the 3 new metrics from word-level timestamps ──
         $longPauseCount = $this->detectLongPauses($transcribedWords);
         $repetitionCount = $this->detectRepetitions($spokenWords);
@@ -153,11 +145,10 @@ class ReadingAnalyzerService
             ],
             'audio_quality' => $transcription['audio_quality'] ?? null,
 
-            // Weakness classification (rule-based fallback)
-            'primary_weakness' => $weaknessClassification['primary'],
-            'secondary_weakness' => $weaknessClassification['secondary'],
-            'confidence_score' => $weaknessClassification['confidence'],
-            'all_scores' => $weaknessClassification['all_scores'] ?? [],
+            // No weakness label is produced here. The analyzer measures; only
+            // the model may name a weakness (MLClassificationService::resolve).
+            // A rule-based label used to be emitted from here as a backup, and
+            // was stored whenever the model's answer was empty.
 
             // ML-ready feature vector (12 features, sent to Flask /api/classify)
             'ml_features' => $mlFeatures,
@@ -779,114 +770,6 @@ class ReadingAnalyzerService
         }
 
         return 'other';
-    }
-
-    /**
-     * Classify primary and secondary weaknesses (rule-based only).
-     *
-     * NOTE: This method intentionally uses ONLY rule-based classification.
-     * The actual ML classification (Flask /api/classify) is called by the
-     * AssessmentController::analyze() method, which then overrides the
-     * rule-based result with the ML prediction. This avoids calling
-     * Flask twice per assessment.
-     *
-     * The rule-based result here serves as a fallback in case:
-     * - The Flask microservice is down
-     * - The RF model is not loaded
-     * - The controller's ML call fails for any reason
-     */
-    protected function classifyWeakness(
-        float $accuracy,
-        float $wpm,
-        float $fluency,
-        array $errorAnalysis
-    ): array {
-        return $this->ruleBasedClassification($accuracy, $wpm, $fluency, $errorAnalysis);
-    }
-
-    /**
-     * Rule-based weakness classification
-     *
-     * Scores each weakness category based on error patterns and metrics:
-     * 1 = Phonemic Awareness (phonetic/vowel/blend errors)
-     * 2 = Decoding Accuracy (low accuracy, many substitutions)
-     * 3 = Oral Reading Fluency (low WPM, poor fluency score)
-     * 4 = Comprehension (many omissions, accurate but expressionless)
-     */
-    protected function ruleBasedClassification(
-        float $accuracy,
-        float $wpm,
-        float $fluency,
-        array $errorAnalysis
-    ): array {
-        $scores = [
-            1 => 0, // Phonemic Awareness
-            2 => 0, // Decoding Accuracy
-            3 => 0, // Oral Reading Fluency
-            4 => 0, // Comprehension
-        ];
-
-        // Phonemic Awareness indicators
-        $phoneticErrors = $errorAnalysis['patterns']['phonetic_confusion'] ?? 0;
-        $vowelErrors = $errorAnalysis['patterns']['vowel_confusion'] ?? 0;
-        $blendErrors = $errorAnalysis['patterns']['consonant_blend_error'] ?? 0;
-        $scores[1] = ($phoneticErrors + $vowelErrors + $blendErrors) * 10;
-
-        // Decoding Accuracy indicators
-        if ($accuracy < 90) {
-            $scores[2] += (90 - $accuracy) * 2;
-        }
-        $scores[2] += ($errorAnalysis['substitutions'] * 3);
-
-        // Fluency indicators
-        if ($wpm < 80) {
-            $scores[3] += (80 - $wpm) / 2;
-        }
-        if ($fluency < 6) {
-            $scores[3] += (6 - $fluency) * 5;
-        }
-
-        // Comprehension indicators (inferred from other patterns)
-        if ($errorAnalysis['omissions'] > 5) {
-            $scores[4] += $errorAnalysis['omissions'] * 2;
-        }
-        if ($accuracy >= 90 && $fluency < 5) {
-            // Can decode but lacks expression = potential comprehension issue
-            $scores[4] += 15;
-        }
-
-        // Sort by score
-        arsort($scores);
-        $ranked = array_keys($scores);
-
-        return [
-            'primary' => $scores[$ranked[0]] > 10 ? $ranked[0] : null,
-            'secondary' => $scores[$ranked[1]] > 5 ? $ranked[1] : null,
-            'confidence' => $this->calculateConfidence($scores),
-            'all_scores' => $scores,
-        ];
-    }
-
-    /**
-     * Calculate confidence score for classification
-     *
-     * Returns a value between 0.5 and 1.0 based on how clearly
-     * the top-scoring weakness stands out from the others.
-     */
-    protected function calculateConfidence(array $scores): float
-    {
-        $sorted = array_values($scores);
-        rsort($sorted);
-
-        if ($sorted[0] === 0) {
-            return 0.5; // No clear weakness
-        }
-
-        // Confidence based on how much the top score exceeds others
-        $gap = $sorted[0] - $sorted[1];
-        $confidence = min(1, 0.5 + ($gap / $sorted[0]) * 0.5);
-
-        return round($confidence, 2);
     }
 
     /**

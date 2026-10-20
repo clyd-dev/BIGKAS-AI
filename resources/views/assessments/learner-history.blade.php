@@ -59,6 +59,12 @@
                                     @else
                                         <span class="badge bg-secondary">-</span>
                                     @endif
+                                    {{-- A reading the model could not classify says so here too. --}}
+                                    <x-weakness-status :outcome="$assessment->weaknessOutcome()" chip />
+                                    @if($assessment->notMeasuredReason())
+                                        <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle d-block mt-1"
+                                              title="Not measured from the child's voice, so it is not counted.">Not measured</span>
+                                    @endif
                                 </td>
                                 <td class="text-end">
                                     @if($assessment->status === 'completed')

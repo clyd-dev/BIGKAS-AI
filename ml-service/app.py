@@ -34,16 +34,22 @@ METADATA_PATH = os.path.join(BASE_DIR, 'model_metadata.json')
 # Report the version the model file actually carries. This used to be a
 # hardcoded "2.0-12feature", which made /api/health claim a different model
 # from the one being served and sent a real diagnosis down the wrong path.
-MODEL_VERSION = '(unknown)'
+METADATA_VERSION = '(unknown)'
 try:
     with open(METADATA_PATH, encoding='utf-8') as fh:
-        MODEL_VERSION = json.load(fh).get('version', '(unknown)')
+        METADATA_VERSION = json.load(fh).get('version', '(unknown)')
 except Exception as exc:
     print(f"No model metadata read ({exc}); version will report as unknown.")
+
+# The metadata file outlives the model it describes: delete the .joblib and this
+# JSON still names a version. MODEL_VERSION is set only once a model is actually
+# loaded, so nothing downstream can attribute a result to a model that is gone.
+MODEL_VERSION = None
 
 if os.path.exists(NEW_MODEL_PATH):
     try:
         model = joblib.load(NEW_MODEL_PATH)
+        MODEL_VERSION = METADATA_VERSION
         print("BIGKAS RF Model (12-feature) loaded from:", NEW_MODEL_PATH)
     except Exception as e:
         print(f"Error loading new model: {e}")
@@ -52,13 +58,13 @@ elif os.path.exists(OLD_MODEL_PATH):
         model = joblib.load(OLD_MODEL_PATH)
         print("WARNING: Loaded OLD 5-feature prototype model from:", OLD_MODEL_PATH)
         print("This model will NOT work with the new 12-feature pipeline.")
-        print("Rule-based fallback will be used until you train a new model.")
+        print("No weakness will be classified until a 12-feature model is trained (there is no rule-based fallback).")
         model = None  # Intentionally disable — 5-feature model cannot accept 12 features
     except Exception as e:
         print(f"Error loading old model: {e}")
 else:
     print("No RF model found. Place 'weakness_classifier.joblib' in ml-service/.")
-    print("Classification will use rule-based fallback via Laravel.")
+    print("No weakness will be classified: Laravel saves the reading without a label and offers Re-analyze.")
 
 if os.path.exists(SCALER_PATH):
     try:
@@ -155,7 +161,11 @@ def classify_reading():
         'primary_weakness': str(prediction),
         'secondary_weakness': None,
         'confidence': confidence,
-        'scores': probabilities.tolist()
+        'scores': probabilities.tolist(),
+        # Travels with the answer so the stored result names the model that
+        # actually produced it, rather than whatever a file on disk claims.
+        'model_version': MODEL_VERSION,
+        'model_file_present': os.path.exists(NEW_MODEL_PATH),
     })
 
 # ============================================================
@@ -256,13 +266,28 @@ def transcribe():
 # ============================================================
 @app.route('/api/health', methods=['GET'])
 def health():
+    # `classifier_loaded` is the object held in memory; `model_file_present` is
+    # what is on disk right now. They disagree when the model file is deleted
+    # under a running process - the model keeps serving until the next restart,
+    # and without this you cannot tell until it silently stops.
+    model_file = os.path.exists(NEW_MODEL_PATH)
+    stale = model is not None and not model_file
+
     return jsonify({
         'status': 'ok',
-        'model_version': MODEL_VERSION if model is not None else '(no model loaded — using rule-based fallback)',
+        'model_version': MODEL_VERSION,
         'feature_columns': FEATURE_COLUMNS,
         'scaler_loaded': scaler is not None,
+        'scaler_file_present': os.path.exists(SCALER_PATH),
         'whisper_loaded': whisper_model is not None,
         'classifier_loaded': model is not None,
+        'model_file_present': model_file,
+        'model_stale': stale,
+        'warning': (
+            'Model file is missing from disk; the loaded model will be gone on restart.'
+            if stale else
+            (None if model is not None else 'No model loaded — no weakness will be classified until one is.')
+        ),
     })
 
 if __name__ == '__main__':

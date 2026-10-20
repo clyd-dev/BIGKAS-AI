@@ -37,6 +37,8 @@ class Assessment extends Model
         'language',
         'assessment_type',
         'status',
+        'rescore_attempts',
+        'last_rescore_at',
         'assessed_at',
         'notes',
     ];
@@ -46,6 +48,7 @@ class Assessment extends Model
         return [
             'transcription' => 'array',
             'assessed_at' => 'datetime',
+            'last_rescore_at' => 'datetime',
         ];
     }
 
@@ -91,30 +94,150 @@ class Assessment extends Model
         return $this->verdict !== null;
     }
 
-    public function effectiveReadingLevel(): ?string
+    /**
+     * Why this reading was not measured from the child, or null if it was.
+     *
+     *  - mock       a placeholder transcript was scored, not the child's voice
+     *               (stored by an earlier version when no speech engine ran)
+     *  - no_speech  nothing but silence or noise was recorded
+     *
+     * A teacher's own count (manual scoring) is a measurement, so it clears
+     * this. Everything that reports on a child reads it: a reading that was
+     * never measured must not show numbers, be accepted, or define a level.
+     */
+    public function notMeasuredReason(): ?string
     {
-        return $this->verdict?->final_reading_level ?? $this->result?->reading_level;
-    }
+        $result = $this->result;
 
-    public function effectivePrimaryWeakness(): ?int
-    {
-        $verdict = $this->verdict;
-
-        if ($verdict && $verdict->final_primary_weakness !== null) {
-            return $verdict->final_primary_weakness;
+        if (! $result) {
+            return null;
         }
 
-        return $this->result?->primary_weakness;
+        if ($this->verdict?->manual_scoring) {
+            return null;
+        }
+
+        $ml = $result->ml_analysis_json ?? [];
+        $provenance = $ml['provenance'] ?? [];
+
+        if (($provenance['stt_engine'] ?? null) === 'mock' || ($provenance['stt_is_mock'] ?? false)) {
+            return 'mock';
+        }
+
+        if (($ml['audio_quality']['rating'] ?? null) === 'no_speech') {
+            return 'no_speech';
+        }
+
+        return null;
+    }
+
+    public function isMeasured(): bool
+    {
+        return $this->notMeasuredReason() === null;
+    }
+
+    public function effectiveReadingLevel(): ?string
+    {
+        return $this->verdict?->final_reading_level
+            ?? ($this->isMeasured() ? $this->result?->reading_level : null);
+    }
+
+    /**
+     * The weakness label as it stands, or null when there is none to stand on.
+     * Reads weaknessOutcome(), so it is null for an unclassified or invalidated
+     * result and never a guess.
+     */
+    public function effectivePrimaryWeakness(): ?int
+    {
+        return $this->weaknessOutcome()['id'];
+    }
+
+    /**
+     * What this assessment can honestly say about the learner's weakness.
+     *
+     * Every page and service reads this instead of the raw column, so a result
+     * the model could not classify is described the same way everywhere:
+     *
+     *  - teacher_set   the teacher's verdict names the weakness
+     *  - classified    the model answered and the measurements back it
+     *  - unclassified  there is no label; `reason` says why (unavailable,
+     *                  model_unsupported, invalidated, not_analyzed)
+     *  - legacy        saved before the outcome was tracked. It keeps its label
+     *                  and says what is known of its source, with a warning
+     *                  where that source was a rule or was never recorded.
+     *
+     * @return array{state: string, id: ?int, name: ?string, usable: bool, reason: ?string, source: ?string, warning: ?string}
+     */
+    public function weaknessOutcome(): array
+    {
+        $labels = config('bigkas.weakness_categories', []);
+
+        $outcome = function (string $state, ?int $id, array $extra = []) use ($labels): array {
+            return array_merge([
+                'state' => $state,
+                'id' => $id,
+                'name' => $id === null ? null : ($labels[$id]['name'] ?? null),
+                'usable' => $id !== null && $state !== 'unclassified',
+                'reason' => null,
+                'source' => null,
+                'warning' => null,
+            ], $extra);
+        };
+
+        $result = $this->result;
+
+        if (! $result) {
+            return $outcome('unclassified', null, ['reason' => 'not_analyzed']);
+        }
+
+        // An invalidated reading is not evidence of anything about the child.
+        if ($this->isInvalidated()) {
+            return $outcome('unclassified', null, ['reason' => 'invalidated']);
+        }
+
+        // Nor is one that was never measured from the child's voice.
+        if (! $this->isMeasured()) {
+            return $outcome('unclassified', null, ['reason' => 'not_measured']);
+        }
+
+        $teacherSet = $this->verdict?->final_primary_weakness;
+
+        if ($teacherSet !== null) {
+            return $outcome('teacher_set', (int) $teacherSet, ['source' => 'teacher']);
+        }
+
+        switch ($result->classification_status) {
+            case AssessmentResult::STATUS_CLASSIFIED:
+                return $outcome('classified', $result->primary_weakness, ['source' => 'model']);
+
+            case AssessmentResult::STATUS_MODEL_UNSUPPORTED:
+            case AssessmentResult::STATUS_UNAVAILABLE:
+                return $outcome('unclassified', null, ['reason' => $result->classification_status]);
+        }
+
+        // No status: saved before outcomes were tracked. The label stays, with
+        // what is known of where it came from.
+        $classifier = $result->ml_analysis_json['provenance']['classifier'] ?? null;
+
+        [$source, $warning] = match ($classifier) {
+            'ml' => ['model', null],
+            'rule_based' => ['rule', 'This label was chosen by a fixed rule, not the model.'],
+            default => ['unrecorded', 'It was not recorded whether the model or a rule chose this label.'],
+        };
+
+        return $outcome('legacy', $result->primary_weakness, ['source' => $source, 'warning' => $warning]);
     }
 
     public function effectiveAccuracy(): ?float
     {
-        return $this->verdict?->final_accuracy_rate ?? $this->result?->accuracy_rate;
+        return $this->verdict?->final_accuracy_rate
+            ?? ($this->isMeasured() ? $this->result?->accuracy_rate : null);
     }
 
     public function effectiveWordsPerMinute(): ?float
     {
-        return $this->verdict?->final_words_per_minute ?? $this->result?->words_per_minute;
+        return $this->verdict?->final_words_per_minute
+            ?? ($this->isMeasured() ? $this->result?->words_per_minute : null);
     }
 
     /** True when the teacher changed any of the AI's conclusions. */
@@ -388,7 +511,9 @@ class Assessment extends Model
             'reading_level' => $analysisData['reading_level'] ?? 'frustration',
             'primary_weakness' => $analysisData['primary_weakness'] ?? null,
             'secondary_weakness' => $analysisData['secondary_weakness'] ?? null,
-            'confidence_score' => $analysisData['confidence_score'] ?? 0.50,
+            // No default: a confidence nobody measured is worse than none.
+            'confidence_score' => $analysisData['confidence_score'] ?? null,
+            'classification_status' => $analysisData['classification_status'] ?? null,
             'ml_analysis_json' => $analysisData,
         ])->save();
 
@@ -411,13 +536,15 @@ class Assessment extends Model
 
     public function getRecommendedInterventions()
     {
-        $result = $this->result;
+        // From the outcome, not the raw column: an unclassified or invalidated
+        // result recommends nothing, and a teacher's own verdict is honoured.
+        $weakness = $this->weaknessOutcome()['id'];
 
-        if (!$result || $result->primary_weakness === null || $result->primary_weakness === 0) {
+        if ($weakness === null || $weakness === 0) {
             return collect();
         }
 
-        $interventions = Intervention::where('target_weakness', $result->primary_weakness)
+        $interventions = Intervention::where('target_weakness', $weakness)
             ->where('grade_level_min', '<=', $this->learner->grade_level)
             ->where('grade_level_max', '>=', $this->learner->grade_level)
             ->where('is_active', true)
@@ -428,7 +555,7 @@ class Assessment extends Model
         // Fallback: If no interventions match the exact grade level (e.g. a Grade 6 learner lacking Grade 1 Phonemic Awareness),
         // we provide the most advanced available interventions for that fundamental weakness.
         if ($interventions->isEmpty()) {
-            $interventions = Intervention::where('target_weakness', $result->primary_weakness)
+            $interventions = Intervention::where('target_weakness', $weakness)
                 ->where('is_active', true)
                 ->orderByDesc('grade_level_max')
                 ->orderByDesc('effectiveness_score')
@@ -453,9 +580,39 @@ class Assessment extends Model
                 'accuracy_rate' => $this->result->accuracy_rate,
                 'words_per_minute' => $this->result->words_per_minute,
                 'reading_level' => $this->result->reading_level,
-                'primary_weakness' => $this->result->primary_weakness,
+                'primary_weakness' => $this->weaknessOutcome()['id'],
+                'weakness_state' => $this->weaknessOutcome()['state'],
+                'classification_status' => $this->result->classification_status,
             ] : null,
         ];
+    }
+
+    /**
+     * Readings that could not be scored and are waiting for the engine.
+     *
+     *  - a saved recording with no result (analysis failed, or was left
+     *    "processing" for over 15 minutes - a run that finished would have
+     *    stored a result), or
+     *  - a result the model could not classify, which has no teacher verdict
+     *    over it yet (a teacher's decision is never overwritten).
+     *
+     * Attempts and timing are the caller's concern; this is only "what is
+     * owed a score".
+     */
+    public function scopeAwaitingRescore($query)
+    {
+        return $query->whereNotNull('audio_file')->where(function ($q) {
+            $q->where(function ($unscored) {
+                $unscored->doesntHave('result')->where(function ($s) {
+                    $s->where('status', self::STATUS_FAILED)
+                        ->orWhere(fn ($stuck) => $stuck->where('status', self::STATUS_PROCESSING)
+                            ->where('updated_at', '<', now()->subMinutes(15)));
+                });
+            })->orWhere(function ($unclassified) {
+                $unclassified->whereHas('result', fn ($r) => $r->where('classification_status', AssessmentResult::STATUS_UNAVAILABLE))
+                    ->doesntHave('verdict');
+            });
+        });
     }
 
     /**

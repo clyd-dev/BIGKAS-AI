@@ -52,16 +52,15 @@
             <tr><th>Date</th><th>Material</th><th>Accuracy</th><th>WPM</th><th>Level</th><th>Primary Weakness</th></tr>
         </thead>
         <tbody>
-            @php $weaknessLabels = config('bigkas.weakness_categories', []); @endphp
-            @forelse($assessments ?? [] as $a)
-                @php $r = $a->results->first(); @endphp
+            @forelse($assessmentResults ?? [] as $r)
+                @php $a = $r->assessment; @endphp
                 <tr>
-                    <td>{{ $a->created_at?->format('M d, Y') }}</td>
-                    <td>{{ $a->material?->title ?? 'N/A' }}</td>
-                    <td>{{ $r?->accuracy_rate ?? '-' }}%</td>
-                    <td>{{ $r?->words_per_minute ?? '-' }}</td>
-                    <td>{{ ucfirst($r?->reading_level ?? '-') }}</td>
-                    <td>{{ $weaknessLabels[$r?->primary_weakness]['name'] ?? '-' }}</td>
+                    <td>{{ $a?->created_at?->format('M d, Y') }}</td>
+                    <td>{{ $a?->material?->title ?? 'N/A' }}</td>
+                    <td>{{ $r->accuracy_rate ?? '-' }}%</td>
+                    <td>{{ $r->words_per_minute ?? '-' }}</td>
+                    <td>{{ ucfirst($r->reading_level ?? '-') }}</td>
+                    <td><x-weakness-status :outcome="$r->weaknessOutcome()" /></td>
                 </tr>
             @empty
                 <tr><td colspan="6" class="text-center">No assessments</td></tr>

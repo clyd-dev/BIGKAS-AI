@@ -164,8 +164,12 @@ class AnalysisAdvisorService
 
         $classifier = match ($provenance['classifier'] ?? null) {
             'ml' => ['label' => 'Random Forest' . (isset($provenance['model_version']) ? ' v' . $provenance['model_version'] : ''), 'state' => 'ok'],
-            'rule_based' => ['label' => 'Rule-based fallback — ML service offline', 'state' => 'warning'],
-            default => ['label' => 'Not recorded', 'state' => 'unknown'],
+            // Legacy only: results saved before the fallback was removed.
+            'rule_based' => ['label' => 'Rule-based fallback (older result, not the model)', 'state' => 'warning'],
+            'unavailable' => ['label' => 'Model not running — no weakness classified', 'state' => 'warning'],
+            // Unknown is not neutral here. A weakness nobody can attribute is
+            // weaker evidence than one known to come from a rule.
+            default => ['label' => 'Not recorded — origin unknown', 'state' => 'warning'],
         };
 
         if ($assessment->comprehensionAnswers->isEmpty()) {
@@ -222,12 +226,38 @@ class AnalysisAdvisorService
             $findings[] = $finding;
         }
 
-        if (($provenance['classifier'] ?? null) === 'rule_based') {
+        $classifierUsed = $provenance['classifier'] ?? null;
+        $status = $result->classification_status;
+
+        if ($classifierUsed === 'unavailable') {
+            $findings[] = [
+                'level' => 'warning',
+                'title' => 'The model could not classify this reading',
+                'message' => 'The analysis model was not running, so no weakness was classified for this reading. The measurements above (accuracy, pace, levels, miscues) are unaffected, and no rule has guessed in its place.',
+                'action' => 'Re-analyze once the model is running, or set the weakness yourself with Override.',
+            ];
+        } elseif ($status === 'model_unsupported') {
+            $findings[] = [
+                'level' => 'warning',
+                'title' => "The model's suggestion is not supported by the measurements",
+                'message' => 'The model named a weakness, but none of its choices is backed by what was measured in this reading, so no weakness was stored.',
+                'action' => 'Read the skill rows and the recording, and set the weakness yourself if you see one.',
+            ];
+        } elseif ($classifierUsed === 'rule_based') {
             $findings[] = [
                 'level' => 'warning',
                 'title' => 'Weakness came from a rule, not the model',
                 'message' => 'The ML service was unreachable, so a fixed rule estimated the weakness at low confidence.',
                 'action' => 'Bring the ML service up and re-run the analysis for a model-based classification.',
+            ];
+        } elseif ($classifierUsed === null) {
+            // Results saved before provenance was recorded, or by a route that
+            // did not record it. Silence here reads as "the model did this".
+            $findings[] = [
+                'level' => 'warning',
+                'title' => 'What produced this weakness was not recorded',
+                'message' => 'This result does not say whether the model or the fallback rule classified the weakness, so how far to trust it is unknown.',
+                'action' => 'Re-run the analysis to get a result that records its own source, or rely on the skill rows and the recording rather than the weakness label.',
             ];
         }
 
@@ -407,18 +437,24 @@ class AnalysisAdvisorService
     {
         $metadata = $this->modelMetadata();
 
+        // The version the result recorded wins: it names what actually ran. The
+        // metadata file only describes a model, and it outlives one - it was
+        // still naming "Random Forest 3.0.0" after every model file was deleted.
+        $ranOnModel = ($provenance['classifier'] ?? null) === 'ml';
+
         return [
-            'version' => $provenance['model_version'] ?? ($metadata['version'] ?? null),
-            'type' => $metadata['model_type'] ?? 'Random Forest',
+            'version' => $provenance['model_version'] ?? ($ranOnModel ? ($metadata['version'] ?? null) : null),
+            'type' => $metadata['model_type'] ?? null,
             'test_accuracy' => isset($metadata['test_accuracy']) ? round($metadata['test_accuracy'] * 100, 1) : null,
             'cv_accuracy' => isset($metadata['cv_accuracy']) ? round($metadata['cv_accuracy'] * 100, 1) : null,
             'samples' => $metadata['total_samples'] ?? null,
+            'described' => $metadata !== [],
         ];
     }
 
     private function modelMetadata(): array
     {
-        $path = base_path('ml-service/model_metadata.json');
+        $path = config('services.ml_api.metadata_path') ?: base_path('ml-service/model_metadata.json');
 
         if (!is_file($path)) {
             return [];

@@ -102,7 +102,14 @@
         </x-slot:actions>
     </x-page-header>
 
-    @if($result)
+    {{-- A reading that was never measured from the child's voice shows nothing but
+         what happened. Its numbers (a flawless score of a placeholder, a silent
+         recording) are not the child's, so they are not shown at all. --}}
+    @php $notMeasured = $result ? $assessment->notMeasuredReason() : null; @endphp
+
+    @if($result && $notMeasured)
+        @include('assessments._not_measured', ['assessment' => $assessment, 'result' => $result, 'reason' => $notMeasured])
+    @elseif($result)
         @php
             $comparison = $result->word_comparison_data ?? [];
             $comprehensionAnswers = $assessment->comprehensionAnswers;
@@ -311,26 +318,118 @@
         {{-- ── Weakness Classification ───────────────────────────────── --}}
         {{-- Full width: the skill rows and their explanations were unreadable
              squeezed into a third of the page. --}}
+        @php
+            $weaknessLabels = config('bigkas.weakness_categories', []);
+
+            // One answer to "what is this learner's weakness?", read the same way
+            // on every page (Assessment::weaknessOutcome).
+            $weakness = $assessment->weaknessOutcome();
+            $unclassified = $weakness['state'] === 'unclassified';
+
+            $reasonText = [
+                'unavailable' => 'The analysis model was not running when this reading was analyzed, so no weakness was classified. Nothing was guessed in its place.',
+                'model_unsupported' => 'The model made a suggestion, but it is not supported by the measurements in this reading, so no weakness was stored.',
+                'invalidated' => 'This result was marked invalid, so no weakness is counted for it.',
+                'not_analyzed' => 'This reading has not been analyzed yet.',
+            ][$weakness['reason'] ?? ''] ?? 'No weakness was classified for this reading.';
+
+            // Re-analyzing needs the saved recording; without one only a new
+            // reading will do. Teachers only: the admin view is read-only.
+            $canAct = auth()->user()->isTeacher();
+            $canReanalyze = $canAct
+                && in_array($weakness['reason'], ['unavailable', 'model_unsupported'], true)
+                && $assessment->audioStatus() === 'available';
+            $needsReassess = $canAct
+                && in_array($weakness['reason'], ['unavailable', 'model_unsupported'], true)
+                && ! $canReanalyze;
+
+            // Legacy results keep their label and carry a warning about its source.
+            $sourceWarning = $weakness['state'] === 'legacy' && $weakness['warning']
+                ? [$weakness['source'] === 'rule' ? 'Not from the model' : 'Source not recorded', $weakness['warning']]
+                : null;
+        @endphp
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h6 class="mb-0"><i class="bi bi-clipboard-pulse me-1"></i> Weakness Classification</h6>
-                @php $weaknessLabels = config('bigkas.weakness_categories', []); @endphp
-                @if($result->primary_weakness !== null && $result->primary_weakness !== 0)
-                    <div class="d-flex align-items-center gap-2">
+                @if($unclassified)
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle fs-6">
+                        <i class="bi bi-dash-circle me-1"></i> Not classified
+                    </span>
+                @elseif($weakness['id'] !== null && $weakness['id'] !== 0)
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
                         <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-6">
-                            Primary: {{ $weaknessLabels[$result->primary_weakness]['name'] ?? 'Unknown' }}
+                            Primary: {{ $weakness['name'] ?? 'Unknown' }}
                         </span>
-                        @if($result->weakness_confidence)
+                        @if($weakness['state'] === 'teacher_set')
+                            <span class="small text-muted"><i class="bi bi-person-check me-1"></i>Set by you</span>
+                        @elseif($result->weakness_confidence)
                             <span class="small text-muted">{{ number_format($result->weakness_confidence * 100, 0) }}% confidence</span>
+                        @endif
+                        @if($sourceWarning)
+                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle"
+                                  title="{{ $sourceWarning[1] }}">
+                                <i class="bi bi-exclamation-triangle me-1"></i>{{ $sourceWarning[0] }}
+                            </span>
                         @endif
                     </div>
                 @else
-                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle fs-6">
-                        <i class="bi bi-check-circle me-1"></i> No significant weakness detected
-                    </span>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle fs-6">
+                            <i class="bi bi-check-circle me-1"></i> No significant weakness detected
+                        </span>
+                        @if($weakness['state'] === 'teacher_set')
+                            <span class="small text-muted"><i class="bi bi-person-check me-1"></i>Set by you</span>
+                        @endif
+                        @if($sourceWarning)
+                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle"
+                                  title="{{ $sourceWarning[1] }}">
+                                <i class="bi bi-exclamation-triangle me-1"></i>{{ $sourceWarning[0] }}
+                            </span>
+                        @endif
+                    </div>
                 @endif
             </div>
             <div class="card-body">
+                @if($unclassified)
+                    {{-- Honest, not silent: what happened and what can be done. --}}
+                    <div class="alert alert-secondary mb-3" role="alert">
+                        <div class="d-flex gap-2">
+                            <i class="bi bi-info-circle-fill mt-1"></i>
+                            <div class="flex-grow-1">
+                                <strong>Weakness classification unavailable.</strong>
+                                {{ $reasonText }}
+                                The accuracy, pace, levels and miscues on this page were measured from the reading and are unaffected.
+                                @if($canAct && $weakness['reason'] !== 'invalidated')
+                                    <div class="small mt-1">You can also set the weakness yourself with <strong>Override</strong> above.</div>
+                                @endif
+                            </div>
+                        </div>
+                        @if($canReanalyze)
+                            <form method="POST" action="{{ route('assessments.reanalyze', $assessment) }}" class="mt-3">
+                                @csrf
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-arrow-repeat me-1"></i> Re-analyze
+                                </button>
+                                <span class="small text-muted ms-2">Uses the saved recording. The child does not need to read again.</span>
+                            </form>
+                        @elseif($needsReassess)
+                            <div class="mt-3">
+                                <a href="{{ route('assessments.start', $assessment->learner) }}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-mic me-1"></i> Re-assess
+                                </a>
+                                <span class="small text-muted ms-2">There is no saved recording to analyze again.</span>
+                            </div>
+                        @endif
+                    </div>
+                @elseif($sourceWarning)
+                    <div class="alert alert-warning d-flex gap-2 py-2 mb-3" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                        <div>
+                            <strong>{{ $sourceWarning[0] }}.</strong> {{ $sourceWarning[1] }}
+                            The skill rows below read the measured numbers directly and are unaffected.
+                        </div>
+                    </div>
+                @endif
                 @include('assessments._weakness_why', ['weaknessWhy' => $weaknessWhy])
             </div>
         </div>
@@ -411,7 +510,17 @@
                     </div>
                 </div>
 
-                @if(!empty($recommendations))
+                {{-- Interventions follow the weakness. With none classified there is
+                     nothing to recommend, and the page says so rather than going quiet. --}}
+                @if($unclassified && $weakness['reason'] !== 'invalidated')
+                    <div class="card border-0 shadow-sm mt-3">
+                        <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-lightbulb me-1"></i> Interventions</h6></div>
+                        <div class="card-body small text-muted">
+                            None suggested yet, because no weakness was classified for this reading.
+                            They appear once it is re-analyzed, or once you set the weakness yourself.
+                        </div>
+                    </div>
+                @elseif(collect($recommendations)->isNotEmpty())
                     <div class="card border-0 shadow-sm mt-3">
                         <div class="card-header bg-white"><h6 class="mb-0"><i class="bi bi-lightbulb me-1"></i> Recommended Interventions</h6></div>
                         <div class="card-body p-0">
@@ -460,7 +569,7 @@
 
 @push('scripts')
 <script>
-    @if($result)
+    @if($result && ! $notMeasured)
     new Chart(document.getElementById('errorChart'), {
         type: 'doughnut',
         data: {

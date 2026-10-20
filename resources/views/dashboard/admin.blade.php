@@ -199,6 +199,13 @@
                         </div>
                     @endif
                 </div>
+                @if(($awaitingClassification ?? 0) > 0)
+                    <div class="card-footer bg-white small text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        {{ $awaitingClassification }} {{ \Illuminate\Support\Str::plural('result', $awaitingClassification) }} awaiting classification,
+                        left out of this chart. They can be re-analyzed once the model is running.
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -251,6 +258,16 @@
                     + '<div class="fw-semibold">' + esc(s.label) + '</div><span class="badge bg-' + c + '">' + esc(s.headline) + '</span></div>'
                     + '<div class="small text-muted">' + esc(s.mode) + '</div><div class="small mt-1">' + esc(s.detail) + '</div></div></div>';
             }).join('');
+            var b = data.backlog || {};
+            if (b.waiting > 0 || b.given_up > 0) {
+                box.insertAdjacentHTML('beforeend',
+                    '<div class="py-3 small"><i class="bi bi-hourglass-split me-1"></i>'
+                    + '<strong>' + (b.waiting || 0) + '</strong> recording' + (b.waiting === 1 ? '' : 's') + ' saved, waiting to be scored automatically'
+                    + (b.given_up ? ' &middot; <span class="text-danger"><strong>' + b.given_up + '</strong> could not be scored</span>' : '')
+                    + ' &middot; <a href="' + @json(route('admin.system')) + '">Details</a></div>');
+            } else {
+                box.insertAdjacentHTML('beforeend', '<div class="py-3 small"><a href="' + @json(route('admin.system')) + '">Engine history</a></div>');
+            }
             overall.className = 'badge bg-' + ({ online: 'success', degraded: 'warning', offline: 'danger' }[worst]);
             overall.textContent = { online: 'All running', degraded: 'Needs a look', offline: 'Attention needed' }[worst];
             stamp.textContent = 'Checked ' + new Date(data.checked_at).toLocaleTimeString();

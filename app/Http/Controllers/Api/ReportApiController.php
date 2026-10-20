@@ -17,17 +17,18 @@ class ReportApiController extends Controller
      */
     public function learnerReport(Learner $learner): JsonResponse
     {
-        $learner->load(['assessments.results', 'interventionLogs.intervention']);
+        $learner->load(['assessments.result', 'assessments.verdict', 'interventionLogs.intervention']);
 
         $assessmentResults = $learner->assessments
             ->where('status', 'completed')
             ->map(fn ($a) => [
                 'id' => $a->id,
                 'date' => $a->created_at->toDateString(),
-                'accuracy' => $a->results->first()?->accuracy_rate,
-                'wpm' => $a->results->first()?->words_per_minute,
-                'reading_level' => $a->results->first()?->reading_level,
-                'primary_weakness' => $a->results->first()?->primary_weakness,
+                'accuracy' => $a->result?->accuracy_rate,
+                'wpm' => $a->result?->words_per_minute,
+                'reading_level' => $a->result?->reading_level,
+                'primary_weakness' => $a->weaknessOutcome()['id'],
+                'weakness_state' => $a->weaknessOutcome()['state'],
             ]);
 
         $interventionLogs = $learner->interventionLogs->map(fn ($log) => [

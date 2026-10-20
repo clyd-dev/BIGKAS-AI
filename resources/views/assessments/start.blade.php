@@ -7,6 +7,8 @@
                    :subtitle="$learner->getFullName()"
                    :back="route('learners.show', $learner)" back-label="Learner profile" />
 
+    @include('assessments._service_status')
+
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <div class="alert alert-info">

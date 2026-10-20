@@ -15,15 +15,28 @@
         </a>
     </div>
 
-    @if($result)
+    @if($result && $notMeasured)
+        {{-- Nothing was measured: no score, no level, no tips aimed at a guess. --}}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="small text-muted">{{ $assessment->created_at?->format('F j, Y') }}</div>
+                <h3 class="mt-1"><i class="bi bi-slash-circle text-muted me-1"></i> This check couldn't be scored</h3>
+                <p class="mb-2">
+                    {{ $name }} read <em>"{{ $assessment->material?->title ?? 'a short passage' }}"</em>,
+                    but the recording couldn't be turned into a score, so there is nothing to show for it.
+                </p>
+                <p class="mb-0 text-muted">It does not count towards {{ $name }}'s reading level. The teacher will arrange another reading check.</p>
+            </div>
+        </div>
+    @elseif($result)
         @php
             $lv      = PF::level($result->reading_level);
             $speed   = PF::speed($result->words_per_minute, $learner->grade_level);
             $trend   = PF::trend($comparison);
-            $tips    = PF::homeTips($result->primary_weakness);
+            $tips    = PF::homeTips($weaknessOutcome['id']);
             $mistakes = PF::mistakeTypes();
             $weaknessLabels = config('bigkas.weakness_categories', []);
-            $weak = $result->primary_weakness !== null ? ($weaknessLabels[$result->primary_weakness] ?? null) : null;
+            $weak = $weaknessOutcome['id'] !== null ? ($weaknessLabels[$weaknessOutcome['id']] ?? null) : null;
         @endphp
 
         {{-- Headline --}}
@@ -100,7 +113,10 @@
             <div class="card-header bg-white"><i class="bi bi-house-heart me-1"></i> How you can help at home</div>
             <div class="card-body">
                 @if($weak && ($weak['code'] ?? '') !== 'INDEPENDENT')
-                    <p class="mb-2">The teacher sees that {{ $name }} can grow most in <strong>{{ strtolower($weak['name']) }}</strong>. Simple things to try:</p>
+                    <p class="mb-2">The teacher sees that {{ $name }} can grow most in <strong>{{ strtolower($weak['name']) }}</strong>@if($weaknessOutcome['state'] === 'legacy' && $weaknessOutcome['warning']) <span class="text-muted">(a preliminary reading)</span>@endif. Simple things to try:</p>
+                @elseif($weaknessOutcome['state'] === 'unclassified')
+                    {{-- No label was worked out: say so in plain words, and do not aim tips at a guess. --}}
+                    <p class="mb-2">{{ $name }}'s focus area is not yet checked, and the teacher will review it. Keep the reading habit going with these simple ideas:</p>
                 @else
                     <p class="mb-2">Keep the reading habit going with these simple ideas:</p>
                 @endif

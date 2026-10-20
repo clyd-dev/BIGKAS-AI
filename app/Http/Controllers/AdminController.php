@@ -26,6 +26,24 @@ class AdminController extends Controller
         )->header('Cache-Control', 'no-store');
     }
 
+    /**
+     * The engine's outage history and the recordings that were saved but not
+     * scored yet, so the principal can see what an outage cost and that it is
+     * being made good.
+     */
+    public function system(\App\Services\RescoreQueue $queue)
+    {
+        $with = ['learner.schoolClass', 'material'];
+
+        return view('admin.system', [
+            'status'   => \App\Services\SystemStatus::all(fresh: true),
+            'waiting'  => $queue->waiting()->with($with)->oldest('id')->limit(50)->get(),
+            'givenUp'  => $queue->givenUp()->with($with)->oldest('id')->limit(50)->get(),
+            'events'   => \App\Models\ServiceHealthEvent::latest('id')->limit(25)->get(),
+            'maxAttempts' => \App\Services\RescoreQueue::MAX_ATTEMPTS,
+        ]);
+    }
+
     /** The Admin Panel was merged into the dashboard; keep the old URL working. */
     public function index()
     {

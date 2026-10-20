@@ -49,6 +49,23 @@ class AssessmentVerdictController extends Controller
         $manualScoring = $decision === AssessmentVerdict::DECISION_OVERRIDDEN
             && $request->boolean('manual_scoring');
 
+        // A reading that was never measured from the child's voice has no result
+        // to accept, and no level to confirm. Accepting it used to make a
+        // placeholder's flawless score the child's record. The teacher may
+        // invalidate it, or count the reading themselves; nothing else.
+        if ($reason = $assessment->notMeasuredReason()) {
+            $countedByTeacher = $decision === AssessmentVerdict::DECISION_OVERRIDDEN && $manualScoring;
+
+            if ($decision !== AssessmentVerdict::DECISION_INVALIDATED && ! $countedByTeacher) {
+                return redirect()->route('assessments.results', $assessment)->with('error',
+                    ($reason === 'mock'
+                        ? "This reading was not measured from the child's voice (a placeholder transcript was scored), so it can't be accepted. "
+                        : "No speech was detected in this recording, so there is nothing to accept. ")
+                    . 'You can invalidate it, or re-score it yourself with Override and your own counts.'
+                );
+            }
+        }
+
         $attributes = [
             'decision' => $decision,
             'reason' => $validated['reason'] ?? null,

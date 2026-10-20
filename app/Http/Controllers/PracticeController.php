@@ -193,7 +193,10 @@ class PracticeController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        $latestAssessment = $learner->assessments()->with('result')->latest()->first();
+        $latestAssessment = $learner->assessments()->with(['result', 'verdict'])->latest()->first();
+        // From the outcome: a reading the model could not classify recommends
+        // no practice type, rather than being read as "no weakness".
+        $weaknessId = $latestAssessment?->weaknessOutcome()['id'];
         $weaknessMap = [
             1 => 'phonemic',
             2 => 'sight_words',
@@ -202,8 +205,8 @@ class PracticeController extends Controller
         ];
 
         $recommended = [];
-        if ($latestAssessment && $latestAssessment->result && $latestAssessment->result->primary_weakness) {
-            $type = $weaknessMap[$latestAssessment->result->primary_weakness] ?? 'phonemic';
+        if ($weaknessId) {
+            $type = $weaknessMap[$weaknessId] ?? 'phonemic';
             $recommended[] = [
                 'type' => $type,
                 'reason' => 'Based on latest assessment weakness',
@@ -299,12 +302,10 @@ class PracticeController extends Controller
 
         // Practice asks no comprehension questions, so that skill has no evidence
         // behind it here; the rest is judged from this reading like anywhere else.
-        $analysis['primary_weakness'] = MLClassificationService::resolveWeaknessId(
+        $analysis = array_merge($analysis, MLClassificationService::resolve(
             $classification,
-            \App\Services\WeaknessEvidence::statuses($analysis, $learner->grade_level, null),
-            $analysis['primary_weakness'] ?? null
-        );
-        $analysis['confidence_score'] = $classification['confidence'] ?? $analysis['confidence_score'];
+            \App\Services\WeaknessEvidence::statuses($analysis, $learner->grade_level, null)
+        ));
 
         return response()->json([
             'success' => true,
@@ -314,6 +315,9 @@ class PracticeController extends Controller
                 'fluency_score' => $analysis['fluency_score'],
                 'reading_level' => $analysis['reading_level'],
                 'primary_weakness' => $analysis['primary_weakness'],
+                // Why there is no label, when there is none, so the app can say
+                // so instead of treating a missing value as "no weakness".
+                'classification_status' => $analysis['classification_status'],
                 'confidence_score' => $analysis['confidence_score'],
                 'error_count' => $analysis['error_count'],
                 'substitutions' => $analysis['substitutions'],

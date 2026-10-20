@@ -154,10 +154,20 @@ class Intervention extends Model
     {
         $recommendations = [];
 
-        if ($result->primary_weakness !== null) {
+        // From the outcome, not the raw column: an unclassified or invalid
+        // result recommends nothing, and a teacher's own verdict is honoured.
+        $outcome = $result->weaknessOutcome();
+
+        if (! $outcome['usable']) {
+            return [];
+        }
+
+        $primaryId = $outcome['id'];
+
+        if ($primaryId !== null) {
             // For independent readers (class 0), we might not have specific interventions 
             // but we fetch them if they exist
-            $primary = self::getByWeakness($result->primary_weakness, $learner->grade_level, $userRole);
+            $primary = self::getByWeakness($primaryId, $learner->grade_level, $userRole);
             foreach ($primary->take(3) as $intervention) {
                 $recommendations[] = [
                     'intervention' => $intervention,
@@ -167,7 +177,7 @@ class Intervention extends Model
             }
         }
 
-        if ($result->secondary_weakness !== null && $result->secondary_weakness !== $result->primary_weakness) {
+        if ($result->secondary_weakness !== null && $result->secondary_weakness !== $primaryId) {
             $secondary = self::getByWeakness($result->secondary_weakness, $learner->grade_level, $userRole);
             foreach ($secondary->take(2) as $intervention) {
                 $recommendations[] = [

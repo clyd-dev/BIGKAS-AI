@@ -190,6 +190,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/assessments/{assessment}/upload-audio', [AssessmentController::class, 'uploadAudio'])->name('assessments.upload-audio');
         Route::post('/assessments/{assessment}/retry', [AssessmentController::class, 'retry'])->name('assessments.retry');
         Route::post('/assessments/{assessment}/analyze', [AssessmentController::class, 'analyze'])->name('assessments.analyze');
+        Route::post('/assessments/{assessment}/reanalyze', [AssessmentController::class, 'reanalyze'])->name('assessments.reanalyze');
 
         // Teacher's decision on an AI result (accept / override / invalidate)
         Route::post('/assessments/{assessment}/verdict', [AssessmentVerdictController::class, 'store'])->name('assessments.verdict');
@@ -357,6 +358,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Health of the AI parts (ML classifier, Whisper), fetched by the dashboard card
         Route::get('/system-status', [AdminController::class, 'systemStatus'])->name('system-status');
+
+        // Engine outage history and the recordings waiting to be scored
+        Route::get('/system', [AdminController::class, 'system'])->name('system');
     });
 
     // ----------------------------------------

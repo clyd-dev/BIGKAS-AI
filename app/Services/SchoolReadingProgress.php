@@ -22,7 +22,7 @@ class SchoolReadingProgress
     {
         $since = now()->startOfMonth()->subMonths($months - 1);
 
-        $results = AssessmentResult::with('assessment:id,learner_id,created_at,language')
+        $results = AssessmentResult::measured()->with('assessment:id,learner_id,created_at,language')
             ->whereHas('assessment', fn ($q) => $q->where('status', 'completed'))
             ->get()
             ->filter(fn ($r) => $r->assessment !== null);

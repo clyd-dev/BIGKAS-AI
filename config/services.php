@@ -46,6 +46,12 @@ return [
     // Whisper STT Mode Configuration
     // Set WHISPER_USE_LOCAL=true in .env to use local faster-whisper via the Python Flask service
     // Set WHISPER_USE_LOCAL=false to use the OpenAI cloud API (requires OPENAI_API_KEY)
+    // Who is emailed when the speech engine or model stays down (see ServiceHealthMonitor).
+    // Empty: the outage is still logged and shown on the admin dashboard.
+    'health_alert' => [
+        'email' => env('HEALTH_ALERT_EMAIL'),
+    ],
+
     'whisper' => [
         'use_local' => env('WHISPER_USE_LOCAL', true),
 
@@ -56,12 +62,6 @@ return [
         // fastcgi_read_timeout, so this is the limit that fires first and the
         // teacher gets a real message instead of a dead gateway.
         'timeout' => (int) env('WHISPER_TIMEOUT', 300),
-
-        // The placeholder transcript ("I have a dog his name is Max...") is a
-        // development aid. Scoring it would store an assessment that describes
-        // nothing, so it is refused unless this is explicitly allowed. Null
-        // means "local and testing only" (see SpeechToTextService).
-        'allow_mock' => env('STT_ALLOW_MOCK'),
     ],
 
     // Google Cloud Speech-to-Text (alternative)
@@ -77,6 +77,8 @@ return [
 
     // Python ML API Service
     'ml_api' => [
+        // Overridable so tests do not depend on a file that ships beside the model.
+        'metadata_path' => env('ML_MODEL_METADATA_PATH'),
         'url' => env('ML_API_URL', 'http://localhost:5000'),
         'enabled' => env('ML_API_ENABLED', true),
         'timeout' => 30,

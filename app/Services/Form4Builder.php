@@ -23,7 +23,8 @@ class Form4Builder
 
         $assessments = Assessment::where('learner_id', $learner->id)
             ->where('status', Assessment::STATUS_COMPLETED)
-            ->whereHas('result')
+            // An official DepEd record: only readings measured from the child.
+            ->whereHas('result', fn ($r) => $r->measured())
             ->with(['material', 'result'])
             ->orderBy('created_at')
             ->get();

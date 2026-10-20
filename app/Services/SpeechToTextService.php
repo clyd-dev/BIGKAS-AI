@@ -19,24 +19,6 @@ class SpeechToTextService
         $this->timeout = $config['timeout'] ?? 60;
     }
 
-    /**
-     * May this run fall back to the placeholder transcript?
-     *
-     * Only where a fake result is harmless. Unset config means local and
-     * testing only; STT_ALLOW_MOCK=true forces it on (for a demo without a
-     * speech engine), STT_ALLOW_MOCK=false forces it off everywhere.
-     */
-    protected function mockAllowed(): bool
-    {
-        $configured = config('services.whisper.allow_mock');
-
-        if ($configured !== null && $configured !== '') {
-            return filter_var($configured, FILTER_VALIDATE_BOOLEAN);
-        }
-
-        return app()->environment('local', 'testing');
-    }
-
     public function transcribe(string $audioPath, string $language = 'en'): array
     {
         if (!file_exists($audioPath)) {
@@ -61,20 +43,18 @@ class SpeechToTextService
             return $this->callWhisperApi($audioPath, $language);
         }
 
-        // Priority 3: the placeholder transcript. Scoring it would store an
-        // assessment that measured nothing, so outside development we stop
-        // here and let the caller report a service problem instead.
-        if (! $this->mockAllowed()) {
-            \Log::error('No STT engine available and mock transcription is not allowed here.', [
-                'audio' => basename($audioPath),
-                'last_error' => $lastError,
-            ]);
+        // No engine answered. There is nothing to fall back to: a stand-in
+        // transcript would be scored as if the child had read it, producing a
+        // flawless result (100%, perfect pace, "independent") for a reading
+        // that never happened. So nothing is scored, in every environment, and
+        // the caller reports that the engine is down. The recording is already
+        // saved, so analysing again once it is back is all it takes.
+        \Log::error('No speech engine answered; nothing was scored.', [
+            'audio' => basename($audioPath),
+            'last_error' => $lastError,
+        ]);
 
-            throw SpeechServiceUnavailable::becauseNoEngineAnswered($lastError);
-        }
-
-        \Log::info('No STT service available. Using mock transcription.');
-        return $this->mockTranscribe($audioPath, $language);
+        throw SpeechServiceUnavailable::becauseNoEngineAnswered($lastError);
     }
 
     /**
@@ -152,43 +132,6 @@ class SpeechToTextService
         ];
     }
 
-    protected function mockTranscribe(string $audioPath, string $language): array
-    {
-        $fileSize = filesize($audioPath);
-        $estimatedDuration = max(10, $fileSize / 16000);
-
-        $mockTexts = [
-            'en' => 'I have a dog his name is Max Max is brown he has a long tail Max likes to run he runs in the park I play with Max we play catch Max catches the ball he brings it back to me I love my dog Max',
-            'fil' => 'Ako ay may pusa ang pangalan niya ay Muning si Muning ay puti mahaba ang buntot niya mahilig siyang matulog natutulog siya sa ilalim ng mesa pinapakain ko siya binibigyan ko siya ng gatas mahal ko ang pusa ko',
-        ];
-
-        $text = $mockTexts[$language] ?? $mockTexts['en'];
-        $words = explode(' ', $text);
-        $wordData = [];
-        $timePerWord = $estimatedDuration / count($words);
-        $currentTime = 0;
-
-        foreach ($words as $word) {
-            $wordData[] = [
-                'word' => $word,
-                'start' => round($currentTime, 2),
-                'end' => round($currentTime + $timePerWord, 2),
-                'confidence' => rand(85, 99) / 100,
-            ];
-            $currentTime += $timePerWord;
-        }
-
-        return [
-            'text' => $text,
-            'words' => $wordData,
-            'language' => $language,
-            'duration' => round($estimatedDuration, 2),
-            'segments' => [],
-            'engine' => 'mock',
-            'is_mock' => true,
-        ];
-    }
-
     public function getSupportedLanguages(): array
     {
         return [
@@ -216,15 +159,15 @@ class SpeechToTextService
     public function healthCheck(): array
     {
         if (empty($this->apiKey)) {
-            return ['status' => 'warning', 'message' => 'API key not configured (using mock mode)', 'mock_mode' => true];
+            return ['status' => 'warning', 'message' => 'No cloud speech API key is configured; transcription depends on the local engine.'];
         }
         try {
             $response = Http::timeout(10)->withToken($this->apiKey)->get($this->apiUrl . '/models');
             return $response->successful()
-                ? ['status' => 'ok', 'message' => 'OpenAI API is reachable', 'mock_mode' => false]
-                : ['status' => 'error', 'message' => "API returned status {$response->status()}", 'mock_mode' => false];
+                ? ['status' => 'ok', 'message' => 'OpenAI API is reachable']
+                : ['status' => 'error', 'message' => "API returned status {$response->status()}"];
         } catch (\Exception $e) {
-            return ['status' => 'error', 'message' => $e->getMessage(), 'mock_mode' => false];
+            return ['status' => 'error', 'message' => $e->getMessage()];
         }
     }
 }

@@ -65,7 +65,6 @@ class SpeechEngineRequiredTest extends TestCase
     {
         config([
             'services.whisper.use_local' => true,
-            'services.whisper.allow_mock' => false,
             'services.openai.api_key' => '',
         ]);
 
@@ -189,38 +188,6 @@ class SpeechEngineRequiredTest extends TestCase
         $this->assertFalse($assessment->awaitingAnalysis());
     }
 
-    public function test_the_placeholder_is_still_available_for_local_development(): void
-    {
-        config([
-            'services.whisper.use_local' => false,
-            'services.whisper.allow_mock' => true,
-            'services.openai.api_key' => '',
-        ]);
-
-        $transcription = app(SpeechToTextService::class)->transcribe(__FILE__, 'en');
-
-        $this->assertSame('mock', $transcription['engine']);
-        $this->assertTrue($transcription['is_mock']);
-    }
-
-    public function test_an_unset_flag_means_local_and_testing_only(): void
-    {
-        config(['services.whisper.allow_mock' => null]);
-
-        // The suite runs in the "testing" environment, where it is allowed.
-        $this->assertTrue($this->mockAllowed());
-
-        app()['env'] = 'production';
-        $this->assertFalse($this->mockAllowed(), 'Production must never fall back to the placeholder.');
-    }
-
-    /** Reach the service's protected decision without duplicating its rule. */
-    private function mockAllowed(): bool
-    {
-        $method = new \ReflectionMethod(SpeechToTextService::class, 'mockAllowed');
-
-        return $method->invoke(app(SpeechToTextService::class));
-    }
 
     public function test_the_transcription_timeout_allows_minutes_not_seconds(): void
     {

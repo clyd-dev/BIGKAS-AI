@@ -22,7 +22,10 @@
             'supported' => ['bi-check-circle-fill', 'success'],
             'weak' => ['bi-exclamation-circle-fill', 'warning'],
             'unusable' => ['bi-x-octagon-fill', 'danger'],
+            'unclassified' => ['bi-dash-circle-fill', 'secondary'],
         ][$primary['fit']] ?? ['bi-info-circle-fill', 'secondary'];
+
+        $unclassified = $primary['fit'] === 'unclassified';
 
         $others = collect($skills)->reject(fn ($s) => $s['id'] === $primary['id']);
     @endphp
@@ -67,6 +70,9 @@
                     </span>
                 @endif
             </h6>
+            {{-- These rows are thresholds applied to the numbers in this reading.
+                 They are measured, not predicted, and do not depend on the model. --}}
+            <p class="small text-muted mb-2">Measured from this reading, not predicted by the model.</p>
 
             @foreach($skills as $skill)
                 @php $s = $status[$skill['status']]; $isPick = $skill['id'] === $primary['id']; @endphp
@@ -112,7 +118,7 @@
             </div>
 
             @if($others->isNotEmpty())
-                <h6 class="small text-uppercase text-muted fw-semibold mt-4 mb-1">What the other skills show</h6>
+                <h6 class="small text-uppercase text-muted fw-semibold mt-4 mb-1">{{ $unclassified ? 'What each skill shows' : 'What the other skills show' }}</h6>
                 <ul class="other-skills">
                     @foreach($others as $skill)
                         <li>

@@ -41,7 +41,7 @@ class DashboardController extends Controller
         $avgAccuracy = 0;
         $avgWpm = 0;
         if ($learnerIds->isNotEmpty()) {
-            $aggregates = AssessmentResult::whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
+            $aggregates = AssessmentResult::measured()->whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
                 ->selectRaw('AVG(accuracy_rate) as avg_acc, AVG(words_per_minute) as avg_wpm')
                 ->first();
             $avgAccuracy = $aggregates->avg_acc ?? 0;
@@ -113,12 +113,12 @@ class DashboardController extends Controller
             'total_interventions' => \App\Models\Intervention::where('is_active', true)->count(),
         ];
 
-        // School-wide primary weaknesses from the ML classification (1-4).
-        $counts = AssessmentResult::selectRaw('primary_weakness, COUNT(*) as count')
-            ->whereNotNull('primary_weakness')
-            ->groupBy('primary_weakness')
-            ->pluck('count', 'primary_weakness')
-            ->toArray();
+        // School-wide weaknesses, read the way every other page reads them:
+        // a teacher's verdict wins, invalid readings are left out, and a reading
+        // the model could not classify is counted as awaiting, not as "none".
+        $weaknessTotals = AssessmentResult::weaknessCounts();
+        $counts = $weaknessTotals['counts'];
+        $awaitingClassification = $weaknessTotals['awaiting'];
 
         $categories = config('bigkas.weakness_categories', [
             1 => ['name' => 'Phonemic Awareness'],
@@ -139,6 +139,9 @@ class DashboardController extends Controller
 
         $sectionsNoAdviser = \App\Models\SchoolClass::where('is_active', true)->whereNull('teacher_id')->count();
         $frustration       = Learner::where('reading_level', 'frustration')->count();
+        $rescore           = app(\App\Services\RescoreQueue::class);
+        $unscored          = $rescore->waiting()->count();
+        $gaveUp            = $rescore->givenUp()->count();
 
         // Most urgent first. danger/warning = something is waiting on the principal; info = for awareness.
         $attention = collect([
@@ -158,12 +161,20 @@ class DashboardController extends Controller
                 'title' => 'Learners at Frustration level', 'count' => $frustration,
                 'detail' => 'These learners need extra reading support. Check their interventions.',
                 'url' => route('learners.index', ['reading_level' => 'frustration']), 'action' => 'View learners'],
+            ['key' => 'unscored', 'severity' => 'warning', 'icon' => 'bi-hourglass-split',
+                'title' => 'Recordings waiting to be scored', 'count' => $unscored,
+                'detail' => 'Saved while the speech engine or model was down. They are scored automatically once it is back.',
+                'url' => route('admin.system'), 'action' => 'See queue'],
+            ['key' => 'unscorable', 'severity' => 'danger', 'icon' => 'bi-exclamation-octagon',
+                'title' => 'Recordings that could not be scored', 'count' => $gaveUp,
+                'detail' => 'Retried several times and still failing. The teacher can press Analyze, or the child can read again.',
+                'url' => route('admin.system'), 'action' => 'Review'],
         ])->filter(fn ($a) => $a['count'] > 0)->values();
 
         $recentActivity = \App\Models\ActivityLog::with('user')->latest()->limit(10)->get();
         $school         = \App\Models\School::orderBy('id')->first();
 
-        return view('dashboard.admin', compact('stats', 'weaknessLabels', 'weaknessData', 'pendingReports', 'pendingTeachers', 'progress', 'attention', 'recentActivity', 'school'));
+        return view('dashboard.admin', compact('stats', 'weaknessLabels', 'weaknessData', 'awaitingClassification', 'pendingReports', 'pendingTeachers', 'progress', 'attention', 'recentActivity', 'school'));
     }
 
     private function studentDashboard($user)

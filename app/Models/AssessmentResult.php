@@ -27,8 +27,15 @@ class AssessmentResult extends Model
         'primary_weakness',
         'secondary_weakness',
         'confidence_score',
+        'classification_status',
         'ml_analysis_json',
     ];
+
+    // What happened when the model was asked for a weakness. NULL means the
+    // result was saved before this was tracked (legacy).
+    public const STATUS_CLASSIFIED = 'classified';
+    public const STATUS_MODEL_UNSUPPORTED = 'model_unsupported';
+    public const STATUS_UNAVAILABLE = 'unavailable';
 
     protected function casts(): array
     {
@@ -112,6 +119,26 @@ class AssessmentResult extends Model
         return ['all_scores' => $ml['skill_scores'] ?? []];
     }
 
+    /**
+     * Only results that were measured from the child's voice.
+     *
+     * Leaves out placeholder-transcript results and silent recordings (see
+     * Assessment::notMeasuredReason), unless the teacher counted the reading
+     * themselves. Every average, chart and list of a child's readings goes
+     * through this, so a reading that never happened cannot pull a number up.
+     */
+    public function scopeMeasured($query)
+    {
+        return $query->where(function ($q) {
+            $q->where(function ($real) {
+                $real->where(fn ($w) => $w->whereNull('ml_analysis_json->provenance->stt_engine')
+                        ->orWhere('ml_analysis_json->provenance->stt_engine', '!=', 'mock'))
+                    ->where(fn ($w) => $w->whereNull('ml_analysis_json->audio_quality->rating')
+                        ->orWhere('ml_analysis_json->audio_quality->rating', '!=', 'no_speech'));
+            })->orWhereHas('assessment.verdict', fn ($v) => $v->where('manual_scoring', true));
+        });
+    }
+
     // ── Helpers ──
 
     public function getReadingLevelInfo(): array
@@ -126,11 +153,106 @@ class AssessmentResult extends Model
 
     public function getPrimaryWeaknessInfo(): ?array
     {
-        if ($this->primary_weakness === null) {
+        $id = $this->effectiveWeakness();
+
+        if ($id === null) {
             return null;
         }
+
         $categories = config('bigkas.weakness_categories', []);
-        return $categories[$this->primary_weakness] ?? null;
+
+        return $categories[$id] ?? null;
+    }
+
+    /**
+     * What this result can honestly say about the weakness (see
+     * Assessment::weaknessOutcome). Reads through the owning assessment so the
+     * teacher's verdict and an invalidated result are taken into account.
+     */
+    public function weaknessOutcome(): array
+    {
+        $assessment = $this->assessment;
+
+        if (! $assessment) {
+            return ['state' => 'unclassified', 'id' => null, 'name' => null, 'usable' => false,
+                'reason' => 'not_analyzed', 'source' => null, 'warning' => null];
+        }
+
+        // This instance is the result being asked about; do not reload it.
+        $assessment->setRelation('result', $this);
+        $assessment->loadMissing('verdict');
+
+        return $assessment->weaknessOutcome();
+    }
+
+    /** The weakness label to act on, or null when there is none to stand on. */
+    public function effectiveWeakness(): ?int
+    {
+        return $this->weaknessOutcome()['id'];
+    }
+
+    /**
+     * What the model's answer left in the record, before any verdict.
+     *
+     * For explaining the model's pick next to the teacher's. Never for deciding
+     * anything about a child: use weaknessOutcome() for that.
+     */
+    public function modelPick(): ?int
+    {
+        return $this->primary_weakness;
+    }
+
+    /**
+     * School-wide weakness counts, the way every other page reads a weakness.
+     *
+     * Follows the same rules as Assessment::weaknessOutcome(): a teacher's
+     * verdict wins, an invalidated reading counts for nothing, and a reading the
+     * model could not classify is counted as awaiting classification rather than
+     * as having no weakness. Done in SQL so the admin dashboard does not load
+     * every result's analysis blob to add up four numbers.
+     *
+     * @return array{counts: array<int, int>, awaiting: int}
+     */
+    public static function weaknessCounts(): array
+    {
+        // Readings never measured from the child's voice name no weakness.
+        $unmeasured = static::query()
+            ->whereNotIn('id', static::measured()->select('assessment_results.id'))
+            ->pluck('assessment_id');
+
+        $rows = \Illuminate\Support\Facades\DB::table('assessment_results as r')
+            ->whereNotIn('r.assessment_id', $unmeasured)
+            ->leftJoin('assessment_verdicts as v', 'v.assessment_id', '=', 'r.assessment_id')
+            ->selectRaw(
+                "CASE
+                    WHEN v.decision = 'invalidated' THEN NULL
+                    WHEN v.final_primary_weakness IS NOT NULL THEN v.final_primary_weakness
+                    WHEN r.classification_status IN ('unavailable', 'model_unsupported') THEN NULL
+                    ELSE r.primary_weakness
+                 END as weakness,
+                 CASE
+                    WHEN v.decision = 'invalidated' THEN 0
+                    WHEN v.final_primary_weakness IS NOT NULL THEN 0
+                    WHEN r.classification_status IN ('unavailable', 'model_unsupported') THEN 1
+                    ELSE 0
+                 END as awaiting,
+                 COUNT(*) as total"
+            )
+            ->groupBy('weakness', 'awaiting')
+            ->get();
+
+        $counts = [];
+        $awaiting = 0;
+
+        foreach ($rows as $row) {
+            if ($row->awaiting) {
+                $awaiting += (int) $row->total;
+            } elseif ($row->weakness !== null) {
+                $counts[(int) $row->weakness] = ($counts[(int) $row->weakness] ?? 0) + (int) $row->total;
+            }
+        }
+
+        return ['counts' => $counts, 'awaiting' => $awaiting];
     }
 
     public function getErrorBreakdown(): array

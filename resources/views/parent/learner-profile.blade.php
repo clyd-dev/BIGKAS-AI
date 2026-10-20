@@ -105,7 +105,10 @@
             <div class="card-body">
                 @if($weaknessInfo && ($weaknessInfo['code'] ?? '') !== 'INDEPENDENT')
                     <p class="mb-2">The teacher sees that {{ $name }} can grow most in
-                        <strong>{{ strtolower($weaknessInfo['name']) }}</strong>. Simple things to try:</p>
+                        <strong>{{ strtolower($weaknessInfo['name']) }}</strong>@if(($weaknessOutcome['state'] ?? null) === 'legacy' && ! empty($weaknessOutcome['warning'])) <span class="text-muted">(a preliminary reading)</span>@endif. Simple things to try:</p>
+                @elseif(($weaknessOutcome['state'] ?? null) === 'unclassified')
+                    {{-- No label was worked out: say so in plain words, and do not aim tips at a guess. --}}
+                    <p class="mb-2">{{ $name }}'s focus area is not yet checked, and the teacher will review it. Keep the reading habit going with these simple ideas:</p>
                 @else
                     <p class="mb-2">Keep the reading habit going with these simple ideas:</p>
                 @endif

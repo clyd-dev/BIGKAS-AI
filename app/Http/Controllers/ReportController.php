@@ -23,7 +23,7 @@ class ReportController extends Controller
         $learners = $user->accessibleLearnersQuery()->get();
 
         if ($user->isParent()) {
-            $latestByLearner = AssessmentResult::select('assessment_results.*', 'assessments.learner_id as owner_id')
+            $latestByLearner = AssessmentResult::measured()->select('assessment_results.*', 'assessments.learner_id as owner_id')
                 ->join('assessments', 'assessments.id', '=', 'assessment_results.assessment_id')
                 ->whereIn('assessments.learner_id', $learners->pluck('id'))
                 ->with('assessment')
@@ -51,10 +51,10 @@ class ReportController extends Controller
 
         $assessed   = $learners->whereNotNull('reading_level')->count();
         $avgAccuracy = $learnerIds->isEmpty() ? 0 :
-            AssessmentResult::whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
+            AssessmentResult::measured()->whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
                 ->avg('accuracy_rate') ?? 0;
         $avgWpm = $learnerIds->isEmpty() ? 0 :
-            AssessmentResult::whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
+            AssessmentResult::measured()->whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
                 ->avg('words_per_minute') ?? 0;
 
         $stats = [
@@ -84,8 +84,8 @@ class ReportController extends Controller
         $stats = [
             'total_learners' => $total,
             'assessed'       => $total - $distribution['not_assessed'],
-            'avg_accuracy'   => round((float) (AssessmentResult::avg('accuracy_rate') ?? 0), 1),
-            'avg_wpm'        => round((float) (AssessmentResult::avg('words_per_minute') ?? 0), 1),
+            'avg_accuracy'   => round((float) (AssessmentResult::measured()->avg('accuracy_rate') ?? 0), 1),
+            'avg_wpm'        => round((float) (AssessmentResult::measured()->avg('words_per_minute') ?? 0), 1),
         ];
 
         $counts = ['learners'];
@@ -123,7 +123,7 @@ class ReportController extends Controller
         $progressWpm      = $progressData->pluck('words_per_minute')->map(fn($v) => (int)$v)->values()->toArray();
 
         // Pass assessments (Assessment models with result) for the history table
-        $assessments = $learner->assessments()->with(['material', 'result'])->latest()->paginate(10)->withQueryString();
+        $assessments = $learner->assessments()->with(['material', 'result', 'verdict'])->latest()->paginate(10)->withQueryString();
 
         // Map skill breakdown keys to match view (phonemic, decoding, fluency, comprehension)
         $rawSkill = $learner->getSkillBreakdown();
@@ -164,7 +164,7 @@ class ReportController extends Controller
 
         // Build flat learner rows for the view table
         $learners = $classLearners->map(function ($learner) {
-            $latestResult = AssessmentResult::whereHas('assessment', fn($q) => $q->where('learner_id', $learner->id))
+            $latestResult = AssessmentResult::measured()->whereHas('assessment', fn($q) => $q->where('learner_id', $learner->id))
                 ->latest()->first();
             return [
                 'id'            => $learner->id,
@@ -179,10 +179,10 @@ class ReportController extends Controller
         $totalLearners = $classLearners->count();
         $assessed      = $classLearners->whereNotNull('reading_level')->count();
         $avgAccuracy   = $learnerIds->isEmpty() ? 0 :
-            AssessmentResult::whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
+            AssessmentResult::measured()->whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
                 ->avg('accuracy_rate') ?? 0;
         $avgWpm = $learnerIds->isEmpty() ? 0 :
-            AssessmentResult::whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
+            AssessmentResult::measured()->whereHas('assessment', fn($q) => $q->whereIn('learner_id', $learnerIds))
                 ->avg('words_per_minute') ?? 0;
 
         $avgAccuracy = round((float) $avgAccuracy, 1);

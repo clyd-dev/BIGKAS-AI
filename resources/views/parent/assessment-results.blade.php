@@ -27,6 +27,8 @@
         @php
             $r  = $assessment->result;
             $rl = PF::level($r?->reading_level);
+            // Never measured from the child's voice: no score, level or bar.
+            $unscored = $r && ! $assessment->isMeasured();
         @endphp
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
@@ -39,14 +41,16 @@
                             @endif
                         </div>
                     </div>
-                    @if($r)
+                    @if($unscored)
+                        <span class="pp-pill pp-none"><i class="bi bi-slash-circle"></i> Couldn't be scored</span>
+                    @elseif($r)
                         <span class="pp-pill pp-{{ $rl['tone'] }}">{{ $rl['emoji'] }} {{ $rl['title'] }}</span>
                     @else
                         <span class="pp-pill pp-none"><i class="bi bi-hourglass-split"></i> Waiting for results</span>
                     @endif
                 </div>
 
-                @if($r)
+                @if($r && ! $unscored)
                     <div class="pp-bar mt-3 pp-{{ $rl['tone'] }}" role="img" aria-label="{{ (int) round($r->accuracy_rate) }} out of 100 words correct">
                         <span style="width: {{ min(100, max(0, $r->accuracy_rate)) }}%"></span>
                     </div>

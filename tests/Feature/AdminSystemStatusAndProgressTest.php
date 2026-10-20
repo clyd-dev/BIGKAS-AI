@@ -72,7 +72,7 @@ class AdminSystemStatusAndProgressTest extends TestCase
 
         $this->assertSame('offline', $this->state($status, 'ml')['state']);
         $this->assertSame('offline', $this->state($status, 'whisper')['state']);
-        $this->assertStringContainsString('still work', $this->state($status, 'ml')['detail']);
+        $this->assertStringContainsString('no weakness is classified', $this->state($status, 'ml')['detail']);
         $this->assertStringContainsString('http://ml.test:5000', $this->state($status, 'ml')['detail']);
     }
 

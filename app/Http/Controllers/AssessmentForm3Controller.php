@@ -31,6 +31,10 @@ class AssessmentForm3Controller extends Controller
         $this->authorizeLearnerAccess($assessment->learner);
         abort_unless($assessment->status === Assessment::STATUS_COMPLETED && $assessment->result()->exists(), 404);
 
+        // The printed Phil-IRI form is an official record. A reading that was never
+        // measured from the child has nothing to print.
+        abort_unless($assessment->isMeasured(), 404, 'This reading was not measured, so there is no form to print.');
+
         return Form3Builder::build($assessment);
     }
 }

@@ -134,20 +134,23 @@
                             <tr>
                                 <td>{{ $assessment->created_at?->format('M d, Y') }}</td>
                                 <td>{{ $assessment->material?->title ?? 'N/A' }}</td>
-                                <td>{{ $r?->accuracy_rate ?? '-' }}%</td>
-                                <td>{{ $r?->words_per_minute ?? '-' }}</td>
+                                {{-- Effective values: a reading that was never measured shows none. --}}
+                                <td>{{ $assessment->effectiveAccuracy() !== null ? $assessment->effectiveAccuracy() . '%' : '-' }}</td>
+                                <td>{{ $assessment->effectiveWordsPerMinute() ?? '-' }}</td>
                                 <td>
-                                    @if($r?->reading_level === 'independent')
+                                    @if($assessment->notMeasuredReason())
+                                        <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">Not measured</span>
+                                    @elseif($assessment->effectiveReadingLevel() === 'independent')
                                         <span class="badge bg-success">Ind.</span>
-                                    @elseif($r?->reading_level === 'instructional')
+                                    @elseif($assessment->effectiveReadingLevel() === 'instructional')
                                         <span class="badge bg-warning text-dark">Inst.</span>
-                                    @elseif($r?->reading_level === 'frustration')
+                                    @elseif($assessment->effectiveReadingLevel() === 'frustration')
                                         <span class="badge bg-danger">Frus.</span>
                                     @else
                                         <span class="badge bg-secondary">-</span>
                                     @endif
                                 </td>
-                                <td>{{ $weaknessLabels[$r?->primary_weakness]['name'] ?? '-' }}</td>
+                                <td><x-weakness-status :outcome="$assessment->weaknessOutcome()" /></td>
                                 <td><a href="{{ auth()->user()->isParent() ? route('parent.children.assessment-detail', [$learner, $assessment]) : route('assessments.results', $assessment) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
                             </tr>
                         @empty

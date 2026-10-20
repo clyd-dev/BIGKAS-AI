@@ -58,7 +58,7 @@ class ParentDashboardController extends Controller
 
         // Per-child summary for the friendly "child cards"
         $latestResults = $learnerIds->isEmpty() ? collect() :
-            AssessmentResult::select('assessment_results.*', 'assessments.learner_id as owner_id')
+            AssessmentResult::measured()->select('assessment_results.*', 'assessments.learner_id as owner_id')
                 ->join('assessments', 'assessments.id', '=', 'assessment_results.assessment_id')
                 ->whereIn('assessments.learner_id', $learnerIds)
                 ->with('assessment')
@@ -124,6 +124,9 @@ class ParentDashboardController extends Controller
         $latestResult   = $progressData->last();
         $weaknessInfo   = $latestResult?->getPrimaryWeaknessInfo();
         $lastAssessedAt = $latestResult?->assessment?->created_at;
+        // One honest answer, so a reading the model could not classify is not
+        // presented as a child with no focus area.
+        $weaknessOutcome = $latestResult?->weaknessOutcome();
 
         // Open home activities the teacher assigned (next up for the parent)
         $suggestedActivities = $learner->interventionLogs()
@@ -140,14 +143,14 @@ class ParentDashboardController extends Controller
         $checkups   = $progressData->take(-5)->reverse()->values();
         $checkups->each->loadMissing('assessment.material');
         $comparison = $latestResult?->getComparisonWithPrevious();
-        $weaknessId = $latestResult?->primary_weakness;
+        $weaknessId = $weaknessOutcome['id'] ?? null;
 
         return view('parent.learner-profile', compact(
             'latestResult', 'checkups', 'comparison', 'weaknessId',
             'learner', 'stats', 'skillScores', 'levelInfo',
             'progressDates', 'progressAccuracy', 'progressWpm',
             'recentPractice', 'interventionLogs',
-            'weaknessInfo', 'lastAssessedAt', 'suggestedActivities', 'badges'
+            'weaknessInfo', 'weaknessOutcome', 'lastAssessedAt', 'suggestedActivities', 'badges'
         ));
     }
 
@@ -197,15 +200,17 @@ class ParentDashboardController extends Controller
         $this->authorizeParent($learner);
         abort_unless($assessment->learner_id === $learner->id, 403);
 
-        $assessment->load(['material', 'result', 'assessor']);
+        $assessment->load(['material', 'result', 'assessor', 'verdict']);
         $result = $assessment->result;
+        $weaknessOutcome = $assessment->weaknessOutcome();
+        $notMeasured = $assessment->notMeasuredReason();
 
         $comparison = $result?->getComparisonWithPrevious();
         $errorBreakdown = $result?->getErrorBreakdown();
         $readingLevelInfo = $result?->getReadingLevelInfo();
 
         return view('parent.assessment-detail', compact(
-            'learner', 'assessment', 'result',
+            'learner', 'assessment', 'result', 'weaknessOutcome', 'notMeasured',
             'comparison', 'errorBreakdown', 'readingLevelInfo'
         ));
     }

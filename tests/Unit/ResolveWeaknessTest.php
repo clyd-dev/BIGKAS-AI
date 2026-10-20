@@ -60,22 +60,23 @@ class ResolveWeaknessTest extends TestCase
         $this->assertSame(0, ML::resolveWeaknessId($c, $this->statuses('ok', 'ok', 'ok', 'ok')));
     }
 
-    /** Without probabilities to walk, the clearest measured problem is used. */
-    public function test_an_unsupported_pick_with_no_scores_falls_back_to_the_clearest_problem(): void
+    /**
+     * Without the model's own ranking to walk, nothing may choose for it. A
+     * "clearest measured problem" pick used to step in here: a rule authoring
+     * the label, stored as though the model had.
+     */
+    public function test_an_unsupported_pick_with_no_scores_stores_nothing(): void
     {
         $c = ['primary' => '1', 'all_scores' => []];
 
-        $this->assertSame(
-            2,
-            ML::resolveWeaknessId($c, $this->statuses('ok', 'concern', 'watch', 'unknown')),
-            'Red beats amber.'
-        );
+        $this->assertNull(ML::resolveWeaknessId($c, $this->statuses('ok', 'concern', 'watch', 'unknown')));
+        $this->assertNull(ML::resolveWeaknessId($c, $this->statuses('ok', 'ok', 'watch', 'watch')));
+    }
 
-        $this->assertSame(
-            3,
-            ML::resolveWeaknessId($c, $this->statuses('ok', 'ok', 'watch', 'watch')),
-            'Among equals the more foundational skill comes first.'
-        );
+    public function test_an_unreadable_prediction_stores_nothing(): void
+    {
+        $this->assertNull(ML::resolveWeaknessId(['primary' => null, 'all_scores' => []], $this->statuses('ok', 'concern', 'ok', 'ok')));
+        $this->assertNull(ML::resolveWeaknessId(['primary' => 'banana', 'all_scores' => []], $this->statuses('ok', 'concern', 'ok', 'ok')));
     }
 
     public function test_nothing_is_stored_when_the_evidence_shows_no_problem_at_all(): void

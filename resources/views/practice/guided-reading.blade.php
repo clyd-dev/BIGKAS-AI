@@ -298,6 +298,13 @@
                             <i class="bi bi-exclamation-triangle me-2"></i><strong>Primary Focus:</strong> ${wName} (confidence: ${((data.confidence_score || 0) * 100).toFixed(0)}%)
                         </div>
                     `;
+                } else if (data.classification_status === 'unavailable' || data.classification_status === 'model_unsupported') {
+                    // No label is not "no weakness": say the check did not happen.
+                    weaknessEl.innerHTML = `
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-info-circle me-2"></i>Your reading was scored. The focus-area check is not available right now.
+                        </div>
+                    `;
                 } else {
                     weaknessEl.innerHTML = '';
                 }

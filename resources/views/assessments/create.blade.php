@@ -6,6 +6,8 @@
     <x-page-header title="New Assessment" icon="bi-plus-circle"
                    :back="route('assessments.index')" back-label="Assessments" />
 
+    @include('assessments._service_status')
+
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <form method="POST" action="{{ route('assessments.store') }}" id="assessmentWizard">

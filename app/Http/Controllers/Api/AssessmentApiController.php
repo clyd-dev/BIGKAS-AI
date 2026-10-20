@@ -192,28 +192,38 @@ class AssessmentApiController extends Controller
             // features the analyzer prepares, not raw counts.
             $classification = $this->mlService->classify($analysis['ml_features']);
 
-            $analysis['primary_weakness'] = MLClassificationService::resolveWeaknessId(
+            // Same rule as the web route: the model's label or none.
+            $analysis = array_merge($analysis, MLClassificationService::resolve(
                 $classification,
                 \App\Services\WeaknessEvidence::statuses(
                     $analysis,
                     $assessment->learner?->grade_level,
                     $comprehensionScore ?? $assessment->comprehensionScore()
-                ),
-                $analysis['primary_weakness'] ?? null
-            );
-            $analysis['confidence_score'] = $classification['confidence'] ?? $analysis['confidence_score'];
+                )
+            ));
 
             if ($comprehensionScore !== null) {
                 $analysis['comprehension_score'] = $comprehensionScore;
             }
+
+            // Record what produced the weakness. Without this the API route saved
+            // results whose origin was unknowable, so a fallback rule and the
+            // model looked identical to the teacher reading them.
+            $analysis['provenance'] = array_merge([
+                'stt_engine' => $transcription['engine'] ?? 'unknown',
+                'stt_is_mock' => (bool) ($transcription['is_mock'] ?? false),
+                'analysed_at' => now()->toIso8601String(),
+            ], MLClassificationService::classifierProvenance($classification));
 
             // Step 4: Save results via the same mapping the web flow uses.
             $result = $assessment->createResult($analysis);
 
             $assessment->markCompleted();
 
+            // createResult() has already recomputed the learner's level from
+            // their usable readings; writing the raw result over it here would
+            // bypass a teacher's verdict and count unmeasured readings.
             $learner = $assessment->learner;
-            $learner?->update(['reading_level' => $result->reading_level]);
 
             // Step 5: Intervention recommendations
             $recommendations = $learner

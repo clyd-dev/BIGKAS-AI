@@ -9,6 +9,11 @@
     $verdict = $assessment->verdict;
     $canDecide = auth()->user()->isTeacher();
     $weaknessLabels = config('bigkas.weakness_categories', []);
+    $isUnclassified = in_array($result->classification_status, ['unavailable', 'model_unsupported'], true);
+
+    // Set by the "nothing was measured" page: there is no result to accept, so the
+    // form offers only what can honestly be done (invalidate, or count it yourself).
+    $notMeasured = $notMeasured ?? false;
 @endphp
 
 <div class="card border-0 shadow-sm mb-4">
@@ -25,6 +30,12 @@
         <div class="card-header bg-primary-subtle text-primary-emphasis">
             <h6 class="mb-0"><i class="bi bi-pencil-square me-1"></i> Overridden by teacher</h6>
         </div>
+    @elseif($notMeasured)
+        {{-- Accepted before this was refused. Nothing was measured, so the
+             acceptance confirms nothing and the child's level does not use it. --}}
+        <div class="card-header bg-warning-subtle text-warning-emphasis">
+            <h6 class="mb-0"><i class="bi bi-exclamation-triangle me-1"></i> Accepted earlier, but nothing was measured, so it does not count</h6>
+        </div>
     @else
         <div class="card-header bg-success-subtle text-success-emphasis">
             <h6 class="mb-0"><i class="bi bi-check-circle me-1"></i> AI result accepted</h6>
@@ -35,6 +46,12 @@
         @if($verdict)
             <div class="row g-3 align-items-start">
                 <div class="col-md-7">
+                    @if($notMeasured && $verdict->isAccepted())
+                        <p class="small text-body-secondary mb-0">
+                            Your acceptance is kept on record, but there was no measurement to confirm,
+                            so it is not counted. Use <strong>Change decision</strong> to mark it invalid.
+                        </p>
+                    @endif
                     @if($verdict->isOverridden())
                         <div class="mb-2">
                             <span class="text-muted small d-block">Final reading level</span>
@@ -47,9 +64,13 @@
                             <div class="mb-2">
                                 <span class="text-muted small d-block">Final primary weakness</span>
                                 <strong>{{ $weaknessLabels[$verdict->final_primary_weakness]['name'] ?? 'Unknown' }}</strong>
-                                @if($result->primary_weakness !== $verdict->final_primary_weakness)
+                                @if($result->modelPick() !== $verdict->final_primary_weakness)
                                     <span class="text-muted small">
-                                        (AI said {{ $weaknessLabels[$result->primary_weakness]['name'] ?? 'none' }})
+                                        @if($isUnclassified)
+                                            (the model did not classify this reading)
+                                        @else
+                                            (AI said {{ $weaknessLabels[$result->modelPick()]['name'] ?? 'none' }})
+                                        @endif
                                     </span>
                                 @endif
                             </div>
@@ -101,16 +122,22 @@
             </div>
         @elseif($canDecide)
             <p class="text-muted small mb-3">
-                Review the evidence below, then record what you conclude. The AI's own numbers are kept either way.
+                @if($notMeasured)
+                    There is no measurement here to accept. You can mark it invalid, or count the reading yourself with Override.
+                @else
+                    Review the evidence below, then record what you conclude. The AI's own numbers are kept either way.
+                @endif
             </p>
             <div class="d-flex flex-wrap gap-2">
-                <form method="POST" action="{{ route('assessments.verdict', $assessment) }}" class="d-inline">
-                    @csrf
-                    <input type="hidden" name="decision" value="accepted">
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle me-1"></i> Accept AI Result
-                    </button>
-                </form>
+                @unless($notMeasured)
+                    <form method="POST" action="{{ route('assessments.verdict', $assessment) }}" class="d-inline">
+                        @csrf
+                        <input type="hidden" name="decision" value="accepted">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i> Accept AI Result
+                        </button>
+                    </form>
+                @endunless
                 <button class="btn btn-outline-primary" type="button"
                         data-bs-toggle="collapse" data-bs-target="#verdictForm"
                         data-preset="overridden">
@@ -144,18 +171,24 @@
                                 <option value="invalidated" {{ old('decision', $verdict?->decision) === 'invalidated' ? 'selected' : '' }}>
                                     Mark invalid — needs re-assessment
                                 </option>
-                                <option value="accepted" {{ old('decision', $verdict?->decision) === 'accepted' ? 'selected' : '' }}>
-                                    Accept the AI result as-is
-                                </option>
+                                @unless($notMeasured)
+                                    <option value="accepted" {{ old('decision', $verdict?->decision) === 'accepted' ? 'selected' : '' }}>
+                                        Accept the AI result as-is
+                                    </option>
+                                @endunless
                             </select>
                         </div>
 
                         <div class="col-md-4 verdict-override-field">
                             <label class="form-label small">Final reading level <span class="text-danger">*</span></label>
                             <select class="form-select" name="final_reading_level">
+                                @if($notMeasured)
+                                    {{-- Never pre-select what a placeholder produced ("independent"). --}}
+                                    <option value="" disabled {{ old('final_reading_level', $verdict?->final_reading_level) ? '' : 'selected' }}>Choose from your own count&hellip;</option>
+                                @endif
                                 @foreach(['frustration' => 'Frustration', 'instructional' => 'Instructional', 'independent' => 'Independent'] as $value => $label)
                                     <option value="{{ $value }}"
-                                        {{ old('final_reading_level', $verdict?->final_reading_level ?? $result->reading_level) === $value ? 'selected' : '' }}>
+                                        {{ old('final_reading_level', $verdict?->final_reading_level ?? ($notMeasured ? null : $result->reading_level)) === $value ? 'selected' : '' }}>
                                         {{ $label }}
                                     </option>
                                 @endforeach
@@ -165,10 +198,11 @@
                         <div class="col-md-4 verdict-override-field">
                             <label class="form-label small">Final primary weakness</label>
                             <select class="form-select" name="final_primary_weakness">
-                                <option value="">— No weakness —</option>
+                                {{-- "No weakness" is a conclusion; an unclassified reading has not reached one. --}}
+                                <option value="">{{ $isUnclassified ? '— Leave unclassified —' : '— No weakness —' }}</option>
                                 @foreach($weaknessLabels as $id => $cat)
                                     <option value="{{ $id }}"
-                                        {{ (string) old('final_primary_weakness', $verdict?->final_primary_weakness ?? $result->primary_weakness) === (string) $id ? 'selected' : '' }}>
+                                        {{ (string) old('final_primary_weakness', $verdict?->final_primary_weakness ?? $result->modelPick()) === (string) $id ? 'selected' : '' }}>
                                         {{ $cat['name'] }}
                                     </option>
                                 @endforeach
@@ -180,7 +214,7 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" value="1"
                                        id="manualScoring" name="manual_scoring"
-                                       {{ old('manual_scoring', $verdict?->manual_scoring) ? 'checked' : '' }}>
+                                       {{ old('manual_scoring', $verdict?->manual_scoring ?? $notMeasured) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="manualScoring">
                                     Re-score the reading myself (recomputes accuracy and words per minute from my own miscue counts)
                                 </label>

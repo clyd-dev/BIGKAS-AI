@@ -168,13 +168,63 @@ class DecisionSupportTest extends TestCase
         $this->assertContains('Only part of the passage was captured', $this->findingTitles($assessment));
     }
 
+    /** Writes a metadata file and points the app at it, so this test does not
+     *  depend on model artifacts that may have been deleted from the repo. */
+    private function withModelMetadata(array $metadata): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'meta') . '.json';
+        file_put_contents($path, json_encode($metadata));
+        config(['services.ml_api.metadata_path' => $path]);
+    }
+
     public function test_model_reliability_is_disclosed(): void
     {
+        $this->withModelMetadata([
+            'version' => '3.0.0-test', 'model_type' => 'Random Forest',
+            'test_accuracy' => 0.625, 'cv_accuracy' => 0.4993, 'total_samples' => 519,
+        ]);
+
+        $assessment = $this->assessmentFor($this->teacher());
+        $assessment->result->update(['ml_analysis_json' => array_merge(
+            $assessment->result->ml_analysis_json ?? [],
+            ['provenance' => ['stt_engine' => 'local_whisper', 'classifier' => 'ml', 'model_version' => '3.0.0-test']]
+        )]);
+
+        $advice = app(AnalysisAdvisorService::class)->for($assessment->fresh(['result', 'verdict', 'comprehensionAnswers']));
+
+        // Comes from the metadata file rather than being hard-coded.
+        $this->assertSame(62.5, $advice['model']['test_accuracy']);
+        $this->assertSame('Random Forest', $advice['model']['type']);
+        $this->assertSame('3.0.0-test', $advice['model']['version']);
+    }
+
+    public function test_no_model_is_named_when_none_is_described(): void
+    {
+        // Every model artifact deleted: nothing may still claim a Random Forest.
+        $this->withModelMetadata([]);
+
         $advice = app(AnalysisAdvisorService::class)->for($this->assessmentFor($this->teacher()));
 
-        // Comes from ml-service/model_metadata.json rather than being hard-coded.
-        $this->assertNotNull($advice['model']['test_accuracy']);
-        $this->assertSame('Random Forest', $advice['model']['type']);
+        $this->assertNull($advice['model']['type']);
+        $this->assertNull($advice['model']['test_accuracy']);
+        $this->assertFalse($advice['model']['described']);
+    }
+
+    public function test_a_rule_based_result_is_never_given_a_model_version(): void
+    {
+        // The metadata file outlives the model, so it must not supply a version
+        // to a result the model never touched.
+        $this->withModelMetadata(['version' => '3.0.0-test', 'model_type' => 'Random Forest']);
+
+        $assessment = $this->assessmentFor($this->teacher());
+        $assessment->result->update(['ml_analysis_json' => array_merge(
+            $assessment->result->ml_analysis_json ?? [],
+            ['provenance' => ['stt_engine' => 'local_whisper', 'classifier' => 'rule_based', 'model_version' => null]]
+        )]);
+
+        $advice = app(AnalysisAdvisorService::class)->for($assessment->fresh(['result', 'verdict', 'comprehensionAnswers']));
+
+        $this->assertNull($advice['model']['version']);
     }
 
     // ── Teacher verdict ──────────────────────────────────────────────

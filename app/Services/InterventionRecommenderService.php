@@ -16,9 +16,21 @@ class InterventionRecommenderService
     ): array {
         $recommendations = [];
 
+        // Interventions follow the weakness. With none to stand on (the model
+        // could not classify the reading, or it was marked invalid) there is
+        // nothing honest to recommend, and nothing is recommended. A teacher's
+        // own verdict counts as a weakness to stand on.
+        $outcome = $result->weaknessOutcome();
+
+        if (! $outcome['usable']) {
+            return [];
+        }
+
+        $primaryId = $outcome['id'];
+
         // Primary weakness interventions
-        if ($result->primary_weakness !== null && $result->primary_weakness !== 0) {
-            $primary = $this->getInterventionsForWeakness($result->primary_weakness, $learner->grade_level, $userRole);
+        if ($primaryId !== null && $primaryId !== 0) {
+            $primary = $this->getInterventionsForWeakness($primaryId, $learner->grade_level, $userRole);
             foreach ($primary as $intervention) {
                 $recommendations[] = [
                     'intervention' => $intervention->toArray(),
@@ -30,7 +42,7 @@ class InterventionRecommenderService
         }
 
         // Secondary weakness interventions
-        if ($result->secondary_weakness !== null && $result->secondary_weakness !== $result->primary_weakness && $result->secondary_weakness !== 0) {
+        if ($result->secondary_weakness !== null && $result->secondary_weakness !== $primaryId && $result->secondary_weakness !== 0) {
             $secondary = $this->getInterventionsForWeakness($result->secondary_weakness, $learner->grade_level, $userRole);
             foreach ($secondary as $intervention) {
                 $recommendations[] = [
@@ -97,7 +109,7 @@ class InterventionRecommenderService
     {
         $impact = 50;
 
-        if ($intervention->target_weakness === $result->primary_weakness) {
+        if ($intervention->target_weakness === $result->effectiveWeakness()) {
             $impact += 20;
         }
 

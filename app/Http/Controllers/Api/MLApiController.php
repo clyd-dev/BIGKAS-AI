@@ -43,16 +43,29 @@ class MLApiController extends Controller
 
         $result = $this->mlService->classify($features);
 
+        // No rule answers in the model's place, so an unavailable model is an
+        // honest 503 rather than a result that looks like a classification.
+        if (! ($result['available'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The analysis model is not running, so no weakness was classified.',
+                'data' => [
+                    'classification_status' => 'unavailable',
+                    'reason' => $result['reason'] ?? 'unavailable',
+                ],
+            ], 503);
+        }
+
         $weaknessCategories = config('bigkas.weakness_categories', []);
-        $primaryWeakness = $result['primary_weakness'] ?? null;
+        $primaryWeakness = MLClassificationService::mapWeaknessToId($result['primary'] ?? '');
         $weaknessInfo = $weaknessCategories[$primaryWeakness] ?? null;
 
         return $this->success([
             'primary_weakness' => $primaryWeakness,
             'weakness_label' => $weaknessInfo['name'] ?? 'Unknown',
             'confidence' => $result['confidence'] ?? null,
-            'probabilities' => $result['probabilities'] ?? null,
-            'method' => $result['method'] ?? 'unknown',
+            'probabilities' => $result['all_scores'] ?? null,
+            'model_version' => $result['model_version'] ?? null,
             'features_used' => $features,
         ], 'Classification completed');
     }
@@ -100,21 +113,15 @@ class MLApiController extends Controller
     public function health(): JsonResponse
     {
         $mlApiUrl = config('services.ml_api.url', 'http://localhost:5000');
-        $healthy = false;
-        $mlStatus = 'unreachable';
-        $mode = 'rule_based_fallback';
 
-        try {
-            $response = Http::timeout(5)->connectTimeout(3)->get($mlApiUrl . '/health');
-
-            if ($response->ok()) {
-                $healthy = true;
-                $mlStatus = 'healthy';
-                $mode = 'ml_model';
-            }
-        } catch (\Exception $e) {
-            $mlStatus = 'error: ' . $e->getMessage();
-        }
+        // The service's own health endpoint, read once and cached for a few
+        // seconds. This used to probe /health, which the service does not have,
+        // so it always reported unreachable. There is no rule-based mode: when
+        // the model cannot answer, nothing classifies.
+        $status = $this->mlService->serviceStatus();
+        $healthy = $status['ok'];
+        $mlStatus = $status['state'];
+        $mode = $status['ok'] ? 'ml_model' : 'unavailable';
 
         $hasApiKey = ! empty(config('services.openai.api_key', ''));
 
@@ -127,9 +134,11 @@ class MLApiController extends Controller
                 'mode' => $mode,
             ],
             'speech_to_text' => [
-                'provider' => 'OpenAI Whisper',
+                'provider' => $hasApiKey ? 'OpenAI Whisper API' : 'faster-whisper (local)',
                 'api_key_configured' => $hasApiKey,
-                'mode' => $hasApiKey ? 'api' : 'mock',
+                // There is no placeholder mode: when no engine is available,
+                // recordings are saved but not scored.
+                'mode' => $status['stt_ok'] ? ($hasApiKey ? 'api' : 'local') : 'unavailable',
             ],
             'php_version' => phpversion(),
             'laravel_version' => app()->version(),

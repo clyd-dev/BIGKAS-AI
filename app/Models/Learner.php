@@ -217,7 +217,7 @@ class Learner extends Model
 
     public function getAssessmentResults()
     {
-        return AssessmentResult::whereHas('assessment', fn($q) => $q->where('learner_id', $this->id))
+        return AssessmentResult::measured()->whereHas('assessment', fn($q) => $q->where('learner_id', $this->id))
             ->with('assessment.material')
             ->latest()
             ->get();
@@ -225,7 +225,7 @@ class Learner extends Model
 
     public function getSkillBreakdown(): array
     {
-        $latestResult = AssessmentResult::whereHas('assessment', fn($q) => $q->where('learner_id', $this->id))
+        $latestResult = AssessmentResult::measured()->whereHas('assessment', fn($q) => $q->where('learner_id', $this->id))
             ->latest()
             ->first();
 
@@ -250,7 +250,7 @@ class Learner extends Model
 
     public function getProgressData()
     {
-        return AssessmentResult::select('assessment_results.*')
+        return AssessmentResult::measured()->select('assessment_results.*')
             ->join('assessments', 'assessments.id', '=', 'assessment_results.assessment_id')
             ->where('assessments.learner_id', $this->id)
             ->orderBy('assessments.created_at')
@@ -258,13 +258,15 @@ class Learner extends Model
     }
 
     /**
-     * Set the learner's reading level from their most recent usable assessment.
+     * The level the learner's readings support: that of their most recent usable
+     * assessment, or null when none is usable.
      *
-     * Results a teacher marked invalid are skipped (they stay on record, they
-     * just don't define the child's level), and where a teacher overrode the
-     * AI's judgement, the teacher's level wins.
+     * Skipped, though they stay on record: results a teacher marked invalid, and
+     * readings never measured from the child's voice (a placeholder transcript,
+     * a silent recording). Where a teacher overrode the AI's judgement, the
+     * teacher's level wins.
      */
-    public function updateReadingLevel(): void
+    public function readingLevelFromAssessments(): ?string
     {
         $latest = $this->assessments()
             ->whereHas('result')
@@ -274,18 +276,26 @@ class Learner extends Model
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->get()
-            ->first(fn (Assessment $assessment) => !$assessment->isInvalidated());
+            ->first(fn (Assessment $assessment) => ! $assessment->isInvalidated()
+                && $assessment->effectiveReadingLevel() !== null);
 
-        $level = $latest?->effectiveReadingLevel();
+        return $latest?->effectiveReadingLevel();
+    }
 
-        if ($level) {
-            $this->update(['reading_level' => $level]);
-        }
+    /**
+     * Set the learner's reading level from their usable assessments.
+     *
+     * When none is usable the level is cleared rather than left as it was: a
+     * level a placeholder result once set must not outlive the result.
+     */
+    public function updateReadingLevel(): void
+    {
+        $this->update(['reading_level' => $this->readingLevelFromAssessments()]);
     }
 
     public function getStats(): array
     {
-        $avgAccuracy = AssessmentResult::whereHas('assessment', fn($q) => $q->where('learner_id', $this->id))
+        $avgAccuracy = AssessmentResult::measured()->whereHas('assessment', fn($q) => $q->where('learner_id', $this->id))
             ->avg('accuracy_rate');
 
         return [

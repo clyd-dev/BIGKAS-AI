@@ -607,25 +607,58 @@ class ReadingInterpretationService
 
         $skills = $this->skillSigns($assessment, $ml, $result, $usable);
 
-        $picked = $result->primary_weakness;
+        $picked = $result->modelPick();
         $confidence = $result->confidence_score;
 
-        $primary = $this->primaryExplanation($picked, $skills, $labels, $usable);
-        $primary['confidence_note'] = ($confidence !== null && $confidence < 0.6)
-            ? sprintf('The model itself was not very sure about this (%d%%), so treat it as a suggestion.', round($confidence * 100))
-            : null;
+        // No label to explain: say why there is none, rather than describing an
+        // absent weakness as though the reading had been judged to have none.
+        $noLabelReason = in_array($result->classification_status, ['unavailable', 'model_unsupported'], true)
+            ? $result->classification_status
+            : ($assessment->isInvalidated() ? 'invalidated' : null);
+
+        if ($noLabelReason !== null) {
+            $picked = null;
+            $primary = $this->unclassifiedExplanation($noLabelReason);
+        } else {
+            $primary = $this->primaryExplanation($picked, $skills, $labels, $usable);
+            $primary['confidence_note'] = ($confidence !== null && $confidence < 0.6)
+                ? sprintf('The model itself was not very sure about this (%d%%), so treat it as a suggestion.', round($confidence * 100))
+                : null;
+        }
 
         $finalNote = null;
         $final = $assessment->effectivePrimaryWeakness();
         if ($assessment->verdict?->isOverridden() && $final !== $picked) {
-            $finalNote = sprintf(
-                'You set the weakness to %s (the model said %s).',
-                $this->weaknessName($final, $labels),
-                $this->weaknessName($picked, $labels)
-            );
+            $finalNote = $noLabelReason !== null
+                ? sprintf('You set the weakness to %s. The model did not classify this reading.', $this->weaknessName($final, $labels))
+                : sprintf(
+                    'You set the weakness to %s (the model said %s).',
+                    $this->weaknessName($final, $labels),
+                    $this->weaknessName($picked, $labels)
+                );
         }
 
         return ['primary' => $primary, 'skills' => array_values($skills), 'final_note' => $finalNote];
+    }
+
+    /** The card's explanation when there is no weakness label at all. */
+    private function unclassifiedExplanation(string $reason): array
+    {
+        $text = match ($reason) {
+            'unavailable' => 'There is no weakness to explain, because none was classified. The skill rows here are measured directly from this reading, so they still show where it does and does not show a problem.',
+            'model_unsupported' => 'The skill rows here are measured directly from this reading. None of them backs the suggestion the model made, which is why no weakness was stored.',
+            'invalidated' => 'This result was marked invalid, so no weakness is counted for it.',
+            default => 'No weakness was classified for this reading.',
+        };
+
+        return [
+            'id' => null,
+            'name' => null,
+            'headline' => 'Why there is no classification',
+            'fit' => 'unclassified',
+            'text' => $text,
+            'confidence_note' => null,
+        ];
     }
 
     private function primaryExplanation(?int $picked, array $skills, array $labels, bool $usable): array

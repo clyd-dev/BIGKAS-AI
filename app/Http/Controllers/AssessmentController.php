@@ -88,18 +88,24 @@ class AssessmentController extends Controller
         $user = auth()->user();
         $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
 
+        // Told before the child reads, not after: can the analysis service
+        // classify right now? Recording is never blocked either way.
+        $mlStatus = app(\App\Services\MLClassificationService::class)->serviceStatus();
+
         // Materials are loaded progressively via materials.options once the
         // teacher picks learner → language → assessment type.
-        return view('assessments.create', compact('learners'));
+        return view('assessments.create', compact('learners', 'mlStatus'));
     }
 
     public function start(Learner $learner)
     {
         $this->authorizeLearnerAccess($learner);
 
+        $mlStatus = app(\App\Services\MLClassificationService::class)->serviceStatus();
+
         // Materials are loaded progressively via materials.options once the
         // teacher picks language → assessment type.
-        return view('assessments.start', compact('learner'));
+        return view('assessments.start', compact('learner', 'mlStatus'));
     }
 
     public function store(Request $request)
@@ -239,6 +245,38 @@ class AssessmentController extends Controller
         return redirect()->route('assessments.show', $assessment);
     }
 
+    /**
+     * Run the analysis again on the recording already saved for this assessment.
+     *
+     * For a result the model could not classify: once the model is back the
+     * teacher gets a real classification without the child reading again. The
+     * newer result replaces the old one (see Assessment::createResult).
+     */
+    public function reanalyze(Request $request, Assessment $assessment, \App\Services\MLClassificationService $mlService)
+    {
+        $this->authorizeLearnerAccess($assessment->learner);
+
+        $back = redirect()->route('assessments.results', $assessment);
+
+        if (! $assessment->hasAudio()) {
+            return $back->with('error', 'There is no saved recording to analyze again. Start a new assessment instead.');
+        }
+
+        // The same pipeline as a first analysis, with no new upload so it reads
+        // the saved copy.
+        $payload = $this->analyze($request, $assessment, $mlService)->getData(true);
+
+        if (! ($payload['success'] ?? false)) {
+            return $back->with('error', $payload['message'] ?? 'The reading could not be analyzed again.');
+        }
+
+        return match ($assessment->fresh('result')->result?->classification_status) {
+            'classified' => $back->with('success', 'Analyzed again. The model classified this reading.'),
+            'model_unsupported' => $back->with('error', "Analyzed again, but the model's suggestion is not supported by the measurements, so no weakness was classified."),
+            default => $back->with('error', 'Analyzed again, but the analysis model is still not running, so no weakness was classified.'),
+        };
+    }
+
     public function analyze(Request $request, Assessment $assessment, \App\Services\MLClassificationService $mlService)
     {
         $this->authorizeLearnerAccess($assessment->learner);
@@ -274,69 +312,13 @@ class AssessmentController extends Controller
             $this->keepRecording($assessment, $request->file('audio'));
         }
 
-        $assessment->updateStatus(Assessment::STATUS_PROCESSING);
-
         try {
-            // ==========================================
-            // REAL: SPEECH TO TEXT (Whisper API)
-            // ==========================================
-            // Always the saved copy, so what was played back is what was analysed.
-            $audioPath = $assessment->getAudioPath();
-            $sttService = app(SpeechToTextService::class);
-            // Uses your OpenAI key in .env, or falls back to mock if not configured
-            $transcription = $sttService->transcribe($audioPath, $assessment->language ?? 'en');
-            
-            $assessment->update(['transcription' => $transcription]);
-
-            // ==========================================
-            // REAL: TEXT ALIGNMENT & METRICS
-            // ==========================================
-            $referenceText = $request->input('reference_text', $assessment->material?->content ?? '');
-            $analyzer = app(ReadingAnalyzerService::class);
-            $analysis = $analyzer->analyze(
-                $transcription,
-                $referenceText,
-                $transcription['duration'] ?? 60
+            app(\App\Services\AssessmentScorer::class)->score(
+                $assessment,
+                $request->input('reference_text'),
+                $comprehensionScore
             );
 
-            // ==========================================
-            // REAL: ML CLASSIFICATION (Calling your Python API!)
-            // ==========================================
-            $classification = $mlService->classify($analysis['ml_features']);
-            
-            // Map the String predictions from Python back to the Database Integers
-            // A weakness is only stored when the measured evidence shows it, so
-            // the result never names a skill the teacher's own rows call fine.
-            $primaryWeaknessId = \App\Services\MLClassificationService::resolveWeaknessId(
-                $classification,
-                \App\Services\WeaknessEvidence::statuses(
-                    $analysis,
-                    $assessment->learner?->grade_level,
-                    $comprehensionScore ?? $assessment->comprehensionScore()
-                ),
-                $analysis['primary_weakness'] ?? null
-            );
-
-            // Merge ML classification into analysis results to store properly
-            $analysis['primary_weakness'] = $primaryWeaknessId;
-            $analysis['secondary_weakness'] = null; // Update mapping if secondary model is implemented
-            $analysis['confidence_score'] = $classification['confidence'] ?? $analysis['confidence_score'];
-
-            // Real comprehension score from the question set, when one was taken.
-            // The ML feature vector is deliberately left untouched.
-            if ($comprehensionScore !== null) {
-                $analysis['comprehension_score'] = $comprehensionScore;
-            }
-
-            // Record which engines actually produced this result, so the teacher
-            // can see whether to trust it (see AnalysisAdvisorService).
-            $analysis['provenance'] = $this->buildProvenance($transcription, $classification);
-
-            // ==========================================
-            // SAVE TO DATABASE
-            // ==========================================
-            $result = $assessment->createResult($analysis);
-            
             ActivityLog::log('analyze_assessment', "Completed analysis for assessment #{$assessment->id}", 'assessment', $assessment->id);
 
             // Return redirect URL to JS instead of just the JSON metrics
@@ -395,34 +377,6 @@ class AssessmentController extends Controller
         if ($previous && $previous !== $path) {
             Storage::disk('public')->delete($previous);
         }
-    }
-
-    /**
-     * Provenance of one analysis run: which speech engine and which classifier
-     * produced it, and how confident the transcription was.
-     */
-    private function buildProvenance(array $transcription, array $classification): array
-    {
-        $confidences = array_filter(
-            array_column($transcription['words'] ?? [], 'confidence'),
-            fn ($v) => $v !== null
-        );
-
-        // Read the shipped metadata rather than calling the ML service again —
-        // analyze() is already the slowest request in the app.
-        $metadataPath = base_path('ml-service/model_metadata.json');
-        $metadata = is_file($metadataPath)
-            ? (json_decode((string) file_get_contents($metadataPath), true) ?: [])
-            : [];
-
-        return [
-            'stt_engine' => $transcription['engine'] ?? 'unknown',
-            'stt_is_mock' => (bool) ($transcription['is_mock'] ?? false),
-            'mean_word_confidence' => $confidences ? round(array_sum($confidences) / count($confidences), 3) : null,
-            'classifier' => ($classification['is_fallback'] ?? false) ? 'rule_based' : 'ml',
-            'model_version' => $metadata['version'] ?? null,
-            'analysed_at' => now()->toIso8601String(),
-        ];
     }
 
     public function results(Assessment $assessment)

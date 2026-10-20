@@ -119,23 +119,28 @@ class InterventionApiController extends Controller
         Assessment $assessment,
         InterventionRecommenderService $recommender
     ): JsonResponse {
-        $result = $assessment->results()->latest()->first();
+        $result = $assessment->result;
 
         if (! $result) {
             return $this->error('Assessment results not found', 404);
         }
 
         $learner = $assessment->learner;
+        $outcome = $assessment->weaknessOutcome();
 
-        $recommendations = $recommender->recommend(
-            $result->primary_weakness ?? 1,
-            $result->reading_level ?? 'frustration',
-            $learner->grade_level ?? 1
-        );
+        // A missing weakness used to default to 1 (Phonemic Awareness) here, so a
+        // reading the model could not classify was recommended phonemic work.
+        // No weakness to stand on means no recommendations, and the response
+        // says why.
+        $recommendations = $outcome['usable'] && $learner
+            ? $recommender->getRecommendations($result, $learner, auth()->user()?->role)
+            : [];
 
         return $this->success([
             'assessment_id' => $assessment->id,
-            'primary_weakness' => $result->primary_weakness,
+            'primary_weakness' => $outcome['id'],
+            'weakness_state' => $outcome['state'],
+            'classification_status' => $result->classification_status,
             'reading_level' => $result->reading_level,
             'recommendations' => $recommendations,
         ]);

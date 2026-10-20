@@ -35,28 +35,6 @@ class WeaknessEvidence
     }
 
     /**
-     * The clearest problem in a status map: red before amber, and where those
-     * tie the more foundational skill, since decoding is taught before pace and
-     * pace before comprehension.
-     *
-     * @param array<int, string> $statuses
-     */
-    public static function clearestProblem(array $statuses): ?int
-    {
-        foreach (['concern', 'watch'] as $severity) {
-            $matches = array_keys($statuses, $severity, true);
-
-            if ($matches !== []) {
-                sort($matches);
-
-                return (int) $matches[0];
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Matching letters to sounds.
      *
      * Needs both a real count of sound-alike slips and a real share of them:

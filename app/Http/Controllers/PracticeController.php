@@ -294,7 +294,8 @@ class PracticeController extends Controller
         $analysis = $analyzer->analyze(
             $transcription,
             $material->content,
-            $transcription['duration'] ?? 60
+            $transcription['duration'] ?? 60,
+            $material->language
         );
 
         $mlService = app(MLClassificationService::class);

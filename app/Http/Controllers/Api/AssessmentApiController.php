@@ -186,7 +186,7 @@ class AssessmentApiController extends Controller
             $duration = $transcription['duration'] ?? 60;
 
             // Step 2: Reading Analysis
-            $analysis = $this->analyzerService->analyze($transcription, $material->content, (float) $duration);
+            $analysis = $this->analyzerService->analyze($transcription, $material->content, (float) $duration, $assessment->language);
 
             // Step 3: ML Classification — the service expects the 12 rate
             // features the analyzer prepares, not raw counts.

@@ -38,7 +38,8 @@ class AssessmentScorer
         $analysis = $this->analyzer->analyze(
             $transcription,
             $referenceText ?? $assessment->material?->content ?? '',
-            $transcription['duration'] ?? 60
+            $transcription['duration'] ?? 60,
+            $assessment->language
         );
 
         $classification = $this->ml->classify($analysis['ml_features']);

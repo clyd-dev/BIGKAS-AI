@@ -17,6 +17,9 @@ class ReadingAnalyzerService
 {
     protected ?MLClassificationService $mlService;
 
+    /** Passage language, used when a numeral is spelled out. */
+    protected ?string $language = null;
+
     public function __construct(?MLClassificationService $mlService = null)
     {
         // Use injected service if ML is enabled, otherwise null
@@ -29,10 +32,14 @@ class ReadingAnalyzerService
      * @param array $transcription Transcription data from speech-to-text
      * @param string $referenceText Original passage text
      * @param float $durationSeconds Reading duration in seconds
+     * @param ?string $language Passage language ('en'/'fil'), for spelling out numerals
      * @return array Complete analysis results
      */
-    public function analyze(array $transcription, string $referenceText, float $durationSeconds): array
+    public function analyze(array $transcription, string $referenceText, float $durationSeconds, ?string $language = null): array
     {
+        // The transcript's own language is a fallback: the material decides.
+        $language ??= $transcription['language'] ?? null;
+        $this->language = $language === 'tl' ? 'fil' : $language;
         // Extract transcribed text
         $transcribedText = $transcription['text'] ?? '';
         $transcribedWords = $transcription['words'] ?? [];
@@ -309,17 +316,23 @@ class ReadingAnalyzerService
     }
 
     /**
-     * Tokenize text into words
+     * Tokenize text into the words it is compared as.
      *
-     * Normalizes to lowercase, removes punctuation, splits on whitespace.
-     * Supports Unicode characters (important for Filipino/Cebuano text).
+     * The passage and the transcript are written by a teacher and a machine
+     * respectively, and they choose different forms for the same word. See
+     * TextNormalizer: it folds look-alike and invisible characters, treats a
+     * hyphen as a word break and spells numerals out, so only a difference in
+     * the reading itself can show up as a miscue.
      */
     protected function tokenizeText(string $text): array
     {
-        $text = mb_strtolower(trim($text));
-        $text = preg_replace('/[^\p{L}\p{N}\s]/u', '', $text);
+        return TextNormalizer::tokens($text, $this->language);
+    }
 
-        return preg_split('/\s+/', $text, -1, PREG_SPLIT_NO_EMPTY);
+    /** The tokens a text is compared as. For diagnostics and tests. */
+    public function normalizedTokens(string $text, ?string $language = null): array
+    {
+        return TextNormalizer::tokens($text, $language === 'tl' ? 'fil' : $language);
     }
 
     /**

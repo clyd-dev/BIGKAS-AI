@@ -22,7 +22,14 @@ class Form3Builder
         $result   = $assessment->result;
         $fil      = $assessment->language === 'fil';
 
-        $words = $material?->word_count ? (int) $material->word_count : null;
+        // The number of words that was actually scored, so this form's word
+        // score agrees with the accuracy on the results page. A hyphenated
+        // compound ("sari-sari") and a numeral ("21st") are read as more than
+        // one word, so it can exceed the material's own count - see
+        // TextNormalizer. Falls back to the material for a reading with no
+        // result yet.
+        $scored = (int) ($result?->ml_analysis_json['total_words'] ?? 0);
+        $words  = $scored ?: ($material?->word_count ? (int) $material->word_count : null);
         $wpm   = $result?->words_per_minute ? (float) $result->words_per_minute : null;
 
         // Total reading time is not stored; it follows from the words read and the reading rate.

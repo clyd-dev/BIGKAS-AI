@@ -118,6 +118,47 @@ trait MakesBatchAssessments
         ]);
     }
 
+    /**
+     * A speech engine that is genuinely down - nothing can transcribe anything.
+     *
+     * Read this before reaching for fakeEngine(stt: false): that is **not** an
+     * outage. It only reports whisper_loaded = false on /api/health, while its
+     * own /api/transcribe stub still answers 200 with a full transcript - and
+     * SpeechToTextService::transcribe() posts straight to that endpoint without
+     * ever consulting health. A test built on it scores the reading happily and
+     * proves nothing. Layering a second Http::fake() on top cannot rescue it
+     * either: fake() appends stubs and the first match wins, so the 200 stays.
+     *
+     * So this helper builds the outage from a clean factory instead: health
+     * down, transcribe dead, classifier dead, and the cloud Whisper key cleared
+     * so the fallback in SpeechToTextService cannot answer and stt_ok cannot be
+     * rescued by it. After it, the lane stands down (RescoreQueue::run()
+     * reports `skipped` and scores nothing) and any scoring attempt that gets
+     * through anyway throws SpeechServiceUnavailable.
+     *
+     * BatchEntryPanelTest::test_a_dead_speech_engine_really_cannot_transcribe
+     * pins all of that, so this helper cannot quietly become another engine
+     * that still answers.
+     */
+    protected function deadSpeechEngine(): void
+    {
+        config(['services.openai.api_key' => null, 'services.whisper.use_local' => true]);
+
+        Http::swap(new \Illuminate\Http\Client\Factory());
+        Http::fake([
+            '*/api/health' => Http::response([
+                'whisper_loaded' => false, 'classifier_loaded' => false,
+                'model_stale' => false, 'model_version' => '3.0.0-test',
+            ]),
+            '*/api/transcribe' => Http::response('speech engine not loaded', 503),
+            '*/api/classify' => Http::response('no model', 503),
+        ]);
+
+        // The status is cached for a few seconds; drop it so the next probe is
+        // this engine and not the last one.
+        \Illuminate\Support\Facades\Cache::forget('ml.service.status');
+    }
+
     /** A teacher with one class and learners in it. */
     protected function teacher(): User
     {

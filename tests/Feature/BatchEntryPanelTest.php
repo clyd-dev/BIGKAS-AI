@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Exceptions\SpeechServiceUnavailable;
-use Carbon\Carbon;
 use App\Models\Assessment;
 use App\Models\AssessmentBatch;
 use App\Models\AssessmentSession;
@@ -12,13 +11,13 @@ use App\Models\Learner;
 use App\Models\ReadingMaterial;
 use App\Models\User;
 use App\Services\AssessmentScorer;
+use App\Services\BatchEntryState;
 use App\Services\MLClassificationService;
 use App\Services\RescoreQueue;
 use App\Services\SpeechToTextService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\MakesBatchAssessments;
 use Tests\TestCase;
@@ -152,35 +151,6 @@ class BatchEntryPanelTest extends TestCase
             ->mapWithKeys(fn ($id) => [$id => $letter])->all();
     }
 
-    /**
-     * A speech engine that is genuinely down.
-     *
-     * The trait's fakeEngine(stt: false) only reports whisper_loaded = false on
-     * /api/health - it still answers /api/transcribe with a full transcript, so
-     * a scoring attempt would succeed and this test would prove nothing. Here
-     * the transcribe endpoint is dead too, the cloud fallback key is cleared so
-     * nothing else can answer, and the status cache is dropped so the lane
-     * re-probes.
-     */
-    private function deadSpeechEngine(): void
-    {
-        config(['services.openai.api_key' => null, 'services.whisper.use_local' => true]);
-
-        Http::swap(new HttpFactory());
-        Http::fake([
-            '*/api/health' => Http::response([
-                'whisper_loaded' => false, 'classifier_loaded' => false,
-                'model_stale' => false, 'model_version' => '3.0.0-test',
-            ]),
-            '*/api/transcribe' => Http::response('speech engine not loaded', 503),
-            '*/api/classify' => Http::response('no model', 503),
-        ]);
-
-        // Proof, not assumption: nothing can report the engine up, and nothing
-        // can transcribe this recording.
-        $this->assertFalse(app(MLClassificationService::class)->serviceStatus(fresh: true)['stt_ok']);
-    }
-
     // ── The recorded resting state ────────────────────────────────────
 
     public function test_an_uploaded_recording_rests_at_recorded_and_is_not_queued(): void
@@ -239,6 +209,45 @@ class BatchEntryPanelTest extends TestCase
         Storage::disk('public')->assertMissing($first);
         $this->assertNull($entry->submitted_for_analysis_at);
         $this->assertFalse(Assessment::awaitingRescore()->whereKey($entry->id)->exists());
+    }
+
+    /**
+     * Card honesty: a measured reading is never quietly replaced underneath its
+     * own numbers.
+     *
+     * Follow Task 8's derivation order with a result in place and no stamp: it
+     * never reaches `recorded` (which requires no result), so the card would
+     * keep reading `needs verdict` or `done` - a reading level and an accuracy
+     * figure belonging to a recording that is no longer on disk. So the
+     * re-record is refused instead, and the result is left strictly alone: no
+     * board action may destroy a measured reading, and deleting one cascades
+     * into verdicts and answers and silently recomputes the learner's level.
+     */
+    public function test_a_child_with_a_result_cannot_be_silently_re_recorded(): void
+    {
+        $teacher = $this->teacher();
+        $entry = $this->recordedEntry($teacher, ['submitted_for_analysis_at' => now()->subHour()]);
+        $entry->createResult($this->classifiedAnalysis());
+        $entry = $entry->fresh(['result', 'verdict', 'material', 'learner']);
+
+        $audio = $entry->audio_file;
+        $chip = BatchEntryState::for($entry)['chip'];
+        $this->assertSame('needs verdict', $chip, 'The fixture must really be a measured reading.');
+
+        $this->actingAs($teacher)->postJson(
+            route('assessments.batch.upload-audio', [$entry->batch_id, $entry->id]),
+            ['audio' => $this->recording()]
+        )->assertStatus(422);
+
+        $fresh = $entry->fresh(['result', 'verdict', 'material', 'learner']);
+
+        // The recording on disk, the result row and the card all unchanged.
+        $this->assertSame($audio, $fresh->audio_file);
+        Storage::disk('public')->assertExists($audio);
+        $this->assertDatabaseCount('assessment_results', 1);
+        $this->assertSame($entry->result->id, $fresh->result->id);
+        $this->assertSame($entry->result->accuracy_rate, $fresh->result->accuracy_rate);
+        $this->assertSame($chip, BatchEntryState::for($fresh)['chip']);
     }
 
     // ── What the panel shows ──────────────────────────────────────────
@@ -440,6 +449,37 @@ class BatchEntryPanelTest extends TestCase
         $this->assertCount(2, $entry->comprehensionAnswers()->get());
         $this->assertSame(100.0, $entry->comprehensionScore());
         $this->assertNull($entry->result);
+    }
+
+    /**
+     * The dead engine itself, pinned.
+     *
+     * MakesBatchAssessments::deadSpeechEngine() is the only thing in this suite
+     * that really simulates an outage - fakeEngine(stt: false) leaves
+     * /api/transcribe answering 200, so a test built on it scores the reading
+     * and proves nothing. This test exists so the helper cannot quietly become
+     * another engine that still answers, and so the regression guard above
+     * keeps meaning what it says.
+     */
+    public function test_a_dead_speech_engine_really_cannot_transcribe(): void
+    {
+        $teacher = $this->teacher();
+        $entry = $this->recordedEntry($teacher, ['submitted_for_analysis_at' => now()]);
+
+        $this->deadSpeechEngine();
+
+        // 1. Nothing can report the speech engine up.
+        $this->assertFalse(app(MLClassificationService::class)->serviceStatus(fresh: true)['stt_ok']);
+
+        // 2. The lane stands down rather than burning attempts on an outage.
+        $summary = app(RescoreQueue::class)->run();
+        $this->assertNotNull($summary['skipped']);
+        $this->assertSame(0, $summary['scored']);
+
+        // 3. And the transcription itself genuinely fails - the assertion that
+        //    fakeEngine(stt: false) would not have survived.
+        $this->expectException(SpeechServiceUnavailable::class);
+        app(SpeechToTextService::class)->transcribe($entry->getAudioPath(), 'en');
     }
 
     // ── Send all ──────────────────────────────────────────────────────

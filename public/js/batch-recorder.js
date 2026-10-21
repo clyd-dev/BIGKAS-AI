@@ -289,6 +289,8 @@
             if (payload.state) {
                 btnStart.innerHTML = '<i class="bi bi-mic-fill me-1"></i> Record again';
             }
+
+            standDown();
         }).catch(function (error) {
             say(message, error.message, 'text-danger');
         }).finally(function () {
@@ -312,6 +314,41 @@
         player.setAttribute('aria-label', 'The recording just made');
 
         preview.appendChild(player);
+    }
+
+    /**
+     * Drop the local take once the card is showing the saved one.
+     *
+     * The board's poll patches this panel's card in place and, when the card
+     * gains a recording it was rendered without, swaps in a server-rendered
+     * card carrying a player for it. From that moment the panel would be
+     * offering two players for the same recording, so the local one stands
+     * down - but never mid-listen: the whole reason this file exists is that a
+     * recording the teacher is listening to must not be cut off. If she is
+     * playing it, the stand-down waits for her to stop.
+     */
+    function standDown() {
+        var waiting = window.setInterval(function () {
+            if (!document.querySelector('[data-entry] audio')) {
+                return;
+            }
+
+            window.clearInterval(waiting);
+
+            var local = preview ? preview.querySelector('audio') : null;
+
+            if (!local) {
+                return;
+            }
+
+            if (local.paused || local.ended) {
+                preview.innerHTML = '';
+
+                return;
+            }
+
+            local.addEventListener('pause', function () { preview.innerHTML = ''; }, { once: true });
+        }, 1000);
     }
 
     // ── Answers and Send ──────────────────────────────────────────────

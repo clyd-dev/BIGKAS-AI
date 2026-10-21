@@ -296,6 +296,26 @@ class AssessmentBatchController extends Controller
     {
         $entry = $this->panelEntry($batch, $assessment);
 
+        // A measured reading is never quietly replaced underneath its own
+        // numbers. Follow BatchEntryState's derivation order with a result in
+        // place: the card can never read `recorded` again (that branch requires
+        // no result), so it would go on showing a reading level and an accuracy
+        // figure belonging to a recording that is no longer on disk - the same
+        // family of dishonesty the whole board was built to prevent.
+        //
+        // So the re-record is refused, and the result is left strictly alone:
+        // no action on this board may destroy a measured reading, and deleting
+        // one cascades into the teacher's verdict and the child's answers and
+        // silently recomputes the learner's reading level.
+        if ($entry->result !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This reading has already been analysed, so it cannot be recorded over. '
+                    . 'Open the result to analyse the saved recording again, or take this child out of the batch '
+                    . 'and start a new reading for them.',
+            ], 422);
+        }
+
         $request->validate(['audio' => 'required|file|max:25600']);
 
         $this->keepRecording($entry, $request->file('audio'));

@@ -48,6 +48,27 @@
                 <div class="card-header bg-white">
                     <h2 class="h6 mb-0"><i class="bi bi-mic-fill text-danger me-1"></i> Conduct here</h2>
                 </div>
+                @if($entry->result)
+                    {{--
+                        This reading has been analysed. Recording over it is
+                        refused by uploadAudio(), because the card could never
+                        read `recorded` again with a result in place - it would
+                        go on showing numbers belonging to a recording that is no
+                        longer on disk. So the recorder is not offered at all
+                        rather than offered and then refused after the child has
+                        already read.
+                    --}}
+                    <div class="card-body">
+                        <p class="small mb-2">
+                            {{ $firstName }}'s reading has already been analysed, so it cannot be recorded over —
+                            the result on the card belongs to the recording that is saved.
+                        </p>
+                        <p class="small text-muted mb-0">
+                            To score that recording again, open the result. To have {{ $firstName }} read a fresh
+                            passage, start a new reading for them rather than replacing this one.
+                        </p>
+                    </div>
+                @else
                 <div class="card-body" data-recorder>
                     <p class="small text-muted">
                         Sit with {{ $firstName }}, tap Start reading, and let them read the passage aloud.
@@ -82,6 +103,7 @@
                         </button>
                     </div>
                 </div>
+                @endif
             </div>
 
             <div class="card border-0 shadow-sm">

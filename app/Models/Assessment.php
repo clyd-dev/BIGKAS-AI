@@ -612,7 +612,11 @@ class Assessment extends Model
                 $unscored->doesntHave('result')->where(function ($s) {
                     $s->where('status', self::STATUS_FAILED)
                         ->orWhere(fn ($stuck) => $stuck->where('status', self::STATUS_PROCESSING)
-                            ->where('updated_at', '<', now()->subMinutes(15)));
+                            ->where('updated_at', '<', now()->subMinutes(15)))
+                        // A batch entry the teacher has sent is owed a score at
+                        // once; an unsent one is only a stored recording.
+                        ->orWhere(fn ($sent) => $sent->whereNotNull('batch_id')
+                            ->whereNotNull('submitted_for_analysis_at'));
                 });
             })->orWhere(function ($unclassified) {
                 $unclassified->whereHas('result', fn ($r) => $r->where('classification_status', AssessmentResult::STATUS_UNAVAILABLE))

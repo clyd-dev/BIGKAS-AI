@@ -126,6 +126,8 @@
 <ul class="decisions">
   <li><span class="k">Recording mode</span><span class="v">Not chosen in advance. <b>Every child's card offers both</b> — a join code for a child with a device, and <i>Conduct here</i> for a child without one. The teacher decides in the moment.</span></li>
   <li><span class="k">Before analysis</span><span class="v">A recording rests at <code>recorded</code> with its audio playable. The teacher listens, then <b>Send for analysis</b> — or re-records. Nothing reaches the lane unsent.</span></li>
+  <li><span class="k">Leaving the page</span><span class="v">Changes nothing. Scoring runs server-side under cron, and the batch completes itself with nobody watching.</span></li>
+  <li><span class="k">Cancel &amp; remove</span><span class="v">Every card can be cancelled or removed, and the batch cancelled behind a confirmation. <b>Nothing on this board can destroy a measured reading</b> — real deletion lives on the child's learner-history screen.</span></li>
   <li><span class="k">Material</span><span class="v">One batch default, overridable per child. Grade policy runs per child, unchanged.</span></li>
   <li><span class="k">Assessment type</span><span class="v">All three supported — <code>oral_reading</code>, <code>comprehension</code>, <code>combined</code> — one type per batch.</span></li>
   <li><span class="k">Analysis</span><span class="v">Everything queued, on the <b>existing</b> <code>RescoreQueue</code> lane. Live progress board with polling. Teacher may close the laptop and return.</span></li>
@@ -644,11 +646,13 @@ database/migrations/2026_10_21_010001_add_batch_columns_to_assessments_table.php
     <tr><td><code>recorded</code></td><td>audio saved, <code>submitted_for_analysis_at</code> null, no result</td><td><b>Audio player</b>, <i>Send for analysis</i>, <i>Re-record</i></td></tr>
     <tr><td><code>queued</code></td><td>sent and owed a score, not currently being scored</td><td>Place in line and ETA; audio still playable</td></tr>
     <tr><td><code>transcribing</code></td><td><code>analysis_started_at</code> set, <code>analysis_duration_ms</code> still null</td><td>Live progress; audio still playable</td></tr>
-    <tr><td><code>needs verdict</code></td><td>result exists and is classified, no verdict</td><td><i>Review</i> → the existing per-child results screen</td></tr>
-    <tr><td><code>done</code></td><td>verdict recorded</td><td>Reading level and accuracy at a glance</td></tr>
+    <tr><td><code>needs verdict</code></td><td>result exists and is classified, no verdict</td><td><b><i>Check Result</i></b> → the existing per-child results screen</td></tr>
+    <tr><td><code>done</code></td><td>verdict recorded</td><td>Reading level and accuracy at a glance, plus <b><i>Check Result</i></b></td></tr>
     <tr><td><code>failed</code></td><td><code>rescore_attempts &gt;= 3</code> and no result</td><td>What went wrong, and <i>Analyze</i> to try by hand</td></tr>
   </tbody>
 </table>
+
+<p><strong><i>Check Result</i> appears the moment a reading has been analysed</strong> — at <code>needs verdict</code> and at <code>done</code> alike. It is the same results screen the single-child flow already uses, so there is one place a reading is ever read, and the verdict is recorded there as it always has been.</p>
 
 <p><strong>Audio is playable in the card from <code>recorded</code> onward</strong> — not only at <code>recorded</code>. Once a recording exists the teacher can always hear what was captured, including after it is scored, which is what makes a surprising result checkable.</p>
 
@@ -660,6 +664,54 @@ database/migrations/2026_10_21_010001_add_batch_columns_to_assessments_table.php
 
 <h4>Comprehension, and the Send gate</h4>
 <p>For a <code>comprehension</code> or <code>combined</code> batch, the card panel carries the question set. Answers are recorded through the existing <code>ComprehensionService</code> <strong>before</strong> <i>Send for analysis</i> becomes available — which means the spec's ordering obligation (§4.3) is enforced by the UI rather than merely hoped for: a dead engine can never discard a child's answers, because the answers were stored before anything was sent.</p>
+
+<h4>Leaving the page must not stop the work</h4>
+
+<p>Nothing about analysis lives in the browser. A recording is scored by <code>assessments:rescore</code> under cron, on the server, so <strong>closing the laptop, pressing Back, losing Wi-Fi or shutting the lid changes nothing</strong> — the lane keeps working and the results are waiting when the teacher returns. The board is a window onto server state, never the engine driving it.</p>
+
+<div class="callout c-stop">
+  <span class="lbl">A flaw in the draft that this requirement exposed</span>
+  <p>The draft had <code>AssessmentBatch::refreshStatus()</code> called from <code>poll()</code>. Scoring would have continued correctly with the page closed — but the <b>batch's own status</b> would have frozen at <code>analyzing</code> until somebody reopened the board, so a batch that finished overnight would still claim to be running.</p>
+  <p>Fixed by moving it to an <strong>observer on <code>Assessment</code></strong>: when an entry gains a result or exhausts its attempts, its batch refreshes itself. The batch now completes with nobody watching, and <code>poll()</code> only reads. A stored status that only updates while someone is looking at it is not a stored status, it is a rendering artefact.</p>
+</div>
+
+<p>The board says so plainly, so the teacher does not sit and wait out of doubt: <i>"Analysis continues even if you close this page — you can come back any time."</i></p>
+
+<p><strong>The one thing that is not safe</strong>, stated rather than glossed: a recording still being captured in the card panel exists only in the browser until it is uploaded. If the laptop closes mid-reading, <em>that</em> recording is lost and the child reads again. Everything that reached the server is safe, including recordings that are <code>recorded</code> but not yet sent.</p>
+
+<h4>Cancelling and removing</h4>
+
+<p>Every card carries a cancel or remove action, and <strong>no action available on this board can destroy a measured reading.</strong> That is a deliberate boundary: a teacher working through fifteen cards is moving fast, and one misplaced tap must not delete a child's record. What each state offers:</p>
+
+<table>
+  <thead><tr><th>State</th><th>Action</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>waiting</code></td><td><i>Remove</i></td><td>Deletes the entry outright. Nothing was recorded, nothing is lost. Its join code stops working.</td></tr>
+    <tr><td><code>recorded</code></td><td><i>Re-record</i> / <i>Remove</i></td><td>Discards the recording and returns to <code>waiting</code>, or removes the entry entirely. Nothing was measured.</td></tr>
+    <tr><td><code>queued</code></td><td><i>Cancel analysis</i></td><td>Clears <code>submitted_for_analysis_at</code>, so the lane stops taking it, and the card returns to <code>recorded</code> with its audio intact. The true "I sent that by mistake".</td></tr>
+    <tr><td><code>transcribing</code></td><td><b>none</b></td><td>A running Whisper process cannot be aborted honestly. The card says <i>"being analysed now — about N min left"</i> and offers nothing, rather than a button that would not do what it says.</td></tr>
+    <tr><td><code>needs verdict</code> · <code>done</code></td><td><i>Remove from batch</i></td><td><strong>Sets <code>batch_id</code> to null and nothing more.</strong> The card leaves the board; the assessment, result, verdict and comprehension answers all survive and stay reachable from the child's learner history. Their reading level is unaffected.</td></tr>
+    <tr><td><code>failed</code></td><td><i>Remove from batch</i></td><td>Also <code>batch_id</code> to null, keeping the recording so the teacher can still press Analyze from the child's history.</td></tr>
+  </tbody>
+</table>
+
+<div class="callout c-warn">
+  <span class="lbl">Why "remove from batch" and not "delete"</span>
+  <p>Deleting an <code>Assessment</code> cascade-deletes its <code>assessment_results</code>, <code>assessment_verdicts</code>, <code>comprehension_answers</code> and <code>assessment_sessions</code> rows. Worse, <code>Learner::readingLevelFromAssessments()</code> derives the child's reading level from their assessments, so a delete <b>silently changes that child's level</b> — which is what parents see, what Practice Center recommends from, what interventions are chosen on, and what the admin chart counts.</p>
+  <p>That is far too much consequence for a button on a card. <strong>Destroying a reading lives on the child's own learner-history screen instead</strong>, where the teacher sees the whole record they are about to remove rather than one card among fifteen, and confirms it there.</p>
+</div>
+
+<h4>Cancelling the whole batch</h4>
+
+<p>Behind a confirmation dialog naming what will and will not be affected — <i>"Cancel this batch? 4 children already assessed keep their results. 6 waiting and 5 queued will be stopped."</i> On confirm:</p>
+<ul>
+  <li>Batch status becomes <code>cancelled</code>, stamped with <code>cancelled_at</code></li>
+  <li>Every <code>queued</code> entry is <strong>un-sent</strong>, so the lane stops taking them</li>
+  <li>Entries with no recording are removed, and their join codes stop working</li>
+  <li><strong>Every child already scored keeps their reading</strong>, in their own history</li>
+  <li>An entry mid-<code>transcribing</code> is left to finish; its result is kept, because it cost the time either way and the measurement is valid</li>
+</ul>
+<p><strong>Cancelling abandons the session, not the measurements.</strong> A teacher who cancels because the bell rang has not thrown away the nine children who did read.</p>
 
 <h4>One bulk action, and only one</h4>
 <p>The board offers <strong>Send all ready</strong> — releasing every <code>recorded</code> card at once, for the common case where fifteen children read simultaneously on their own devices and the teacher reviews them in a batch.</p>

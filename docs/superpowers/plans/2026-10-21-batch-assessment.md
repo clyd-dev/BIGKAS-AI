@@ -39,6 +39,8 @@ Five conditions the spec implies that no task's happy path exercises, most likel
 3. **A learner leaving the teacher's reach mid-batch.** Class reassignment during a 40-minute batch must not expose that child's result to a teacher who no longer has access, and must not 500 the board. *(Task 8)*
 4. **The same learner added to a batch while another assessment of theirs is still unscored.** Two in-flight assessments for one child, both owed a score, both reaching `createResult()` — which replaces. *(Task 6)*
 5. **Roster boundaries: 0 learners, exactly 15, exactly 16, and the same learner twice.** *(Task 6)*
+6. **A batch left unwatched.** The browser drives nothing, but the draft had the batch's own status updating only on poll — so a batch finishing overnight would still read `analyzing`. Pinned by a test that makes no HTTP request at all. *(Task 8)*
+7. **A removal that quietly rewrites a child's record.** Deleting an `Assessment` cascades to its result, verdict and answers, and silently recomputes the learner's reading level. No board action may do this. *(Tasks 11 and 12)*
 
 ---
 
@@ -705,6 +707,8 @@ git switch feat/batch-assessment && git merge --no-ff feat/batch-t07-setup
 **Files:**
 - Modify: `app/Http/Controllers/AssessmentBatchController.php` — `board()`, `poll()`
 - Create: `app/Services/BatchEntryState.php`
+- Create: `app/Observers/AssessmentObserver.php`
+- Modify: `app/Providers/AppServiceProvider.php` — register the observer
 - Create: `resources/views/assessments/batch/board.blade.php`
 - Create: `resources/views/assessments/batch/_card.blade.php`
 - Create: `public/css/batch-board.css`
@@ -714,9 +718,14 @@ git switch feat/batch-assessment && git merge --no-ff feat/batch-t07-setup
 **Interfaces:**
 - Consumes: `AnalysisQueueEstimator::forBatch()` (Task 3), the routes from Task 5.
 - Produces:
-  - `BatchEntryState::for(Assessment $entry): array` → `['chip' => string, 'label' => string, 'tone' => 'good'|'ok'|'help'|'none', 'playable' => bool, 'action' => ?string]`
-  - `AssessmentBatch::refreshStatus(): void` — recomputes the batch's own status from its entries and saves it. **This is the only thing that writes `assessment_batches.status`** apart from creation (`collecting`) and `cancel()`. Rules: any entry past `waiting` ⇒ `analyzing`; every entry `done` or `failed` ⇒ `completed` with `completed_at`; a `cancelled` batch never changes. Called from `poll()`, so the board's own polling advances it and no extra scheduled work is needed.
-  - `poll()` returns `['entries' => [id => state], 'batch_status' => string, 'estimate' => ['remaining' => int, 'ahead' => int, 'seconds' => int], 'ready_to_send' => int]`
+  - `BatchEntryState::for(Assessment $entry): array` → `['chip' => string, 'label' => string, 'tone' => 'good'|'ok'|'help'|'none', 'playable' => bool, 'action' => ?string, 'result_url' => ?string]`
+  - `AssessmentBatch::refreshStatus(): void` — recomputes the batch's own status from its entries and saves it. **This is the only thing that writes `assessment_batches.status`** apart from creation (`collecting`) and cancellation. Rules: any entry past `waiting` ⇒ `analyzing`; every entry `done` or `failed` ⇒ `completed` with `completed_at`; a `cancelled` batch never changes.
+  - `AssessmentObserver::saved()` — when a saved `Assessment` has a `batch_id`, calls `refreshStatus()` on its batch.
+  - `poll()` returns `['entries' => [id => state], 'batch_status' => string, 'estimate' => ['remaining' => int, 'ahead' => int, 'seconds' => int], 'ready_to_send' => int]` — **read-only**, it writes nothing.
+
+**`refreshStatus()` must not be driven by the browser.** The draft called it from `poll()`, which meant a batch finishing overnight would still read `analyzing` until someone reopened the board. The observer makes the batch complete itself with nobody watching; `poll()` only reads. A stored status that updates only while someone is looking at it is a rendering artefact, not a stored status.
+
+**`result_url`** is set as soon as a result exists — at `needs verdict` and at `done` — and renders as a **Check Result** button pointing at the existing `assessments.results` screen. One place a reading is ever read; the verdict is recorded there as it always has been.
 
 **A grid of cards, one per child, every card clickable** — not a table. The card carries the child's name, the state chip, and the one action that state calls for; clicking it opens that child's panel (Task 9). Build on the staff shell with `<x-page-header>`; the board is reached from the setup screen, so it gets a back link labelled **"Assessments"**. Card tone classes reuse the existing `good` / `ok` / `help` / `none` palette from `parent.css` rather than inventing new colours.
 
@@ -728,8 +737,8 @@ git switch feat/batch-assessment && git merge --no-ff feat/batch-t07-setup
 | `recorded` | audio saved, `submitted_for_analysis_at` null, no result | **audio player**, *Send for analysis*, *Re-record* |
 | `transcribing` | `analysis_started_at` set, `analysis_duration_ms` null, status `processing` | live progress; audio playable |
 | `queued` | `awaitingRescore()` claims it | place in line + ETA; audio playable |
-| `needs verdict` | result exists, classification not `unavailable`, no verdict | *Review* → existing results screen |
-| `done` | verdict exists | reading level + accuracy |
+| `needs verdict` | result exists, classification not `unavailable`, no verdict | **Check Result** → existing results screen |
+| `done` | verdict exists | reading level + accuracy, **Check Result** |
 | `failed` | `rescore_attempts >= RescoreQueue::MAX_ATTEMPTS`, no result | what went wrong, *Analyze* by hand |
 
 `playable` is simply `hasAudio()` — **audio is available in the card from `recorded` onward**, not only at `recorded`, so a surprising result stays checkable.
@@ -793,15 +802,39 @@ public function test_an_unclassified_result_reads_as_queued_not_done(): void
 // audio availability
 public function test_audio_is_playable_in_every_state_once_a_recording_exists(): void
 
+// Check Result
+public function test_check_result_appears_as_soon_as_a_reading_is_analysed(): void
+public function test_check_result_is_absent_before_a_result_exists(): void
+
 // board + batch status
 public function test_the_board_reads_weaknesses_through_weakness_outcome(): void
 public function test_poll_reports_the_estimate_and_every_entry(): void
 public function test_poll_counts_how_many_cards_are_ready_to_send(): void
 public function test_another_teacher_cannot_open_or_poll_this_board(): void
-public function test_the_batch_completes_when_every_entry_is_done_or_failed(): void
 public function test_a_batch_turns_to_analyzing_once_any_entry_has_audio(): void
 public function test_a_cancelled_batch_is_not_revived_by_polling(): void
+
+// the batch must finish with nobody watching
+public function test_a_batch_completes_without_anyone_opening_the_board(): void
+{
+    $batch = AssessmentBatch::factory()->create();
+    $entry = $this->sentBatchEntry(['batch_id' => $batch->id]);
+
+    // score it the way the scheduler does - no HTTP request, no poll
+    $entry->createResult($this->classifiedAnalysis());
+    $entry->verdict()->create($this->acceptedVerdict());
+
+    $this->assertSame(AssessmentBatch::STATUS_COMPLETED, $batch->fresh()->status);
+    $this->assertNotNull($batch->fresh()->completed_at);
+}
+
+public function test_poll_writes_nothing(): void
+{
+    // the batch status must already be correct before any poll happens
+}
 ```
+
+`test_a_batch_completes_without_anyone_opening_the_board` is the load-bearing one for "the process must not stop": it deliberately makes **no HTTP request at all**. Add `acceptedVerdict()` to the helper trait.
 
 `test_an_unclassified_result_reads_as_queued_not_done` pins the model-or-nothing rule; `test_an_entry_being_scored_right_now_reads_as_transcribing` pins that the state comes from Task 1's timing columns rather than from raw `status`.
 
@@ -810,7 +843,7 @@ public function test_a_cancelled_batch_is_not_revived_by_polling(): void
 Run: `php artisan test --filter=BatchBoardTest`
 Expected: FAIL — `BatchEntryState` not found.
 
-- [ ] **Step 3: Implement `BatchEntryState::for()` and `AssessmentBatch::refreshStatus()`**
+- [ ] **Step 3: Implement `BatchEntryState::for()`, `refreshStatus()` and the observer**
 
 Derivation order matters — check in this sequence and return the first match. `failed` is checked **before** `queued` so an exhausted entry does not read as still waiting, and `transcribing` before `queued` because a scoring entry also satisfies `awaitingRescore()`:
 
@@ -827,9 +860,13 @@ result exists, verdict exists                           → done
 result exists, no verdict                               → needs verdict
 ```
 
+Guard the observer against recursion: `refreshStatus()` saves the *batch*, not the assessment, so it will not re-enter — but do not save the assessment from inside it.
+
 - [ ] **Step 4: Implement `board()`, `poll()`, the card grid and the polling JS**
 
 Scope entries through the teacher's `accessibleLearnersQuery()` so Review Focus #3 holds. Poll on the same interval pattern as `assessments.session.poll`. Cards go in `_card.blade.php` so Task 9's panel and the board share one rendering of a card's chip and actions.
+
+The board carries a standing reassurance, because a teacher who doubts it will sit and wait: **"Analysis continues even if you close this page — you can come back any time."**
 
 **No bulk verdict control** anywhere on this page. *Send all ready* is the only bulk action; each child's verdict goes through the existing per-child flow.
 
@@ -841,7 +878,7 @@ Expected: both PASS, zero edits to existing test files.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add app/Services/BatchEntryState.php app/Models/AssessmentBatch.php app/Http/Controllers/AssessmentBatchController.php resources/views/assessments/batch public/css/batch-board.css public/js/batch-board.js tests/Feature/BatchBoardTest.php
+git add app/Services/BatchEntryState.php app/Observers/AssessmentObserver.php app/Providers/AppServiceProvider.php app/Models/AssessmentBatch.php app/Http/Controllers/AssessmentBatchController.php resources/views/assessments/batch public/css/batch-board.css public/js/batch-board.js tests/Feature/BatchBoardTest.php
 git commit -m "feat(batch): add the card board and honest per-child state"
 git switch feat/batch-assessment && git merge --no-ff feat/batch-t08-board
 ```
@@ -984,7 +1021,158 @@ git switch feat/batch-assessment && git merge --no-ff feat/batch-t10-codes
 
 ---
 
-### Task 11: Deploy notes and a real 15-child run
+### Task 11: Cancelling and removing
+
+**Files:**
+- Modify: `app/Http/Controllers/AssessmentBatchController.php` — `removeEntry()`, `unsendEntry()`, `cancel()`
+- Modify: `routes/web.php` — two routes: `DELETE .../entry/{assessment}` → `assessments.batch.entry.remove`, `POST .../entry/{assessment}/unsend` → `assessments.batch.unsend`
+- Modify: `resources/views/assessments/batch/_card.blade.php`, `board.blade.php` — the actions and the confirmation dialog
+- Test: `tests/Feature/BatchCancelTest.php`
+
+**Interfaces:**
+- Consumes: `BatchEntryState::for()` (Task 8).
+- Produces:
+  - `unsendEntry()` — clears `submitted_for_analysis_at`. The card returns to `recorded` with its audio intact; the lane stops taking it.
+  - `removeEntry()` — behaviour depends on whether a reading was measured (table below).
+  - `cancel()` — behind a confirmation; sets `cancelled` + `cancelled_at`, un-sends every queued entry, removes every un-recorded entry, **keeps every scored reading**.
+
+**The governing rule: nothing available on this board may destroy a measured reading.** A teacher moving through fifteen cards must not be able to delete a child's record with one misplaced tap.
+
+| State | Action | What `removeEntry()` does |
+|---|---|---|
+| `waiting` | *Remove* | Deletes the entry and its `AssessmentSession`. Nothing was recorded. |
+| `recorded` | *Re-record* / *Remove* | Discards audio → `waiting`, or deletes the entry. Nothing was measured. |
+| `queued` | *Cancel analysis* | `unsendEntry()` → back to `recorded`, audio kept. |
+| `transcribing` | **none** | A running Whisper process cannot be aborted honestly. The card offers nothing and says *"being analysed now — about N min left"*, rather than a button that would not do what it claims. |
+| `needs verdict` · `done` | *Remove from batch* | **Sets `batch_id` to null and nothing else.** Assessment, result, verdict and comprehension answers all survive. |
+| `failed` | *Remove from batch* | Also `batch_id` to null, keeping the recording so Analyze still works from the child's history. |
+
+**Why not delete:** deleting an `Assessment` cascade-deletes `assessment_results`, `assessment_verdicts`, `comprehension_answers` and `assessment_sessions`, and `Learner::readingLevelFromAssessments()` derives the child's reading level from their assessments — so a delete silently changes what parents see, what Practice Center recommends, which interventions are chosen and what the admin chart counts. That belongs on the learner's own history screen (Task 12), not on a card.
+
+- [ ] **Step 1: Write the failing test**
+
+```php
+// the boundary that matters most
+public function test_removing_a_scored_card_keeps_the_assessment_and_its_result(): void
+{
+    $entry = $this->sentBatchEntry();
+    $entry->createResult($this->classifiedAnalysis());
+
+    $this->actingAs($this->teacher())->delete(route('assessments.batch.entry.remove', [...]));
+
+    $this->assertDatabaseHas('assessments', ['id' => $entry->id, 'batch_id' => null]);
+    $this->assertDatabaseHas('assessment_results', ['assessment_id' => $entry->id]);
+}
+
+public function test_removing_a_scored_card_does_not_change_the_childs_reading_level(): void
+public function test_removing_a_scored_card_keeps_its_verdict_and_answers(): void
+public function test_no_board_action_can_delete_a_measured_reading(): void
+
+// pre-result removal is real deletion, and that is fine
+public function test_removing_a_waiting_card_deletes_the_entry_and_its_session(): void
+public function test_removing_a_recorded_card_deletes_the_entry_and_its_audio_file(): void
+
+// un-send
+public function test_cancelling_analysis_returns_a_queued_card_to_recorded(): void
+public function test_a_cancelled_analysis_is_no_longer_claimed_by_the_lane(): void
+public function test_cancelling_analysis_keeps_the_audio(): void
+public function test_a_transcribing_card_offers_no_cancel_action(): void
+
+// batch cancel
+public function test_cancelling_a_batch_keeps_every_scored_reading(): void
+public function test_cancelling_a_batch_unsends_every_queued_entry(): void
+public function test_cancelling_a_batch_removes_entries_that_were_never_recorded(): void
+public function test_a_cancelled_batchs_join_codes_no_longer_admit_a_child(): void
+public function test_cancelling_a_batch_reports_what_will_be_kept_and_stopped(): void
+public function test_a_cancelled_batch_cannot_accept_new_recordings(): void
+
+// authorization
+public function test_another_teacher_cannot_remove_an_entry_or_cancel_the_batch(): void
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `php artisan test --filter=BatchCancelTest`
+Expected: FAIL
+
+- [ ] **Step 3: Implement the three actions and the confirmation dialog**
+
+The confirmation names the consequences rather than asking a generic question: *"Cancel this batch? 4 children already assessed keep their results. 6 waiting and 5 queued will be stopped."* Counts come from `BatchEntryState`.
+
+- [ ] **Step 4: Run the test to verify it passes, then the full suite**
+
+Run: `php artisan test --filter=BatchCancelTest && php artisan test`
+Expected: both PASS, zero edits to existing test files.
+
+- [ ] **Step 5: Commit and merge the phase**
+
+```bash
+git add app/Http/Controllers/AssessmentBatchController.php routes/web.php resources/views/assessments/batch tests/Feature/BatchCancelTest.php
+git commit -m "feat(batch): cancel and remove without ever losing a reading"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t11-cancel
+```
+
+---
+
+### Task 12: Deleting a reading, on the learner's own history
+
+**Files:**
+- Modify: `app/Http/Controllers/AssessmentController.php` — add `destroy()`
+- Modify: `routes/web.php` — `DELETE /assessments/{assessment}` → `assessments.destroy`
+- Modify: `resources/views/assessments/learner-history.blade.php` — the delete control and its confirmation
+- Test: `tests/Feature/AssessmentDeleteTest.php`
+
+**Interfaces:**
+- Consumes: nothing from earlier tasks. This is deliberately **outside** the batch feature and **outside** the batch feature flag — it is a gap in the existing app that the batch work surfaced.
+- Produces: `AssessmentController::destroy(Assessment $assessment)` — deletes the assessment after an explicit confirmation, then recomputes the learner's reading level.
+
+**This is the only place a reading can be destroyed, and it must earn it:**
+- The confirmation shows what is being deleted — the date, material, reading level and accuracy — not a generic "are you sure".
+- It names the consequences: the result, verdict and comprehension answers go with it, and the child's reading level will be recomputed.
+- An assessment with a **verdict** is a reviewed record with an audit trail; it requires the typed name of the learner to confirm, not just a click.
+- `ActivityLog::log()` records the deletion, with who and when, before the row goes.
+- The learner's reading level is recomputed afterwards, the same way `learners:recompute-levels` does it, so the level never silently reflects a deleted reading.
+
+**Admins stay read-only**, per the `LearnerAdminReadOnlyTest` precedent — deleting is the assessing teacher's action.
+
+- [ ] **Step 1: Write the failing test**
+
+```php
+public function test_a_teacher_can_delete_an_assessment_from_the_learners_history(): void
+public function test_deleting_an_assessment_removes_its_result_verdict_and_answers(): void
+public function test_deleting_an_assessment_recomputes_the_learners_reading_level(): void
+public function test_deleting_a_reviewed_assessment_requires_the_learners_typed_name(): void
+public function test_a_deletion_is_written_to_the_activity_log(): void
+public function test_an_admin_cannot_delete_an_assessment(): void
+public function test_a_teacher_cannot_delete_another_teachers_learners_assessment(): void
+public function test_the_confirmation_names_the_reading_being_deleted(): void
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `php artisan test --filter=AssessmentDeleteTest`
+Expected: FAIL — route `assessments.destroy` not defined.
+
+- [ ] **Step 3: Implement `destroy()`, the route and the confirmation**
+
+Route placement: `DELETE /assessments/{assessment}` cannot shadow `/assessments/batch/...` because the methods differ, but declare it beside the existing `GET /assessments/{assessment}` for clarity.
+
+- [ ] **Step 4: Run the test to verify it passes, then the full suite**
+
+Run: `php artisan test --filter=AssessmentDeleteTest && php artisan test`
+Expected: both PASS, zero edits to existing test files.
+
+- [ ] **Step 5: Commit and merge the phase**
+
+```bash
+git add app/Http/Controllers/AssessmentController.php routes/web.php resources/views/assessments/learner-history.blade.php tests/Feature/AssessmentDeleteTest.php
+git commit -m "feat(assessment): delete a reading from the learner's history, deliberately"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t12-delete
+```
+
+---
+
+### Task 13: Deploy notes and a real 15-child run
 
 **Files:**
 - Modify: `docs/deployment-vps.md` — the batch flag, the new schedule values, and the cron prerequisite
@@ -1014,6 +1202,10 @@ Cover: the flag and its default; `BATCH_ASSESSMENT_ENABLED` needing `config:cach
 
 Record the observed median per-recording duration and the wall-clock time from the last *send* to the last result. Confirm against the spec's stated 25–45 minutes, confirm the whole roster cleared in one run, and confirm no recording was scored twice.
 
+- [ ] **Step 3b: Prove the work survives the browser closing**
+
+Send a batch, then **close the browser entirely** and leave it closed. Come back after the run should have finished and check, without opening the board first, that every entry has a result and the batch status is `completed`. This is the requirement that motivated the observer in Task 8, and it is only genuinely proven by not watching.
+
 - [ ] **Step 4: Re-tune if the measurement disagrees**
 
 If the measured worst case per recording exceeds 3 minutes, `--limit=20` breaches the §8 invariant and both it and `withoutOverlapping` must move together. `RescoreScheduleTest` from Task 4 should fail if they do not.
@@ -1023,7 +1215,7 @@ If the measured worst case per recording exceeds 3 minutes, `--limit=20` breache
 ```bash
 git add docs/deployment-vps.md
 git commit -m "docs(batch): deploy notes for the batch flag and the tuned lane"
-git switch feat/batch-assessment && git merge --no-ff feat/batch-t11-deploy
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t13-deploy
 ```
 
 **Do not merge `feat/batch-assessment` into `master`.** That is a separate, explicit decision for the user to take after reviewing the measured run (spec §9.3).

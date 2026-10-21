@@ -5,6 +5,9 @@
 @section('content')
     <x-page-header title="New Assessment" icon="bi-plus-circle"
                    :back="route('assessments.index')" back-label="Assessments" />
+    @if(config('assessment.batch_enabled'))
+        <a href="{{ route('assessments.batch.create') }}" class="btn btn-outline-primary btn-sm mb-3"><i class="bi bi-people me-1"></i>Assess a group</a>
+    @endif
 
     @include('assessments._service_status')
 

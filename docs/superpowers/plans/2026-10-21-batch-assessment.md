@@ -90,7 +90,7 @@ Columns added to `assessments`, all nullable and additive:
 | `analysis_started_at` | `timestamp` nullable | after the above | Set, with `analysis_duration_ms` still null, **is** the `transcribing` state |
 | `analysis_duration_ms` | `unsignedInteger` nullable | after the above | Written on every run incl. single-child; feeds the estimator |
 
-Indexes added to `assessments`: `batch_id`, and composite **`(batch_id, submitted_for_analysis_at)`** — Task 2's scope branch filters on both, and without it that branch scans `assessments` every scheduler tick, which at `everyMinute` is every minute. Do **not** index the two timing columns: the estimator reads the last 20 rows by `id`, and the `transcribing` check is always already narrowed by `batch_id`.
+Indexes added to `assessments`: `batch_id`, and composite **`(batch_id, submitted_for_analysis_at)`**. `batch_id` serves the board's `where batch_id = ?`, which is the hot query. **Correction (found in Task 2):** the composite does *not* stop `awaitingRescore` scanning — that scope is a disjunction OR-ing the batch branch with unindexed `status`/`updated_at` conditions and a `NOT EXISTS` subquery, so a planner cannot drive an index through it. The scan predates this feature and is acceptable at one school's volume. Do **not** index the two timing columns: the estimator reads the last 20 rows by `id`, and the `transcribing` check is always already narrowed by `batch_id`.
 
 **There is no `recording_mode` column.** Every card offers both a join code and *Conduct here*; nothing is chosen in advance.
 
@@ -295,10 +295,9 @@ Expected: FAIL on the first test — the batch entry is not yet claimed.
 
 Add the batch branch inside the existing `$unscored` closure, leaving the `failed` and stale-`processing` conditions exactly as they are. The `whereNotNull('audio_file')` guard at the top of the scope already covers the no-audio case. Create `tests/Concerns/MakesBatchAssessments.php` with the helpers listed in Interfaces.
 
-- [ ] **Step 3b: Confirm the new branch uses the composite index**
+- [ ] **Step 3b: Record what the planner actually does** *(amended after Task 2)*
 
-Run: `php artisan tinker --execute="echo Assessment::awaitingRescore()->toSql();"` then `EXPLAIN` that query against a seeded table.
-Expected: the batch branch resolves via the `(batch_id, submitted_for_analysis_at)` index from Task 1, not a full scan. This query runs **every minute** in production, so a scan here is a standing cost.
+Run `EXPLAIN QUERY PLAN` on `Assessment::awaitingRescore()`. **Expect a scan, and that is acceptable** — the scope is a disjunction, so no index can be driven through it, and the scan predates this feature. The binding requirement is only that the branch *filters on both columns* so it can use the composite index when queried in isolation. Record what you observed; do not restructure the scope to chase an index.
 
 - [ ] **Step 4: Run the new test and the outage-recovery test together**
 

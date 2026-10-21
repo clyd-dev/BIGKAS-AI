@@ -507,8 +507,14 @@ database/migrations/2026_10_21_010001_add_batch_columns_to_assessments_table.php
 <p><b>Indexes added to <code>assessments</code>:</b></p>
 <ul>
   <li><code>batch_id</code> — the board loads one batch's entries on every poll; this is the hottest new query in the feature.</li>
-  <li>Composite <code>(batch_id, submitted_for_analysis_at)</code> — serves the widened <code>awaitingRescore</code> branch, which filters on both together. Without it that branch degrades to a scan of <code>assessments</code> every scheduler tick, which at <code>everyMinute</code> is a scan every minute.</li>
+  <li>Composite <code>(batch_id, submitted_for_analysis_at)</code> — serves queries that filter a batch's entries by whether they have been sent: the board, the estimator, and the widened <code>awaitingRescore</code> branch read in isolation.</li>
 </ul>
+
+<div class="callout c-warn">
+  <span class="lbl">Correction — what the composite index does <em>not</em> buy</span>
+  <p>An earlier revision claimed this index stops <code>awaitingRescore</code> scanning <code>assessments</code> every scheduler tick. <strong>It does not.</strong> That scope is a disjunction — the batch branch is OR&#8209;ed with unindexed <code>status</code> and <code>updated_at</code> conditions and with <code>doesntHave()</code>, which compiles to <code>NOT EXISTS</code> — and a planner generally cannot drive an index through an OR of that shape. <code>EXPLAIN QUERY PLAN</code> on SQLite reports <code>SCAN assessments</code> with the index in place.</p>
+  <p>The scan was already happening before batch assessment existed, so nothing regressed, and <code>audio_file IS NOT NULL</code> already limits the rows examined. At one school&#8217;s volume — hundreds to low thousands of assessments — a scan once a minute is not a cost worth restructuring the scope for. The indexes still earn their place on the board&#8217;s own <code>where batch_id = ?</code> query, which is the genuinely hot one. <strong>Verify with a MySQL <code>EXPLAIN</code> on realistic data before relying on either claim</strong>; rewriting the batch branch as a <code>UNION</code> would be a bigger change and is not warranted now.</p>
+</div>
 
 <p><b>Not indexed, on purpose:</b> <code>analysis_started_at</code> and <code>analysis_duration_ms</code>. The estimator reads at most the last 20 rows ordered by <code>id</code>, and the <code>transcribing</code> check is always already narrowed by <code>batch_id</code>.</p>
 

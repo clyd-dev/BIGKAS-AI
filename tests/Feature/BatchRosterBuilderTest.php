@@ -9,8 +9,10 @@ use App\Models\Learner;
 use App\Models\ReadingMaterial;
 use App\Models\User;
 use App\Services\BatchRosterBuilder;
+use App\Traits\AuthorizesLearnerAccess;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\Concerns\MakesBatchAssessments;
 use Tests\TestCase;
 
@@ -310,5 +312,52 @@ class BatchRosterBuilderTest extends TestCase
         $this->assertSame(Assessment::STATUS_PROCESSING, $existing->fresh()->status);
         $this->assertSame($batch->id, $mine->fresh()->batch_id);
         $this->assertSame(Assessment::STATUS_PENDING, $mine->fresh()->status);
+    }
+
+    public function test_the_builders_access_rule_matches_the_shared_trait(): void
+    {
+        $teacher = $this->teacher();
+        $other = $this->otherTeacher();
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'is_active' => true, 'email_verified_at' => now()]);
+        $pivot = $this->learnersOf($other)[0];
+        $teacher->learners()->attach($pivot->id, ['relationship' => 'teacher']);
+
+        $cases = [
+            'pivot-linked learner' => [$teacher, $pivot, true],
+            'learner in a class the teacher teaches' => [$teacher, $this->learnersOf($teacher)[0], true],
+            'unrelated learner' => [$teacher, $this->learnersOf($other)[1], false],
+            'admin acting' => [$admin, $this->learnersOf($other)[1], true],
+        ];
+
+        $gate = new class {
+            use AuthorizesLearnerAccess;
+
+            public function allows($learner): bool
+            {
+                try {
+                    $this->authorizeLearnerAccess($learner);
+
+                    return true;
+                } catch (HttpException $e) {
+                    return false;
+                }
+            }
+        };
+
+        foreach ($cases as $name => [$user, $learner, $expected]) {
+            $this->actingAs($user);
+            $viaTrait = $gate->allows($learner);
+
+            $errors = [];
+            try {
+                app(BatchRosterBuilder::class)->build($user, $this->input([$learner]));
+            } catch (ValidationException $e) {
+                $errors = $e->errors();
+            }
+            $viaBuilder = ! array_key_exists('entries.0.learner_id', $errors);
+
+            $this->assertSame($expected, $viaTrait, "trait: $name");
+            $this->assertSame($viaTrait, $viaBuilder, "builder disagrees with trait: $name");
+        }
     }
 }

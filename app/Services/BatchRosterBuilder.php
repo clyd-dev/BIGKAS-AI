@@ -7,11 +7,8 @@ use App\Models\AssessmentBatch;
 use App\Models\Learner;
 use App\Models\ReadingMaterial;
 use App\Models\User;
-use App\Traits\AuthorizesLearnerAccess;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Validates a whole batch roster, per child, and only then creates the batch and
@@ -24,8 +21,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  */
 class BatchRosterBuilder
 {
-    use AuthorizesLearnerAccess;
-
     public function build(User $teacher, array $input): AssessmentBatch
     {
         $errors = $this->validate($teacher, $input);
@@ -157,27 +152,26 @@ class BatchRosterBuilder
     }
 
     /**
-     * The shared trait authorises the authenticated user and aborts with a 403.
-     * Run it as the given teacher so access means exactly what it does in the
-     * other controllers, and turn the 403 into a per-entry answer.
+     * The same rule as AuthorizesLearnerAccess::authorizeLearnerAccess(), evaluated
+     * against the given teacher instead of the authenticated user, and returning a
+     * bool instead of aborting. Deliberately duplicated so the single-child trait
+     * stays untouched; BatchRosterBuilderTest pins the two together.
      */
-    private function canAccess(User $teacher, Learner $learner): bool
+    private function canAccess(User $user, Learner $learner): bool
     {
-        $guard = Auth::guard();
-        $previous = $guard->user();
-        $guard->setUser($teacher);
-
-        try {
-            $this->authorizeLearnerAccess($learner);
-
+        // Admins can access all learners.
+        if ($user->isAdmin()) {
             return true;
-        } catch (HttpException $e) {
-            if ($e->getStatusCode() === 403) {
-                return false;
-            }
-            throw $e;
-        } finally {
-            $previous ? $guard->setUser($previous) : $guard->forgetUser();
         }
+
+        // Attached to the learner via the pivot table.
+        if ($user->learners()->where('learners.id', $learner->id)->exists()) {
+            return true;
+        }
+
+        // Or the teacher of the learner's class.
+        return $user->isTeacher()
+            && $learner->class_id
+            && $user->taughtClasses()->where('id', $learner->class_id)->exists();
     }
 }

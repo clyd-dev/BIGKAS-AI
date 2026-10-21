@@ -11,10 +11,13 @@ use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Shared fixtures for the batch assessment tests. The using test must have
- * RefreshDatabase; audio is stored on a faked "public" disk.
+ * RefreshDatabase and must fake the "public" disk itself, once (Storage::fake in
+ * setUp): the helpers never fake it, because faking again would delete the audio
+ * of every entry already made.
  */
 trait MakesBatchAssessments
 {
@@ -39,15 +42,11 @@ trait MakesBatchAssessments
     /** A recording with stored audio and no batch. */
     protected function assessmentWithAudio(array $attributes = []): Assessment
     {
-        Storage::fake('public');
-
-        $assessment = Assessment::factory()->create($attributes);
-
-        $path = 'assessments/audio/a' . $assessment->id . '.webm';
+        $path = 'assessments/audio/' . Str::uuid() . '.webm';
         Storage::disk('public')->put($path, 'audio');
-        $assessment->forceFill(['audio_file' => $path])->save();
 
-        return $assessment->fresh();
+        // audio_file goes in at creation so a caller-supplied updated_at survives.
+        return Assessment::factory()->create(array_merge(['audio_file' => $path], $attributes))->fresh();
     }
 
     /** A minimal valid createResult() payload that was classified. */

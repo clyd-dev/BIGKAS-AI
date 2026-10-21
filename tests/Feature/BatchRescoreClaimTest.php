@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Assessment;
 use App\Models\AssessmentBatch;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\MakesBatchAssessments;
 use Tests\TestCase;
 
@@ -16,6 +17,31 @@ class BatchRescoreClaimTest extends TestCase
 {
     use MakesBatchAssessments;
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Storage::fake('public');
+    }
+
+    public function test_the_helpers_keep_every_entrys_audio_on_disk(): void
+    {
+        $first = $this->sentBatchEntry();
+        $second = $this->batchEntryWithAudio();
+        $solo = $this->assessmentWithAudio();
+
+        foreach ([$first, $second, $solo] as $entry) {
+            Storage::disk('public')->assertExists($entry->audio_file);
+        }
+    }
+
+    public function test_the_helpers_honour_a_supplied_updated_at(): void
+    {
+        $stale = $this->assessmentWithAudio(['updated_at' => now()->subMinutes(30)]);
+
+        $this->assertTrue($stale->updated_at->lt(now()->subMinutes(29)));
+    }
 
     public function test_a_sent_batch_entry_is_owed_a_score_at_once(): void
     {

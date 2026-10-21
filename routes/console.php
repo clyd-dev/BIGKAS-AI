@@ -11,4 +11,4 @@ Artisan::command('inspire', function () {
 // Tell the admin when the engine stops, and score again what was saved meanwhile.
 // Needs the cron entry that runs `php artisan schedule:run` every minute.
 Schedule::command('health:check')->everyMinute()->withoutOverlapping(5);
-Schedule::command('assessments:rescore')->everyFiveMinutes()->withoutOverlapping(30);
+Schedule::command('assessments:rescore --limit=20')->everyMinute()->withoutOverlapping(120);

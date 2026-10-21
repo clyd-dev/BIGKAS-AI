@@ -494,6 +494,11 @@ class BatchEntryPanelTest extends TestCase
      * measurement about a child which someone may act on, so it is refused
      * rather than recomputed: rewriting a measured result in place is exactly
      * what no action on this board may do.
+     *
+     * Both doors are checked here, because send() records answers too: a Send
+     * carrying new answers reaches ComprehensionService by the same route and
+     * must be refused by the same rule. One guard
+     * (AssessmentBatchController::refuseIfAnalysed()), one test.
      */
     public function test_answers_cannot_be_changed_once_the_reading_is_analysed(): void
     {
@@ -513,20 +518,24 @@ class BatchEntryPanelTest extends TestCase
         $this->assertSame('needs verdict', $chip, 'The fixture must really be a measured reading.');
         $this->assertSame(100.0, $entry->comprehensionScore());
 
-        // Re-answering with the wrong option: refused, and nothing moves.
-        $this->actingAs($teacher)->postJson(
-            route('assessments.batch.answers', [$entry->batch_id, $entry->id]),
-            ['answers' => $this->allAnswers($entry, 'B')]
-        )->assertStatus(422);
+        // Both doors onto the same reading: the answers endpoint, and Send,
+        // which records any answers posted with it.
+        foreach (['assessments.batch.answers', 'assessments.batch.send'] as $door) {
+            // Re-answering with the wrong option: refused, and nothing moves.
+            $this->actingAs($teacher)->postJson(
+                route($door, [$entry->batch_id, $entry->id]),
+                ['answers' => $this->allAnswers($entry, 'B')]
+            )->assertStatus(422);
 
-        $fresh = $entry->fresh(['result', 'verdict', 'material', 'learner']);
+            $fresh = $entry->fresh(['result', 'verdict', 'material', 'learner']);
 
-        $this->assertCount(2, $fresh->comprehensionAnswers()->get());
-        $this->assertSame(100.0, $fresh->comprehensionScore());
-        $this->assertSame(0, $fresh->comprehensionAnswers()->where('is_correct', false)->count());
-        $this->assertSame($entry->result->id, $fresh->result->id);
-        $this->assertSame($entry->result->comprehension_score, $fresh->result->comprehension_score);
-        $this->assertSame($chip, BatchEntryState::for($fresh)['chip']);
+            $this->assertCount(2, $fresh->comprehensionAnswers()->get(), $door);
+            $this->assertSame(100.0, $fresh->comprehensionScore(), $door);
+            $this->assertSame(0, $fresh->comprehensionAnswers()->where('is_correct', false)->count(), $door);
+            $this->assertSame($entry->result->id, $fresh->result->id, $door);
+            $this->assertSame($entry->result->comprehension_score, $fresh->result->comprehension_score, $door);
+            $this->assertSame($chip, BatchEntryState::for($fresh)['chip'], $door);
+        }
     }
 
     /**
@@ -622,6 +631,19 @@ class BatchEntryPanelTest extends TestCase
         $fresh = $this->recordedEntry($teacher, ['batch' => $batch, 'learner_id' => $this->learnerOf($teacher, 1)->id]);
         $stamp = $alreadySent->submitted_for_analysis_at;
 
+        // An analysed reading is out of reach of the bulk send for the same
+        // reason the panel refuses to change one: `recorded` requires no result,
+        // and that chip is the only thing sendAll() acts on. It also never
+        // touches ComprehensionService, so there is no second door here.
+        $analysed = $this->comprehensionEntry($teacher, [
+            'batch' => $batch,
+            'learner_id' => $this->learnerOf($teacher, 2)->id,
+            'submitted_for_analysis_at' => now()->subHours(3),
+        ]);
+        $analysed->createResult($this->classifiedAnalysis(['comprehension_score' => 50]));
+        $analysed = $analysed->fresh(['result', 'verdict', 'material', 'learner']);
+        $this->assertSame('needs verdict', BatchEntryState::for($analysed)['chip']);
+
         $this->actingAs($teacher)
             ->postJson(route('assessments.batch.send-all', $batch))
             ->assertOk()
@@ -630,6 +652,38 @@ class BatchEntryPanelTest extends TestCase
 
         $this->assertSame($stamp, $alreadySent->fresh()->submitted_for_analysis_at);
         $this->assertNotNull($fresh->fresh()->submitted_for_analysis_at);
+
+        $after = $analysed->fresh(['result', 'verdict', 'material', 'learner']);
+        $this->assertSame($analysed->result->id, $after->result->id);
+        $this->assertSame($analysed->result->comprehension_score, $after->result->comprehension_score);
+        $this->assertCount(0, $after->comprehensionAnswers()->get());
+        $this->assertSame('needs verdict', BatchEntryState::for($after)['chip']);
+    }
+
+    /**
+     * A second press of Send all ready says something honest.
+     *
+     * It used to flash "0 readings sent for analysis.", which reads like a
+     * failure rather than the plain fact that there was nothing left to send.
+     */
+    public function test_send_all_says_plainly_when_nothing_was_ready(): void
+    {
+        $teacher = $this->teacher();
+        $batch = $this->panelBatch($teacher);
+        $this->recordedEntry($teacher, ['batch' => $batch, 'submitted_for_analysis_at' => now()->subHour()]);
+        $this->waitingEntry($teacher, ['batch' => $batch, 'learner_id' => $this->learnerOf($teacher, 1)->id]);
+
+        $this->actingAs($teacher)
+            ->postJson(route('assessments.batch.send-all', $batch))
+            ->assertOk()
+            ->assertJsonPath('sent', 0)
+            ->assertJsonPath('skipped', 0)
+            ->assertJsonPath('message', 'Nothing was ready to send - every reading on this board has either been sent already or has no recording yet.');
+
+        $this->actingAs($teacher)
+            ->post(route('assessments.batch.send-all', $batch))
+            ->assertRedirect(route('assessments.batch.board', $batch))
+            ->assertSessionHas('warning');
     }
 
     // ── Safety ────────────────────────────────────────────────────────

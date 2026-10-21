@@ -247,6 +247,10 @@
             uploadUrl: '{{ route("assessments.batch.upload-audio", [$batch, $entry]) }}',
             answersUrl: '{{ route("assessments.batch.answers", [$batch, $entry]) }}',
             sendUrl: '{{ route("assessments.batch.send", [$batch, $entry]) }}',
+            // Whether the state offers Send at all. The script may only ever
+            // narrow this, never widen it: a queued or failed card must not get
+            // a Send button that reports success for a stamp that no-ops.
+            sendOffered: {{ $state['action'] === 'Send for analysis' ? 'true' : 'false' }},
             boardUrl: '{{ route("assessments.batch.board", $batch) }}',
             csrf: '{{ csrf_token() }}',
         };

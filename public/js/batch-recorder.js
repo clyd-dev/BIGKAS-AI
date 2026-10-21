@@ -57,6 +57,15 @@
     /** True once a recording exists on the server for this child. */
     var hasRecording = !!document.querySelector('[data-entry] audio');
 
+    /**
+     * Whether the server's state offers Send. Seeded from the rendered state
+     * and refreshed from every reply, so the gate below can only narrow it.
+     */
+    var sendOffered = config.sendOffered === true;
+
+    /** The stand-down watcher, so it can be cleared when the page goes away. */
+    var standDownTimer = null;
+
     // ── Small helpers ─────────────────────────────────────────────────
 
     function say(target, text, tone) {
@@ -133,9 +142,16 @@
     }
 
     /**
-     * Send is offered only when the gate would allow it: a recording exists and
-     * every comprehension question on the page has an answer. The server
-     * refuses anything else anyway; this only keeps the button honest.
+     * Send is offered only when the server offers it, narrowed further by what
+     * is true in the page.
+     *
+     * `sendOffered` comes from BatchEntryState's own `action`, and every reply
+     * from the panel's endpoints carries a fresh state, so this script can only
+     * ever take the offer away - never grant one. That matters: on a `queued` or
+     * `failed` card the server offers no Send, and stamp() would no-op, so a
+     * button enabled here would report "Sent. It is in line for analysis" for an
+     * action that did nothing. A control that claims success for a no-op is the
+     * same dishonesty as a card that claims a state it is not in.
      */
     function refreshSendGate() {
         if (!btnSend) {
@@ -145,7 +161,14 @@
         var answers = pickedAnswers();
         var answered = !answers || answers.picked.length === answers.total;
 
-        btnSend.disabled = busy || !hasRecording || !answered;
+        btnSend.disabled = busy || !sendOffered || !hasRecording || !answered;
+    }
+
+    /** Take the server's word for whether Send is on offer. */
+    function adoptState(state) {
+        if (state && typeof state.action !== 'undefined') {
+            sendOffered = state.action === 'Send for analysis';
+        }
     }
 
     // ── Recording ─────────────────────────────────────────────────────
@@ -284,6 +307,7 @@
 
         post(config.uploadUrl, body).then(function (payload) {
             hasRecording = true;
+            adoptState(payload.state);
             say(message, 'Recording saved. Listen to it, then send it for analysis when you are ready.', 'text-success');
 
             if (payload.state) {
@@ -326,14 +350,30 @@
      * down - but never mid-listen: the whole reason this file exists is that a
      * recording the teacher is listening to must not be cut off. If she is
      * playing it, the stand-down waits for her to stop.
+     *
+     * It is bounded, because the card it waits for may never arrive: the board
+     * poll does not run at all on a completed or cancelled batch, and it can
+     * fail. Thirty seconds of looking is plenty for a three-second poll; after
+     * that the local player simply stays, which is harmless. It is also cleared
+     * on pagehide, with the microphone.
      */
     function standDown() {
-        var waiting = window.setInterval(function () {
+        var attempts = 0;
+
+        if (standDownTimer) {
+            window.clearInterval(standDownTimer);
+        }
+
+        standDownTimer = window.setInterval(function () {
             if (!document.querySelector('[data-entry] audio')) {
+                if (++attempts >= 30) {
+                    stopStandDown();
+                }
+
                 return;
             }
 
-            window.clearInterval(waiting);
+            stopStandDown();
 
             var local = preview ? preview.querySelector('audio') : null;
 
@@ -351,6 +391,13 @@
         }, 1000);
     }
 
+    function stopStandDown() {
+        if (standDownTimer) {
+            window.clearInterval(standDownTimer);
+            standDownTimer = null;
+        }
+    }
+
     // ── Answers and Send ──────────────────────────────────────────────
 
     function saveAnswers() {
@@ -364,6 +411,7 @@
         say(answersMessage, 'Saving the answers...', 'text-muted');
 
         post(config.answersUrl, form(answers.picked)).then(function (payload) {
+            adoptState(payload.state);
             say(answersMessage, 'Answers saved — ' + payload.comprehension_score + '% correct.', 'text-success');
         }).catch(function (error) {
             say(answersMessage, error.message, 'text-danger');
@@ -387,7 +435,8 @@
         refreshSendGate();
         say(message, 'Sending for analysis...', 'text-muted');
 
-        post(config.sendUrl, form(answers ? answers.picked : [])).then(function () {
+        post(config.sendUrl, form(answers ? answers.picked : [])).then(function (payload) {
+            adoptState(payload.state);
             say(message, 'Sent. It is in line for analysis — you can go back to the board.', 'text-success');
         }).catch(function (error) {
             busy = false;
@@ -423,5 +472,8 @@
     }
 
     refreshSendGate();
-    window.addEventListener('pagehide', releaseStream);
+    window.addEventListener('pagehide', function () {
+        releaseStream();
+        stopStandDown();
+    });
 })();

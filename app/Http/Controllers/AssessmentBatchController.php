@@ -251,6 +251,44 @@ class AssessmentBatchController extends Controller
     }
 
     /**
+     * One rule, one place: a measured reading cannot be changed from this panel.
+     *
+     * A result was worked out from one particular recording and one particular
+     * set of comprehension answers. Replace either of them and the result goes
+     * on reporting figures that the rows beside it no longer say - a reading
+     * level and an accuracy for audio that is gone, or a comprehension score
+     * that contradicts the stored answers. Those are measurements about a
+     * child which someone may act on, and a teacher reading the results screen
+     * has no way to tell which half is true.
+     *
+     * Refused, never recomputed and never deleted: rewriting or destroying a
+     * measured reading is the one thing no action on this board may do.
+     *
+     * This is a single guard rather than a copy per endpoint because the panel
+     * has three doors onto the same reading - uploadAudio(), answers() and
+     * send(), which also records answers - and a rule written out three times
+     * is a rule that will hold in two places. sendAll() needs no call: it only
+     * ever stamps a card whose chip is `recorded`, and that chip requires there
+     * to be no result, so it cannot reach an analysed entry at all.
+     *
+     * @return \Illuminate\Http\JsonResponse|null  the refusal, or null when there is nothing to refuse
+     */
+    private function refuseIfAnalysed(Assessment $entry)
+    {
+        if ($entry->result === null) {
+            return null;
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'This reading has already been analysed, so it cannot be changed from here - its '
+                . 'recording and its comprehension answers are what the result was worked out from. '
+                . 'Open the result to analyse the saved recording again, or take this child out of the batch '
+                . 'and start a new reading for them.',
+        ], 422);
+    }
+
+    /**
      * One child's panel: the passage, the recorder, the join code, the player
      * and - when the type needs them - the comprehension questions.
      *
@@ -300,20 +338,10 @@ class AssessmentBatchController extends Controller
         // numbers. Follow BatchEntryState's derivation order with a result in
         // place: the card can never read `recorded` again (that branch requires
         // no result), so it would go on showing a reading level and an accuracy
-        // figure belonging to a recording that is no longer on disk - the same
-        // family of dishonesty the whole board was built to prevent.
-        //
-        // So the re-record is refused, and the result is left strictly alone:
-        // no action on this board may destroy a measured reading, and deleting
-        // one cascades into the teacher's verdict and the child's answers and
-        // silently recomputes the learner's reading level.
-        if ($entry->result !== null) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This reading has already been analysed, so it cannot be recorded over. '
-                    . 'Open the result to analyse the saved recording again, or take this child out of the batch '
-                    . 'and start a new reading for them.',
-            ], 422);
+        // figure belonging to a recording that is no longer on disk. Refused
+        // before anything is validated or written - see refuseIfAnalysed().
+        if ($refusal = $this->refuseIfAnalysed($entry)) {
+            return $refusal;
         }
 
         $request->validate(['audio' => 'required|file|max:25600']);
@@ -354,14 +382,8 @@ class AssessmentBatchController extends Controller
     {
         $entry = $this->panelEntry($batch, $assessment);
 
-        if ($entry->result !== null) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This reading has already been analysed, so its comprehension answers cannot be '
-                    . 'changed - the score in the result was worked out from the answers that are stored. '
-                    . 'Open the result to analyse the saved recording again, or take this child out of the batch '
-                    . 'and start a new reading for them.',
-            ], 422);
+        if ($refusal = $this->refuseIfAnalysed($entry)) {
+            return $refusal;
         }
 
         $request->validate(['answers' => 'required|array']);
@@ -389,6 +411,16 @@ class AssessmentBatchController extends Controller
     public function send(Request $request, AssessmentBatch $batch, Assessment $assessment)
     {
         $entry = $this->panelEntry($batch, $assessment);
+
+        // Send is the panel's third door onto the same reading, because it
+        // records any answers posted with it. Without this guard a Send
+        // carrying new answers would rewrite the answer rows of an analysed
+        // reading while its result went on reporting the old score - the two
+        // then actively contradicting each other. Refused before
+        // ComprehensionService is touched and before anything is stamped.
+        if ($refusal = $this->refuseIfAnalysed($entry)) {
+            return $refusal;
+        }
 
         if (! $entry->hasAudio()) {
             return response()->json([
@@ -457,9 +489,15 @@ class AssessmentBatchController extends Controller
             $sent++;
         }
 
-        $message = $sent === 1
-            ? '1 reading sent for analysis.'
-            : "{$sent} readings sent for analysis.";
+        // "0 readings sent for analysis." is what a second press of the button
+        // used to say, which reads like a failure rather than the plain fact
+        // that there was nothing left to send.
+        $message = match (true) {
+            $sent === 0 && $skipped === 0 => 'Nothing was ready to send - every reading on this board has either been sent already or has no recording yet.',
+            $sent === 0 => 'Nothing was sent.',
+            $sent === 1 => '1 reading sent for analysis.',
+            default => "{$sent} readings sent for analysis.",
+        };
 
         if ($skipped > 0) {
             $message .= $skipped === 1

@@ -188,8 +188,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/assessments', [AssessmentController::class, 'store'])->name('assessments.store');
 
         // Batch assessment: a whole group at once, dark until BATCH_ASSESSMENT_ENABLED.
-        // Declared before /assessments/{assessment} so /assessments/batch/... is never
-        // read as a model id; every route 404s while the flag is off.
+        // Every route here 404s while the flag is off.
+        // Declared before /assessments/{assessment} to match how /assessments/new is
+        // handled above, though here the order is belt-and-braces rather than load
+        // bearing: {assessment} matches a single path segment, so the three-segment
+        // /assessments/batch/create could never reach it, and POST /assessments/batch
+        // differs from the wildcard by method. Keep the order anyway - a later
+        // two-segment batch URL would need it, and it costs nothing.
         Route::middleware('batch.enabled')->group(function () {
             Route::get('/assessments/batch/create', [AssessmentBatchController::class, 'create'])->name('assessments.batch.create');
             Route::post('/assessments/batch', [AssessmentBatchController::class, 'store'])->name('assessments.batch.store');

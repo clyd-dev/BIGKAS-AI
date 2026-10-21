@@ -18,7 +18,11 @@
  * read server-side through weaknessOutcome()) and gaining a recording it was
  * rendered without (no audio URL existed at render time). For those, and only
  * those, the board HTML is fetched once and *that one card's element* is
- * swapped. Never the page.
+ * swapped. Never the page. Even then the live <audio> node is carried into the
+ * replacement rather than re-created, so a recording playing on this board is
+ * not cut off by a verdict recorded somewhere else; and one card is only ever
+ * being replaced by one fetch at a time, with a late response dropped if the
+ * card's state has moved on since the fetch was issued.
  *
  * The poll only reads. The batch's own status is kept true by the server's
  * observers, so closing this page does not stop anything - which is exactly what
@@ -31,6 +35,12 @@
     var POLL_MS = 3000;
     var TONES = ['pp-good', 'pp-ok', 'pp-help', 'pp-none'];
     var timer = null;
+
+    /** entry id -> the signature a replacement fetch is currently in flight for. */
+    var replacing = {};
+
+    /** entry id -> the signature the most recent poll reported for that card. */
+    var latestSig = {};
 
     if (!config.pollUrl) {
         return;
@@ -104,11 +114,62 @@
         return holder.innerHTML;
     }
 
-    /** Fetch the board once and swap only the listed cards' elements. */
-    function replaceCards(ids) {
-        if (!config.boardUrl || ids.length === 0) {
+    /**
+     * Move the card's live <audio> element into its replacement, so the teacher
+     * keeps her place in the recording.
+     *
+     * The node itself is carried across, not its src: an element re-created from
+     * markup starts at zero and paused, which is the very thing F3 was about.
+     * The move happens in the same synchronous task as the swap and both parents
+     * are already in the document, so the element is never out of a document
+     * when the browser next reaches a stable state - the point at which a
+     * removed media element would be paused.
+     *
+     * If the replacement has no audio slot (a state rendered without a player),
+     * the live node is grafted in anyway rather than dropped.
+     */
+    function carryAudio(current, replacement) {
+        var live = current.querySelector('audio');
+        if (!live) {
             return;
         }
+
+        var slot = replacement.querySelector('audio');
+        if (slot) {
+            slot.replaceWith(live);
+
+            return;
+        }
+
+        var body = replacement.querySelector('.card-body') || replacement;
+        var actions = body.querySelector('[data-actions]');
+
+        if (actions) {
+            body.insertBefore(live, actions);
+        } else {
+            body.appendChild(live);
+        }
+    }
+
+    /**
+     * Fetch the board once and swap only the listed cards' elements.
+     *
+     * @param requests [{id, sig}] - sig is the state the card was asked to
+     *        become, so a response can be dropped if that has since moved on.
+     */
+    function replaceCards(requests) {
+        // One card is only ever replaced by one fetch at a time: without this,
+        // two overlapping polls could swap the same element twice and the slower
+        // response would win with older markup.
+        var wanted = requests.filter(function (request) {
+            return !replacing[request.id];
+        });
+
+        if (!config.boardUrl || wanted.length === 0) {
+            return;
+        }
+
+        wanted.forEach(function (request) { replacing[request.id] = request.sig; });
 
         fetch(config.boardUrl, { headers: { Accept: 'text/html' } })
             .then(function (response) { return response.ok ? response.text() : null; })
@@ -119,24 +180,39 @@
 
                 var parsed = new DOMParser().parseFromString(html, 'text/html');
 
-                ids.forEach(function (id) {
-                    var current = cardFor(id);
-                    var replacement = parsed.querySelector('[data-entry="' + id + '"]');
+                wanted.forEach(function (request) {
+                    // The card moved on while this was in flight: let the next
+                    // poll deal with the state that is actually true now.
+                    if (latestSig[request.id] !== request.sig) {
+                        return;
+                    }
 
-                    // Swap the grid column, so the card keeps its place in the row.
-                    if (current && replacement) {
-                        var currentCol = current.parentElement;
-                        var replacementCol = replacement.parentElement;
+                    var current = cardFor(request.id);
+                    var replacement = parsed.querySelector('[data-entry="' + request.id + '"]');
 
-                        if (currentCol && replacementCol) {
-                            currentCol.replaceWith(replacementCol);
-                        } else {
-                            current.replaceWith(replacement);
-                        }
+                    if (!current || !replacement) {
+                        return;
+                    }
+
+                    var currentCol = current.parentElement;
+                    var replacementCol = replacement.parentElement;
+
+                    if (currentCol && replacementCol) {
+                        // In the document first, so carrying the audio across
+                        // never takes it out of one. Then the old column goes.
+                        currentCol.after(replacementCol);
+                        carryAudio(current, replacement);
+                        currentCol.remove();
+                    } else {
+                        carryAudio(current, replacement);
+                        current.replaceWith(replacement);
                     }
                 });
             })
-            .catch(function (e) { console.error('Board card refresh error:', e); });
+            .catch(function (e) { console.error('Board card refresh error:', e); })
+            .finally(function () {
+                wanted.forEach(function (request) { delete replacing[request.id]; });
+            });
     }
 
     function apply(data) {
@@ -149,14 +225,19 @@
             }
 
             var state = data.entries[id];
+            var sig = signature(state);
+
+            // Recorded for every entry on every poll, so a replacement fetch
+            // that lands late can tell its target state is no longer current.
+            latestSig[id] = sig;
 
             // Unchanged: touch nothing on this card at all.
-            if (card.dataset.sig === signature(state)) {
+            if (card.dataset.sig === sig) {
                 return;
             }
 
             if (needsServerMarkup(card, state)) {
-                needMarkup.push(id);
+                needMarkup.push({ id: id, sig: sig });
 
                 return;
             }
@@ -170,7 +251,7 @@
 
             patchActions(card, state);
 
-            card.dataset.sig = signature(state);
+            card.dataset.sig = sig;
         });
 
         var count = document.querySelector('[data-ready-count]');

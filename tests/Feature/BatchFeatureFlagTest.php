@@ -36,10 +36,15 @@ class BatchFeatureFlagTest extends TestCase
         config(['assessment.batch_enabled' => false]);
         $this->actingAs($teacher)->post(route('assessments.batch.send-all', $batch))->assertNotFound();
 
-        // With the flag on the same URL reaches the controller, which is still
-        // unbuilt (501). Proves the group guards the route rather than the action.
+        // With the flag on the same URL reaches the controller. What the action
+        // then answers is its own business - this only proves the group guards
+        // the route rather than the action, so it is asserted as "not hidden"
+        // rather than against one particular answer. (It read 501 while
+        // sendAll() was unbuilt; Task 9 built it, and the point of the test is
+        // unchanged either way.)
         config(['assessment.batch_enabled' => true]);
-        $this->actingAs($teacher)->post(route('assessments.batch.send-all', $batch))->assertStatus(501);
+        $response = $this->actingAs($teacher)->post(route('assessments.batch.send-all', $batch));
+        $this->assertNotSame(404, $response->status());
     }
 
     public function test_the_flag_defaults_to_off(): void

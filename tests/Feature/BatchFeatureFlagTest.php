@@ -49,7 +49,17 @@ class BatchFeatureFlagTest extends TestCase
 
     public function test_the_flag_defaults_to_off(): void
     {
+        // Two separate claims. The first is what this suite runs with, pinned in
+        // phpunit.xml so a developer's own .env cannot quietly switch the feature
+        // on inside the tests. The second is the shipped default a fresh install
+        // gets, which is the one that actually keeps a half-built screen hidden.
         $this->assertFalse(config('assessment.batch_enabled'));
+
+        $this->assertStringContainsString(
+            'BATCH_ASSESSMENT_ENABLED=false',
+            file_get_contents(base_path('.env.example')),
+            '.env.example must ship the batch feature switched off.'
+        );
     }
 
     public function test_the_roster_cap_is_fifteen(): void

@@ -7,5 +7,10 @@ return [
 
     // Batch assessment (one teacher assessing many children at once). Off by
     // default so it can be deployed dark; the batch routes answer 404 until on.
-    'batch_enabled' => env('BATCH_ASSESSMENT_ENABLED', false),
+    //
+    // Cast, not taken raw: an unset key, an empty `BATCH_ASSESSMENT_ENABLED=`,
+    // and the strings "false"/"off"/"0" must all read as off, and phpunit.xml
+    // hands over "false" as an empty string. Only a genuinely true value opens
+    // the feature.
+    'batch_enabled' => filter_var(env('BATCH_ASSESSMENT_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
 ];

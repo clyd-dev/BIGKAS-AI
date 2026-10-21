@@ -54,9 +54,36 @@
         return [state.chip, state.label, state.action || '', state.result_url || ''].join('|');
     }
 
+    /**
+     * Which way a card in this state lets a child leave the board. Mirrors the
+     * match() in _card.blade.php; the row itself is only ever rendered by the
+     * server, because it holds forms with CSRF tokens.
+     */
+    function manageFor(chip) {
+        if (chip === 'waiting' || chip === 'recorded') {
+            return 'remove';
+        }
+        if (chip === 'queued') {
+            return 'unsend';
+        }
+        if (chip === 'needs verdict' || chip === 'done' || chip === 'failed') {
+            return 'detach';
+        }
+
+        return '';
+    }
+
     /** True when this state needs server-rendered markup we cannot build here. */
     function needsServerMarkup(card, state) {
         if (state.chip === 'done' && !card.querySelector('[data-done]')) {
+            return true;
+        }
+
+        // A card that has moved between manage rows - a queued reading the lane
+        // has now started, say - must be re-rendered rather than patched: an
+        // un-send form left behind would offer to stop a running Whisper.
+        var manage = card.querySelector('[data-manage]');
+        if ((manage ? manage.getAttribute('data-manage') : '') !== manageFor(state.chip)) {
             return true;
         }
 

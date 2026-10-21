@@ -204,6 +204,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/assessments/batch/{batch}/entry/{assessment}/upload-audio', [AssessmentBatchController::class, 'uploadAudio'])->name('assessments.batch.upload-audio');
             Route::post('/assessments/batch/{batch}/entry/{assessment}/answers', [AssessmentBatchController::class, 'answers'])->name('assessments.batch.answers');
             Route::post('/assessments/batch/{batch}/entry/{assessment}/send', [AssessmentBatchController::class, 'send'])->name('assessments.batch.send');
+            // Taking a child off the board, and un-sending a reading the lane has
+            // not started yet. DELETE never means "destroy this reading": for a
+            // scored card removeEntry() only clears batch_id - see the controller.
+            Route::delete('/assessments/batch/{batch}/entry/{assessment}', [AssessmentBatchController::class, 'removeEntry'])->name('assessments.batch.entry.remove');
+            Route::post('/assessments/batch/{batch}/entry/{assessment}/unsend', [AssessmentBatchController::class, 'unsendEntry'])->name('assessments.batch.unsend');
             Route::post('/assessments/batch/{batch}/send-all', [AssessmentBatchController::class, 'sendAll'])->name('assessments.batch.send-all');
             Route::post('/assessments/batch/{batch}/cancel', [AssessmentBatchController::class, 'cancel'])->name('assessments.batch.cancel');
         });
@@ -351,6 +356,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/users/{user}/activate', [AdminController::class, 'activateUser'])->name('users.activate');
         Route::post('/users/{user}/deactivate', [AdminController::class, 'deactivateUser'])->name('users.deactivate');
         Route::post('/users/{user}/reset-password', [AdminController::class, 'resetUserPassword'])->name('users.reset-password');
+
+        // Bulk-create parent accounts for families with no email (e.g. a whole-school pilot)
+        Route::get('/users/import', [\App\Http\Controllers\ParentImportController::class, 'form'])->name('users.import');
+        Route::post('/users/import/preview', [\App\Http\Controllers\ParentImportController::class, 'preview'])->name('users.import.preview');
+        Route::post('/users/import/confirm', [\App\Http\Controllers\ParentImportController::class, 'confirm'])->name('users.import.confirm');
 
         // School management
         Route::get('/schools', [AdminController::class, 'schools'])->name('schools');

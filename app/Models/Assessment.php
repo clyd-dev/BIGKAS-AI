@@ -32,6 +32,7 @@ class Assessment extends Model
         'learner_id',
         'material_id',
         'assessor_id',
+        'batch_id',
         'audio_file',
         'transcription',
         'language',
@@ -53,6 +54,11 @@ class Assessment extends Model
     }
 
     // ── Relationships ──
+
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(AssessmentBatch::class, 'batch_id');
+    }
 
     public function learner(): BelongsTo
     {

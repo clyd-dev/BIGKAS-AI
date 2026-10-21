@@ -33,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'teacher.assigned' => \App\Http\Middleware\EnsureTeacherAssigned::class,
             'student.auth' => \App\Http\Middleware\StudentAuth::class,
+            'batch.enabled' => \App\Http\Middleware\EnsureBatchAssessmentEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

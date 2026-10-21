@@ -7,6 +7,7 @@
  */
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AssessmentBatchController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AssessmentVerdictController;
 use App\Http\Controllers\AuthController;
@@ -185,6 +186,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/assessments/new', [AssessmentController::class, 'create'])->name('assessments.create');
         Route::get('/assessments/start/{learner}', [AssessmentController::class, 'start'])->name('assessments.start');
         Route::post('/assessments', [AssessmentController::class, 'store'])->name('assessments.store');
+
+        // Batch assessment: a whole group at once, dark until BATCH_ASSESSMENT_ENABLED.
+        // Declared before /assessments/{assessment} so /assessments/batch/... is never
+        // read as a model id; every route 404s while the flag is off.
+        Route::middleware('batch.enabled')->group(function () {
+            Route::get('/assessments/batch/create', [AssessmentBatchController::class, 'create'])->name('assessments.batch.create');
+            Route::post('/assessments/batch', [AssessmentBatchController::class, 'store'])->name('assessments.batch.store');
+            Route::get('/assessments/batch/{batch}', [AssessmentBatchController::class, 'board'])->name('assessments.batch.board');
+            Route::get('/assessments/batch/{batch}/poll', [AssessmentBatchController::class, 'poll'])->name('assessments.batch.poll');
+            Route::get('/assessments/batch/{batch}/entry/{assessment}', [AssessmentBatchController::class, 'entry'])->name('assessments.batch.entry');
+            Route::post('/assessments/batch/{batch}/entry/{assessment}/upload-audio', [AssessmentBatchController::class, 'uploadAudio'])->name('assessments.batch.upload-audio');
+            Route::post('/assessments/batch/{batch}/entry/{assessment}/answers', [AssessmentBatchController::class, 'answers'])->name('assessments.batch.answers');
+            Route::post('/assessments/batch/{batch}/entry/{assessment}/send', [AssessmentBatchController::class, 'send'])->name('assessments.batch.send');
+            Route::post('/assessments/batch/{batch}/send-all', [AssessmentBatchController::class, 'sendAll'])->name('assessments.batch.send-all');
+            Route::post('/assessments/batch/{batch}/cancel', [AssessmentBatchController::class, 'cancel'])->name('assessments.batch.cancel');
+        });
+
         Route::get('/assessments/{assessment}', [AssessmentController::class, 'show'])->name('assessments.show');
         Route::get('/assessments/{assessment}/status', [AssessmentController::class, 'status'])->name('assessments.status');
         Route::post('/assessments/{assessment}/upload-audio', [AssessmentController::class, 'uploadAudio'])->name('assessments.upload-audio');

@@ -5,6 +5,7 @@ namespace Tests\Concerns;
 use App\Models\Assessment;
 use App\Models\AssessmentBatch;
 use App\Models\AssessmentResult;
+use App\Models\AssessmentVerdict;
 use App\Models\Learner;
 use App\Models\School;
 use App\Models\SchoolClass;
@@ -72,6 +73,20 @@ trait MakesBatchAssessments
             'confidence_score' => null,
             'classification_status' => AssessmentResult::STATUS_UNAVAILABLE,
         ], $overrides));
+    }
+
+    /**
+     * A minimal valid verdict()->create() payload: the teacher accepted the AI's
+     * reading as it stands. No final_* column is set, so the weakness still
+     * comes from the model through Assessment::weaknessOutcome().
+     */
+    protected function acceptedVerdict(array $overrides = []): array
+    {
+        return array_merge([
+            'decision' => AssessmentVerdict::DECISION_ACCEPTED,
+            'decided_by' => User::factory()->create(['role' => User::ROLE_TEACHER])->id,
+            'decided_at' => now(),
+        ], $overrides);
     }
 
     /** Flask up or down, per part: transcription and the classifier. */

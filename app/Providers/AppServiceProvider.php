@@ -33,6 +33,14 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('partials.pagination');
         Paginator::defaultSimpleView('partials.pagination');
 
+        // A batch keeps its own status true to its entries without the browser:
+        // the board's poll only reads, so a batch that finishes overnight is
+        // already completed when the teacher comes back. Both observers return
+        // at once for anything that is not a batch entry, so the single-child
+        // flow costs one null check.
+        \App\Models\Assessment::observe(\App\Observers\AssessmentObserver::class);
+        \App\Models\AssessmentVerdict::observe(\App\Observers\AssessmentVerdictObserver::class);
+
         // Users are found by the blind index of their encrypted email.
         Auth::provider('blind_eloquent', fn ($app, array $config) => new \App\Auth\BlindIndexUserProvider($app['hash'], $config['model']));
 

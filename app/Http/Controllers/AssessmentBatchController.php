@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Assessment;
 use App\Models\AssessmentBatch;
+use App\Services\AnalysisQueueEstimator;
+use App\Services\BatchEntryState;
 use App\Services\BatchRosterBuilder;
 use App\Support\Directory;
 use App\Traits\AuthorizesLearnerAccess;
@@ -26,8 +28,9 @@ class AssessmentBatchController extends Controller
         return view('assessments.batch.create', compact('learners', 'classes', 'maxLearners'));
     }
 
-    // Declared, not built: the routes resolve but answer 501. Task 7 owns board, Task 8 poll, Task 9 entry, uploadAudio and answers, Task 10 send and
-    // sendAll, Task 11 cancel. Each task replaces its own body.
+    // Declared, not built: the remaining routes resolve but answer 501. Task 9 owns entry, uploadAudio, answers, send and
+    // sendAll, Task 11 cancel. Each task replaces its own body. The board renders Send all ready already, because poll()
+    // must report the count, but the control is inert until sendAll() exists.
 
     public function store(Request $request)
     {
@@ -60,12 +63,85 @@ class AssessmentBatchController extends Controller
 
     public function board(AssessmentBatch $batch)
     {
-        abort(501);
+        $this->authorizeBatch($batch);
+
+        $entries = $this->boardEntries($batch);
+        $states = $entries->mapWithKeys(fn (Assessment $entry) => [$entry->id => BatchEntryState::for($entry)]);
+
+        return view('assessments.batch.board', [
+            'batch' => $batch,
+            'entries' => $entries,
+            'states' => $states,
+            'estimate' => app(AnalysisQueueEstimator::class)->forBatch($batch),
+            'readyToSend' => $this->readyToSend($states),
+        ]);
     }
 
+    /**
+     * Strictly read-only. Nothing here writes: the batch's own status is kept
+     * true by AssessmentObserver, so a batch that finishes while the teacher is
+     * away is already correct when they come back. A status that only updated
+     * while someone was looking at it would be a rendering artefact.
+     */
     public function poll(AssessmentBatch $batch)
     {
-        abort(501);
+        $this->authorizeBatch($batch);
+
+        $states = $this->boardEntries($batch)
+            ->mapWithKeys(fn (Assessment $entry) => [$entry->id => BatchEntryState::for($entry)]);
+
+        return response()->json([
+            'entries' => $states,
+            'batch_status' => $batch->status,
+            'estimate' => app(AnalysisQueueEstimator::class)->forBatch($batch),
+            'ready_to_send' => $this->readyToSend($states),
+        ]);
+    }
+
+    /** The batch is the teacher's own board; an admin may look at any of them. */
+    private function authorizeBatch(AssessmentBatch $batch): void
+    {
+        $user = auth()->user();
+
+        abort_unless($user->isAdmin() || $batch->teacher_id === $user->id, 403, 'This batch is not yours.');
+    }
+
+    /**
+     * The entries whose child the batch's teacher can still reach.
+     *
+     * Scoped against the teacher who owns the batch rather than the auth guard,
+     * so an admin looking on sees exactly the board the teacher sees. A child
+     * who has moved to another class simply drops off the board instead of
+     * crashing it.
+     */
+    private function boardEntries(AssessmentBatch $batch)
+    {
+        $teacher = $batch->teacher;
+
+        if (! $teacher) {
+            return collect();
+        }
+
+        return $batch->entries()
+            ->whereIn('learner_id', $teacher->accessibleLearnersQuery()->select('learners.id'))
+            ->with(['learner', 'material', 'result', 'verdict'])
+            ->orderBy('id')
+            ->get()
+            // Same ordering as every other learner list in the app.
+            ->sortBy(fn (Assessment $entry) => Directory::key($entry->learner?->last_name)
+                . ' ' . Directory::key($entry->learner?->first_name))
+            ->values();
+    }
+
+    /**
+     * How many cards Send all ready would actually release: a recorded card
+     * whose Send is offered. One still missing its comprehension answers is
+     * recorded but not ready, and counting it would promise a send that the
+     * lane would refuse.
+     */
+    private function readyToSend($states): int
+    {
+        return $states->filter(fn (array $state) => $state['chip'] === 'recorded' && $state['action'] !== null)->count();
     }
 
     public function entry(AssessmentBatch $batch, Assessment $assessment)

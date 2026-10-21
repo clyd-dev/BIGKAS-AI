@@ -5,9 +5,9 @@
 @section('content')
 
     {{-- Active Assessment Alert --}}
-    @if($activeSession)
+    @if($activeSession && $activeSession->assessment_id)
         <div class="kid-card kid-card-colored kid-card-pink mb-3" style="cursor: pointer;"
-             onclick="window.location='{{ route('student.assessment.show', $activeSession) }}'">
+             onclick="window.location='{{ route('student.assessment.read', $activeSession->assessment_id) }}'">
             <div class="d-flex align-items-center gap-3">
                 <div style="font-size: 2.5rem;">📝</div>
                 <div class="flex-grow-1">

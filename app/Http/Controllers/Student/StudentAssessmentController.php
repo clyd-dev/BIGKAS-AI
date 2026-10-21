@@ -16,6 +16,8 @@ class StudentAssessmentController extends Controller
         $learner = $request->attributes->get('learner');
         $assessment = \App\Models\Assessment::where('learner_id', $learner->id)
             ->where('status', \App\Models\Assessment::STATUS_PENDING)
+            // A cancelled batch's entries are no longer offered to the child.
+            ->whereDoesntHave('batch', fn ($b) => $b->where('status', \App\Models\AssessmentBatch::STATUS_CANCELLED))
             ->latest()
             ->first();
 
@@ -29,7 +31,9 @@ class StudentAssessmentController extends Controller
     public function read(Request $request, \App\Models\Assessment $assessment)
     {
         $learner = $request->attributes->get('learner');
-        if ($assessment->learner_id !== $learner->id || $assessment->status !== \App\Models\Assessment::STATUS_PENDING) {
+        if ($assessment->learner_id !== $learner->id
+            || $assessment->status !== \App\Models\Assessment::STATUS_PENDING
+            || $this->batchClosed($assessment)) {
             return redirect()->route('student.dashboard')->with('error', 'No pending assessment found.');
         }
 
@@ -47,11 +51,11 @@ class StudentAssessmentController extends Controller
     public function start(Request $request, \App\Models\Assessment $assessment)
     {
         $learner = $request->attributes->get('learner');
-        if ($assessment->learner_id !== $learner->id) {
+        if ($assessment->learner_id !== $learner->id || $this->batchClosed($assessment)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        if ($assessment->status === \App\Models\Assessment::STATUS_PENDING) {
+        if ($assessment->status ===\App\Models\Assessment::STATUS_PENDING) {
             $assessment->update(['status' => \App\Models\Assessment::STATUS_RECORDING]);
         }
         return response()->json(['success' => true]);
@@ -60,7 +64,7 @@ class StudentAssessmentController extends Controller
     public function uploadAudio(Request $request, \App\Models\Assessment $assessment)
     {
         $learner = $request->attributes->get('learner');
-        if ($assessment->learner_id !== $learner->id) {
+        if ($assessment->learner_id !== $learner->id || $this->batchClosed($assessment)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -78,11 +82,35 @@ class StudentAssessmentController extends Controller
         $filename = "assessment_{$assessment->id}_student_{$learner->id}." . ($file->getClientOriginalExtension() ?: 'webm');
         $path = $file->storeAs('assessments/audio', $filename, 'public');
 
-        $assessment->update([
-            'audio_file' => $path,
-            'status' => \App\Models\Assessment::STATUS_PROCESSING
-        ]);
+        if ($assessment->batch_id !== null) {
+            // A batch entry rests at `recorded` for the teacher to hear and send,
+            // exactly as when the teacher records it (AssessmentBatchController::
+            // keepRecording()). `processing` would be claimed by the rescore lane
+            // fifteen minutes later, sending the reading without the teacher.
+            $assessment->forceFill([
+                'audio_file' => $path,
+                'status' => \App\Models\Assessment::STATUS_PENDING,
+                'submitted_for_analysis_at' => null,
+                'analysis_started_at' => null,
+                'analysis_duration_ms' => null,
+            ])->save();
+        } else {
+            $assessment->update([
+                'audio_file' => $path,
+                'status' => \App\Models\Assessment::STATUS_PROCESSING
+            ]);
+        }
 
         return response()->json(['success' => true, 'message' => 'Audio uploaded successfully.']);
+    }
+
+    /**
+     * A batch entry whose batch the teacher has cancelled admits no child. An
+     * entry outside any batch is never closed by this.
+     */
+    private function batchClosed(\App\Models\Assessment $assessment): bool
+    {
+        return $assessment->batch_id !== null
+            && $assessment->batch?->status === \App\Models\AssessmentBatch::STATUS_CANCELLED;
     }
 }

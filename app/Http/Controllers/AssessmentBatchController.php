@@ -317,8 +317,8 @@ class AssessmentBatchController extends Controller
             'material' => $entry->material ?? $batch->defaultMaterial,
             'questions' => $questions,
             'answers' => $entry->comprehensionAnswers,
-            // Read, never issued: Task 10 owns giving every batch entry a
-            // session. Until then this is simply null and the panel says so.
+            // Issued with the batch by BatchRosterBuilder, one per entry; only
+            // a batch made before join codes existed has none, and the panel says so.
             'session' => AssessmentSession::where('assessment_id', $entry->getKey())->latest('id')->first(),
         ]);
     }

@@ -74,6 +74,14 @@
                         No passage chosen yet — pick one when you conduct this reading.
                     @endif
                 </p>
+                {{-- The other route, always on offer: the child's own join code. --}}
+                @php $joinCode = \App\Models\AssessmentSession::where('assessment_id', $entry->getKey())->latest('id')->value('session_code'); @endphp
+                @if($joinCode)
+                    <p class="small mb-0" data-join-code>
+                        <span class="text-muted">Join code:</span>
+                        <span class="fw-bold font-monospace text-primary">{{ $joinCode }}</span>
+                    </p>
+                @endif
             @endif
 
             @if($state['playable'])

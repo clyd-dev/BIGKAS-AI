@@ -35,7 +35,7 @@ class AnalysisQueueEstimator
     public function typicalSeconds(): float
     {
         $ms = Assessment::whereNotNull('analysis_duration_ms')
-            ->orderByDesc('id')
+            ->orderByDesc('analysis_started_at')
             ->limit(self::WINDOW)
             ->pluck('analysis_duration_ms')
             ->sort()
@@ -53,13 +53,15 @@ class AnalysisQueueEstimator
 
     /**
      * @return array{remaining: int, ahead: int, seconds: int}
-     *   remaining: this batch's entries still due a score;
-     *   ahead: other work due before this batch's oldest due entry;
+     *   remaining: this batch's entries still owed a score (including the one being scored now);
+     *   ahead: other work owed a score before this batch's oldest due entry;
      *   seconds: estimated wait until this batch is done (0 when nothing is owed).
      */
     public function forBatch(AssessmentBatch $batch): array
     {
-        $mine = $this->queue->due()->where('batch_id', $batch->id);
+        // waiting(), not due(): rescore() stamps last_rescore_at before scoring,
+        // so due() drops the entry in flight and the wait would read as zero.
+        $mine = $this->queue->waiting()->where('batch_id', $batch->id);
 
         $remaining = (clone $mine)->count();
         $oldest = (clone $mine)->min('id');
@@ -68,7 +70,7 @@ class AnalysisQueueEstimator
             return ['remaining' => 0, 'ahead' => 0, 'seconds' => 0];
         }
 
-        $ahead = $this->queue->due()
+        $ahead = $this->queue->waiting()
             ->where('id', '<', $oldest)
             ->where(fn ($q) => $q->whereNull('batch_id')->orWhere('batch_id', '!=', $batch->id))
             ->count();

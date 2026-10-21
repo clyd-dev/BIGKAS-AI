@@ -31,8 +31,8 @@ class AnalysisQueueEstimatorTest extends TestCase
 
     public function test_the_typical_duration_is_the_median_of_recent_runs(): void
     {
-        foreach ([60_000, 120_000, 300_000] as $ms) {
-            Assessment::factory()->create(['analysis_duration_ms' => $ms]);
+        foreach ([60_000, 120_000, 300_000] as $i => $ms) {
+            Assessment::factory()->create(['analysis_duration_ms' => $ms, 'analysis_started_at' => now()->subMinutes(10 - $i)]);
         }
 
         $this->assertSame(120.0, app(AnalysisQueueEstimator::class)->typicalSeconds());
@@ -45,11 +45,27 @@ class AnalysisQueueEstimatorTest extends TestCase
 
     public function test_only_the_last_twenty_runs_count(): void
     {
-        foreach (range(1, 5) as $i) {
-            Assessment::factory()->create(['analysis_duration_ms' => 1_000_000]);   // old and slow
+        // Newest first: 5 quick runs, 15 middling, then 10 very old slow ones.
+        // Only a window of 20 puts the median on a middling run.
+        $runs = [[5, 10_000], [15, 100_000], [10, 1_000_000]];
+        $age = 0;
+        foreach ($runs as [$count, $ms]) {
+            foreach (range(1, $count) as $i) {
+                Assessment::factory()->create(['analysis_duration_ms' => $ms, 'analysis_started_at' => now()->subMinutes(++$age)]);
+            }
+        }
+
+        $this->assertSame(100.0, app(AnalysisQueueEstimator::class)->typicalSeconds());
+    }
+
+    public function test_the_window_follows_when_runs_happened_not_row_order(): void
+    {
+        // Re-analysed rows keep their low ids but hold the newest measurements.
+        foreach (range(1, 11) as $i) {
+            Assessment::factory()->create(['analysis_duration_ms' => 10_000, 'analysis_started_at' => now()->subMinutes($i)]);
         }
         foreach (range(1, 20) as $i) {
-            Assessment::factory()->create(['analysis_duration_ms' => 10_000]);
+            Assessment::factory()->create(['analysis_duration_ms' => 200_000, 'analysis_started_at' => now()->subHours($i)]);
         }
 
         $this->assertSame(10.0, app(AnalysisQueueEstimator::class)->typicalSeconds());
@@ -57,8 +73,8 @@ class AnalysisQueueEstimatorTest extends TestCase
 
     public function test_the_median_of_an_even_number_of_runs_is_the_middle_pair_average(): void
     {
-        foreach ([60_000, 100_000] as $ms) {
-            Assessment::factory()->create(['analysis_duration_ms' => $ms]);
+        foreach ([60_000, 100_000] as $i => $ms) {
+            Assessment::factory()->create(['analysis_duration_ms' => $ms, 'analysis_started_at' => now()->subMinutes(10 - $i)]);
         }
 
         $this->assertSame(80.0, app(AnalysisQueueEstimator::class)->typicalSeconds());
@@ -91,6 +107,25 @@ class AnalysisQueueEstimatorTest extends TestCase
         // 1 ahead + 2 of its own, at the 150 s seed, plus one tick of latency.
         $this->assertSame(1, $estimate['ahead']);
         $this->assertSame((int) ceil(3 * 150.0 + $estimator->tickSeconds()), $estimate['seconds']);
+    }
+
+    public function test_an_entry_being_scored_right_now_still_counts_as_remaining(): void
+    {
+        $batch = AssessmentBatch::factory()->create();
+        $this->sentBatchEntry(['batch_id' => $batch->id, 'last_rescore_at' => now(), 'status' => Assessment::STATUS_PROCESSING]);
+
+        $estimate = app(AnalysisQueueEstimator::class)->forBatch($batch->fresh());
+
+        $this->assertSame(1, $estimate['remaining']);
+        $this->assertGreaterThan(0, $estimate['seconds']);
+    }
+
+    public function test_an_entry_that_used_up_its_attempts_is_not_waited_for(): void
+    {
+        $batch = AssessmentBatch::factory()->create();
+        $this->sentBatchEntry(['batch_id' => $batch->id, 'rescore_attempts' => 3]);
+
+        $this->assertSame(0, app(AnalysisQueueEstimator::class)->forBatch($batch->fresh())['remaining']);
     }
 
     public function test_an_empty_or_fully_scored_batch_has_nothing_to_wait_for(): void

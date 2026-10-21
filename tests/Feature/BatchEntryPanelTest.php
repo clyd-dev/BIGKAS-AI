@@ -482,6 +482,86 @@ class BatchEntryPanelTest extends TestCase
         app(SpeechToTextService::class)->transcribe($entry->getAudioPath(), 'en');
     }
 
+    /**
+     * The same honesty rule one step further along: a scored reading's answers
+     * are part of its result.
+     *
+     * ComprehensionService::record() replaces the previous attempt, but the
+     * comprehension score already written into the AssessmentResult is not
+     * recomputed - so new answers would leave the result reporting a figure the
+     * answer rows beside it no longer say, and the results screen would show
+     * one number while the answers show another. That stale number is a
+     * measurement about a child which someone may act on, so it is refused
+     * rather than recomputed: rewriting a measured result in place is exactly
+     * what no action on this board may do.
+     */
+    public function test_answers_cannot_be_changed_once_the_reading_is_analysed(): void
+    {
+        $teacher = $this->teacher();
+        $entry = $this->comprehensionEntry($teacher, ['submitted_for_analysis_at' => now()->subHour()], questions: 2);
+
+        // Answered correctly, then scored.
+        $this->actingAs($teacher)->postJson(
+            route('assessments.batch.answers', [$entry->batch_id, $entry->id]),
+            ['answers' => $this->allAnswers($entry, 'A')]
+        )->assertOk();
+
+        $entry->createResult($this->classifiedAnalysis(['comprehension_score' => 100]));
+        $entry = $entry->fresh(['result', 'verdict', 'material', 'learner']);
+
+        $chip = BatchEntryState::for($entry)['chip'];
+        $this->assertSame('needs verdict', $chip, 'The fixture must really be a measured reading.');
+        $this->assertSame(100.0, $entry->comprehensionScore());
+
+        // Re-answering with the wrong option: refused, and nothing moves.
+        $this->actingAs($teacher)->postJson(
+            route('assessments.batch.answers', [$entry->batch_id, $entry->id]),
+            ['answers' => $this->allAnswers($entry, 'B')]
+        )->assertStatus(422);
+
+        $fresh = $entry->fresh(['result', 'verdict', 'material', 'learner']);
+
+        $this->assertCount(2, $fresh->comprehensionAnswers()->get());
+        $this->assertSame(100.0, $fresh->comprehensionScore());
+        $this->assertSame(0, $fresh->comprehensionAnswers()->where('is_correct', false)->count());
+        $this->assertSame($entry->result->id, $fresh->result->id);
+        $this->assertSame($entry->result->comprehension_score, $fresh->result->comprehension_score);
+        $this->assertSame($chip, BatchEntryState::for($fresh)['chip']);
+    }
+
+    /**
+     * The other side of that line: the gate is "a result exists", never
+     * submitted_for_analysis_at.
+     *
+     * An entry waiting in the lane has no result to contradict - the scorer
+     * reads the answers when it gets to it - so changing them while it waits is
+     * harmless, and sometimes exactly what a teacher needs.
+     */
+    public function test_a_sent_but_unscored_entry_still_accepts_answers(): void
+    {
+        $teacher = $this->teacher();
+        $entry = $this->comprehensionEntry($teacher, ['submitted_for_analysis_at' => now()->subHour()], questions: 2);
+
+        $this->assertNull($entry->result, 'The fixture must really be sent and unscored.');
+        $this->assertTrue(Assessment::awaitingRescore()->whereKey($entry->id)->exists());
+        $this->assertSame('queued', BatchEntryState::for($entry)['chip']);
+
+        $this->actingAs($teacher)->postJson(
+            route('assessments.batch.answers', [$entry->batch_id, $entry->id]),
+            ['answers' => $this->allAnswers($entry, 'B')]
+        )->assertOk()->assertJsonPath('comprehension_score', 0);
+
+        // Changed again while it is still waiting: still accepted.
+        $this->actingAs($teacher)->postJson(
+            route('assessments.batch.answers', [$entry->batch_id, $entry->id]),
+            ['answers' => $this->allAnswers($entry, 'A')]
+        )->assertOk()->assertJsonPath('comprehension_score', 100);
+
+        $entry->refresh();
+        $this->assertSame(100.0, $entry->comprehensionScore());
+        $this->assertCount(2, $entry->comprehensionAnswers()->get());
+    }
+
     // ── Send all ──────────────────────────────────────────────────────
 
     public function test_send_all_sends_every_eligible_recorded_entry(): void

@@ -332,10 +332,37 @@ class AssessmentBatchController extends Controller
      * Through ComprehensionService::record() and nothing else, so a score
      * cannot be computed two different ways (see that class). An incomplete set
      * is refused by the service with a 422, and nothing is stored.
+     *
+     * Refused once a result exists, for the same reason a re-record is:
+     * record() replaces the previous attempt, but the comprehension score
+     * already written into the AssessmentResult is not recomputed - so new
+     * answers would leave the result reporting a figure that no longer matches
+     * the answer rows stored beside it, and the results screen would show one
+     * number while the answers say another. That stale number is a measurement
+     * about a child which someone may act on.
+     *
+     * Refused, not recomputed: recomputing means rewriting a measured result in
+     * place, and no action on this board may destroy or silently alter a
+     * measured reading.
+     *
+     * The gate is strictly "a result exists", never submitted_for_analysis_at.
+     * An entry waiting in the lane has no result to contradict - the scorer
+     * reads the answers when it gets to it - so changing them while it waits is
+     * harmless, and sometimes exactly what a teacher needs.
      */
     public function answers(Request $request, AssessmentBatch $batch, Assessment $assessment)
     {
         $entry = $this->panelEntry($batch, $assessment);
+
+        if ($entry->result !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This reading has already been analysed, so its comprehension answers cannot be '
+                    . 'changed - the score in the result was worked out from the answers that are stored. '
+                    . 'Open the result to analyse the saved recording again, or take this child out of the batch '
+                    . 'and start a new reading for them.',
+            ], 422);
+        }
 
         $request->validate(['answers' => 'required|array']);
 

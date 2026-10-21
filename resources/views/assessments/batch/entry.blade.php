@@ -144,6 +144,42 @@
                             <span class="badge bg-warning text-dark">Required before sending</span>
                         @endif
                     </div>
+                    @if($entry->result)
+                        {{--
+                            Analysed. The score in the result was worked out from
+                            these answers, and changing them would leave that
+                            figure reporting something the answer rows no longer
+                            say - so answers() refuses, and the form is not
+                            offered rather than offered and then refused after
+                            the child has already answered. What they answered is
+                            still shown, read-only.
+                        --}}
+                        <div class="card-body">
+                            <p class="small text-muted">
+                                This reading has been analysed, so these answers are now part of its result and
+                                cannot be changed. To score the saved recording again, open the result.
+                            </p>
+                            @if($answers->isNotEmpty())
+                                <ol class="mb-0">
+                                    @foreach($answers as $answer)
+                                        <li class="mb-2">
+                                            <div>{{ $answer->question_text }}</div>
+                                            <div class="small">
+                                                @if($answer->is_correct)
+                                                    <span class="text-success"><i class="bi bi-check-circle me-1"></i>{{ $answer->selected_text }}</span>
+                                                @else
+                                                    <span class="text-danger"><i class="bi bi-x-circle me-1"></i>{{ $answer->selected_text ?? 'No answer' }}</span>
+                                                    <span class="text-muted ms-2">Correct: {{ $answer->correct_text }}</span>
+                                                @endif
+                                            </div>
+                                        </li>
+                                    @endforeach
+                                </ol>
+                            @else
+                                <p class="small text-muted mb-0">No answers were stored for this reading.</p>
+                            @endif
+                        </div>
+                    @else
                     <div class="card-body" data-answers>
                         <p class="small text-muted">
                             Ask each question aloud and mark what {{ $firstName }} answered — or hand them the
@@ -173,6 +209,7 @@
                         </button>
                         <p class="small mb-0 mt-2" data-answers-message role="status" aria-live="polite"></p>
                     </div>
+                    @endif
                 </div>
             @endif
 

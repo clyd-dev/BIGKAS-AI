@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Assessment;
 use App\Models\AssessmentBatch;
 use App\Models\AssessmentSession;
+use App\Models\ComprehensionQuestion;
 use App\Models\Learner;
 use App\Models\ReadingMaterial;
 use App\Models\User;
@@ -12,6 +13,7 @@ use App\Services\BatchEntryState;
 use App\Services\BatchRosterBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\MakesBatchAssessments;
 use Tests\TestCase;
@@ -232,10 +234,245 @@ class BatchSelfRecordTest extends TestCase
         $code = fn ($e) => AssessmentSession::where('assessment_id', $e->id)->value('session_code');
 
         $this->actingAs($batch->teacher)->get(route('assessments.batch.entry', [$batch, $waiting]))
-            ->assertOk()->assertSee($code($waiting))->assertDontSee('No join code was issued');
+            ->assertOk()->assertSee($code($waiting))->assertDontSee('No session code was issued');
 
         $board = $this->actingAs($batch->teacher)->get(route('assessments.batch.board', $batch))->assertOk();
         $board->assertSee($code($waiting));
         $board->assertDontSee($code($recorded));
+    }
+
+    /**
+     * The board asks for the roster's join codes once, not once per card.
+     *
+     * Same shape as BatchBoardTest's rescore-lane count: listen for the queries
+     * that carry the lookup's own shape and compare a board of one against a
+     * board of fifteen.
+     */
+    public function test_the_board_s_join_codes_cost_the_same_however_many_children(): void
+    {
+        $teacher = $this->teacher();
+        $small = $this->batchOf($teacher, 1);
+        $large = $this->batchOf($teacher, 15);
+
+        $this->assertSame(
+            $this->codeQueryCount($teacher, $small),
+            $this->codeQueryCount($teacher, $large),
+            'rendering a board of fifteen costs the same number of session-code queries as a board of one'
+        );
+        $this->assertLessThanOrEqual(1, $this->codeQueryCount($teacher, $large));
+    }
+
+    /** How many queries one board render sends against assessment_sessions. */
+    private function codeQueryCount(User $teacher, AssessmentBatch $batch): int
+    {
+        $count = 0;
+
+        DB::listen(function ($query) use (&$count) {
+            if (str_contains($query->sql, 'assessment_sessions')) {
+                $count++;
+            }
+        });
+
+        $this->actingAs($teacher)->get(route('assessments.batch.board', $batch))->assertOk();
+
+        return $count;
+    }
+
+    // ── The door the child cannot push twice ──────────────────────────
+
+    /** A comprehension entry of this batch, analysed, with its answers stored. */
+    private function analysedComprehensionEntry(AssessmentBatch $batch): Assessment
+    {
+        $entry = $batch->entries[0];
+        $material = ReadingMaterial::factory()->create(['language' => 'en', 'grade_level' => 4]);
+        ComprehensionQuestion::create([
+            'material_id' => $material->id,
+            'question' => 'What colour is Max?',
+            'question_type' => 'literal',
+            'correct_answer' => 'Brown',
+            'option_a' => 'Brown',
+            'option_b' => 'Blue',
+            'sort_order' => 1,
+        ]);
+
+        $entry->forceFill([
+            'assessment_type' => Assessment::TYPE_COMPREHENSION,
+            'material_id' => $material->id,
+            'audio_file' => 'assessments/audio/first-take.webm',
+            'submitted_for_analysis_at' => now()->subHour(),
+            'status' => Assessment::STATUS_COMPLETED,
+        ])->save();
+        Storage::disk('public')->put('assessments/audio/first-take.webm', 'audio');
+
+        $entry = $entry->fresh();
+        $this->assertTrue($entry->needsComprehensionTest());
+
+        app(\App\Services\ComprehensionService::class)->record(
+            $entry,
+            $material->comprehensionQuestions()->pluck('id')->mapWithKeys(fn ($id) => [$id => 'A'])->all()
+        );
+        $entry->createResult($this->classifiedAnalysis(['comprehension_score' => 100]));
+
+        return $entry->fresh();
+    }
+
+    public function test_a_child_cannot_record_over_a_reading_that_has_been_analysed(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $this->analysedComprehensionEntry($batch);
+
+        $answersBefore = $entry->comprehensionAnswers()->orderBy('id')->get(['id', 'selected_option'])->toArray();
+        $this->assertNotEmpty($answersBefore);
+
+        $this->asChild($entry)->postJson(route('student.assessment.upload-audio', $entry), [
+            'audio' => $this->recording(),
+            'answers' => $entry->material->comprehensionQuestions()->pluck('id')
+                ->mapWithKeys(fn ($id) => [$id => 'B'])->all(),
+        ])->assertStatus(409);
+
+        $this->asChild($entry)->postJson(route('student.assessment.start', $entry))->assertStatus(409);
+
+        $after = $entry->fresh();
+        $this->assertSame('assessments/audio/first-take.webm', $after->audio_file);
+        $this->assertEquals($entry->submitted_for_analysis_at, $after->submitted_for_analysis_at);
+        $this->assertSame(Assessment::STATUS_COMPLETED, $after->status);
+        $this->assertSame(
+            $answersBefore,
+            $after->comprehensionAnswers()->orderBy('id')->get(['id', 'selected_option'])->toArray()
+        );
+    }
+
+    /**
+     * The result half of the guard, standing on its own.
+     *
+     * A single-child reading carries no batch and so is never "sent"; a result
+     * is the only thing between it and a direct POST. This is the hole the guard
+     * closes for the untouched single-child flow - nothing in its UI offers the
+     * recorder once a result is in place, because read() requires `pending`.
+     */
+    public function test_a_child_cannot_record_over_a_scored_single_child_reading(): void
+    {
+        $teacher = $this->teacher();
+        $learner = Learner::whereIn('class_id', $teacher->taughtClasses()->pluck('id'))->first();
+        $single = $this->assessmentWithAudio([
+            'learner_id' => $learner->id,
+            'assessor_id' => $teacher->id,
+            'status' => Assessment::STATUS_COMPLETED,
+        ]);
+        $single->createResult($this->classifiedAnalysis());
+        $single = $single->fresh();
+
+        $this->assertNull($single->batch_id);
+        $this->assertNull($single->submitted_for_analysis_at);
+
+        $this->withSession(['student_learner_id' => $learner->id])
+            ->postJson(route('student.assessment.upload-audio', $single), ['audio' => $this->recording()])
+            ->assertStatus(409);
+        $this->withSession(['student_learner_id' => $learner->id])
+            ->postJson(route('student.assessment.start', $single))
+            ->assertStatus(409);
+
+        $after = $single->fresh();
+        $this->assertSame($single->audio_file, $after->audio_file);
+        $this->assertSame(Assessment::STATUS_COMPLETED, $after->status);
+
+        // And the reading screen was never on offer in the first place: the
+        // single-child UI cannot reach the guard, so nothing regresses.
+        $this->withSession(['student_learner_id' => $learner->id])
+            ->get(route('student.assessment.read', $single))
+            ->assertRedirect(route('student.dashboard'));
+    }
+
+    public function test_a_child_cannot_record_over_a_reading_the_teacher_has_sent(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $batch->entries[0];
+
+        $this->asChild($entry)->postJson(route('student.assessment.upload-audio', $entry), ['audio' => $this->recording()])
+            ->assertOk();
+        $this->actingAs($batch->teacher)->postJson(route('assessments.batch.send', [$batch, $entry]))->assertOk();
+
+        $entry = $entry->fresh();
+        $sentAt = $entry->submitted_for_analysis_at;
+        $this->assertNotNull($sentAt);
+
+        $this->asChild($entry)->postJson(route('student.assessment.upload-audio', $entry), ['audio' => $this->recording()])
+            ->assertStatus(409);
+        $this->asChild($entry)->postJson(route('student.assessment.start', $entry))->assertStatus(409);
+
+        $after = $entry->fresh();
+        $this->assertEquals($sentAt, $after->submitted_for_analysis_at);
+        $this->assertSame($entry->audio_file, $after->audio_file);
+    }
+
+    /** The guard must not over-refuse: a noisy first take is re-recordable. */
+    public function test_a_child_whose_reading_has_not_been_sent_can_record_again(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $batch->entries[0];
+
+        $this->asChild($entry)->postJson(route('student.assessment.upload-audio', $entry), ['audio' => $this->recording()])
+            ->assertOk();
+        $this->assertNotNull($entry->fresh()->audio_file);
+
+        $this->asChild($entry)->postJson(route('student.assessment.start', $entry))->assertOk();
+        $this->asChild($entry)->postJson(route('student.assessment.upload-audio', $entry), ['audio' => $this->recording()])
+            ->assertOk();
+
+        $after = $entry->fresh();
+        $this->assertNotNull($after->audio_file);
+        Storage::disk('public')->assertExists($after->audio_file);
+        $this->assertNull($after->submitted_for_analysis_at);
+    }
+
+    // ── The dashboard card ────────────────────────────────────────────
+
+    public function test_the_dashboard_card_shows_for_a_reading_that_is_really_waiting(): void
+    {
+        // A batch child.
+        $batch = $this->batchOf($this->teacher());
+        $entry = $batch->entries[0];
+        $this->asChild($entry)->get(route('student.dashboard'))
+            ->assertOk()->assertSee('Reading Assessment Ready!');
+
+        // And a single-child live session, the untouched flow.
+        $teacher = $this->otherTeacher();
+        $learner = Learner::whereIn('class_id', $teacher->taughtClasses()->pluck('id'))->first();
+        $single = Assessment::factory()->create([
+            'learner_id' => $learner->id,
+            'assessor_id' => $teacher->id,
+            'status' => Assessment::STATUS_PENDING,
+        ]);
+        AssessmentSession::create([
+            'assessment_id' => $single->id,
+            'learner_id' => $learner->id,
+            'teacher_id' => $teacher->id,
+            'material_id' => $single->material_id,
+            'session_code' => AssessmentSession::generateCode(),
+            'status' => 'waiting',
+            'started_at' => now(),
+        ]);
+
+        $this->withSession(['student_learner_id' => $learner->id])->get(route('student.dashboard'))
+            ->assertOk()->assertSee('Reading Assessment Ready!');
+    }
+
+    public function test_the_dashboard_card_goes_away_once_there_is_nothing_to_read(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $analysed = $this->analysedComprehensionEntry($batch);
+
+        $this->asChild($analysed)->get(route('student.dashboard'))
+            ->assertOk()->assertDontSee('Reading Assessment Ready!');
+
+        // The other child's reading is still pending, but the batch is cancelled.
+        $other = $batch->entries[1];
+        $this->asChild($other)->get(route('student.dashboard'))
+            ->assertOk()->assertSee('Reading Assessment Ready!');
+
+        $batch->update(['status' => AssessmentBatch::STATUS_CANCELLED]);
+
+        $this->asChild($other)->get(route('student.dashboard'))
+            ->assertOk()->assertDontSee('Reading Assessment Ready!');
     }
 }

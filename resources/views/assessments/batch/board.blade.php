@@ -60,7 +60,7 @@
     @else
         <div class="row g-3" id="batchBoardGrid">
             @foreach($entries as $entry)
-                @include('assessments.batch._card', ['batch' => $batch, 'entry' => $entry, 'state' => $states[$entry->id]])
+                @include('assessments.batch._card', ['batch' => $batch, 'entry' => $entry, 'state' => $states[$entry->id], 'joinCode' => $joinCodes[$entry->id] ?? null])
             @endforeach
         </div>
     @endif

@@ -3,9 +3,11 @@
     and sends it.
 
     Two ways to read are offered side by side, not chosen at setup: the teacher
-    can conduct the reading on this device, or hand the child a join code to
-    read on their own. Which one suits a child is known in the moment, not an
-    hour earlier.
+    can conduct the reading on this device, or the child can read it on their own
+    device after signing in to the student portal with their PIN. Which one suits
+    a child is known in the moment, not an hour earlier. The session code below
+    is a reference for the teacher’s records, never a way in: no screen in
+    this application accepts a code.
 
     The chip, the label and the one action come from the board's own
     _card.blade.php, included here rather than written again, so the panel can
@@ -35,13 +37,13 @@
     <x-page-header :title="$childName" icon="bi-mic"
                    :back="route('assessments.batch.board', $batch)"
                    :back-label="$batch->title ?: 'Group Assessment'"
-                   :subtitle="'Record this reading here, or give ' . $firstName . ' the join code to read on their own device.'" />
+                   :subtitle="'Record this reading here, or let ' . $firstName . ' read it on their own device after signing in with their PIN.'" />
 
     <div class="row g-3">
         <div class="col-lg-5">
             {{-- What the board says about this child, rendered by the board's own card. --}}
             <div class="row g-3 mb-3">
-                @include('assessments.batch._card', ['batch' => $batch, 'entry' => $entry, 'state' => $state])
+                @include('assessments.batch._card', ['batch' => $batch, 'entry' => $entry, 'state' => $state, 'joinCode' => $session?->session_code])
             </div>
 
             <div class="card border-0 shadow-sm mb-3">
@@ -113,20 +115,23 @@
                 <div class="card-body">
                     @if($session)
                         <p class="small text-muted mb-2">
-                            {{ $firstName }} signs in to the student portal and enters this code to read on their
-                            own device. The recording lands on this panel either way.
+                            {{ $firstName }} signs in to the student portal with their PIN, and this reading is
+                            waiting on their dashboard — there is no code for them to type. The code below
+                            identifies this session in your own records. The recording lands on this panel
+                            either way.
                         </p>
                         <div class="d-flex align-items-baseline gap-2">
-                            <span class="small text-muted">Join code:</span>
+                            <span class="small text-muted">Session code (for your records):</span>
                             <span class="fs-4 fw-bold text-primary font-monospace">{{ $session->session_code }}</span>
                         </div>
                     @else
                         {{-- Every entry in a batch is issued a code when the batch is
                              created, so this is only ever empty for a batch made
-                             before join codes existed. --}}
+                             before session codes existed. The code is only a
+                             reference, so its absence costs the child nothing. --}}
                         <p class="small text-muted mb-0">
-                            No join code was issued for {{ $firstName }}, so this reading is conducted
-                            here on your device.
+                            No session code was issued for {{ $firstName }}. They can still sign in with their
+                            PIN and read on their own device, or you can conduct this reading here.
                         </p>
                     @endif
                 </div>

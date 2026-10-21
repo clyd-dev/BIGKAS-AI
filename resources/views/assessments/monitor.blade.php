@@ -25,7 +25,7 @@
                             {{ ucfirst($session->status) }}
                         </span>
                         <div class="mt-1">
-                            <small class="text-muted">Session Code:</small>
+                            <small class="text-muted">Session code (for your records):</small>
                             <span class="fw-bold text-primary">{{ $session->session_code }}</span>
                         </div>
                     </div>

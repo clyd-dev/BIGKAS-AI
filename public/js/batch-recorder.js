@@ -229,7 +229,7 @@
 
     function start() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
-            say(message, 'This browser cannot record audio. Use the join code so the child can read on their own device.', 'text-danger');
+            say(message, 'This browser cannot record audio. Have the child sign in to the student portal with their PIN and read on their own device.', 'text-danger');
 
             return;
         }

@@ -4,10 +4,12 @@
 
 @section('content')
 
-    {{-- Active Assessment Alert --}}
-    @if($activeSession && $activeSession->assessment_id)
+    {{-- Active Assessment Alert. Offered on the reading, not on the session:
+         a session is never completed, so it would promise a reading that has
+         already been read, or one in a batch the teacher has cancelled. --}}
+    @if($pendingAssessment)
         <div class="kid-card kid-card-colored kid-card-pink mb-3" style="cursor: pointer;"
-             onclick="window.location='{{ route('student.assessment.read', $activeSession->assessment_id) }}'">
+             onclick="window.location='{{ route('student.assessment.read', $pendingAssessment->id) }}'">
             <div class="d-flex align-items-center gap-3">
                 <div style="font-size: 2.5rem;">📝</div>
                 <div class="flex-grow-1">

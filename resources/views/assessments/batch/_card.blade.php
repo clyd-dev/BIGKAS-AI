@@ -2,7 +2,10 @@
     One child's card. The board and Task 9's panel share this one rendering, so a
     chip or an action can never say two different things about the same child.
 
-    Expects: $batch, $entry, $state (App\Services\BatchEntryState::for($entry)).
+    Expects: $batch, $entry, $state (App\Services\BatchEntryState::for($entry)),
+    and $joinCode - that child’s session code, handed in by whoever includes this
+    (the board passes its own one-query map, the panel passes its $session), so
+    the card never runs a query of its own.
 
     The whole card is clickable through a stretched link, so the buttons inside
     it sit above that link rather than nested inside an anchor.
@@ -74,11 +77,11 @@
                         No passage chosen yet — pick one when you conduct this reading.
                     @endif
                 </p>
-                {{-- The other route, always on offer: the child's own join code. --}}
-                @php $joinCode = \App\Models\AssessmentSession::where('assessment_id', $entry->getKey())->latest('id')->value('session_code'); @endphp
-                @if($joinCode)
+                {{-- The child's own code, for the teacher's records. It is not a
+                     way in: no screen in this application accepts a code. --}}
+                @if($joinCode ?? null)
                     <p class="small mb-0" data-join-code>
-                        <span class="text-muted">Join code:</span>
+                        <span class="text-muted">Session code (for your records):</span>
                         <span class="fw-bold font-monospace text-primary">{{ $joinCode }}</span>
                     </p>
                 @endif

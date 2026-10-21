@@ -81,7 +81,28 @@ class AssessmentBatchController extends Controller
             'states' => $states,
             'estimate' => $this->estimator->forBatch($batch),
             'readyToSend' => $this->readyToSend($states),
+            'joinCodes' => $this->joinCodes($entries),
         ]);
+    }
+
+    /**
+     * entry id => that child's join code, in one query for the whole roster.
+     *
+     * The card used to look its own code up, which cost a query per card on a
+     * board that is otherwise a single lane query. Ordered by id and keyed by
+     * assessment, so the newest session wins - the same code the panel shows.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    private function joinCodes($entries)
+    {
+        if ($entries->isEmpty()) {
+            return collect();
+        }
+
+        return AssessmentSession::whereIn('assessment_id', $entries->modelKeys())
+            ->orderBy('id')
+            ->pluck('session_code', 'assessment_id');
     }
 
     /**

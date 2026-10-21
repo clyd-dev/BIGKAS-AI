@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Assessment;
 use App\Models\AssessmentBatch;
+use App\Models\AssessmentSession;
 use App\Models\Learner;
 use App\Models\ReadingMaterial;
 use App\Models\User;
@@ -41,7 +42,7 @@ class BatchRosterBuilder
             ]);
 
             foreach ($input['entries'] as $entry) {
-                Assessment::create([
+                $assessment = Assessment::create([
                     'batch_id' => $batch->id,
                     'learner_id' => $entry['learner_id'],
                     'material_id' => $entry['material_id'] ?? $input['default_material_id'],
@@ -49,6 +50,22 @@ class BatchRosterBuilder
                     'language' => $input['language'],
                     'assessment_type' => $input['assessment_type'],
                     'status' => Assessment::STATUS_PENDING,
+                ]);
+
+                // A join code for every child, unconditionally: which route a
+                // child takes (the teacher's laptop or their own device) is
+                // decided in the moment, so the code is always there. It is the
+                // live single-child session AssessmentController::startSession()
+                // issues, made in bulk, and it shares this transaction - a
+                // failure anywhere leaves no batch, no entry and no code.
+                AssessmentSession::create([
+                    'assessment_id' => $assessment->id,
+                    'learner_id' => $assessment->learner_id,
+                    'teacher_id' => $teacher->id,
+                    'material_id' => $assessment->material_id,
+                    'session_code' => AssessmentSession::generateCode(),
+                    'status' => 'waiting',
+                    'started_at' => now(),
                 ]);
             }
 

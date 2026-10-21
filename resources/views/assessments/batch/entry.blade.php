@@ -121,11 +121,11 @@
                             <span class="fs-4 fw-bold text-primary font-monospace">{{ $session->session_code }}</span>
                         </div>
                     @else
-                        {{-- Issuing a session for every batch entry is Task 10's
-                             work; this panel only ever reads one. Until then say
-                             so plainly rather than show an empty code box. --}}
+                        {{-- Every entry in a batch is issued a code when the batch is
+                             created, so this is only ever empty for a batch made
+                             before join codes existed. --}}
                         <p class="small text-muted mb-0">
-                            No join code has been issued for {{ $firstName }} yet, so this reading is conducted
+                            No join code was issued for {{ $firstName }}, so this reading is conducted
                             here on your device.
                         </p>
                     @endif

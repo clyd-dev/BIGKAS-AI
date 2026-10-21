@@ -132,7 +132,7 @@ class BatchRosterBuilder
             // Grade policy: exact grade first; adjacent grades (±1) only when this
             // entry's own cross-grade fallback is ticked.
             $gradeDiff = abs($material->grade_level - $learner->grade_level);
-            if ($gradeDiff > 0 && empty($entry['allow_fallback'])) {
+            if ($gradeDiff > 0 && ! filter_var($entry['allow_fallback'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
                 $add("entries.$i.material_id", 'This material is for a different grade level. Pick a Grade ' . $learner->grade_level . ' material or choose a cross-grade fallback option.');
                 continue;
             }

@@ -210,8 +210,10 @@ class BatchRosterBuilderTest extends TestCase
 
         $errors = $this->errorsOf(fn () => app(BatchRosterBuilder::class)->build($teacher, $input));
 
-        // Byte-identical to AssessmentController::store(), which single-quotes the
-        // ’ escape and so ships it literally.
+        // Asserts the CORRECT wording (a real U+2019 apostrophe), not parity with
+        // AssessmentController::store(): that copy is single-quoted, so it renders a
+        // literal backslash-u2019. The divergence is deliberate and known; reconcile it
+        // on the controller side once the single-child flow may be touched.
         $this->assertSame(
             ['Cross-grade fallback is limited to one grade above or below the learner’s grade.'],
             $errors['entries.0.material_id']
@@ -359,5 +361,55 @@ class BatchRosterBuilderTest extends TestCase
             $this->assertSame($expected, $viaTrait, "trait: $name");
             $this->assertSame($viaTrait, $viaBuilder, "builder disagrees with trait: $name");
         }
+    }
+
+    public function test_a_fallback_tick_is_read_the_same_way_as_the_single_child_form(): void
+    {
+        $teacher = $this->teacher();
+        [$a] = $this->learnersOf($teacher);
+        $grade5 = ReadingMaterial::factory()->create(['grade_level' => 5]);
+
+        // What an HTML form can send; "false"/"off" are non-empty strings, so
+        // empty() would wrongly read them as ticked. Laravel's boolean() reads them false.
+        $shapes = ['absent' => [null, false], 'on' => ['on', true], '0' => ['0', false], 'false' => ['false', false], 'off' => ['off', false], '1' => ['1', true]];
+
+        foreach ($shapes as $name => [$value, $accepted]) {
+            $input = $this->input([$a], $grade5);
+            if ($name === 'absent') {
+                unset($input['entries'][0]['allow_fallback']);
+            } else {
+                $input['entries'][0]['allow_fallback'] = $value;
+            }
+
+            if ($accepted) {
+                $this->assertCount(1, app(BatchRosterBuilder::class)->build($teacher, $input)->entries, $name);
+            } else {
+                $errors = $this->errorsOf(fn () => app(BatchRosterBuilder::class)->build($teacher, $input));
+                $this->assertArrayHasKey('entries.0.material_id', $errors, $name);
+            }
+        }
+    }
+
+    public function test_a_failure_during_creation_rolls_back_the_batch_and_earlier_entries(): void
+    {
+        $teacher = $this->teacher();
+        $learners = $this->learnersOf($teacher);
+        $count = 0;
+        Assessment::creating(function () use (&$count) {
+            if (++$count === 2) {
+                throw new \RuntimeException('boom on the second entry');
+            }
+        });
+
+        try {
+            app(BatchRosterBuilder::class)->build($teacher, $this->input($learners));
+            $this->fail('Expected the creation failure to propagate.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('boom on the second entry', $e->getMessage());
+        }
+
+        $this->assertSame(2, $count);
+        $this->assertSame(0, AssessmentBatch::count());
+        $this->assertSame(0, Assessment::count());
     }
 }

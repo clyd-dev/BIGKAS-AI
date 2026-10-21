@@ -30,7 +30,7 @@ use App\Models\AssessmentResult;
  *   no audio_file                                       -> waiting
  *   no submitted_for_analysis_at, no result              -> recorded
  *   rescore_attempts >= MAX_ATTEMPTS, no result          -> failed
- *   analysis_started_at set, analysis_duration_ms null   -> transcribing
+ *   isRunning() (started, not finished)                  -> transcribing
  *   awaitingRescore() claims it                          -> queued
  *   result exists, verdict exists                        -> done
  *   result exists, no verdict                            -> needs verdict
@@ -87,9 +87,53 @@ class BatchEntryState
     }
 
     /**
+     * Is a Whisper run under way on this recording?
+     *
+     * The one definition of "running" in this application. The `transcribing`
+     * branch below is this predicate, and so is the controller's write-time
+     * refusal on remove and un-send - shared rather than written out twice,
+     * because two copies of one state is how the board and the refusal come to
+     * disagree about whether a recording can still be taken out of the lane.
+     *
+     * AssessmentScorer::score() stamps analysis_started_at before it calls the
+     * engine and analysis_duration_ms only when the call returns, so the pair
+     * says "started and not finished" and nothing else does.
+     */
+    public static function isRunning(Assessment $entry): bool
+    {
+        return $entry->analysis_started_at !== null && $entry->analysis_duration_ms === null;
+    }
+
+    /**
+     * Is that run still plausibly alive?
+     *
+     * isRunning() alone has no end. RescoreQueue::rescore() calls markFailed()
+     * *after* score() has stamped analysis_started_at, so an engine outage or a
+     * killed worker leaves an entry reading `transcribing` for ever - and a
+     * card that is `transcribing` offers the teacher no door off the board at
+     * all. Bounded here by the same number the lane uses to re-claim a stuck
+     * run (Assessment::STALE_PROCESSING_MINUTES), read from that constant
+     * rather than retyped: past it the lane has given up on the run, so this
+     * must stop claiming one is in progress, or the board would be refusing on
+     * behalf of a process that no longer exists.
+     *
+     * The chip stays `transcribing` either way - it was started and never
+     * finished, which is the truth - but the card gains a way out.
+     */
+    public static function isRunningNow(Assessment $entry): bool
+    {
+        if (! self::isRunning($entry)) {
+            return false;
+        }
+
+        return $entry->updated_at === null
+            || $entry->updated_at->greaterThanOrEqualTo(now()->subMinutes(Assessment::STALE_PROCESSING_MINUTES));
+    }
+
+    /**
      * @param  int[]|null  $claimedIds  the pre-fetched claimed set from claimedIds(),
      *                                  or null to ask the lane about this one entry.
-     * @return array{chip: string, label: string, tone: string, playable: bool, action: ?string, result_url: ?string}
+     * @return array{chip: string, label: string, tone: string, playable: bool, running: bool, action: ?string, result_url: ?string}
      */
     public static function for(Assessment $entry, ?array $claimedIds = null): array
     {
@@ -97,12 +141,18 @@ class BatchEntryState
         $hasResult = $entry->result !== null;
         $resultUrl = $hasResult ? route('assessments.results', $entry) : null;
 
-        $state = function (string $chip, string $label, string $tone, ?string $action = null) use ($playable, $resultUrl) {
+        // Whether anything is actually working on this recording right now, as
+        // opposed to having started and stopped. The card reads it to decide
+        // whether a `transcribing` chip may still offer a door off the board.
+        $running = self::isRunningNow($entry);
+
+        $state = function (string $chip, string $label, string $tone, ?string $action = null) use ($playable, $resultUrl, $running) {
             return [
                 'chip' => $chip,
                 'label' => $label,
                 'tone' => $tone,
                 'playable' => $playable,
+                'running' => $running,
                 'action' => $action,
                 // Set the moment a result exists - at needs verdict and at done
                 // alike - so a reading is only ever read in one place.
@@ -129,7 +179,7 @@ class BatchEntryState
             return $state('failed', 'This recording could not be scored after ' . RescoreQueue::MAX_ATTEMPTS . ' tries.', 'help', 'Analyze');
         }
 
-        if ($entry->analysis_started_at !== null && $entry->analysis_duration_ms === null) {
+        if (self::isRunning($entry)) {
             return $state('transcribing', 'Listening to the recording now.', 'ok');
         }
 

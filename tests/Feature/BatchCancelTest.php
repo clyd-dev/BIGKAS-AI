@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Assessment;
 use App\Models\AssessmentBatch;
+use App\Models\AssessmentResult;
 use App\Models\AssessmentSession;
 use App\Models\ComprehensionAnswer;
 use App\Models\Learner;
@@ -123,6 +124,22 @@ class BatchCancelTest extends TestCase
     {
         $this->queue($entry);
         $entry->createResult($this->classifiedAnalysis());
+
+        return $entry->fresh();
+    }
+
+    /**
+     * Measured, but the model could not name the weakness.
+     *
+     * A real result with real numbers and classification_status = unavailable.
+     * scopeAwaitingRescore() goes on claiming it - there is no rule-based
+     * fallback in this system, so a reading without a model answer is
+     * incomplete - which is why its chip is `queued` and not `done`.
+     */
+    private function measuredButUnclassified(Assessment $entry): Assessment
+    {
+        $this->queue($entry);
+        $entry->createResult($this->unclassifiedAnalysis());
 
         return $entry->fresh();
     }
@@ -490,6 +507,14 @@ class BatchCancelTest extends TestCase
         // by a person, so nothing recomputes it back from the entries.
         $this->assertSame(AssessmentBatch::STATUS_CANCELLED, $batch->fresh()->status);
 
+        // And this is what pins the *ordering* - cancel() writing the status
+        // before the un-send loop rather than after it. With the write last,
+        // the un-sends drive refreshStatus() mid-method and a completed_at set
+        // there survives the final overwrite of the status, so a batch the
+        // teacher stopped would claim to have finished. Nothing on this board
+        // completed, so there is no date to show for it.
+        $this->assertNull($batch->fresh()->completed_at, 'a cancelled batch never completed');
+
         // And it survives anything that recomputes afterwards, too.
         $batch->fresh()->refreshStatus();
         $this->assertSame(AssessmentBatch::STATUS_CANCELLED, $batch->fresh()->status);
@@ -665,5 +690,330 @@ class BatchCancelTest extends TestCase
         $this->actingAs($teacher)->delete($this->removeUrl($batch, $entry))->assertStatus(404);
 
         $this->assertDatabaseHas('assessments', ['id' => $entry->id, 'batch_id' => $other->id]);
+    }
+
+    // ── The confirmation on the one destructive action ────────────────
+
+    /**
+     * A name with an apostrophe must not cost the teacher her dialog.
+     *
+     * Asserted against the rendered attribute, not against the page merely
+     * containing the name, because "the page renders" is exactly the assertion
+     * that missed this. Blade's e() writes O'Brien as O&#039;Brien, the browser
+     * HTML-decodes an attribute *before* parsing it as JavaScript, and the
+     * apostrophe lands back inside the JS string literal: the handler is a
+     * syntax error, never compiles, its `return false` never runs, and the form
+     * submits with no dialog at all - deleting a child's entry and their
+     * recording on one tap because of their surname.
+     *
+     * What keeps the handler compiling is the backslash addslashes() puts in
+     * front of the apostrophe, which survives the entity round-trip. So that is
+     * what is asserted: the escaped form present, the breaking form absent.
+     */
+    public function test_a_child_whose_name_has_an_apostrophe_still_gets_the_remove_confirmation(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $this->record($batch->entries()->orderBy('id')->first());
+        $entry->learner->forceFill(['first_name' => 'Mary', 'last_name' => 'O\'Brien'])->save();
+
+        $board = $this->actingAs($batch->teacher)->get(route('assessments.batch.board', $batch))->assertOk();
+
+        // The dialog is still there, and the name in it is escaped for
+        // JavaScript before Blade escapes it for HTML.
+        $board->assertSee('onsubmit="return confirm(\'Remove Mary O\\&#039;Brien and delete the recording', false);
+
+        // And the shape that breaks the handler is nowhere on the page: an
+        // apostrophe inside the confirm() string with no backslash before it.
+        $this->assertStringNotContainsString(
+            'confirm(\'Remove Mary O&#039;Brien',
+            $board->getContent(),
+            'an unescaped apostrophe makes the handler a syntax error, so Remove submits with no dialog at all'
+        );
+
+        // The panel shares the card, so it is safe there too.
+        $this->actingAs($batch->teacher)->get(route('assessments.batch.entry', [$batch, $entry]))->assertOk()
+            ->assertSee('onsubmit="return confirm(\'Remove Mary O\\&#039;Brien', false);
+    }
+
+    /** The detach confirmation carries a name too, so it is escaped as well. */
+    public function test_an_apostrophe_name_is_escaped_in_the_detach_confirmation_too(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $this->scored($batch->entries()->orderBy('id')->first());
+        $entry->learner->forceFill(['first_name' => 'Jude', 'last_name' => 'D\'Cruz'])->save();
+
+        $this->assertSame('needs verdict', BatchEntryState::for($entry->fresh())['chip']);
+
+        $board = $this->actingAs($batch->teacher)->get(route('assessments.batch.board', $batch))->assertOk();
+
+        $board->assertSee('onsubmit="return confirm(\'Take Jude D\\&#039;Cruz off this board?', false);
+        $this->assertStringNotContainsString('confirm(\'Take Jude D&#039;Cruz', $board->getContent());
+    }
+
+    /**
+     * Deleting a waiting or recorded entry takes any comprehension answers the
+     * teacher had already typed with it, so the confirmation names them.
+     */
+    public function test_the_remove_confirmation_names_the_comprehension_answers_it_would_take(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entries = $batch->entries()->orderBy('id')->get();
+        $entry = $this->record($entries[0]);
+        $bare = $this->record($entries[1]);
+
+        ComprehensionAnswer::create([
+            'assessment_id' => $entry->id,
+            'question_text' => 'What colour is Max?',
+            'selected_text' => 'Brown',
+            'correct_text' => 'Brown',
+            'is_correct' => true,
+        ]);
+
+        $board = $this->actingAs($batch->teacher)->get(route('assessments.batch.board', $batch))->assertOk();
+
+        $board->assertSee('The 1 comprehension answer already entered for them goes too.', false);
+        // A card with none does not invent them.
+        $this->assertSame('recorded', BatchEntryState::for($bare)['chip']);
+        $board->assertDontSee('0 comprehension');
+    }
+
+    // ── A measured reading always has a door off the board ────────────
+
+    /**
+     * The circular state: a result, no classification, still `queued`.
+     *
+     * Before this, remove said "cancel the analysis first" and un-send said
+     * "take this child out of the batch" - each door pointing at the other,
+     * batch_id never changing, the card unable to leave at all. A result
+     * exists, so the answer is the one every other scored state already gets:
+     * detach.
+     */
+    public function test_a_measured_but_unclassified_reading_can_leave_the_board(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $this->measuredButUnclassified($batch->entries()->orderBy('id')->first());
+
+        // No verdict, deliberately: scopeAwaitingRescore() only claims an
+        // unclassified result while no teacher has ruled on it, and a verdict
+        // would take the card straight to `done` - out of the state this test
+        // is about.
+        ComprehensionAnswer::create([
+            'assessment_id' => $entry->id,
+            'question_text' => 'What colour is Max?',
+            'selected_text' => 'Brown',
+            'correct_text' => 'Brown',
+            'is_correct' => true,
+        ]);
+
+        // The fixture really is the circular state, not merely a scored card.
+        $entry = $entry->fresh();
+        $this->assertNotNull($entry->result, 'fixture: there must be a result');
+        $this->assertSame(
+            AssessmentResult::STATUS_UNAVAILABLE,
+            $entry->result->classification_status,
+            'fixture: the model must have failed to classify it'
+        );
+        $this->assertSame('queued', BatchEntryState::for($entry)['chip'], 'fixture: it must still read queued');
+
+        $this->actingAs($batch->teacher)->delete($this->removeUrl($batch, $entry))
+            ->assertRedirect(route('assessments.batch.board', $batch))
+            ->assertSessionHas('success', fn ($message) => str_contains($message, 'no longer on this board'));
+
+        // Detached, with everything measured intact. That is the whole of it.
+        $this->assertDatabaseHas('assessments', ['id' => $entry->id, 'batch_id' => null]);
+        $this->assertDatabaseHas('assessment_results', [
+            'assessment_id' => $entry->id,
+            'classification_status' => AssessmentResult::STATUS_UNAVAILABLE,
+        ]);
+        $this->assertDatabaseHas('comprehension_answers', ['assessment_id' => $entry->id]);
+        $this->assertSame($entry->audio_file, $entry->fresh()->audio_file);
+        Storage::disk('public')->assertExists($entry->audio_file);
+        $this->assertNotNull(
+            $entry->fresh()->submitted_for_analysis_at,
+            'detaching writes batch_id and nothing else'
+        );
+    }
+
+    /**
+     * A queued card with nothing measured is still asked to cancel the analysis
+     * first: that refusal was right, it was only too wide.
+     */
+    public function test_a_queued_card_with_no_result_is_still_asked_to_cancel_the_analysis_first(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $this->queue($batch->entries()->orderBy('id')->first());
+
+        $this->assertNull($entry->result);
+
+        $this->actingAs($batch->teacher)->delete($this->removeUrl($batch, $entry))
+            ->assertRedirect()
+            ->assertSessionHas('warning', fn ($message) => str_contains($message, 'in line for analysis'));
+
+        $this->assertDatabaseHas('assessments', ['id' => $entry->id, 'batch_id' => $batch->id]);
+    }
+
+    // ── An engine outage must not pin a card to the board ─────────────
+
+    /**
+     * A card stuck `transcribing` past the lane's own staleness bound.
+     *
+     * AssessmentScorer::score() stamps analysis_started_at before it calls the
+     * engine, and RescoreQueue::rescore() calls markFailed() *after* that - so
+     * an outage or a killed worker leaves the pair saying "started, never
+     * finished" indefinitely. The lane re-claims such a run after
+     * Assessment::STALE_PROCESSING_MINUTES; past that the write-time refusal
+     * stands down too, or the teacher is left with a card that offers her
+     * nothing and refuses everything.
+     */
+    public function test_a_card_stuck_transcribing_past_the_stale_bound_can_be_un_sent(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $this->transcribing($batch->entries()->orderBy('id')->first());
+
+        // While the run is alive, the door is shut.
+        $this->assertTrue(BatchEntryState::isRunningNow($entry));
+        $this->actingAs($batch->teacher)->post($this->unsendUrl($batch, $entry))
+            ->assertSessionHas('warning', fn ($message) => str_contains($message, 'being analysed'));
+
+        // The engine died. Nothing has touched the row since.
+        $this->travel(Assessment::STALE_PROCESSING_MINUTES + 1)->minutes();
+
+        $entry = $entry->fresh();
+        $this->assertSame('transcribing', BatchEntryState::for($entry)['chip'], 'the chip is still the truth');
+        $this->assertFalse(BatchEntryState::isRunningNow($entry), 'nothing is listening to this recording any more');
+
+        $this->actingAs($batch->teacher)->post($this->unsendUrl($batch, $entry))
+            ->assertRedirect(route('assessments.batch.board', $batch))
+            ->assertSessionHas('success', fn ($message) => str_contains($message, 'taken out of the lane'));
+
+        $entry->refresh();
+
+        $this->assertNull($entry->submitted_for_analysis_at);
+        // A door off the board is not a licence to throw the child's work away.
+        Storage::disk('public')->assertExists($entry->audio_file);
+
+        $this->travelBack();
+    }
+
+    public function test_a_card_stuck_transcribing_past_the_stale_bound_offers_a_door_on_the_board(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $this->transcribing($batch->entries()->orderBy('id')->first());
+
+        // While it runs: the explaining line, and no controls at all.
+        $this->actingAs($batch->teacher)->get(route('assessments.batch.board', $batch))->assertOk()
+            ->assertSee('data-manage=""', false)
+            ->assertSee('Being analysed now')
+            ->assertDontSee('Cancel analysis');
+
+        $this->travel(Assessment::STALE_PROCESSING_MINUTES + 1)->minutes();
+
+        $board = $this->actingAs($batch->teacher)->get(route('assessments.batch.board', $batch))->assertOk();
+        $board->assertSee('Cancel analysis');
+        $board->assertSee($this->unsendUrl($batch, $entry), false);
+        $board->assertDontSee('Being analysed now');
+
+        // The poll reports it too, so an open board is re-rendered into the row
+        // that now has a door rather than skipped as unchanged.
+        $this->actingAs($batch->teacher)->get(route('assessments.batch.poll', $batch))
+            ->assertOk()
+            ->assertJsonPath('entries.' . $entry->id . '.chip', 'transcribing')
+            ->assertJsonPath('entries.' . $entry->id . '.running', false);
+
+        $this->travelBack();
+    }
+
+    public function test_a_card_stuck_transcribing_past_the_stale_bound_can_be_removed(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $this->transcribing($batch->entries()->orderBy('id')->first());
+
+        $this->travel(Assessment::STALE_PROCESSING_MINUTES + 1)->minutes();
+
+        $this->actingAs($batch->teacher)->delete($this->removeUrl($batch, $entry))
+            ->assertRedirect()
+            ->assertSessionHas('success', fn ($message) => str_contains($message, 'no longer on this board'));
+
+        // Detached, not deleted: nothing measured it, but the recording is the
+        // child's own work and the row is their history.
+        $this->assertDatabaseHas('assessments', ['id' => $entry->id, 'batch_id' => null]);
+        Storage::disk('public')->assertExists($entry->audio_file);
+
+        $this->travelBack();
+    }
+
+    // ── The backstop reads the database, not its caller's memory ──────
+
+    /**
+     * A result that lands while the teacher's request is in flight.
+     *
+     * deleteEntry() used to re-read $entry->result, a relation the call site had
+     * already loaded, so its "even if a caller asks" guarantee was an in-memory
+     * re-read of the caller's own copy. Here the result is written straight to
+     * the table, behind the loaded model's back - which is what a concurrent
+     * scoring run looks like from inside this request - and the backstop must
+     * still refuse.
+     */
+    public function test_the_delete_backstop_sees_a_result_written_behind_the_loaded_model(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $this->record($batch->entries()->orderBy('id')->first());
+
+        // Loaded and cached exactly as the controller loads it, with no result.
+        $entry->load('result', 'verdict');
+        $this->assertNull($entry->result);
+
+        // Now a result exists in the database. The model above cannot see it.
+        AssessmentResult::create([
+            'assessment_id' => $entry->id,
+            'accuracy_rate' => 90,
+            'words_per_minute' => 80,
+            'fluency_score' => 75,
+            'reading_level' => 'independent',
+            'classification_status' => AssessmentResult::STATUS_CLASSIFIED,
+        ]);
+        $this->assertNull($entry->result, 'the cached relation is still empty - that is the window');
+
+        $deleteEntry = new \ReflectionMethod(\App\Http\Controllers\AssessmentBatchController::class, 'deleteEntry');
+        $deleteEntry->setAccessible(true);
+
+        try {
+            $deleteEntry->invoke(app(\App\Http\Controllers\AssessmentBatchController::class), $entry);
+            $this->fail('deleteEntry() must refuse an entry whose result is in the database');
+        } catch (\LogicException $e) {
+            $this->assertStringContainsString('never deleted', $e->getMessage());
+        }
+
+        // Nothing died: the row, the result, the session and the recording.
+        $this->assertDatabaseHas('assessments', ['id' => $entry->id]);
+        $this->assertDatabaseHas('assessment_results', ['assessment_id' => $entry->id]);
+        $this->assertDatabaseHas('assessment_sessions', ['assessment_id' => $entry->id]);
+        Storage::disk('public')->assertExists($entry->audio_file);
+    }
+
+    // ── An emptied board claims nothing ───────────────────────────────
+
+    public function test_a_batch_emptied_of_its_last_entry_stops_claiming_to_be_analysing(): void
+    {
+        $batch = $this->batchOf($this->teacher(), 1);
+        $entry = $this->queue($batch->entries()->orderBy('id')->first());
+
+        $batch->fresh()->refreshStatus();
+        $this->assertSame(
+            AssessmentBatch::STATUS_ANALYZING,
+            $batch->fresh()->status,
+            'fixture: a sent reading makes the batch analysing'
+        );
+
+        $this->actingAs($batch->teacher)->post($this->unsendUrl($batch, $entry))->assertRedirect();
+        $this->actingAs($batch->teacher)->delete($this->removeUrl($batch, $entry))->assertRedirect();
+
+        $this->assertDatabaseMissing('assessments', ['id' => $entry->id]);
+        $this->assertSame(0, $batch->fresh()->entries()->count());
+
+        // Nothing is being analysed and nothing was completed, so it claims
+        // neither.
+        $this->assertSame(AssessmentBatch::STATUS_COLLECTING, $batch->fresh()->status);
+        $this->assertNull($batch->fresh()->completed_at);
     }
 }

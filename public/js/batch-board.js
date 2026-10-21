@@ -51,7 +51,14 @@
     }
 
     function signature(state) {
-        return [state.chip, state.label, state.action || '', state.result_url || ''].join('|');
+        // Mirrors $signature in _card.blade.php, `running` included: crossing
+        // the lane's staleness bound changes no chip and no label, only whether
+        // the card offers a door off the board, so without it the poll would
+        // skip the card and the door would never appear.
+        return [
+            state.chip, state.label, state.action || '', state.result_url || '',
+            state.running ? 'running' : ''
+        ].join('|');
     }
 
     /**
@@ -59,7 +66,9 @@
      * match() in _card.blade.php; the row itself is only ever rendered by the
      * server, because it holds forms with CSRF tokens.
      */
-    function manageFor(chip) {
+    function manageFor(state) {
+        var chip = state.chip;
+
         if (chip === 'waiting' || chip === 'recorded') {
             return 'remove';
         }
@@ -68,6 +77,12 @@
         }
         if (chip === 'needs verdict' || chip === 'done' || chip === 'failed') {
             return 'detach';
+        }
+        // A transcribing card offers nothing only while something is really
+        // running; past the lane's staleness bound the run is gone and the card
+        // gains a Cancel analysis, so this row has to move with it.
+        if (chip === 'transcribing') {
+            return state.running ? '' : 'unsend';
         }
 
         return '';
@@ -83,7 +98,7 @@
         // has now started, say - must be re-rendered rather than patched: an
         // un-send form left behind would offer to stop a running Whisper.
         var manage = card.querySelector('[data-manage]');
-        if ((manage ? manage.getAttribute('data-manage') : '') !== manageFor(state.chip)) {
+        if ((manage ? manage.getAttribute('data-manage') : '') !== manageFor(state)) {
             return true;
         }
 

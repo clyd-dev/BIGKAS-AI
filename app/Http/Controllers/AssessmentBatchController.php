@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Assessment;
 use App\Models\AssessmentBatch;
+use App\Models\AssessmentResult;
 use App\Models\AssessmentSession;
+use App\Models\AssessmentVerdict;
 use App\Services\AnalysisQueueEstimator;
 use App\Services\BatchEntryState;
 use App\Services\BatchRosterBuilder;
@@ -12,6 +14,7 @@ use App\Services\ComprehensionService;
 use App\Support\Directory;
 use App\Traits\AuthorizesLearnerAccess;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -154,6 +157,10 @@ class AssessmentBatchController extends Controller
         return $batch->entries()
             ->whereIn('learner_id', $teacher->accessibleLearnersQuery()->select('learners.id'))
             ->with(['learner', 'material', 'result', 'verdict'])
+            // Counted here, not in the card: the remove confirmation names the
+            // comprehension answers it is about to take with it, and _card
+            // never runs a query of its own (R39).
+            ->withCount('comprehensionAnswers')
             ->orderBy('id')
             ->get()
             // Same ordering as every other learner list in the app.
@@ -323,6 +330,10 @@ class AssessmentBatchController extends Controller
     {
         $entry = $this->panelEntry($batch, $assessment);
         $entry->load(['learner', 'material', 'result', 'verdict', 'comprehensionAnswers']);
+        // The shared card names the answers its remove confirmation would take
+        // with it, and reads the count rather than the relation so the board and
+        // the panel hand it the same thing.
+        $entry->loadCount('comprehensionAnswers');
 
         // needsComprehensionTest() reads the entry's own material, so the
         // questions are taken from there too: asking a different material's
@@ -597,6 +608,20 @@ class AssessmentBatchController extends Controller
         $chip = BatchEntryState::for($entry)['chip'];
         $name = $entry->learner?->first_name ?? 'This child';
 
+        // A measured reading is detached, never deleted - and that holds for
+        // every chip, not only for the scored ones. A reading whose result the
+        // model could not classify rests at `queued` waiting for a weakness
+        // label that may never come, because there is no rule-based fallback
+        // anywhere in this system; until this check came first, that card could
+        // not leave the board at all. Remove said "cancel the analysis first"
+        // and un-send said "take this child out of the batch", each pointing at
+        // the other. Measured-therefore-detach is the rule every other scored
+        // state already follows, so answering it here removes a special case
+        // rather than adding one.
+        if ($entry->result !== null) {
+            return $this->detachEntry($request, $batch, $entry, $name);
+        }
+
         if ($chip === 'queued') {
             return $this->refuse($request, $batch, 'This reading is in line for analysis. Cancel the analysis '
                 . 'first, then take ' . $name . ' out of the batch.');
@@ -615,12 +640,28 @@ class AssessmentBatchController extends Controller
         }
 
         // Everything else is detached and nothing else is touched.
+        return $this->detachEntry($request, $batch, $entry, $name);
+    }
+
+    /**
+     * Take one child off the board without deleting anything.
+     *
+     * batch_id goes to null and no other column is written: the reading, its
+     * result, any verdict over it and the comprehension answers all stay on the
+     * child's own record, where Learner::readingLevelFromAssessments(), the
+     * parent portal and the admin chart go on reading them.
+     *
+     * One method rather than two call sites, so the measured-therefore-detach
+     * rule has one implementation and cannot drift between them.
+     */
+    private function detachEntry(Request $request, AssessmentBatch $batch, Assessment $entry, string $name)
+    {
         $entry->forceFill(['batch_id' => null])->save();
 
         $this->restatus($batch);
 
         return $this->done($request, $batch, $name . ' is no longer on this board. Their reading, its result '
-            . 'and your verdict are all kept on their own history.');
+            . 'and any verdict you had given are all kept on their own history.');
     }
 
     /**
@@ -657,6 +698,16 @@ class AssessmentBatchController extends Controller
 
         $name = $entry->learner?->first_name ?? 'This child';
 
+        // A `failed` entry is un-sent too, and that is deliberate rather than an
+        // oversight. `failed` means the recording used up its attempts without
+        // ever producing a result, so there is nothing measured to protect and
+        // nothing running to interrupt; clearing the stamp takes it out of the
+        // lane and returns the card to `recorded`, which is the honest word for
+        // a recording nobody is scoring. It is also the only way a teacher can
+        // stop a dead recording being re-claimed without deleting the child's
+        // work. No button renders for it - the chip offers Analyze instead - so
+        // this is reached only from a board a minute out of date or a direct
+        // POST, and either way it destroys nothing.
         if ($entry->submitted_for_analysis_at === null) {
             // A double-tapped Cancel analysis: say so and write nothing.
             return $this->done($request, $batch, 'This reading was already waiting with you, not in the lane.');
@@ -731,14 +782,22 @@ class AssessmentBatchController extends Controller
     /**
      * Why this reading cannot be touched right now, or null.
      *
-     * Read from the two timing columns rather than from the chip: these are
-     * what say a Whisper run is in progress, and they are the reason
-     * `transcribing` offers no button at all. A button that is merely absent
-     * from a page rendered a minute ago is not a guard.
+     * Asked of BatchEntryState::isRunningNow() rather than read from the timing
+     * columns here: that predicate is the `transcribing` chip itself, so the
+     * refusal and the card can never disagree about whether a run is under way.
+     * A button that is merely absent from a page rendered a minute ago is not a
+     * guard, which is why this is checked again at write time.
+     *
+     * Bounded, deliberately. Past Assessment::STALE_PROCESSING_MINUTES the lane
+     * has given up on the run and re-claims the recording, so refusing here any
+     * longer would be refusing on behalf of a process that no longer exists -
+     * and an engine outage would leave the teacher a card with no door off the
+     * board at all. Past the bound both doors open again, and neither destroys
+     * anything: an entry carrying a result is detached, never deleted.
      */
     private function runningMessage(Assessment $entry): ?string
     {
-        if ($entry->analysis_started_at === null || $entry->analysis_duration_ms !== null) {
+        if (! BatchEntryState::isRunningNow($entry)) {
             return null;
         }
 
@@ -753,19 +812,39 @@ class AssessmentBatchController extends Controller
      * anything measured. That check is here rather than only at the call site
      * on purpose: this is the one method whose mistakes cannot be undone, so it
      * will not destroy a result even if a caller asks it to.
+     *
+     * The re-assertion is two exists() queries rather than $entry->result and
+     * $entry->verdict: by the time this runs, both relations have already been
+     * loaded - by boardEntries()/cancel()'s eager load and by the
+     * BatchEntryState::for() call at the call site - so reading them back would
+     * re-read the caller's own in-memory copy and miss anything that landed in
+     * between. That window is the one race in this board's no-data-destruction
+     * argument that could not otherwise be ruled out, and a fresh read closes
+     * it: a result written while the teacher's request was in flight now throws
+     * instead of being deleted underneath her.
+     *
+     * The deletions are one transaction, so a failure part-way cannot leave the
+     * sessions gone and the entry behind. The audio file goes *after* the
+     * commit, because a deleted file is the one thing a rollback cannot bring
+     * back.
      */
     private function deleteEntry(Assessment $entry): void
     {
-        if ($entry->result !== null || $entry->verdict !== null) {
+        $key = $entry->getKey();
+
+        if (AssessmentResult::where('assessment_id', $key)->exists()
+            || AssessmentVerdict::where('assessment_id', $key)->exists()) {
             throw new \LogicException('A measured reading is never deleted from the batch board.');
         }
 
         $audio = $entry->audio_file;
 
-        // Deleted explicitly rather than left to the foreign key, so this holds
-        // the same on every engine the app runs on.
-        AssessmentSession::where('assessment_id', $entry->getKey())->delete();
-        $entry->delete();
+        DB::transaction(function () use ($entry, $key) {
+            // Deleted explicitly rather than left to the foreign key, so this
+            // holds the same on every engine the app runs on.
+            AssessmentSession::where('assessment_id', $key)->delete();
+            $entry->delete();
+        });
 
         if ($audio) {
             Storage::disk('public')->delete($audio);

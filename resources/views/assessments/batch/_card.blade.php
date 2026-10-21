@@ -24,7 +24,42 @@
     $passage = $entry->material?->title ?? $batch->defaultMaterial?->title;
     $entryUrl = route('assessments.batch.entry', [$batch, $entry]);
     $childName = $entry->learner?->full_name ?? 'Unknown child';
-    $signature = implode('|', [$state['chip'], $state['label'], $state['action'] ?? '', $state['result_url'] ?? '']);
+
+    /*
+     * The same name again, for the inline confirm() handlers below.
+     *
+     * Blade's e() turns O'Brien into O&#039;Brien, and the browser HTML-decodes
+     * an attribute *before* parsing it as JavaScript - so the apostrophe lands
+     * back inside the JS string literal, the handler is a syntax error, it never
+     * compiles, its `return false` never happens and the form submits with no
+     * dialog at all. On the Remove button that means a child's entry and their
+     * recording deleted on one tap, silently, because of their surname.
+     * O'Brien and D'Cruz are ordinary names on a Philippine class roll.
+     *
+     * addslashes() first, e() after, which is the repo's existing pattern
+     * (admin/users.blade.php, learners/_student_portal.blade.php): the backslash
+     * survives the entity round-trip and the string closes where it should.
+     */
+    $confirmName = addslashes($childName);
+
+    /*
+     * Deleting a waiting or recorded entry cascade-deletes any comprehension
+     * answers the teacher had already typed for it, so the confirmation names
+     * them rather than letting them go unmentioned. The count is handed in by
+     * the board and the panel - this card never queries (R39).
+     */
+    $answerCount = (int) ($entry->comprehension_answers_count ?? 0);
+    $answerLoss = $answerCount === 0
+        ? ''
+        : ' The ' . $answerCount . ' comprehension ' . ($answerCount === 1 ? 'answer' : 'answers')
+            . ' already entered for them ' . ($answerCount === 1 ? 'goes' : 'go') . ' too.';
+    $signature = implode('|', [
+        $state['chip'], $state['label'], $state['action'] ?? '', $state['result_url'] ?? '',
+        // Crossing the staleness bound changes no chip and no label, only
+        // whether this card offers a door - so it has to be in the signature or
+        // the poll would skip the card and the door would never appear.
+        $state['running'] ? 'running' : '',
+    ]);
 
     /*
      * Which way this child leaves the board, by state - and `transcribing`
@@ -40,13 +75,25 @@
      *
      * `queued` offers no remove on purpose: the teacher cancels the analysis
      * first, so taking a child off the board is never also a decision about
-     * lane time. Every one of these is re-checked in the controller at write
-     * time - this board may be a minute old.
+     * lane time - unless the reading has already been measured, in which case
+     * the controller detaches it, because a result that the model could not
+     * classify also rests at `queued` and must still be able to leave.
+     *
+     * `transcribing` is the one state with no door - while something is really
+     * running. Past the lane's own staleness bound ($state['running'] goes
+     * false) the engine has died or the worker was killed, nothing is listening
+     * to the recording any more, and a card the teacher cannot clear would be
+     * the dishonest answer. Then it offers Cancel analysis like any other sent
+     * reading.
+     *
+     * Every one of these is re-checked in the controller at write time - this
+     * board may be a minute old.
      */
     $manage = match ($state['chip']) {
         'waiting', 'recorded' => 'remove',
         'queued' => 'unsend',
         'needs verdict', 'done', 'failed' => 'detach',
+        'transcribing' => $state['running'] ? '' : 'unsend',
         default => '',
     };
 @endphp
@@ -135,7 +182,7 @@
                 state calls for a different one, the card is re-rendered by the
                 server rather than patched here.
             --}}
-            @if($state['chip'] === 'transcribing')
+            @if($state['chip'] === 'transcribing' && $state['running'])
                 <p class="small text-muted mb-0 fst-italic" data-manage="">
                     Being analysed now — this one cannot be stopped. The result appears on this card when it is done.
                 </p>
@@ -153,7 +200,7 @@
                              the board. The reading, its result, your verdict and
                              the comprehension answers stay on their history. --}}
                         <form method="POST" action="{{ route('assessments.batch.entry.remove', [$batch, $entry]) }}"
-                              onsubmit="return confirm('Take {{ $childName }} off this board? Their reading, its result and your verdict are all kept on their own history — only the batch link is removed.')">
+                              onsubmit="return confirm('Take {{ $confirmName }} off this board? Their reading, its result and any verdict you had given are all kept on their own history — only the batch link is removed.')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-secondary">
@@ -162,7 +209,7 @@
                         </form>
                     @else
                         <form method="POST" action="{{ route('assessments.batch.entry.remove', [$batch, $entry]) }}"
-                              onsubmit="return confirm('{{ $state['chip'] === 'recorded' ? 'Remove ' . $childName . ' and delete the recording that has not been sent? Nothing has been measured yet, so nothing is lost from their record.' : 'Remove ' . $childName . ' from this batch? Nothing has been recorded for them yet.' }}')">
+                              onsubmit="return confirm('{{ $state['chip'] === 'recorded' ? 'Remove ' . $confirmName . ' and delete the recording that has not been sent? Nothing has been measured yet, so nothing is lost from their record.' . $answerLoss : 'Remove ' . $confirmName . ' from this batch? Nothing has been recorded for them yet.' . $answerLoss }}')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger">

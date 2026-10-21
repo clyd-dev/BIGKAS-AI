@@ -84,6 +84,15 @@ class AssessmentBatch extends Model
         $entries = $this->entries()->with(['result', 'verdict', 'material'])->get();
 
         if ($entries->isEmpty()) {
+            // Every child has left the board - removed one by one, or moved out
+            // of the teacher's classes. There are no entries left to derive a
+            // status from, and keeping whatever the last one implied would leave
+            // an empty batch reading `analyzing` for ever, with nothing being
+            // analysed, or `completed` with nothing completed. `collecting` is
+            // the one word that claims nothing, so an empty board goes back to
+            // it and completed_at is cleared with it.
+            $this->writeStatus(self::STATUS_COLLECTING, null);
+
             return;
         }
 

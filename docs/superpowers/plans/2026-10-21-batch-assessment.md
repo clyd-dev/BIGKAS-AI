@@ -4,7 +4,9 @@
 
 **Goal:** A teacher sets up one batch covering up to 15 children, captures each child's recording either on the child's own device or teacher-led one at a time, and tracks the whole group from a single polling board.
 
-**Architecture:** A batch is an `assessment_batches` row; each roster entry *is* an ordinary `Assessment` carrying `batch_id`. Scoring adds no new mechanism — `Assessment::scopeAwaitingRescore()` is widened additively so batch entries are owed a score the moment their audio is saved, and the existing `assessments:rescore` scheduler plus `RescoreQueue` plus `AssessmentScorer` do the work on their existing single serial lane. The board derives every per-child chip from state the database already holds; no parallel state machine is stored.
+**Architecture:** A batch is an `assessment_batches` row; each roster entry *is* an ordinary `Assessment` carrying `batch_id`. Scoring adds no new mechanism — `Assessment::scopeAwaitingRescore()` is widened additively so a **sent** batch entry is owed a score at once, and the existing `assessments:rescore` scheduler plus `RescoreQueue` plus `AssessmentScorer` do the work on their existing single serial lane. The board is a grid of clickable cards, one per child; the card panel is where the teacher conducts the reading, plays back the audio and answers comprehension questions. All seven card states are derived from data the database already holds — no parallel state machine is stored.
+
+**Branching:** `master` is never committed to. Every task gets its own branch off the integration branch `feat/batch-assessment` and merges back with `--no-ff`, so each phase is one revertible merge commit. See spec §9.3.
 
 **Tech Stack:** Laravel 11 (PHP 8.3), Blade + Bootstrap 5, PHPUnit 11 with `RefreshDatabase`, MySQL, vanilla JS (no build step for board/recorder), local faster-whisper + Random Forest behind a Flask service.
 
@@ -13,7 +15,10 @@
 ## Global Constraints
 
 - **Roster cap is 15** learners per batch, from `config('assessment.batch_max_learners')`.
-- **Feature ships behind a flag**, default **off**: `config('assessment.batch_enabled')` ← `BATCH_ASSESSMENT_ENABLED`. Off means the entry link is hidden and every batch route returns 404.
+- **Feature ships behind a flag**, default **off**: `config('assessment.batch_enabled')` ← `BATCH_ASSESSMENT_ENABLED`. Off means the entry link is hidden and every batch route returns 404. **The flag lands in Task 5, before any batch screen exists** (spec §9.1).
+- **Every task on its own branch**, off `feat/batch-assessment`, merged back with `--no-ff`. Never commit to `master`. Each task's first step is `git switch -c feat/batch-tNN-<slug>` from the integration branch; each task's last step is the merge.
+- **Scheduler settings move together:** `--limit=20` with `withoutOverlapping(120)`. Changing one without the other re-creates the double-scoring bug.
+- **Nothing reaches the lane unsent.** `submitted_for_analysis_at` is the gate; an unsent recording is never claimed.
 - **Single-child behaviour must not change.** The entire existing suite must stay green **with zero edits to any existing test file**. If an existing test must change to pass, the change is wrong.
 - **`RescoreQueueTest` must stay green, unedited** — it pins outage-recovery behaviour already in production.
 - **Never add a rule that authors a weakness label.** Only the Random Forest may name one. No fallback, no "clearest problem" pick.
@@ -30,7 +35,7 @@
 Five conditions the spec implies that no task's happy path exercises, most likely to bite first:
 
 1. **A transient `failed` status during an engine outage read as permanent failure.** `RescoreQueue::rescore()` calls `markFailed()` even when the engine — not the recording — is at fault, deliberately leaving the attempt uncounted. A board that renders raw `status` would tell a teacher that ten children failed when nothing did. *(Task 8)*
-2. **A comprehension batch entry whose answers never arrive.** `RescoreQueue::run()` skips an unscored assessment that `needsComprehensionTest()` without answers — forever. A self-record child who reads but never answers leaves the batch stuck at `analyzing` with no explanation. *(Task 8)*
+2. **A comprehension batch entry whose answers never arrive.** `RescoreQueue::run()` skips an unscored assessment that `needsComprehensionTest()` without answers — forever. The Send gate is what prevents the silent stall: such an entry can never be sent, so it rests visibly at `recorded` saying what it needs, rather than sitting in a lane that will never take it. *(Tasks 8 and 9)*
 3. **A learner leaving the teacher's reach mid-batch.** Class reassignment during a 40-minute batch must not expose that child's result to a teacher who no longer has access, and must not 500 the board. *(Task 8)*
 4. **The same learner added to a batch while another assessment of theirs is still unscored.** Two in-flight assessments for one child, both owed a score, both reaching `createResult()` — which replaces. *(Task 6)*
 5. **Roster boundaries: 0 learners, exactly 15, exactly 16, and the same learner twice.** *(Task 6)*
@@ -40,20 +45,58 @@ Five conditions the spec implies that no task's happy path exercises, most likel
 ### Task 1: Schema and the batch model
 
 **Files:**
-- Create: `database/migrations/2026_10_21_000000_create_assessment_batches_table.php`
-- Create: `database/migrations/2026_10_21_000001_add_batch_columns_to_assessments_table.php`
+- Create: `database/migrations/2026_10_21_010000_create_assessment_batches_table.php`
+- Create: `database/migrations/2026_10_21_010001_add_batch_columns_to_assessments_table.php`
 - Create: `app/Models/AssessmentBatch.php`
-- Modify: `app/Models/Assessment.php` — add `batch_id` and `recording_mode` to `$fillable`, add `batch()` relation
+- Create: `database/factories/AssessmentBatchFactory.php`
+- Modify: `app/Models/Assessment.php` — add `batch_id` to `$fillable`, add `batch()` relation
 - Test: `tests/Feature/AssessmentBatchTest.php`
+
+**The migration timestamps are not free to choose.** `2026_10_21_000000` is already taken by `add_rescore_queue_and_service_health`. Use `010000` and `010001` as given.
+
+**Column conventions:** follow the *newest* migration, not the oldest. `service_health_events.state` is `string(24)` with a `->comment()` listing permitted values; the original `assessments` table uses `enum()`. **Use `string` + comment** — adding a batch status later would otherwise need an `ALTER` on a MySQL enum, and the values are already enforced by model constants and validation.
 
 **Interfaces:**
 - Consumes: nothing.
 - Produces:
   - `AssessmentBatch` with `$fillable`: `teacher_id`, `school_class_id`, `title`, `language`, `assessment_type`, `default_material_id`, `status`, `completed_at`, `cancelled_at`
-  - Constants `AssessmentBatch::STATUS_COLLECTING = 'collecting'`, `STATUS_ANALYZING = 'analyzing'`, `STATUS_COMPLETED = 'completed'`, `STATUS_CANCELLED = 'cancelled'` — **there is no `engine_unavailable`**
+  - Constants `AssessmentBatch::STATUS_COLLECTING = 'collecting'`, `STATUS_ANALYZING = 'analyzing'`, `STATUS_COMPLETED = 'completed'`, `STATUS_CANCELLED = 'cancelled'` — **there is no `engine_unavailable`** (spec §4.4)
   - Relations: `teacher(): BelongsTo`, `schoolClass(): BelongsTo`, `defaultMaterial(): BelongsTo` (`ReadingMaterial`, FK `default_material_id`), `entries(): HasMany` (`Assessment`, FK `batch_id`)
   - `Assessment::batch(): BelongsTo`
-  - Columns added to `assessments`: `batch_id` (nullable FK → `assessment_batches`, indexed, `nullOnDelete`), `recording_mode` (nullable string 8), `analysis_started_at` (nullable timestamp), `analysis_duration_ms` (nullable unsigned int)
+
+`assessment_batches` columns, with on-delete behaviour that is load-bearing, not incidental:
+
+| Column | Type | On delete | Why |
+|---|---|---|---|
+| `teacher_id` | `foreignId` → `users` | `restrictOnDelete` | Matches `assessments.assessor_id` — a teacher with history is never silently deleted |
+| `school_class_id` | `foreignId` nullable → `school_classes` | `nullOnDelete` | A hand-picked batch has no class; a deleted class leaves the batch as history |
+| `title` | `string` nullable | — | Teacher's own label |
+| `language` | `string(8)` | — | Comment: `en \| fil \| hil` |
+| `assessment_type` | `string(16)` | — | Comment: `oral_reading \| comprehension \| combined` |
+| `default_material_id` | `foreignId` → `reading_materials` | `restrictOnDelete` | Matches `assessments.material_id` — a cited material cannot vanish |
+| `status` | `string(16)` | — | Comment: `collecting \| analyzing \| completed \| cancelled` |
+| `completed_at`, `cancelled_at` | `timestamp` nullable | — | Lifecycle |
+
+Indexes on `assessment_batches`: `teacher_id`, `status`.
+
+Columns added to `assessments`, all nullable and additive:
+
+| Column | Type | Placement | Why |
+|---|---|---|---|
+| `batch_id` | `foreignId` nullable → `assessment_batches`, **`nullOnDelete`** | `->after('assessor_id')` | `NULL` means single-child. `nullOnDelete` is load-bearing: **deleting a batch must never delete a child's assessment or result.** |
+| `submitted_for_analysis_at` | `timestamp` nullable | `->after('last_rescore_at')` | The Send gate. Separates `recorded` from `queued` and is what Task 2's scope branch checks. |
+| `analysis_started_at` | `timestamp` nullable | after the above | Set, with `analysis_duration_ms` still null, **is** the `transcribing` state |
+| `analysis_duration_ms` | `unsignedInteger` nullable | after the above | Written on every run incl. single-child; feeds the estimator |
+
+Indexes added to `assessments`: `batch_id`, and composite **`(batch_id, submitted_for_analysis_at)`** — Task 2's scope branch filters on both, and without it that branch scans `assessments` every scheduler tick, which at `everyMinute` is every minute. Do **not** index the two timing columns: the estimator reads the last 20 rows by `id`, and the `transcribing` check is always already narrowed by `batch_id`.
+
+**There is no `recording_mode` column.** Every card offers both a join code and *Conduct here*; nothing is chosen in advance.
+
+- [ ] **Step 0: Branch**
+
+```bash
+git switch feat/batch-assessment && git switch -c feat/batch-t01-schema
+```
 
 - [ ] **Step 1: Write the failing test**
 
@@ -75,14 +118,13 @@ public function test_a_batch_holds_its_entries_and_its_defaults(): void
         'assessment_type' => Assessment::TYPE_COMBINED,
         'status' => AssessmentBatch::STATUS_COLLECTING,
     ]);
-    $entry = Assessment::factory()->create(['batch_id' => $batch->id, 'recording_mode' => 'teacher']);
+    $entry = Assessment::factory()->create(['batch_id' => $batch->id]);
 
     $this->assertTrue($batch->entries->contains($entry));
     $this->assertSame($batch->id, $entry->batch->id);
-    $this->assertSame('teacher', $entry->recording_mode);
 }
 
-public function test_deleting_a_batch_keeps_its_assessments(): void
+public function test_deleting_a_batch_keeps_its_assessments_and_their_results(): void
 {
     $batch = AssessmentBatch::factory()->create();
     $entry = Assessment::factory()->create(['batch_id' => $batch->id]);
@@ -90,6 +132,23 @@ public function test_deleting_a_batch_keeps_its_assessments(): void
     $batch->delete();
 
     $this->assertDatabaseHas('assessments', ['id' => $entry->id, 'batch_id' => null]);
+}
+
+public function test_a_material_cited_by_a_batch_cannot_be_deleted(): void
+{
+    $batch = AssessmentBatch::factory()->create();
+
+    $this->expectException(\Illuminate\Database\QueryException::class);
+    ReadingMaterial::findOrFail($batch->default_material_id)->delete();
+}
+
+public function test_a_new_batch_starts_collecting_and_has_no_submitted_entries(): void
+{
+    $entry = Assessment::factory()->create(['batch_id' => AssessmentBatch::factory()]);
+
+    $this->assertNull($entry->submitted_for_analysis_at);
+    $this->assertNull($entry->analysis_started_at);
+    $this->assertNull($entry->analysis_duration_ms);
 }
 ```
 
@@ -102,7 +161,7 @@ Expected: FAIL — `Class "App\Models\AssessmentBatch" not found`
 
 - [ ] **Step 3: Write the two migrations**
 
-Both must carry a working `down()`. All changes are additive: one new table, four nullable columns. Nothing is renamed, retyped or dropped.
+Per the tables in Interfaces. Both carry a working `down()`; the second drops its four columns and both indexes. All changes are additive — one new table, four nullable columns, two indexes. Nothing is renamed, retyped or dropped. Add a docblock to each explaining what it is for, matching the style of `2026_10_21_000000_add_rescore_queue_and_service_health.php`.
 
 - [ ] **Step 4: Implement `AssessmentBatch` and the `Assessment` additions**
 
@@ -118,11 +177,17 @@ Expected: PASS
 Run: `php artisan migrate:fresh && php artisan migrate:rollback --step=2 && php artisan migrate && php artisan test`
 Expected: rollback and re-migrate both succeed; full suite PASS with zero edits to existing test files.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 7: Confirm the indexes actually exist**
+
+Run: `php artisan db:table assessments`
+Expected: the output lists an index on `batch_id` and a composite index covering `batch_id, submitted_for_analysis_at`. A migration that silently skipped an index is a slow scan every minute in production, so this is checked rather than assumed.
+
+- [ ] **Step 8: Commit and merge the phase**
 
 ```bash
 git add database/migrations database/factories/AssessmentBatchFactory.php app/Models/AssessmentBatch.php app/Models/Assessment.php tests/Feature/AssessmentBatchTest.php
 git commit -m "feat(batch): add assessment batches and the roster columns"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t01-schema
 ```
 
 ---
@@ -136,9 +201,16 @@ git commit -m "feat(batch): add assessment batches and the roster columns"
 **Interfaces:**
 - Consumes: Task 1's `batch_id` column.
 - Produces:
-  - no new production signature. `scopeAwaitingRescore()` gains one additive `orWhere` branch: an entry with a non-null `batch_id` and no result is owed a score immediately, without waiting for the `failed` or 15-minutes-stale-in-`processing` conditions.
+  - no new production signature. `scopeAwaitingRescore()` gains **one** additive `orWhere` branch, narrow by design:
+
+    ```
+    batch_id IS NOT NULL  AND  submitted_for_analysis_at IS NOT NULL  AND  no result
+    ```
+
+    The `failed` and 15-minutes-stale-in-`processing` conditions are left exactly as they are, so a non-batch recording behaves identically. The `submitted_for_analysis_at` gate means **a half-finished batch cannot leak into the lane**: a teacher who rosters fifteen children and records three has three recordings stored and nothing queued until they send.
   - **`tests/Concerns/MakesBatchAssessments.php`** — the shared test helpers every later task uses. Define them here, once:
-    - `batchEntryWithAudio(array $attributes = []): Assessment` — a batch entry with a stored fake audio file; creates a batch unless `batch_id` is given
+    - `batchEntryWithAudio(array $attributes = []): Assessment` — a batch entry with a stored fake audio file, **not yet sent**; creates a batch unless `batch_id` is given
+    - `sentBatchEntry(array $attributes = []): Assessment` — the same, with `submitted_for_analysis_at` stamped
     - `assessmentWithAudio(array $attributes = []): Assessment` — the same without a batch
     - `classifiedAnalysis(array $overrides = []): array` — a minimal valid payload for `createResult()` with `classification_status = 'classified'`
     - `fakeEngine(bool $stt = true, bool $classifier = true): void` — `Http::fake()` for the Flask service, copied from `RescoreQueueTest`'s existing faking rather than reinvented
@@ -148,14 +220,27 @@ Tasks 3, 6, 7, 8, 9 and 10 all `use MakesBatchAssessments;` rather than rolling 
 
 This is the riskiest edit in the plan: the scope is shared with outage recovery that already works in production. It is widened **only** for rows with a `batch_id`.
 
+- [ ] **Step 0: Branch**
+
+```bash
+git switch feat/batch-assessment && git switch -c feat/batch-t02-claim
+```
+
 - [ ] **Step 1: Write the failing test**
 
 ```php
-public function test_a_batch_entry_is_owed_a_score_as_soon_as_its_audio_is_saved(): void
+public function test_a_sent_batch_entry_is_owed_a_score_at_once(): void
 {
-    $entry = $this->batchEntryWithAudio(['status' => Assessment::STATUS_PROCESSING]);
+    $entry = $this->sentBatchEntry(['status' => Assessment::STATUS_PROCESSING]);
 
     $this->assertTrue(Assessment::awaitingRescore()->whereKey($entry->id)->exists());
+}
+
+public function test_an_unsent_batch_entry_is_never_claimed(): void
+{
+    $entry = $this->batchEntryWithAudio();   // audio saved, not sent
+
+    $this->assertFalse(Assessment::awaitingRescore()->whereKey($entry->id)->exists());
 }
 
 public function test_a_single_child_recording_still_waits_for_the_stale_rule(): void
@@ -169,9 +254,9 @@ public function test_a_single_child_recording_still_waits_for_the_stale_rule(): 
     $this->assertFalse(Assessment::awaitingRescore()->whereKey($solo->id)->exists());
 }
 
-public function test_a_batch_entry_that_already_has_a_result_is_not_owed_a_score(): void
+public function test_a_sent_batch_entry_that_already_has_a_result_is_not_owed_a_score(): void
 {
-    $entry = $this->batchEntryWithAudio();
+    $entry = $this->sentBatchEntry();
     $entry->createResult($this->classifiedAnalysis());
 
     $this->assertFalse(Assessment::awaitingRescore()->whereKey($entry->id)->exists());
@@ -179,11 +264,25 @@ public function test_a_batch_entry_that_already_has_a_result_is_not_owed_a_score
 
 public function test_a_batch_entry_with_no_audio_is_not_owed_a_score(): void
 {
-    $entry = Assessment::factory()->create(['batch_id' => AssessmentBatch::factory(), 'audio_file' => null]);
+    $entry = Assessment::factory()->create([
+        'batch_id' => AssessmentBatch::factory(),
+        'audio_file' => null,
+        'submitted_for_analysis_at' => now(),   // even if somehow marked sent
+    ]);
 
     $this->assertFalse(Assessment::awaitingRescore()->whereKey($entry->id)->exists());
 }
+
+public function test_a_sent_entry_whose_result_lacks_a_classification_is_still_owed_one(): void
+{
+    $entry = $this->sentBatchEntry();
+    $entry->createResult($this->unclassifiedAnalysis());
+
+    $this->assertTrue(Assessment::awaitingRescore()->whereKey($entry->id)->exists());
+}
 ```
+
+The last one pins the model-or-nothing rule against the existing scope: an unclassified result is still owed a classification. Add `unclassifiedAnalysis()` to the helper trait beside `classifiedAnalysis()`.
 
 - [ ] **Step 2: Run the test to verify it fails**
 
@@ -194,6 +293,11 @@ Expected: FAIL on the first test — the batch entry is not yet claimed.
 
 Add the batch branch inside the existing `$unscored` closure, leaving the `failed` and stale-`processing` conditions exactly as they are. The `whereNotNull('audio_file')` guard at the top of the scope already covers the no-audio case. Create `tests/Concerns/MakesBatchAssessments.php` with the helpers listed in Interfaces.
 
+- [ ] **Step 3b: Confirm the new branch uses the composite index**
+
+Run: `php artisan tinker --execute="echo Assessment::awaitingRescore()->toSql();"` then `EXPLAIN` that query against a seeded table.
+Expected: the batch branch resolves via the `(batch_id, submitted_for_analysis_at)` index from Task 1, not a full scan. This query runs **every minute** in production, so a scan here is a standing cost.
+
 - [ ] **Step 4: Run the new test and the outage-recovery test together**
 
 Run: `php artisan test --filter="BatchRescoreClaimTest|RescoreQueueTest"`
@@ -203,7 +307,8 @@ Expected: PASS, with **zero edits to `RescoreQueueTest`**. If it needed editing,
 
 ```bash
 git add app/Models/Assessment.php tests/Concerns/MakesBatchAssessments.php tests/Feature/BatchRescoreClaimTest.php
-git commit -m "feat(batch): owe a score to a batch entry the moment its audio lands"
+git commit -m "feat(batch): owe a score to a batch entry once the teacher sends it"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t02-claim
 ```
 
 ---
@@ -301,6 +406,7 @@ Expected: both PASS, zero edits to existing test files.
 ```bash
 git add app/Services/AssessmentScorer.php app/Services/AnalysisQueueEstimator.php tests/Feature/AnalysisQueueEstimatorTest.php
 git commit -m "feat(batch): measure scoring time and estimate the queue wait"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t03-estimator
 ```
 
 ---
@@ -313,9 +419,22 @@ git commit -m "feat(batch): measure scoring time and estimate the queue wait"
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: the scheduled command becomes `assessments:rescore --limit=8`, `everyMinute()`, `withoutOverlapping(45)`.
+- Produces: the scheduled command becomes `assessments:rescore --limit=20`, `everyMinute()`, `withoutOverlapping(120)`.
+
+| Setting | Was | Now | Why |
+|---|---|---|---|
+| `--limit` | 5 | **20** | A full 15-child batch clears in **one run**, with room for a few single assessments alongside |
+| worst-case run | 15 min | **60 min** | 20 × 3 min |
+| × 1.5 margin | 22.5 min | **90 min** | The figure the lock must clear |
+| `withoutOverlapping` | 30 min | **120 min** | Comfortably above 90 |
+| tick | 5 min | **1 min** | See below |
 
 `everyMinute` is deliberate and not a typo: `withoutOverlapping` already prevents a second concurrent run, so a one-minute tick means "start again as soon as the lane is free" instead of idling to the next multiple of five. The command exits immediately when nothing is due, so an idle tick costs nothing.
+
+**Two costs to carry forward into Task 11's deploy notes, not to discover in production:**
+
+1. **A 60-minute run holds the single lane.** Another teacher's one-off assessment created mid-batch waits behind it. `RescoreQueue` orders `oldest('id')` first, so this is fair FIFO rather than starvation — but fair still means slow with one lane.
+2. **A 120-minute lock is a 120-minute liability if the process is killed.** `withoutOverlapping` releases on normal exit; a `SIGKILL` (OOM, `systemctl stop` mid-run, reboot) leaves the cache lock. Until it expires **nothing is rescored at all**, including outage recovery for ordinary single-child assessments. The unstick command is `php artisan schedule:clear-cache`, and the symptom is recordings sitting at `queued` with a demonstrably healthy engine and no `Rescored assessment` lines in the log.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -336,9 +455,12 @@ public function test_the_lane_is_tuned_for_a_batch_arriving_at_once(): void
 {
     $event = $this->rescoreEvent();
 
-    $this->assertStringContainsString('--limit=8', $event->command);
+    $this->assertStringContainsString('--limit=20', $event->command);
     $this->assertSame('* * * * *', $event->expression);     // every minute
-    $this->assertSame(45, $event->expiresAt);               // minutes
+    $this->assertSame(120, $event->expiresAt);              // minutes
+
+    // A full roster must clear in one run.
+    $this->assertGreaterThanOrEqual(config('assessment.batch_max_learners'), 20);
 }
 
 public function test_a_rescore_run_cannot_outlast_its_overlap_lock(): void
@@ -358,12 +480,12 @@ public function test_a_rescore_run_cannot_outlast_its_overlap_lock(): void
 }
 ```
 
-At today's values the guard computes `5 × 3 × 1.5 = 22.5` against a `30`-minute lock and would pass, so **confirm it fails for the right reason**: it must be the *first* test that fails, on `--limit=8` being absent. After Step 3 the guard computes `8 × 3 × 1.5 = 36` against `45` and passes with real margin.
+At today's values the guard computes `5 × 3 × 1.5 = 22.5` against a `30`-minute lock and passes, so the *first* test is what must fail. After Step 3 the guard computes `20 × 3 × 1.5 = 90` against `120` and passes with real margin.
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
 Run: `php artisan test --filter=RescoreScheduleTest`
-Expected: `test_the_lane_is_tuned_for_a_batch_arriving_at_once` FAILS — `--limit=8` not found in the command. If `assertNotNull` fails instead, the scheduler is not registering the command in the test environment; fix the test's access to the schedule before going further.
+Expected: `test_the_lane_is_tuned_for_a_batch_arriving_at_once` FAILS — `--limit=20` not found in the command. If `assertNotNull` fails instead, the scheduler is not registering the command in the test environment; fix the test's access to the schedule before going further.
 
 - [ ] **Step 3: Apply the new schedule in `routes/console.php`**
 
@@ -379,6 +501,7 @@ Expected: PASS
 ```bash
 git add routes/console.php tests/Feature/RescoreScheduleTest.php
 git commit -m "feat(batch): tune the rescore lane for 15 recordings at once"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t04-schedule
 ```
 
 ---
@@ -402,8 +525,11 @@ git commit -m "feat(batch): tune the rescore lane for 15 recordings at once"
     - `POST /assessments/batch` → `assessments.batch.store`
     - `GET  /assessments/batch/{batch}` → `assessments.batch.board`
     - `GET  /assessments/batch/{batch}/poll` → `assessments.batch.poll`
+    - `GET  /assessments/batch/{batch}/entry/{assessment}` → `assessments.batch.entry` (the card panel)
     - `POST /assessments/batch/{batch}/entry/{assessment}/upload-audio` → `assessments.batch.upload-audio`
     - `POST /assessments/batch/{batch}/entry/{assessment}/answers` → `assessments.batch.answers`
+    - `POST /assessments/batch/{batch}/entry/{assessment}/send` → `assessments.batch.send`
+    - `POST /assessments/batch/{batch}/send-all` → `assessments.batch.send-all`
     - `POST /assessments/batch/{batch}/cancel` → `assessments.batch.cancel`
 
 **Route ordering matters:** `/assessments/batch/create` must be declared **before** `/assessments/{assessment}`, for the same reason `/assessments/new` already is — see the existing comment at `routes/web.php:180`.
@@ -455,6 +581,7 @@ Expected: PASS
 ```bash
 git add config/assessment.php .env.example routes/web.php bootstrap/app.php app/Http/Middleware/EnsureBatchAssessmentEnabled.php app/Http/Controllers/AssessmentBatchController.php resources/views/assessments/batch tests/Feature/BatchFeatureFlagTest.php
 git commit -m "feat(batch): add the batch routes behind a default-off flag"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t05-flag
 ```
 
 ---
@@ -470,7 +597,8 @@ git commit -m "feat(batch): add the batch routes behind a default-off flag"
 - Produces:
   - `BatchRosterBuilder::build(User $teacher, array $input): AssessmentBatch` — validates the whole roster, creates the batch and one `Assessment` per entry inside a single transaction, and returns the batch.
   - Throws `Illuminate\Validation\ValidationException` with per-field messages; creates nothing when any entry is invalid.
-  - `$input` shape: `['title' => ?string, 'language' => string, 'assessment_type' => string, 'default_material_id' => int, 'school_class_id' => ?int, 'entries' => [['learner_id' => int, 'material_id' => ?int, 'recording_mode' => 'self'|'teacher', 'allow_fallback' => bool], ...]]`
+  - `$input` shape: `['title' => ?string, 'language' => string, 'assessment_type' => string, 'default_material_id' => int, 'school_class_id' => ?int, 'entries' => [['learner_id' => int, 'material_id' => ?int, 'allow_fallback' => bool], ...]]`
+  - **No `recording_mode`.** Every card offers both routes, so nothing about recording is decided at setup.
 
 Every rule already enforced by `AssessmentController::store()` is enforced here **per entry**, reusing the same thresholds and the same messages: material language must match the batch language; a material whose grade differs from the learner's requires that entry's own `allow_fallback`; the difference may never exceed one grade; comprehension and combined types require a material that has comprehension questions.
 
@@ -515,6 +643,7 @@ Expected: PASS
 ```bash
 git add app/Services/BatchRosterBuilder.php tests/Feature/BatchRosterBuilderTest.php
 git commit -m "feat(batch): validate a roster per child before creating anything"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t06-roster
 ```
 
 ---
@@ -566,81 +695,115 @@ Expected: PASS
 ```bash
 git add app/Http/Controllers/AssessmentBatchController.php resources/views/assessments/batch/create.blade.php resources/views/assessments/create.blade.php tests/Feature/BatchSetupTest.php
 git commit -m "feat(batch): add the batch setup screen"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t07-setup
 ```
 
 ---
 
-### Task 8: The board and its honest chips
+### Task 8: The card board
 
 **Files:**
 - Modify: `app/Http/Controllers/AssessmentBatchController.php` — `board()`, `poll()`
 - Create: `app/Services/BatchEntryState.php`
 - Create: `resources/views/assessments/batch/board.blade.php`
+- Create: `resources/views/assessments/batch/_card.blade.php`
+- Create: `public/css/batch-board.css`
 - Create: `public/js/batch-board.js`
 - Test: `tests/Feature/BatchBoardTest.php`
 
 **Interfaces:**
 - Consumes: `AnalysisQueueEstimator::forBatch()` (Task 3), the routes from Task 5.
 - Produces:
-  - `BatchEntryState::for(Assessment $entry): array` → `['chip' => string, 'label' => string, 'tone' => 'good'|'ok'|'help'|'none', 'action' => ?string]`
-  - `chip` is one of `waiting`, `owed`, `scoring`, `needs_verdict`, `done`, `given_up`, `needs_answers`
-  - `AssessmentBatch::refreshStatus(): void` — recomputes the batch's own status from its entries' chips and saves it. **This is the only thing that writes `assessment_batches.status`** apart from creation (`collecting`) and `cancel()`. Rules: any entry past `waiting` ⇒ `analyzing`; every entry `done` or `given_up` ⇒ `completed` with `completed_at`; a `cancelled` batch never changes. Called from `poll()`, so the board's own polling advances it and no extra scheduled work is needed.
-  - `poll()` returns `['entries' => [id => state], 'batch_status' => string, 'estimate' => ['remaining' => int, 'ahead' => int, 'seconds' => int]]`
+  - `BatchEntryState::for(Assessment $entry): array` → `['chip' => string, 'label' => string, 'tone' => 'good'|'ok'|'help'|'none', 'playable' => bool, 'action' => ?string]`
+  - `AssessmentBatch::refreshStatus(): void` — recomputes the batch's own status from its entries and saves it. **This is the only thing that writes `assessment_batches.status`** apart from creation (`collecting`) and `cancel()`. Rules: any entry past `waiting` ⇒ `analyzing`; every entry `done` or `failed` ⇒ `completed` with `completed_at`; a `cancelled` batch never changes. Called from `poll()`, so the board's own polling advances it and no extra scheduled work is needed.
+  - `poll()` returns `['entries' => [id => state], 'batch_status' => string, 'estimate' => ['remaining' => int, 'ahead' => int, 'seconds' => int], 'ready_to_send' => int]`
+
+**A grid of cards, one per child, every card clickable** — not a table. The card carries the child's name, the state chip, and the one action that state calls for; clicking it opens that child's panel (Task 9). Build on the staff shell with `<x-page-header>`; the board is reached from the setup screen, so it gets a back link labelled **"Assessments"**. Card tone classes reuse the existing `good` / `ok` / `help` / `none` palette from `parent.css` rather than inventing new colours.
+
+**The seven states are the user's own vocabulary.** Derive them in exactly this order and return the first match:
+
+| Chip | Condition | Card shows |
+|---|---|---|
+| `waiting` | no `audio_file` | *Conduct here*, join code |
+| `recorded` | audio saved, `submitted_for_analysis_at` null, no result | **audio player**, *Send for analysis*, *Re-record* |
+| `transcribing` | `analysis_started_at` set, `analysis_duration_ms` null, status `processing` | live progress; audio playable |
+| `queued` | `awaitingRescore()` claims it | place in line + ETA; audio playable |
+| `needs verdict` | result exists, classification not `unavailable`, no verdict | *Review* → existing results screen |
+| `done` | verdict exists | reading level + accuracy |
+| `failed` | `rescore_attempts >= RescoreQueue::MAX_ATTEMPTS`, no result | what went wrong, *Analyze* by hand |
+
+`playable` is simply `hasAudio()` — **audio is available in the card from `recorded` onward**, not only at `recorded`, so a surprising result stays checkable.
 
 This task carries four of the five Review Focus items, so its tests are the load-bearing ones in the plan.
 
-**`BatchEntryState` must never render raw `status`.** `RescoreQueue::rescore()` calls `markFailed()` during an engine outage *by design*, leaving the attempt uncounted. An entry whose `status` is `failed` but which `Assessment::awaitingRescore()` still claims is **`owed`, not failed** — it is waiting for the engine, and the board says so. Only `rescore_attempts >= RescoreQueue::MAX_ATTEMPTS` is `given_up`.
+**Two honesty rules, both enforced by the ordering above:**
+
+- **`BatchEntryState` must never render raw `status`.** `RescoreQueue::rescore()` calls `markFailed()` during an engine outage *by design*, leaving the attempt uncounted. An entry whose `status` is `failed` but which `awaitingRescore()` still claims is **`queued`, waiting for the speech engine** — never `failed`. Only `rescore_attempts >= MAX_ATTEMPTS` is `failed`.
+- **An unclassified result is not `done`.** A result with `classification_status = 'unavailable'` has measurements but no weakness label; `awaitingRescore()` still claims it, so it reads `queued` — waiting for the model. It must never present as finished.
+
+**One bulk action, and only one.** *Send all ready* releases every `recorded` card at once, for the common case of fifteen children reading simultaneously on their own devices. This is **not** a contradiction of the no-bulk-accept rule: sending asks the machine to measure something and a bad send costs lane time, whereas accepting a verdict writes a judgement about a child into their permanent record. The first is safe fifteen at a time; the second never is. **No bulk verdict control anywhere on this page.**
 
 - [ ] **Step 1: Write the failing test**
 
 ```php
 // Review Focus #1 — the one most likely to bite
-public function test_an_entry_waiting_for_a_downed_engine_reads_as_waiting_not_failed(): void
+public function test_an_entry_waiting_for_a_downed_engine_reads_as_queued_not_failed(): void
 {
-    $entry = $this->batchEntryWithAudio();
+    $entry = $this->sentBatchEntry();
     $entry->markFailed('The speech engine is down.');   // what RescoreQueue does on an outage
 
     $state = BatchEntryState::for($entry->fresh());
 
-    $this->assertSame('owed', $state['chip']);
+    $this->assertSame('queued', $state['chip']);
     $this->assertStringNotContainsStringIgnoringCase('failed', $state['label']);
 }
 
-public function test_an_entry_that_used_up_its_attempts_reads_as_given_up(): void
+public function test_an_entry_that_used_up_its_attempts_reads_as_failed(): void
 {
-    $entry = $this->batchEntryWithAudio(['rescore_attempts' => RescoreQueue::MAX_ATTEMPTS]);
+    $entry = $this->sentBatchEntry(['rescore_attempts' => RescoreQueue::MAX_ATTEMPTS]);
 
-    $this->assertSame('given_up', BatchEntryState::for($entry->fresh())['chip']);
+    $this->assertSame('failed', BatchEntryState::for($entry->fresh())['chip']);
 }
 
-// Review Focus #2
-public function test_a_comprehension_entry_missing_its_answers_says_so_rather_than_stalling_silently(): void
+// Review Focus #2 — the Send gate is what prevents the silent stall
+public function test_a_comprehension_entry_without_answers_cannot_be_sent(): void
 {
     $entry = $this->batchEntryWithAudio(['assessment_type' => Assessment::TYPE_COMBINED]);
-    // audio saved, no answers recorded — RescoreQueue::run() will skip this forever
 
     $state = BatchEntryState::for($entry->fresh());
 
-    $this->assertSame('needs_answers', $state['chip']);
-    $this->assertNotNull($state['action']);
+    $this->assertSame('recorded', $state['chip']);
+    $this->assertStringContainsStringIgnoringCase('question', $state['label']);
+    $this->assertNull($state['action']);   // Send is not offered until answers exist
 }
 
 // Review Focus #3
 public function test_the_board_omits_a_learner_the_teacher_no_longer_reaches(): void
 public function test_the_board_does_not_error_when_every_learner_moved_away(): void
 
+// the seven states
+public function test_an_entry_with_no_audio_reads_as_waiting(): void
+public function test_a_recorded_entry_reads_as_recorded_and_is_playable(): void
+public function test_an_entry_being_scored_right_now_reads_as_transcribing(): void
+public function test_a_sent_entry_waiting_its_turn_reads_as_queued(): void
 public function test_a_scored_entry_awaiting_a_verdict_reads_as_needs_verdict(): void
-public function test_an_entry_with_an_accepted_verdict_reads_as_done(): void
-public function test_an_unclassified_result_does_not_read_as_done(): void
+public function test_an_entry_with_a_verdict_reads_as_done(): void
+public function test_an_unclassified_result_reads_as_queued_not_done(): void
+
+// audio availability
+public function test_audio_is_playable_in_every_state_once_a_recording_exists(): void
+
+// board + batch status
 public function test_the_board_reads_weaknesses_through_weakness_outcome(): void
 public function test_poll_reports_the_estimate_and_every_entry(): void
+public function test_poll_counts_how_many_cards_are_ready_to_send(): void
 public function test_another_teacher_cannot_open_or_poll_this_board(): void
-public function test_the_batch_completes_when_every_entry_is_done_or_given_up(): void
+public function test_the_batch_completes_when_every_entry_is_done_or_failed(): void
 public function test_a_batch_turns_to_analyzing_once_any_entry_has_audio(): void
 public function test_a_cancelled_batch_is_not_revived_by_polling(): void
 ```
 
-`test_an_unclassified_result_does_not_read_as_done` pins the model-or-nothing rule: a result with `classification_status = 'unavailable'` is still owed a classification, not finished.
+`test_an_unclassified_result_reads_as_queued_not_done` pins the model-or-nothing rule; `test_an_entry_being_scored_right_now_reads_as_transcribing` pins that the state comes from Task 1's timing columns rather than from raw `status`.
 
 - [ ] **Step 2: Run the test to verify it fails**
 
@@ -649,24 +812,26 @@ Expected: FAIL — `BatchEntryState` not found.
 
 - [ ] **Step 3: Implement `BatchEntryState::for()` and `AssessmentBatch::refreshStatus()`**
 
-Derivation order matters — check in this sequence and return the first match:
+Derivation order matters — check in this sequence and return the first match. `failed` is checked **before** `queued` so an exhausted entry does not read as still waiting, and `transcribing` before `queued` because a scoring entry also satisfies `awaitingRescore()`:
 
 ```
-no audio                                        → waiting
-needs comprehension test, no answers            → needs_answers
-rescore_attempts >= MAX_ATTEMPTS, no result     → given_up
-awaitingRescore claims it                       → owed
-status = processing, claimed recently           → scoring
-result exists, classification unavailable       → owed
-result exists, no verdict                       → needs_verdict
-result exists, verdict exists                   → done
+no audio_file                                           → waiting
+no submitted_for_analysis_at, no result                 → recorded
+  (label names the blocker when answers are missing;
+   action is null until they exist)
+rescore_attempts >= MAX_ATTEMPTS, no result             → failed
+analysis_started_at set, analysis_duration_ms null      → transcribing
+awaitingRescore() claims it                             → queued
+  (covers both the outage case and an unclassified result)
+result exists, verdict exists                           → done
+result exists, no verdict                               → needs verdict
 ```
 
-- [ ] **Step 4: Implement `board()`, `poll()`, the view and the polling JS**
+- [ ] **Step 4: Implement `board()`, `poll()`, the card grid and the polling JS**
 
-Scope entries through the teacher's `accessibleLearnersQuery()` so Review Focus #3 holds. Poll on the same interval pattern as `assessments.session.poll`. The board is a nav-reachable page in its own right but is reached from the setup screen, so give it a back link labelled **"Assessments"**.
+Scope entries through the teacher's `accessibleLearnersQuery()` so Review Focus #3 holds. Poll on the same interval pattern as `assessments.session.poll`. Cards go in `_card.blade.php` so Task 9's panel and the board share one rendering of a card's chip and actions.
 
-**No bulk-accept control** anywhere on this page. Each child's verdict goes through the existing per-child flow.
+**No bulk verdict control** anywhere on this page. *Send all ready* is the only bulk action; each child's verdict goes through the existing per-child flow.
 
 - [ ] **Step 5: Run the test to verify it passes, then the full suite**
 
@@ -676,103 +841,145 @@ Expected: both PASS, zero edits to existing test files.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add app/Services/BatchEntryState.php app/Models/AssessmentBatch.php app/Http/Controllers/AssessmentBatchController.php resources/views/assessments/batch/board.blade.php public/js/batch-board.js tests/Feature/BatchBoardTest.php
-git commit -m "feat(batch): add the progress board and honest per-child state"
+git add app/Services/BatchEntryState.php app/Models/AssessmentBatch.php app/Http/Controllers/AssessmentBatchController.php resources/views/assessments/batch public/css/batch-board.css public/js/batch-board.js tests/Feature/BatchBoardTest.php
+git commit -m "feat(batch): add the card board and honest per-child state"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t08-board
 ```
 
 ---
 
-### Task 9: Teacher-led recording and comprehension entry
+### Task 9: The card panel — conduct, listen, send
 
 **Files:**
-- Modify: `app/Http/Controllers/AssessmentBatchController.php` — `uploadAudio()`, `answers()`
+- Modify: `app/Http/Controllers/AssessmentBatchController.php` — `entry()`, `uploadAudio()`, `answers()`, `send()`, `sendAll()`
+- Create: `resources/views/assessments/batch/entry.blade.php`
 - Create: `public/js/batch-recorder.js`
-- Modify: `resources/views/assessments/batch/board.blade.php` — the recording and answer panels
-- Test: `tests/Feature/BatchRecordingTest.php`
+- Test: `tests/Feature/BatchEntryPanelTest.php`
 
 **Interfaces:**
-- Consumes: Task 8's board, Task 5's upload and answers routes.
-- Produces: `uploadAudio()` stores the recording against the entry and returns `['success' => true, 'state' => <BatchEntryState::for()>]`; the entry is then owed a score and the teacher is **not** made to wait for scoring.
+- Consumes: Task 8's `BatchEntryState::for()` and `_card.blade.php`, Task 5's entry/upload/answers/send routes.
+- Produces:
+  - `entry()` renders the child's panel: the passage to read from, the recorder, the join code, the audio player when one exists, and the comprehension questions when the type needs them.
+  - `uploadAudio()` stores the recording and returns `['success' => true, 'state' => <BatchEntryState::for()>]`. The entry becomes **`recorded`**, *not* queued — nothing is sent yet.
+  - `send()` stamps `submitted_for_analysis_at` and returns the new state. **Refuses with 422 when the assessment needs comprehension answers and has none.**
+  - `sendAll()` stamps every `recorded` entry of the batch that is eligible, and reports how many were sent and how many were skipped for missing answers.
 
-**One recorder instance for the whole board, bound to the row the teacher is working on.** Teacher-led recording is sequential by definition — one child reads at a time — so a per-row recorder is unnecessary. `public/js/audio-recorder.js` cannot be reused: it is global-function and hard-coded to single-page element ids (`audioPlayback`, the comprehension gate, `window.BIGKAS_LOCAL_FLOW`), and it ends by navigating to a results page. `batch-recorder.js` is a small instance that records one row and posts it, nothing more.
+**The panel is where the teacher works.** This is the screen for a child with no device, or who needs to read from the teacher's laptop: open the card, the passage is there, record, listen, send. The same panel shows the join code for a child who does have a device, so the teacher chooses in the moment rather than at setup.
 
-**Ordering obligation, from the spec:** comprehension answers must be recorded **before** the audio is owed a score, via `ComprehensionService::record()`, exactly as `AssessmentController::analyze()` does. Otherwise a dead engine can discard a child's answers. Reuse the extension allow-list in `AssessmentController::keepRecording()` — the audio folder is served publicly, so a file named `recording.php` must never be written as-is.
+**One recorder instance, bound to the open panel.** Only one child reads at a time, so a per-card recorder is unnecessary. `public/js/audio-recorder.js` cannot be reused: it is global-function, hard-coded to single-page element ids (`audioPlayback`, the comprehension gate, `window.BIGKAS_LOCAL_FLOW`), and it ends by navigating to a results page. `batch-recorder.js` records the open panel and posts it, nothing more.
+
+**Ordering obligation, from the spec §4.3.** Comprehension answers must reach `ComprehensionService::record()` **before** anything is sent, exactly as `AssessmentController::analyze()` does — otherwise a dead engine can discard a child's answers. The Send gate enforces this structurally: `send()` refuses without answers, so an unanswered entry can never be in the lane.
+
+Reuse the extension allow-list in `AssessmentController::keepRecording()`: the audio folder is served publicly, so a file named `recording.php` must never be written as-is.
 
 - [ ] **Step 1: Write the failing test**
 
 ```php
-public function test_an_uploaded_batch_recording_is_owed_a_score_immediately(): void
-public function test_an_uploaded_recording_does_not_block_on_scoring(): void
-public function test_a_dangerous_file_extension_is_not_written_as_given(): void
-public function test_answers_are_recorded_before_the_entry_is_owed_a_score(): void
+// the recorded resting state
+public function test_an_uploaded_recording_rests_at_recorded_and_is_not_queued(): void
+{
+    $entry = // a waiting entry in this teacher's batch
+    $this->actingAs($this->teacher())->post(route('assessments.batch.upload-audio', [...]), [...]);
+
+    $entry->refresh();
+    $this->assertNotNull($entry->audio_file);
+    $this->assertNull($entry->submitted_for_analysis_at);
+    $this->assertFalse(Assessment::awaitingRescore()->whereKey($entry->id)->exists());
+}
+
+public function test_sending_puts_the_entry_in_the_lane(): void
+public function test_re_recording_replaces_the_audio_and_keeps_it_unsent(): void
+public function test_the_panel_offers_both_a_join_code_and_conduct_here(): void
+public function test_the_panel_shows_the_passage_the_child_must_read(): void
+public function test_the_audio_player_appears_once_a_recording_exists(): void
+
+// the Send gate — Review Focus #2, enforced structurally
+public function test_a_comprehension_entry_cannot_be_sent_without_answers(): void
+public function test_recording_answers_then_sending_works(): void
+public function test_answers_are_stored_before_anything_is_sent(): void
 public function test_answers_survive_when_no_speech_engine_answers(): void
-public function test_a_teacher_cannot_upload_to_another_teachers_batch(): void
-public function test_uploading_replaces_an_earlier_recording_for_that_entry(): void
+
+// send all
+public function test_send_all_sends_every_eligible_recorded_entry(): void
+public function test_send_all_skips_entries_missing_answers_and_reports_them(): void
+public function test_send_all_does_not_touch_entries_already_sent(): void
+
+// safety
+public function test_a_dangerous_file_extension_is_not_written_as_given(): void
+public function test_a_teacher_cannot_open_or_upload_to_another_teachers_batch(): void
+public function test_an_admin_cannot_record_in_a_batch(): void
 ```
 
-`test_answers_survive_when_no_speech_engine_answers` is the regression guard for the ordering obligation: record answers, fake a dead engine, let the lane run, and assert the answers are still there.
+`test_answers_survive_when_no_speech_engine_answers` is the regression guard for the ordering obligation: record answers, send, fake a dead engine, let the lane run, and assert the answers are still there.
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run: `php artisan test --filter=BatchRecordingTest`
+Run: `php artisan test --filter=BatchEntryPanelTest`
 Expected: FAIL
 
-- [ ] **Step 3: Implement the two endpoints and the recorder**
+- [ ] **Step 3: Implement the five endpoints, the panel view and the recorder**
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [ ] **Step 4: Run the test to verify it passes, then the full suite**
 
-Run: `php artisan test --filter=BatchRecordingTest`
-Expected: PASS
+Run: `php artisan test --filter=BatchEntryPanelTest && php artisan test`
+Expected: both PASS, zero edits to existing test files.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Commit and merge the phase**
 
 ```bash
-git add app/Http/Controllers/AssessmentBatchController.php public/js/batch-recorder.js resources/views/assessments/batch/board.blade.php tests/Feature/BatchRecordingTest.php
-git commit -m "feat(batch): record a child from the board and keep answers safe"
+git add app/Http/Controllers/AssessmentBatchController.php public/js/batch-recorder.js resources/views/assessments/batch/entry.blade.php tests/Feature/BatchEntryPanelTest.php
+git commit -m "feat(batch): conduct, listen and send from a child's card"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t09-panel
 ```
 
 ---
 
-### Task 10: Self-record join codes
+### Task 10: A join code for every child
 
 **Files:**
-- Modify: `app/Http/Controllers/AssessmentBatchController.php` — issue a session per `self` entry
-- Modify: `resources/views/assessments/batch/board.blade.php` — show each code
+- Modify: `app/Services/BatchRosterBuilder.php` — issue a session per entry
+- Modify: `resources/views/assessments/batch/entry.blade.php` — show the code
 - Test: `tests/Feature/BatchSelfRecordTest.php`
 
 **Interfaces:**
-- Consumes: the existing `AssessmentSession` model, `AssessmentSession::generateCode()`, and the existing student join flow.
-- Produces: one `AssessmentSession` per `recording_mode = 'self'` entry, created when the batch is created, with `status = 'waiting'` and the batch entry's `assessment_id`.
+- Consumes: the existing `AssessmentSession` model, `AssessmentSession::generateCode()`, and the existing student join flow; `BatchRosterBuilder::build()` from Task 6.
+- Produces: one `AssessmentSession` per entry — **every entry, unconditionally** — created with the batch, `status = 'waiting'` and that entry's `assessment_id`. Since there is no `recording_mode`, every child can use either route and the code always exists.
 
-No new table and no new student-facing flow — a self-record entry is exactly today's live session, created in bulk.
+No new table and no new student-facing flow: a self-recording child is exactly today's live session, created in bulk.
+
+**A child's own recording also rests at `recorded`.** The teacher still listens and sends, which is why *Send all ready* (Task 8) exists — fifteen children reading simultaneously produce fifteen `recorded` cards for the teacher to review and release.
 
 - [ ] **Step 1: Write the failing test**
 
 ```php
-public function test_a_self_record_entry_gets_its_own_join_code(): void
-public function test_a_teacher_led_entry_gets_no_join_code(): void
+public function test_every_entry_in_a_batch_gets_a_join_code(): void
 public function test_every_code_in_a_batch_is_distinct(): void
 public function test_a_child_joining_with_their_code_reaches_their_own_entry(): void
-public function test_a_childs_own_recording_leaves_the_entry_owed_a_score(): void
+public function test_a_child_cannot_join_another_childs_entry_with_their_own_code(): void
+public function test_a_childs_own_recording_rests_at_recorded_not_queued(): void
+public function test_a_cancelled_batch_s_codes_no_longer_admit_a_child(): void
 ```
+
+`test_a_childs_own_recording_rests_at_recorded_not_queued` is the one that matters: a self-recorded reading must not bypass the teacher's review and go straight into the lane.
 
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `php artisan test --filter=BatchSelfRecordTest`
 Expected: FAIL
 
-- [ ] **Step 3: Issue the sessions and surface the codes**
+- [ ] **Step 3: Issue the sessions and surface the code**
 
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `php artisan test --filter=BatchSelfRecordTest`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Commit and merge the phase**
 
 ```bash
-git add app/Http/Controllers/AssessmentBatchController.php resources/views/assessments/batch/board.blade.php tests/Feature/BatchSelfRecordTest.php
-git commit -m "feat(batch): issue a join code for every self-record entry"
+git add app/Services/BatchRosterBuilder.php resources/views/assessments/batch/entry.blade.php tests/Feature/BatchSelfRecordTest.php
+git commit -m "feat(batch): issue a join code for every child in a batch"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t10-codes
 ```
 
 ---
@@ -797,22 +1004,29 @@ Expected: suite PASS; the diff shows **only added files** under `tests/`, no mod
 
 - [ ] **Step 2: Document the deploy**
 
-The flag and its default; `BATCH_ASSESSMENT_ENABLED` needing `config:cache` to take effect; the new `--limit` / tick / lock values and the invariant tying them together; the `schedule:run` cron prerequisite; and all three cache rebuilds, per the project's standing deploy rule.
+Cover: the flag and its default; `BATCH_ASSESSMENT_ENABLED` needing `config:cache` to take effect; the new `--limit=20` / 1-minute tick / 120-minute lock and the invariant tying limit and lock together; the `schedule:run` cron prerequisite; and all three cache rebuilds, per the project's standing deploy rule.
+
+**Two operational notes that must not be omitted**, both from spec §8:
+- A 15-child batch holds the single lane for up to an hour; another teacher's one-off assessment created mid-batch waits behind it. Fair FIFO, but slow.
+- **`php artisan schedule:clear-cache`** is the unstick command when a run is killed rather than allowed to finish. Until the 120-minute lock expires, *nothing* is rescored — including outage recovery for ordinary single-child assessments. Document the symptom: recordings sitting at `queued` with a demonstrably healthy engine and no `Rescored assessment` lines in the log.
 
 - [ ] **Step 3: Measure a real batch of 15 against local Whisper**
 
-Record the observed median per-recording duration and the wall-clock time from last recording to last result. Confirm against the spec's stated 25–45 minutes, and confirm no recording was scored twice.
+Record the observed median per-recording duration and the wall-clock time from the last *send* to the last result. Confirm against the spec's stated 25–45 minutes, confirm the whole roster cleared in one run, and confirm no recording was scored twice.
 
-- [ ] **Step 4: Re-tune `--limit` if the measurement disagrees with the estimate**
+- [ ] **Step 4: Re-tune if the measurement disagrees**
 
-If the measured worst case per recording exceeds 3 minutes, `--limit=8` breaches the §8 invariant and both it and `withoutOverlapping` must move. `RescoreScheduleTest` from Task 4 should fail if they do not.
+If the measured worst case per recording exceeds 3 minutes, `--limit=20` breaches the §8 invariant and both it and `withoutOverlapping` must move together. `RescoreScheduleTest` from Task 4 should fail if they do not.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Commit, merge, and stop**
 
 ```bash
 git add docs/deployment-vps.md
 git commit -m "docs(batch): deploy notes for the batch flag and the tuned lane"
+git switch feat/batch-assessment && git merge --no-ff feat/batch-t11-deploy
 ```
+
+**Do not merge `feat/batch-assessment` into `master`.** That is a separate, explicit decision for the user to take after reviewing the measured run (spec §9.3).
 
 ---
 

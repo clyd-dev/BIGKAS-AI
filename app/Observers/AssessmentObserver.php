@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Assessment;
+use App\Models\AssessmentBatch;
 
 /**
  * Keeps a batch's stored status true to its entries, with nobody watching.
@@ -21,8 +22,17 @@ class AssessmentObserver
             return;
         }
 
+        // Found fresh, never through the cached $assessment->batch relation.
+        // refreshStatus() decides whether to write by comparing against the
+        // instance it holds, so a cached batch whose row has since been changed
+        // by another instance - AssessmentVerdictObserver does exactly that -
+        // would compare against its own last write, decline to write, and leave
+        // the stored row saying `completed` with a stale completed_at while an
+        // entry read `queued`. Both observers now recompute from a fresh
+        // instance, so they cannot disagree.
+        //
         // refreshStatus() saves the batch, not the assessment, so this cannot
         // re-enter.
-        $assessment->batch?->refreshStatus();
+        AssessmentBatch::find($assessment->batch_id)?->refreshStatus();
     }
 }

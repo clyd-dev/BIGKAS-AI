@@ -16,6 +16,10 @@ class AssessmentBatchController extends Controller
 {
     use AuthorizesLearnerAccess;
 
+    public function __construct(private AnalysisQueueEstimator $estimator)
+    {
+    }
+
     public function create()
     {
         $user = auth()->user();
@@ -66,13 +70,13 @@ class AssessmentBatchController extends Controller
         $this->authorizeBatch($batch);
 
         $entries = $this->boardEntries($batch);
-        $states = $entries->mapWithKeys(fn (Assessment $entry) => [$entry->id => BatchEntryState::for($entry)]);
+        $states = BatchEntryState::forAll($entries);
 
         return view('assessments.batch.board', [
             'batch' => $batch,
             'entries' => $entries,
             'states' => $states,
-            'estimate' => app(AnalysisQueueEstimator::class)->forBatch($batch),
+            'estimate' => $this->estimator->forBatch($batch),
             'readyToSend' => $this->readyToSend($states),
         ]);
     }
@@ -87,13 +91,12 @@ class AssessmentBatchController extends Controller
     {
         $this->authorizeBatch($batch);
 
-        $states = $this->boardEntries($batch)
-            ->mapWithKeys(fn (Assessment $entry) => [$entry->id => BatchEntryState::for($entry)]);
+        $states = BatchEntryState::forAll($this->boardEntries($batch));
 
         return response()->json([
             'entries' => $states,
             'batch_status' => $batch->status,
-            'estimate' => app(AnalysisQueueEstimator::class)->forBatch($batch),
+            'estimate' => $this->estimator->forBatch($batch),
             'ready_to_send' => $this->readyToSend($states),
         ]);
     }

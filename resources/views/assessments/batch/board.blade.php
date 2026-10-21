@@ -70,6 +70,9 @@
     <script>
         window.BATCH_BOARD = {
             pollUrl: '{{ route("assessments.batch.poll", $batch) }}',
+            // Used only to re-render a single card whose new state needs
+            // server-side markup; the page itself is never reloaded.
+            boardUrl: '{{ route("assessments.batch.board", $batch) }}',
             status: '{{ $batch->status }}',
         };
     </script>

@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\BatchEntryState;
 use App\Services\RescoreQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\MakesBatchAssessments;
 use Tests\TestCase;
@@ -348,6 +349,74 @@ class BatchBoardTest extends TestCase
             ->assertDontSee('Oral Reading Fluency');
     }
 
+    /**
+     * A waiting card names the passage this child will read - their own, which
+     * may differ from the batch default - and never leaves the slot blank.
+     *
+     * Both assessments.material_id and assessment_batches.default_material_id
+     * are NOT NULL, so neither can actually be missing; the card resolves the
+     * title rather than guarding on the batch relation, so it still says
+     * something honest if either column is ever made nullable.
+     */
+    public function test_a_waiting_card_names_the_passage_this_child_will_read(): void
+    {
+        $teacher = $this->teacher();
+        $batch = $this->boardBatch($teacher);
+
+        $ownPassage = ReadingMaterial::factory()->create(['title' => 'The Long Tailed Dog']);
+        Assessment::factory()->create([
+            'batch_id' => $batch->id,
+            'learner_id' => $this->learnersOf($teacher)[0]->id,
+            'material_id' => $ownPassage->id,
+        ]);
+
+        $this->actingAs($teacher)->get(route('assessments.batch.board', $batch))
+            ->assertOk()
+            ->assertSee('Passage: The Long Tailed Dog')
+            ->assertDontSee($batch->defaultMaterial->title);
+    }
+
+    /**
+     * The rescore lane is the single definition of "owed a score", and it is
+     * asked once per board, not once per card: the number of lane queries must
+     * not grow with the number of children.
+     */
+    public function test_the_board_asks_the_rescore_lane_once_not_once_per_card(): void
+    {
+        $teacher = $this->teacher();
+        $learners = $this->learnersOf($teacher);
+
+        $small = $this->boardBatch($teacher);
+        $this->sentBatchEntry(['batch_id' => $small->id, 'learner_id' => $learners[0]->id]);
+
+        $large = $this->boardBatch($teacher);
+        foreach ($learners as $learner) {
+            $this->sentBatchEntry(['batch_id' => $large->id, 'learner_id' => $learner->id]);
+        }
+
+        $this->assertSame(
+            $this->laneQueryCount($teacher, $small),
+            $this->laneQueryCount($teacher, $large),
+            'polling a board of three costs the same number of rescore-lane queries as a board of one'
+        );
+    }
+
+    /** How many queries one poll sends that carry scopeAwaitingRescore()'s shape. */
+    private function laneQueryCount(User $teacher, AssessmentBatch $batch): int
+    {
+        $count = 0;
+
+        DB::listen(function ($query) use (&$count) {
+            if (str_contains($query->sql, 'audio_file') && str_contains($query->sql, 'classification_status')) {
+                $count++;
+            }
+        });
+
+        $this->actingAs($teacher)->get(route('assessments.batch.poll', $batch))->assertOk();
+
+        return $count;
+    }
+
     /** The standing reassurance, and the estimate line beside it. */
     public function test_the_board_promises_that_analysis_continues_after_you_close_it(): void
     {
@@ -484,6 +553,46 @@ class BatchBoardTest extends TestCase
 
         $this->assertSame(AssessmentBatch::STATUS_COMPLETED, $batch->fresh()->status);
         $this->assertNotNull($batch->fresh()->completed_at);
+    }
+
+    /**
+     * A batch that goes backwards must stop calling itself finished.
+     *
+     * This is the stale-instance path: the batch row is completed by the verdict
+     * observer, which holds its own fresh AssessmentBatch, and then the *same*
+     * in-memory Assessment is saved again. While the assessment observer
+     * refreshed through the cached $assessment->batch relation, that cached row
+     * still believed `analyzing` from its own earlier write, so refreshStatus()
+     * compared against itself, declined to write, and left the stored row saying
+     * `completed` with a stale completed_at while the entry read `queued`.
+     */
+    public function test_a_batch_that_goes_backwards_stops_reporting_itself_finished(): void
+    {
+        $batch = AssessmentBatch::factory()->create();
+        $entry = $this->sentBatchEntry(['batch_id' => $batch->id]);
+
+        $entry->createResult($this->classifiedAnalysis());
+        $entry->verdict()->create($this->acceptedVerdict());
+
+        $this->assertSame(AssessmentBatch::STATUS_COMPLETED, AssessmentBatch::findOrFail($batch->id)->status);
+        $this->assertNotNull(AssessmentBatch::findOrFail($batch->id)->completed_at);
+
+        // The reading is thrown back into the lane: its verdict and result go,
+        // and it is sent again - all through the same $entry instance.
+        $entry->verdict()->delete();
+        $entry->result()->delete();
+        $entry->forceFill([
+            'status' => Assessment::STATUS_PROCESSING,
+            'submitted_for_analysis_at' => now(),
+        ])->save();
+
+        // Asserted on freshly loaded instances, never on the in-memory ones.
+        $this->assertSame('queued', BatchEntryState::for(Assessment::findOrFail($entry->id))['chip']);
+
+        $stored = AssessmentBatch::findOrFail($batch->id);
+
+        $this->assertSame(AssessmentBatch::STATUS_ANALYZING, $stored->status);
+        $this->assertNull($stored->completed_at);
     }
 
     public function test_poll_writes_nothing(): void

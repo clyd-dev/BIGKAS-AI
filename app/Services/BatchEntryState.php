@@ -43,9 +43,55 @@ use App\Models\AssessmentResult;
 class BatchEntryState
 {
     /**
+     * Every entry's state, keyed by entry id, with the rescore lane asked once
+     * instead of once per card.
+     *
+     * @param  iterable<Assessment>  $entries
+     * @return \Illuminate\Support\Collection<int, array>
+     */
+    public static function forAll($entries)
+    {
+        $entries = collect($entries);
+        $claimed = self::claimedIds($entries);
+
+        return $entries->mapWithKeys(fn (Assessment $entry) => [
+            $entry->getKey() => self::for($entry, $claimed),
+        ]);
+    }
+
+    /**
+     * Which of these entries the rescore lane claims, in one query.
+     *
+     * Asked through Assessment::scopeAwaitingRescore() and nothing else: the
+     * scope stays the single definition of "owed a score", because a copy of
+     * its conditions in PHP is how the lane and the board would drift apart -
+     * and that drift would read as exactly the dishonesty this class exists to
+     * prevent.
+     *
+     * @param  iterable<Assessment>  $entries
+     * @return int[]
+     */
+    public static function claimedIds($entries): array
+    {
+        $keys = collect($entries)->map(fn (Assessment $entry) => $entry->getKey())->filter()->values()->all();
+
+        if ($keys === []) {
+            return [];
+        }
+
+        // Never cached across calls: what the lane claims changes as entries are
+        // saved, and a remembered answer would be the same stale-state lie this
+        // class exists to prevent.
+        return Assessment::awaitingRescore()->whereIn('id', $keys)->pluck('id')
+            ->map(fn ($id) => (int) $id)->all();
+    }
+
+    /**
+     * @param  int[]|null  $claimedIds  the pre-fetched claimed set from claimedIds(),
+     *                                  or null to ask the lane about this one entry.
      * @return array{chip: string, label: string, tone: string, playable: bool, action: ?string, result_url: ?string}
      */
-    public static function for(Assessment $entry): array
+    public static function for(Assessment $entry, ?array $claimedIds = null): array
     {
         $playable = $entry->hasAudio();
         $hasResult = $entry->result !== null;
@@ -87,7 +133,11 @@ class BatchEntryState
             return $state('transcribing', 'Listening to the recording now.', 'ok');
         }
 
-        if (Assessment::awaitingRescore()->whereKey($entry->getKey())->exists()) {
+        $claimed = $claimedIds === null
+            ? Assessment::awaitingRescore()->whereKey($entry->getKey())->exists()
+            : in_array($entry->getKey(), $claimedIds, true);
+
+        if ($claimed) {
             // Both the engine-outage case and an unclassified result land here.
             return $hasResult && $entry->result->classification_status === AssessmentResult::STATUS_UNAVAILABLE
                 ? $state('queued', 'Measured, waiting for the model to name the weakness.', 'ok')

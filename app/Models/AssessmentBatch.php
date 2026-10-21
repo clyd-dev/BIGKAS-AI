@@ -87,7 +87,9 @@ class AssessmentBatch extends Model
             return;
         }
 
-        $chips = $entries->map(fn (Assessment $entry) => \App\Services\BatchEntryState::for($entry)['chip']);
+        // forAll(), not for() per entry: the rescore lane is asked once for the
+        // whole board instead of once per card, through the same scope.
+        $chips = \App\Services\BatchEntryState::forAll($entries)->map(fn (array $state) => $state['chip']);
 
         if ($chips->every(fn (string $chip) => in_array($chip, ['done', 'failed'], true))) {
             $this->writeStatus(self::STATUS_COMPLETED, $this->completed_at ?? now());

@@ -1033,6 +1033,47 @@ class BatchCancelTest extends TestCase
         Storage::disk('public')->assertExists($entry->audio_file);
     }
 
+    /**
+     * The destructive path cannot half-happen.
+     *
+     * deleteEntry() removes the sessions and then the entry. Without a
+     * transaction, a failure between the two leaves a child's sessions gone and
+     * their entry behind - and the audio file gone with them, which no rollback
+     * could bring back. So the database work is one transaction and the file is
+     * removed only after it commits.
+     *
+     * The failure is injected on the entry's own delete, which is the only
+     * statement that can realistically fail after the sessions have gone.
+     */
+    public function test_a_failed_delete_leaves_the_entry_its_sessions_and_its_recording(): void
+    {
+        $batch = $this->batchOf($this->teacher());
+        $entry = $this->record($batch->entries()->orderBy('id')->first());
+        $audio = $entry->audio_file;
+
+        $this->assertDatabaseHas('assessment_sessions', ['assessment_id' => $entry->id]);
+
+        Assessment::deleting(function () {
+            throw new \RuntimeException('the database went away mid-delete');
+        });
+
+        $deleteEntry = new \ReflectionMethod(\App\Http\Controllers\AssessmentBatchController::class, 'deleteEntry');
+        $deleteEntry->setAccessible(true);
+
+        try {
+            $deleteEntry->invoke(app(\App\Http\Controllers\AssessmentBatchController::class), $entry);
+            $this->fail('the injected failure should have propagated');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('went away', $e->getMessage());
+        }
+
+        // Nothing half-happened: the row, its sessions and its recording are
+        // all exactly as they were.
+        $this->assertDatabaseHas('assessments', ['id' => $entry->id, 'batch_id' => $batch->id]);
+        $this->assertDatabaseHas('assessment_sessions', ['assessment_id' => $entry->id]);
+        Storage::disk('public')->assertExists($audio);
+    }
+
     // ── An emptied board claims nothing ───────────────────────────────
 
     public function test_a_batch_emptied_of_its_last_entry_stops_claiming_to_be_analysing(): void

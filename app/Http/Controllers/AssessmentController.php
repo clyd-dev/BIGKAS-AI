@@ -140,7 +140,7 @@ class AssessmentController extends Controller
         }
         if ($gradeDiff > 1) {
             return back()
-                ->withErrors(['material_id' => 'Cross-grade fallback is limited to one grade above or below the learner\u2019s grade.'])
+                ->withErrors(['material_id' => 'Cross-grade fallback is limited to one grade above or below the learner’s grade.'])
                 ->withInput();
         }
 

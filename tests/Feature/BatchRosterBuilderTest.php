@@ -210,10 +210,10 @@ class BatchRosterBuilderTest extends TestCase
 
         $errors = $this->errorsOf(fn () => app(BatchRosterBuilder::class)->build($teacher, $input));
 
-        // Asserts the CORRECT wording (a real U+2019 apostrophe), not parity with
-        // AssessmentController::store(): that copy is single-quoted, so it renders a
-        // literal backslash-u2019. The divergence is deliberate and known; reconcile it
-        // on the controller side once the single-child flow may be touched.
+        // A real U+2019 apostrophe, matching AssessmentController::store() byte for
+        // byte. Both copies once held a single-quoted ’ escape, which PHP does
+        // not process, so teachers read the escape itself; the controller's copy was
+        // corrected to the same character this asserts.
         $this->assertSame(
             ['Cross-grade fallback is limited to one grade above or below the learner’s grade.'],
             $errors['entries.0.material_id']

@@ -25,7 +25,7 @@ class AnalysisQueueEstimator
     public const WINDOW = 20;
 
     /** Tick used when the schedule cannot be read (the web process does not load it). */
-    private const FALLBACK_TICK_SECONDS = 300;
+    private const FALLBACK_TICK_SECONDS = 60;
 
     public function __construct(private RescoreQueue $queue)
     {

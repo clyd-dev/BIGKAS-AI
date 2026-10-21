@@ -523,6 +523,48 @@ class BatchCancelTest extends TestCase
             ->assertOk()->assertJson(['batch_status' => AssessmentBatch::STATUS_CANCELLED]);
     }
 
+    /**
+     * cancel() writes `cancelled` before it un-sends anything - pinned by
+     * watching the batch from inside the loop.
+     *
+     * This is the assertion R42 was missing. Asserting the final row cannot see
+     * the ordering at all: with the status written last, the un-sends do drive
+     * AssessmentObserver -> refreshStatus() mid-method, but the entry just
+     * un-sent reads `recorded`, so the recompute lands on `analyzing` - the
+     * same value the batch already held - and cancel() then overwrites it. The
+     * final row, completed_at included, is identical either way.
+     *
+     * What differs is what refreshStatus() *sees* while it runs. So this reads
+     * the batch back from the database at the moment each entry is saved: with
+     * the status written first it is already `cancelled`, which is what makes
+     * refreshStatus()'s early return cover the whole method rather than only
+     * its tail. Without that, the guard protects nothing during the one window
+     * where a batch is being recomputed from entries the teacher just stopped,
+     * and any future change to refreshStatus()'s rules turns it into the bug
+     * R42 describes.
+     */
+    public function test_cancel_writes_its_status_before_it_un_sends_anything(): void
+    {
+        $batch = $this->batchOf($this->teacher(), 2);
+        $entries = $batch->entries()->orderBy('id')->get();
+        $this->scored($entries[0]);
+        $this->queue($entries[1]);
+
+        $seen = [];
+        Assessment::updated(function (Assessment $entry) use ($batch, &$seen) {
+            $seen[] = AssessmentBatch::find($batch->getKey())?->status;
+        });
+
+        $this->actingAs($batch->teacher)->post(route('assessments.batch.cancel', $batch))->assertRedirect();
+
+        $this->assertNotEmpty($seen, 'fixture: the cancel must have un-sent at least one entry');
+        $this->assertSame(
+            [AssessmentBatch::STATUS_CANCELLED],
+            array_values(array_unique($seen)),
+            'every write inside cancel() must happen against a batch that is already cancelled'
+        );
+    }
+
     public function test_a_cancelled_batchs_join_codes_no_longer_admit_a_child(): void
     {
         $batch = $this->batchOf($this->teacher());

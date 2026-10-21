@@ -476,7 +476,7 @@ database/migrations/2026_10_21_010001_add_batch_columns_to_assessments_table.php
   <tbody>
     <tr><td><code>id</code></td><td><code>id()</code></td><td>—</td></tr>
     <tr><td><code>teacher_id</code></td><td><code>foreignId</code> → <code>users</code>, <code>restrictOnDelete</code></td><td>Owner; batches are per-teacher. Restrict, matching how <code>assessments.assessor_id</code> already guards the user who administered an assessment — a teacher with history is never silently deleted.</td></tr>
-    <tr><td><code>school_class_id</code></td><td><code>foreignId</code> nullable → <code>school_classes</code>, <code>nullOnDelete</code></td><td>Nullable: a batch may be hand-picked learners rather than a class. If the class is later deleted the batch survives as a historical record.</td></tr>
+    <tr><td><code>school_class_id</code></td><td><code>foreignId</code> nullable → <code>classes</code>, <code>nullOnDelete</code></td><td>Nullable: a batch may be hand-picked learners rather than a class. If the class is later deleted the batch survives as a historical record. <b>The table is <code>classes</code></b> (<code>SchoolClass::$table</code>), not <code>school_classes</code>; the column keeps the <code>school_class_id</code> name.</td></tr>
     <tr><td><code>title</code></td><td><code>string</code> nullable</td><td>Teacher's own label.</td></tr>
     <tr><td><code>language</code></td><td><code>string(8)</code></td><td>Comment: <code>en | fil | hil</code>. Mirrors the values of <code>assessments.language</code>.</td></tr>
     <tr><td><code>assessment_type</code></td><td><code>string(16)</code></td><td>Comment: <code>oral_reading | comprehension | combined</code>. Batch-wide; one type per batch.</td></tr>

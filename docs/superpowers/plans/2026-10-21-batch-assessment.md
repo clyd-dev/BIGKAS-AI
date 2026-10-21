@@ -71,7 +71,7 @@ Five conditions the spec implies that no task's happy path exercises, most likel
 | Column | Type | On delete | Why |
 |---|---|---|---|
 | `teacher_id` | `foreignId` → `users` | `restrictOnDelete` | Matches `assessments.assessor_id` — a teacher with history is never silently deleted |
-| `school_class_id` | `foreignId` nullable → `school_classes` | `nullOnDelete` | A hand-picked batch has no class; a deleted class leaves the batch as history |
+| `school_class_id` | `foreignId` nullable → **`classes`** | `nullOnDelete` | A hand-picked batch has no class; a deleted class leaves the batch as history. The table is `classes` (`SchoolClass::$table`), not `school_classes` — the column keeps the `school_class_id` name. |
 | `title` | `string` nullable | — | Teacher's own label |
 | `language` | `string(8)` | — | Comment: `en \| fil \| hil` |
 | `assessment_type` | `string(16)` | — | Comment: `oral_reading \| comprehension \| combined` |

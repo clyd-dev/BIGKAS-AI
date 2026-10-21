@@ -28,8 +28,29 @@
                     Send all ready <span class="badge bg-light text-dark ms-1" data-ready-count>{{ $readyToSend }}</span>
                 </button>
             </form>
+
+            @if($batch->status !== \App\Models\AssessmentBatch::STATUS_CANCELLED)
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelBatchModal">
+                    <i class="bi bi-slash-circle me-1"></i> Cancel batch
+                </button>
+            @endif
         </x-slot:actions>
     </x-page-header>
+
+    @if($batch->status === \App\Models\AssessmentBatch::STATUS_CANCELLED)
+        {{-- A cancelled batch is the record of what was accomplished before the
+             teacher stopped, so the cards stay. --}}
+        <div class="alert alert-secondary d-flex align-items-start gap-2" role="status">
+            <i class="bi bi-slash-circle mt-1"></i>
+            <div>
+                <div class="fw-semibold">This batch was cancelled{{ $batch->cancelled_at ? ' on ' . $batch->cancelled_at->format('j M Y, g:ia') : '' }}.</div>
+                <div class="small text-muted">
+                    The readings below are what was done before it stopped — they are kept. Nothing more can be
+                    recorded or sent from this batch; start a new one for any child who still needs a reading.
+                </div>
+            </div>
+        </div>
+    @endif
 
     <div class="alert alert-light border d-flex align-items-start gap-2" role="status">
         <i class="bi bi-shield-check mt-1"></i>
@@ -62,6 +83,42 @@
             @foreach($entries as $entry)
                 @include('assessments.batch._card', ['batch' => $batch, 'entry' => $entry, 'state' => $states[$entry->id], 'joinCode' => $joinCodes[$entry->id] ?? null])
             @endforeach
+        </div>
+    @endif
+
+    @if($batch->status !== \App\Models\AssessmentBatch::STATUS_CANCELLED)
+        {{--
+            The confirmation names the consequences rather than asking a generic
+            "are you sure?": a teacher pressing this needs to know which children
+            keep their results and what is about to be stopped. The sentence is
+            built from BatchEntryState in the controller, so it cannot promise
+            something the cards do not show.
+        --}}
+        <div class="modal fade" id="cancelBatchModal" tabindex="-1" aria-labelledby="cancelBatchModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title h5" id="cancelBatchModalLabel">Cancel this batch?</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2">{{ $cancelConsequences }}</p>
+                        <p class="small text-muted mb-0">
+                            No child’s result is ever deleted by this. Readings already measured stay on this board
+                            and on each child’s own history.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Keep going</button>
+                        <form method="POST" action="{{ route('assessments.batch.cancel', $batch) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-slash-circle me-1"></i> Cancel batch
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     @endif
 @endsection

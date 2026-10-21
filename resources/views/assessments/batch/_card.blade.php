@@ -25,6 +25,30 @@
     $entryUrl = route('assessments.batch.entry', [$batch, $entry]);
     $childName = $entry->learner?->full_name ?? 'Unknown child';
     $signature = implode('|', [$state['chip'], $state['label'], $state['action'] ?? '', $state['result_url'] ?? '']);
+
+    /*
+     * Which way this child leaves the board, by state - and `transcribing`
+     * leaves it no way at all, because a running Whisper process cannot be
+     * aborted honestly and a button that did not do what it claimed would be
+     * worse than no button.
+     *
+     *   remove  the row, its session and its unsent audio are deleted; nothing
+     *           has been measured
+     *   unsend  the reading comes back out of the lane, audio kept
+     *   detach  batch_id = null and nothing else: the result, the verdict and
+     *           the comprehension answers all stay on the child's record
+     *
+     * `queued` offers no remove on purpose: the teacher cancels the analysis
+     * first, so taking a child off the board is never also a decision about
+     * lane time. Every one of these is re-checked in the controller at write
+     * time - this board may be a minute old.
+     */
+    $manage = match ($state['chip']) {
+        'waiting', 'recorded' => 'remove',
+        'queued' => 'unsend',
+        'needs verdict', 'done', 'failed' => 'detach',
+        default => '',
+    };
 @endphp
 
 <div class="col-12 col-sm-6 col-lg-4">
@@ -103,6 +127,51 @@
                     <a href="{{ $entryUrl }}" class="btn btn-sm btn-outline-primary">{{ $state['action'] }}</a>
                 @endif
             </div>
+
+            {{--
+                Kept out of [data-actions] deliberately: the poll rebuilds that
+                row's HTML from JSON, which would wipe a form and its CSRF
+                token. data-manage is what the poll compares instead - when the
+                state calls for a different one, the card is re-rendered by the
+                server rather than patched here.
+            --}}
+            @if($state['chip'] === 'transcribing')
+                <p class="small text-muted mb-0 fst-italic" data-manage="">
+                    Being analysed now — this one cannot be stopped. The result appears on this card when it is done.
+                </p>
+            @elseif($manage !== '')
+                <div class="d-flex flex-wrap gap-2 bb-act" data-manage="{{ $manage }}">
+                    @if($manage === 'unsend')
+                        <form method="POST" action="{{ route('assessments.batch.unsend', [$batch, $entry]) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Cancel analysis
+                            </button>
+                        </form>
+                    @elseif($manage === 'detach')
+                        {{-- Nothing is deleted here: this only takes the child off
+                             the board. The reading, its result, your verdict and
+                             the comprehension answers stay on their history. --}}
+                        <form method="POST" action="{{ route('assessments.batch.entry.remove', [$batch, $entry]) }}"
+                              onsubmit="return confirm('Take {{ $childName }} off this board? Their reading, its result and your verdict are all kept on their own history — only the batch link is removed.')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-box-arrow-right me-1"></i> Remove from batch
+                            </button>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('assessments.batch.entry.remove', [$batch, $entry]) }}"
+                              onsubmit="return confirm('{{ $state['chip'] === 'recorded' ? 'Remove ' . $childName . ' and delete the recording that has not been sent? Nothing has been measured yet, so nothing is lost from their record.' : 'Remove ' . $childName . ' from this batch? Nothing has been recorded for them yet.' }}')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-x-lg me-1"></i> Remove
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 </div>

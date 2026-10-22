@@ -546,9 +546,57 @@ class AssessmentController extends Controller
         };
     }
 
+    /**
+     * The conditional guard on the one door that scores in the request (R51).
+     *
+     * analyze() runs the whole pipeline synchronously, so pointed at a batch
+     * entry it does two things at once that the feature exists to prevent: it
+     * scores a reading the teacher never sent, and it takes the host’s single
+     * scoring slot while the rest of the batch waits in a strictly serial lane.
+     * There is no button for it on that screen any more - R48 gated the conduct
+     * card - but the route is still a route.
+     *
+     * It cannot simply be shut, because reanalyze() calls analyze() and
+     * re-analysing a batch result the model could not classify is the only way
+     * out of the circular unclassified state (R45). So the rule is conditional
+     * and the condition is the measurement itself:
+     *
+     *   no result  -> a Send bypass. Refused.
+     *   a result   -> the Send already happened and the reading has already been
+     *                 measured; this is a re-analysis of something the teacher
+     *                 asked for. Permitted.
+     *
+     * Always a JSON 409, never a redirect: analyze() answers JSON on every
+     * other path, its callers are fetch, and reanalyze() reads this response
+     * with getData() - a redirect here would crash the teacher’s re-analysis
+     * instead of explaining itself to her.
+     *
+     * A single-child reading has batch_id === null and is handed straight back
+     * to the identical path.
+     */
+    private function refuseIfUnmeasuredBatchEntry(Assessment $assessment): ?\Illuminate\Http\JsonResponse
+    {
+        if ($assessment->batch_id === null || $assessment->result !== null) {
+            return null;
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'This reading belongs to a group assessment and has not been sent for analysis yet, '
+                . 'so it is not analysed from here: send it from the batch board when you have listened to it, '
+                . 'and it is scored in turn with the rest of the group.',
+        ], 409);
+    }
+
     public function analyze(Request $request, Assessment $assessment, \App\Services\MLClassificationService $mlService)
     {
         $this->authorizeLearnerAccess($assessment->learner);
+
+        // Before the comprehension write and before the scorer: see
+        // refuseIfUnmeasuredBatchEntry().
+        if ($refusal = $this->refuseIfUnmeasuredBatchEntry($assessment)) {
+            return $refusal;
+        }
         // For testing the ML pipeline, we accept the audio directly in the analyze endpoint.
         if (!$request->hasFile('audio') && !$assessment->hasAudio()) {
             return response()->json(['success' => false, 'message' => 'No audio recording provided.'], 400);

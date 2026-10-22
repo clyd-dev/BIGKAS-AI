@@ -322,4 +322,111 @@ class BatchSingleChildDoorTest extends TestCase
         $this->actingAs($teacher)->get(route('assessments.show', $waiting))
             ->assertSee(route('assessments.upload-audio', $waiting));
     }
+
+    // ── The analyze door (R51) ────────────────────────────
+
+    /**
+     * The last door behind the single-child screens, and the sharpest: analyze()
+     * scores a reading **synchronously**, in the request. Pointed at a batch
+     * entry the teacher has not sent, it bypasses the Send gate entirely and
+     * takes the serial lane’s host for itself while fourteen other children
+     * wait.
+     *
+     * Before the guard this test failed on its first assertion: the entry came
+     * back 200 with a redirect_url, and a result the teacher never asked for.
+     */
+    public function test_the_analyze_door_refuses_an_unsent_batch_entry(): void
+    {
+        $this->fakeEngine();
+        $teacher = $this->teacher();
+        $entry = $this->recordedEntry($teacher);
+
+        $response = $this->actingAs($teacher)->postJson(route('assessments.analyze', $entry));
+
+        $response->assertStatus(409);
+        $response->assertJson(['success' => false]);
+        $this->assertStringContainsString('group assessment', $response->json('message'));
+
+        // Nothing was measured and nothing was stamped: the card still reads
+        // `recorded` and the teacher’s Send is still the only way in.
+        $this->assertDatabaseMissing('assessment_results', ['assessment_id' => $entry->id]);
+        $entry->refresh();
+        $this->assertNull($entry->submitted_for_analysis_at);
+        $this->assertNull($entry->analysis_started_at);
+        $this->assertSame(Assessment::STATUS_PENDING, $entry->status);
+    }
+
+    /** A form caller gets the same refusal, and still nothing is scored. */
+    public function test_the_analyze_door_refuses_an_unsent_batch_entry_posted_from_a_form(): void
+    {
+        $this->fakeEngine();
+        $teacher = $this->teacher();
+        $entry = $this->recordedEntry($teacher);
+
+        $this->actingAs($teacher)->post(route('assessments.analyze', $entry))->assertStatus(409);
+
+        $this->assertDatabaseMissing('assessment_results', ['assessment_id' => $entry->id]);
+    }
+
+    /**
+     * And the conditional half, which is why this door is not simply shut.
+     *
+     * A batch result the model could not classify rests at `queued` waiting for
+     * a weakness label that may never come - there is no rule-based fallback in
+     * this system - and re-analysing it once the model is back is exactly the
+     * way out of that circle (R45). Re-analysis reads a reading that has already
+     * been measured, so it bypasses no Send: the Send already happened.
+     *
+     * reanalyze() calls analyze(), so the guard must let this through.
+     */
+    public function test_re_analysing_a_measured_batch_entry_is_still_allowed(): void
+    {
+        $this->fakeEngine();
+        $teacher = $this->teacher();
+        $entry = $this->recordedEntry($teacher);
+        $entry->forceFill(['submitted_for_analysis_at' => now()])->save();
+        $entry->createResult($this->unclassifiedAnalysis());
+
+        $this->actingAs($teacher)->post(route('assessments.reanalyze', $entry->fresh()))
+            ->assertRedirect(route('assessments.results', $entry))
+            ->assertSessionHas('success');
+
+        // Measured again, and this time with the model answering.
+        $this->assertSame(
+            \App\Models\AssessmentResult::STATUS_CLASSIFIED,
+            $entry->fresh('result')->result->classification_status
+        );
+    }
+
+    /**
+     * Re-analysis goes through analyze(), so an entry with no result must not
+     * reach the scorer that way either - and the teacher must be told, not
+     * handed a crash from a redirect that reanalyze() tried to read as JSON.
+     */
+    public function test_re_analysing_an_unsent_batch_entry_is_refused_in_words(): void
+    {
+        $this->fakeEngine();
+        $teacher = $this->teacher();
+        $entry = $this->recordedEntry($teacher);
+
+        $this->actingAs($teacher)->post(route('assessments.reanalyze', $entry))
+            ->assertRedirect(route('assessments.results', $entry))
+            ->assertSessionHas('error', fn ($message) => str_contains($message, 'group assessment'));
+
+        $this->assertDatabaseMissing('assessment_results', ['assessment_id' => $entry->id]);
+    }
+
+    /** Single-child, unchanged: analyze() still scores a reading of its own, in the request. */
+    public function test_a_single_child_reading_is_still_analysed_synchronously(): void
+    {
+        $this->fakeEngine();
+        $teacher = $this->teacher();
+        $solo = $this->soloRecorded($teacher);
+
+        $this->actingAs($teacher)->postJson(route('assessments.analyze', $solo))
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('assessment_results', ['assessment_id' => $solo->id]);
+    }
 }

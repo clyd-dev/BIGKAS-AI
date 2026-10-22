@@ -364,8 +364,27 @@ class BatchAddChildTest extends TestCase
         $after = AssessmentBatch::findOrFail($batch->id);
 
         $this->assertNotSame(AssessmentBatch::STATUS_COMPLETED, $after->status);
-        $this->assertSame(AssessmentBatch::STATUS_ANALYZING, $after->status);
         $this->assertNull($after->completed_at);
+
+        // `collecting`, not `analyzing`: the finished readings are done with and
+        // the one outstanding child has not read yet, so nothing is being
+        // analysed and the batch must not say it is. Only unfinished entries
+        // choose between the two live words.
+        $this->assertSame(AssessmentBatch::STATUS_COLLECTING, $after->status);
+
+        // And once that child has actually read and been sent, it does say so.
+        // Both halves are needed: a stamp with no recording still reads
+        // `waiting`, because a child who has not read is not in any queue.
+        $late = $batch->entries()->where('learner_id', $learners[1]->id)->sole();
+        $late->forceFill([
+            'audio_file' => 'assessments/audio/late-child.webm',
+            'submitted_for_analysis_at' => now(),
+        ])->save();
+
+        $this->assertSame(
+            AssessmentBatch::STATUS_ANALYZING,
+            AssessmentBatch::findOrFail($batch->id)->status
+        );
     }
 
     // ── One session each, and all-or-nothing ──────────────────────────

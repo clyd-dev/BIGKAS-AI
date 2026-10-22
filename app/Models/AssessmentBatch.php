@@ -106,8 +106,17 @@ class AssessmentBatch extends Model
             return;
         }
 
+        // Only the unfinished entries decide between the two live words, so a
+        // child added to a board whose other readings are all done does not
+        // make the batch claim to be analysing. Before `Add child` a batch could
+        // not hold a done entry beside a waiting one, and counting `done` as
+        // "something is happening" was harmless; now it would tell the teacher
+        // work is under way when the only outstanding thing is a child who has
+        // not read yet.
+        $outstanding = $chips->reject(fn (string $chip) => in_array($chip, ['done', 'failed'], true));
+
         $this->writeStatus(
-            $chips->contains(fn (string $chip) => $chip !== 'waiting') ? self::STATUS_ANALYZING : self::STATUS_COLLECTING,
+            $outstanding->contains(fn (string $chip) => $chip !== 'waiting') ? self::STATUS_ANALYZING : self::STATUS_COLLECTING,
             null
         );
     }

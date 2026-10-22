@@ -32,6 +32,7 @@
   pre code{background:none;border:none;padding:0;font-size:12.5px;line-height:1.55}
   strong{font-weight:600}
   a{color:var(--accent)}
+  a.rev{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-decoration:none;white-space:nowrap;background:var(--warn-soft);border:1px solid #f3d9b5;color:var(--warn);border-radius:3px;padding:0 4px;vertical-align:1px}
 
   .sub{color:var(--muted);font-size:14px;margin:0 0 4px}
   .meta{display:flex;flex-wrap:wrap;gap:8px 28px;margin:18px 0 0;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
@@ -108,9 +109,18 @@
 <div class="meta">
   <span><b>Drafted</b> 9 October 2026</span>
   <span><b>Revised</b> 21 October 2026 — rev. 2</span>
+  <span><b>Revised</b> 22 October 2026 — <a href="#rev5">rev. 5</a></span>
   <span><b>Status</b> Approved; Phases 0–1 already satisfied upstream</span>
   <span><b>Branch</b> <code>feat/batch-assessment</code> @ dbfb7cb</span>
   <span><b>Rollback point</b> tag <code>pre-batch-assessment</code></span>
+</div>
+
+<div class="callout c-warn" id="rev5">
+  <span class="lbl">Revision note — 22 October 2026 (rev.&nbsp;5): the join code is a reference, not a way in</span>
+  <p><b>What this document promised.</b> Seven places in this plan — the <i>Recording mode</i> decision in §1, the dropped <code>recording_mode</code> note in §6, the card-panel figure and its caption, the <code>waiting</code> row of the seven-states table, the <code>waiting</code> row of the cancel-and-remove table, and the batch-cancel list — describe a <b>join code</b> as one of the two routes a recording can be captured by: &ldquo;a join code for a child with a device&rdquo;, &ldquo;its join code stops working&rdquo;. Read plainly, that promises a screen where a child types a code and starts reading.</p>
+  <p><b>What was built.</b> There is no code-entry screen, and no screen anywhere in this application accepts a code. A child reaches their reading the one way they reach everything else: they <b>sign in with their own PIN</b>, and the reading the teacher set up is waiting on their dashboard (<code>StudentAssessmentController::pendingFor()</code>). The code is still issued — one <code>AssessmentSession</code> per entry, created with the batch — and the board and the card panel still show it, but only as a <b>reference for the teacher&#8217;s own records</b>, which is how both screens now label it. Nothing in the system reads it back.</p>
+  <p><b>Why a code-entry screen was declined.</b> It was considered. A code box that starts a reading is an <b>unauthenticated door onto a named child&#8217;s assessment</b>: anyone holding six characters — a classmate, a sibling, anyone who saw the board over a shoulder — could open that child&#8217;s reading and record audio against their record, with no sign-in and nothing tying the recording to the child it is filed under. The child is already authenticated by their PIN, and their dashboard already knows what they owe, so the door would add a weaker way in to reach something the stronger way already reaches. The measurement is about a child; its provenance has to be at least as strong as the rest of their record.</p>
+  <p><b>So, for the next reader:</b> wherever this plan says <i>join code</i>, read <i>session code, shown to the teacher for her records</i>. &ldquo;Its join code stops working&rdquo; means only that the session row is deleted with the entry — nothing stopped working for the child, because nothing was ever typed in. <b>Do not build the code-entry screen</b> on the strength of the sentences below; they are the draft&#8217;s language, kept so the history reads honestly, each marked <a class="rev" href="#rev5">rev&nbsp;5</a>. The rest of this plan stands as written.</p>
 </div>
 
 <div class="callout c-info">
@@ -124,7 +134,7 @@
 
 <h4>Decisions locked</h4>
 <ul class="decisions">
-  <li><span class="k">Recording mode</span><span class="v">Not chosen in advance. <b>Every child's card offers both</b> — a join code for a child with a device, and <i>Conduct here</i> for a child without one. The teacher decides in the moment.</span></li>
+  <li><span class="k">Recording mode</span><span class="v">Not chosen in advance. <b>Every child's card offers both</b> — a join code for a child with a device, and <i>Conduct here</i> for a child without one. The teacher decides in the moment. <a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a></span></li>
   <li><span class="k">Before analysis</span><span class="v">A recording rests at <code>recorded</code> with its audio playable. The teacher listens, then <b>Send for analysis</b> — or re-records. Nothing reaches the lane unsent.</span></li>
   <li><span class="k">Leaving the page</span><span class="v">Changes nothing. Scoring runs server-side under cron, and the batch completes itself with nobody watching.</span></li>
   <li><span class="k">Cancel &amp; remove</span><span class="v">Every card can be cancelled or removed, and the batch cancelled behind a confirmation. <b>Nothing on this board can destroy a measured reading</b> — real deletion lives on the child's learner-history screen.</span></li>
@@ -520,7 +530,7 @@ database/migrations/2026_10_21_010001_add_batch_columns_to_assessments_table.php
 
 <div class="callout c-warn">
   <span class="lbl">Dropped from the draft: <code>recording_mode</code></span>
-  <p>The draft stored <code>self</code> / <code>teacher</code> per child, chosen at setup. <b>The column is gone.</b> Every card now offers both a join code and <i>Conduct here</i>, so there is nothing to record in advance — the teacher decides per child in the moment, which is how a classroom actually behaves. This removes a column, a setup decision, a validation path and a whole class of "the teacher guessed wrong at setup" problem.</p>
+  <p><a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a> The draft stored <code>self</code> / <code>teacher</code> per child, chosen at setup. <b>The column is gone.</b> Every card now offers both a join code and <i>Conduct here</i>, so there is nothing to record in advance — the teacher decides per child in the moment, which is how a classroom actually behaves. This removes a column, a setup decision, a validation path and a whole class of "the teacher guessed wrong at setup" problem.</p>
 </div>
 
 <h4>Already present — reused, not re-added</h4>
@@ -641,14 +651,14 @@ database/migrations/2026_10_21_010001_add_batch_columns_to_assessments_table.php
     <text x="452" y="233" font-size="9" fill="#5b6672">needs them</text>
   </g>
 </svg>
-<figcaption>Every card offers both routes, so the teacher never has to have predicted at setup which children would have a working device.</figcaption>
+<figcaption>Every card offers both routes, so the teacher never has to have predicted at setup which children would have a working device. The figure&#8217;s &ldquo;join code: 4821&rdquo; and &ldquo;a join code, for a child who has one&rdquo; are the draft&#8217;s language: the code is a reference for the teacher, and the child signs in with their PIN — see <a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a>.</figcaption>
 </figure>
 
 <h4>The seven states, and what each card shows</h4>
 <table>
   <thead><tr><th>Chip</th><th>Derived from</th><th>Card shows</th></tr></thead>
   <tbody>
-    <tr><td><code>waiting</code></td><td>no <code>audio_file</code></td><td><i>Conduct here</i>, and the join code</td></tr>
+    <tr><td><code>waiting</code></td><td>no <code>audio_file</code></td><td><i>Conduct here</i>, and the join code <a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a></td></tr>
     <tr><td><code>recorded</code></td><td>audio saved, <code>submitted_for_analysis_at</code> null, no result</td><td><b>Audio player</b>, <i>Send for analysis</i>, <i>Re-record</i></td></tr>
     <tr><td><code>queued</code></td><td>sent and owed a score, not currently being scored</td><td>Place in line and ETA; audio still playable</td></tr>
     <tr><td><code>transcribing</code></td><td><code>analysis_started_at</code> set, <code>analysis_duration_ms</code> still null</td><td>Live progress; audio still playable</td></tr>
@@ -692,7 +702,7 @@ database/migrations/2026_10_21_010001_add_batch_columns_to_assessments_table.php
 <table>
   <thead><tr><th>State</th><th>Action</th><th>What it does</th></tr></thead>
   <tbody>
-    <tr><td><code>waiting</code></td><td><i>Remove</i></td><td>Deletes the entry outright. Nothing was recorded, nothing is lost. Its join code stops working.</td></tr>
+    <tr><td><code>waiting</code></td><td><i>Remove</i></td><td>Deletes the entry outright. Nothing was recorded, nothing is lost. Its join code stops working. <a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a></td></tr>
     <tr><td><code>recorded</code></td><td><i>Re-record</i> / <i>Remove</i></td><td>Discards the recording and returns to <code>waiting</code>, or removes the entry entirely. Nothing was measured.</td></tr>
     <tr><td><code>queued</code></td><td><i>Cancel analysis</i></td><td>Clears <code>submitted_for_analysis_at</code>, so the lane stops taking it, and the card returns to <code>recorded</code> with its audio intact. The true "I sent that by mistake".</td></tr>
     <tr><td><code>transcribing</code></td><td><b>none</b></td><td>A running Whisper process cannot be aborted honestly. The card says <i>"being analysed now — about N min left"</i> and offers nothing, rather than a button that would not do what it says.</td></tr>
@@ -713,7 +723,7 @@ database/migrations/2026_10_21_010001_add_batch_columns_to_assessments_table.php
 <ul>
   <li>Batch status becomes <code>cancelled</code>, stamped with <code>cancelled_at</code></li>
   <li>Every <code>queued</code> entry is <strong>un-sent</strong>, so the lane stops taking them</li>
-  <li>Entries with no recording are removed, and their join codes stop working</li>
+  <li>Entries with no recording are removed, and their join codes stop working <a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a></li>
   <li><strong>Every child already scored keeps their reading</strong>, in their own history</li>
   <li>An entry mid-<code>transcribing</code> is left to finish; its result is kept, because it cost the time either way and the measurement is valid</li>
 </ul>

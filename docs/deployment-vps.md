@@ -427,6 +427,24 @@ php artisan schedule:list           # assessments:rescore --limit=20, every minu
 php artisan assessments:rescore     # by hand, once, to see it work
 ```
 
+**The board now says so, which is how you will hear about it.** When readings
+are waiting and nothing anywhere has been scored for longer than one tick plus
+the lane's own staleness bound (`Assessment::STALE_PROCESSING_MINUTES`, so about
+sixteen minutes), the board shows a warning: *"Nothing has been scored for N
+minutes, although readings are waiting. The analysis scheduler may not be
+running — ask whoever looks after the server to check it."*
+
+It is worded as an observation, not a diagnosis, because the application cannot
+see your crontab — only that nothing has moved. It carries no commands, because
+a teacher has no terminal. When a teacher reports it, the two causes are the two
+in this section: **no `schedule:run` line**, or **a killed run still holding the
+overlap lock** (below — `php artisan schedule:clear-cache`). The warning clears
+itself on the next poll once something is scored, so it is also the confirmation
+that the fix worked.
+
+Locally there is no cron at all, which is where this first bit: `php artisan
+schedule:work` in a second terminal, for the whole session.
+
 ### One lane, first in first out — what a teacher will think is broken
 
 A 15-child batch holds the single scoring lane for **up to an hour**. Another

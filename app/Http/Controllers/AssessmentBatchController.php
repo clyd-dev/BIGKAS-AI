@@ -68,17 +68,65 @@ class AssessmentBatchController extends Controller
         return redirect()->route('assessments.batch.board', $batch);
     }
 
+    /**
+     * The teacher's own batches, newest first - the way back to a board.
+     *
+     * There was none before this: a teacher who closed the board and went
+     * somewhere else had to type the URL back in. Newest first because the one
+     * she wants is almost always the one she just left.
+     *
+     * The progress column is the same definition of "done" the cards use
+     * (BatchEntryState), so the list cannot say a batch is finished while its
+     * board shows work outstanding. It costs a fixed number of queries per
+     * page, not one per batch: every entry on the page is loaded in one query
+     * and the lane is asked once for all of them.
+     */
+    public function index()
+    {
+        $user = auth()->user();
+
+        $batches = AssessmentBatch::where('teacher_id', $user->id)
+            ->with('defaultMaterial')
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        $entries = $batches->isEmpty()
+            ? collect()
+            : Assessment::whereIn('batch_id', collect($batches->items())->pluck('id'))
+                ->with(['result', 'verdict', 'material'])
+                ->get();
+
+        $states = BatchEntryState::forAll($entries);
+
+        $progress = $entries->groupBy('batch_id')->map(fn ($group) => [
+            'total' => $group->count(),
+            'done' => $group->filter(fn (Assessment $entry) => ($states[$entry->getKey()]['chip'] ?? null) === 'done')->count(),
+        ]);
+
+        return view('assessments.batch.index', [
+            'batches' => $batches,
+            'progress' => $progress,
+        ]);
+    }
+
     public function board(AssessmentBatch $batch)
     {
         $this->authorizeBatch($batch);
 
         $entries = $this->boardEntries($batch);
-        $states = BatchEntryState::forAll($entries);
+        // Where every card really stands in the shared lane, computed once for
+        // the whole board and handed to the cards: the partial never queries
+        // (R39), and a per-card position lookup would be fifteen queries on a
+        // page cut to a handful.
+        $lane = $this->estimator->lane($entries);
+        $states = BatchEntryState::forAll($entries, $lane);
 
         return view('assessments.batch.board', [
             'batch' => $batch,
             'entries' => $entries,
             'states' => $states,
+            'lane' => $lane,
             'estimate' => $this->estimator->forBatch($batch),
             'readyToSend' => $this->readyToSend($states),
             'joinCodes' => $this->joinCodes($entries),
@@ -120,13 +168,17 @@ class AssessmentBatchController extends Controller
     {
         $this->authorizeBatch($batch);
 
-        $states = BatchEntryState::forAll($this->boardEntries($batch));
+        $entries = $this->boardEntries($batch);
+        $lane = $this->estimator->lane($entries);
+        $states = BatchEntryState::forAll($entries, $lane);
 
         return response()->json([
             'entries' => $states,
             'batch_status' => $batch->status,
             'estimate' => $this->estimator->forBatch($batch),
             'ready_to_send' => $this->readyToSend($states),
+            // So the warning appears, and disappears, without a reload.
+            'lane_stalled_minutes' => $lane['stalled_minutes'],
         ]);
     }
 
@@ -238,6 +290,22 @@ class AssessmentBatchController extends Controller
     }
 
     /**
+     * The state the panel should now show for this one entry, lane included.
+     *
+     * The lane goes in because these answers are what the panel paints after a
+     * send: without it a reading that has just entered the queue would say "in
+     * line for analysis" with no place and no wait, and three seconds later the
+     * board's poll would give it both. One query on a write path, not on the
+     * every-few-seconds poll.
+     */
+    private function freshState(Assessment $entry): array
+    {
+        $fresh = $this->freshEntry($entry);
+
+        return BatchEntryState::for($fresh, null, $this->estimator->lane([$fresh]));
+    }
+
+    /**
      * Save a browser recording against this entry, replacing any earlier one.
      *
      * The extension allow-list is AssessmentController::keepRecording()'s,
@@ -344,10 +412,15 @@ class AssessmentBatchController extends Controller
             ? $entry->material->comprehensionQuestions()->orderBy('sort_order')->get()
             : collect();
 
+        // The panel shows the same card as the board, so it needs the same lane
+        // facts: one entry, one lane read.
+        $lane = $this->estimator->lane([$entry]);
+
         return view('assessments.batch.entry', [
             'batch' => $batch,
             'entry' => $entry,
-            'state' => BatchEntryState::for($entry),
+            'lane' => $lane,
+            'state' => BatchEntryState::for($entry, null, $lane),
             'material' => $entry->material ?? $batch->defaultMaterial,
             'questions' => $questions,
             'answers' => $entry->comprehensionAnswers,
@@ -388,7 +461,7 @@ class AssessmentBatchController extends Controller
 
         return response()->json([
             'success' => true,
-            'state' => BatchEntryState::for($this->freshEntry($entry)),
+            'state' => $this->freshState($entry),
         ]);
     }
 
@@ -435,7 +508,7 @@ class AssessmentBatchController extends Controller
         return response()->json([
             'success' => true,
             'comprehension_score' => $score,
-            'state' => BatchEntryState::for($this->freshEntry($entry)),
+            'state' => $this->freshState($entry),
         ]);
     }
 
@@ -492,7 +565,7 @@ class AssessmentBatchController extends Controller
 
         return response()->json([
             'success' => true,
-            'state' => BatchEntryState::for($this->freshEntry($entry)),
+            'state' => $this->freshState($entry),
         ]);
     }
 

@@ -62,7 +62,23 @@ class AssessmentController extends Controller
 
         $learners = Directory::paginate(Directory::sortLearners($learnerQuery->withCount('assessments')->get()), 10);
 
-        return view('assessments.index', compact('learners'));
+        // The group assessment she has not finished - the one she is trying to
+        // get back to. One query, and only while the feature is on; with the
+        // flag off this page is exactly what it was. Nothing about the
+        // single-child flow below changes either way.
+        $openBatches = collect();
+
+        if (config('assessment.batch_enabled')) {
+            $openBatches = \App\Models\AssessmentBatch::where('teacher_id', $user->id)
+                ->whereIn('status', [
+                    \App\Models\AssessmentBatch::STATUS_COLLECTING,
+                    \App\Models\AssessmentBatch::STATUS_ANALYZING,
+                ])
+                ->orderByDesc('id')
+                ->get();
+        }
+
+        return view('assessments.index', compact('learners', 'openBatches'));
     }
 
     /**

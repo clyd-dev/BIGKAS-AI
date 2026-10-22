@@ -59,6 +59,13 @@
         // whether this card offers a door - so it has to be in the signature or
         // the poll would skip the card and the door would never appear.
         $state['running'] ? 'running' : '',
+        // The place in the line and the wait that follows from it. In the
+        // signature because they are what changes most often: a card that
+        // moved from "3rd in line" to "2nd in line" has the same chip, the
+        // same tone and the same action, so without these the poll would read
+        // the card as unchanged and the number would sit there being wrong.
+        $state['position'] ?? '',
+        $state['eta_minutes'] ?? '',
     ]);
 
     /*
@@ -116,6 +123,27 @@
             </div>
 
             <p class="small text-muted mb-0" data-label>{{ $state['label'] }}</p>
+
+            {{--
+                A loading indication for a reading being transcribed, and
+                deliberately an INDETERMINATE one.
+
+                Nothing inside Whisper is observable from here, so there is no
+                honest percentage to draw: a bar at 60% would be an invention,
+                and a teacher would read it as a promise. This bar carries no
+                width, no value and no aria-valuenow - it only says that work
+                is under way. The words beside it (data-label) carry the facts
+                that can be measured: how long this run has been going, and how
+                long runs like it usually take.
+
+                Toggled by class rather than rendered conditionally, so the
+                poll can show and hide it in place without re-rendering the
+                card - the same reason the chip's spinner is built this way.
+            --}}
+            <div class="progress bb-progress @class(['d-none' => $state['chip'] !== 'transcribing'])"
+                 data-progress role="status" aria-label="Analysis in progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated"></div>
+            </div>
 
             @if($state['chip'] === 'done')
                 <div data-done>

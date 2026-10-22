@@ -195,13 +195,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Batch assessment: a whole group at once, dark until BATCH_ASSESSMENT_ENABLED.
         // Every route here 404s while the flag is off.
-        // Declared before /assessments/{assessment} to match how /assessments/new is
-        // handled above, though here the order is belt-and-braces rather than load
-        // bearing: {assessment} matches a single path segment, so the three-segment
-        // /assessments/batch/create could never reach it, and POST /assessments/batch
-        // differs from the wildcard by method. Keep the order anyway - a later
-        // two-segment batch URL would need it, and it costs nothing.
+        // Declared before /assessments/{assessment}, and here that order IS load
+        // bearing: GET /assessments/batch (the list of a teacher's batches) is two
+        // segments, exactly the shape {assessment} matches, so moving this group
+        // below the wildcard would have the list read as an assessment id and 404.
+        // The three-segment URLs below could not be shadowed either way.
         Route::middleware('batch.enabled')->group(function () {
+            Route::get('/assessments/batch', [AssessmentBatchController::class, 'index'])->name('assessments.batch.index');
             Route::get('/assessments/batch/create', [AssessmentBatchController::class, 'create'])->name('assessments.batch.create');
             Route::post('/assessments/batch', [AssessmentBatchController::class, 'store'])->name('assessments.batch.store');
             Route::get('/assessments/batch/{batch}', [AssessmentBatchController::class, 'board'])->name('assessments.batch.board');
@@ -380,6 +380,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/users/import', [\App\Http\Controllers\ParentImportController::class, 'form'])->name('users.import');
         Route::post('/users/import/preview', [\App\Http\Controllers\ParentImportController::class, 'preview'])->name('users.import.preview');
         Route::post('/users/import/confirm', [\App\Http\Controllers\ParentImportController::class, 'confirm'])->name('users.import.confirm');
+        // Same for teachers (name login, shared pilot password, grade & section from the sheet)
+        Route::get('/teachers/import', [\App\Http\Controllers\TeacherImportController::class, 'form'])->name('teachers.import');
+        Route::post('/teachers/import/preview', [\App\Http\Controllers\TeacherImportController::class, 'preview'])->name('teachers.import.preview');
+        Route::post('/teachers/import/confirm', [\App\Http\Controllers\TeacherImportController::class, 'confirm'])->name('teachers.import.confirm');
+
         // Same for teachers (name login, shared pilot password, grade & section from the sheet)
         Route::get('/teachers/import', [\App\Http\Controllers\TeacherImportController::class, 'form'])->name('teachers.import');
         Route::post('/teachers/import/preview', [\App\Http\Controllers\TeacherImportController::class, 'preview'])->name('teachers.import.preview');

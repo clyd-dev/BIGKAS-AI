@@ -52,6 +52,34 @@
         </div>
     @endif
 
+    {{--
+        Nothing is driving the lane.
+
+        Observed, not diagnosed: all this page can see is that readings are
+        waiting and that nothing anywhere has been scored for far longer than a
+        run takes. It cannot see the server's crontab, so it says what it saw
+        and who to ask - it never claims the scheduler is dead, and it never
+        asks a teacher to run a command she has no terminal for. The two real
+        causes (no schedule:run line; a killed run still holding the overlap
+        lock) are in docs/deployment-vps.md, Phase 7, where the commands belong.
+
+        Hidden rather than omitted, so public/js/batch-board.js can raise and
+        clear it on a poll without a reload.
+    --}}
+    <div data-lane-stall class="alert alert-warning d-flex align-items-start gap-2{{ $lane['stalled_minutes'] ? '' : ' d-none' }}"
+         role="alert">
+        <i class="bi bi-exclamation-triangle mt-1"></i>
+        <div>
+            <div class="fw-semibold" data-lane-stall-text>
+                Nothing has been scored for {{ $lane['stalled_minutes'] ?? 0 }} minutes, although readings are waiting.
+            </div>
+            <div class="small">
+                The analysis scheduler may not be running — ask whoever looks after the server to check it.
+                Nothing is lost in the meantime: these recordings stay in line and will be scored once it runs again.
+            </div>
+        </div>
+    </div>
+
     <div class="alert alert-light border d-flex align-items-start gap-2" role="status">
         <i class="bi bi-shield-check mt-1"></i>
         <div>

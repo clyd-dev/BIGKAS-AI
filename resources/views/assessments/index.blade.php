@@ -5,6 +5,16 @@
 @section('content')
     <x-page-header title="Assessments" icon="bi-clipboard-check">
         <x-slot:actions>
+            @if(config('assessment.batch_enabled'))
+                {{-- The way to a group board without typing a URL. Only while the
+                     feature is on: every batch route 404s with the flag off. --}}
+                <a href="{{ route('assessments.batch.index') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-people me-1"></i> Group assessments
+                    @if(($openBatches ?? collect())->isNotEmpty())
+                        <span class="badge bg-primary ms-1">{{ $openBatches->count() }}</span>
+                    @endif
+                </a>
+            @endif
             @if(auth()->user()->hasAssignedClass())
                 <a href="{{ route('assessments.create') }}" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-circle me-1"></i> New Assessment
@@ -14,6 +24,31 @@
     </x-page-header>
 
     @include('partials.unassigned-teacher')
+
+    {{--
+        An unfinished group, named, with the way back to its board.
+
+        This is the whole point of the entry point: a teacher who closed a board
+        mid-batch is looking for that board, and a generic link to a list makes
+        her hunt for it. So the open ones are named here, newest first.
+    --}}
+    @foreach(($openBatches ?? collect()) as $openBatch)
+        <div class="alert alert-primary d-flex flex-wrap align-items-center justify-content-between gap-2" role="status">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-people-fill mt-1"></i>
+                <div>
+                    <div class="fw-semibold">{{ $openBatch->title ?: 'Group Assessment' }} — still open</div>
+                    <div class="small">
+                        Started {{ $openBatch->created_at?->format('M d, Y g:ia') }}. Analysis carries on whether
+                        or not this page is open.
+                    </div>
+                </div>
+            </div>
+            <a href="{{ route('assessments.batch.board', $openBatch) }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-grid-3x3-gap me-1"></i> Back to the board
+            </a>
+        </div>
+    @endforeach
 
     {{-- Filters --}}
     <div class="card border-0 shadow-sm mb-4">

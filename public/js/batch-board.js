@@ -57,7 +57,13 @@
         // skip the card and the door would never appear.
         return [
             state.chip, state.label, state.action || '', state.result_url || '',
-            state.running ? 'running' : ''
+            state.running ? 'running' : '',
+            // The place in the line and the wait. A card moving from "3rd in
+            // line" to "2nd in line" keeps its chip, its tone and its action,
+            // so without these the signature would match and the card would
+            // never repaint - the number would just sit there being wrong.
+            state.position === null || state.position === undefined ? '' : state.position,
+            state.eta_minutes === null || state.eta_minutes === undefined ? '' : state.eta_minutes
         ].join('|');
     }
 
@@ -123,6 +129,13 @@
         var spinner = chip.querySelector('[data-chip-spinner]');
         if (spinner) {
             spinner.classList.toggle('d-none', state.chip !== 'transcribing');
+        }
+
+        // The indeterminate bar follows the chip, so a reading that has stopped
+        // being transcribed stops looking as though something is working on it.
+        var progress = card.querySelector('[data-progress]');
+        if (progress) {
+            progress.classList.toggle('d-none', state.chip !== 'transcribing');
         }
     }
 
@@ -320,6 +333,24 @@
 
             if (estimate.textContent.trim() !== text) {
                 estimate.textContent = text;
+            }
+        }
+
+        // Nothing is driving the lane. Raised and cleared from the same poll
+        // that draws the cards, so it goes away by itself the moment something
+        // is scored again - a warning that stayed up after the lane recovered
+        // would train a teacher to ignore it.
+        var stall = document.querySelector('[data-lane-stall]');
+        if (stall) {
+            var minutes = data.lane_stalled_minutes;
+            var stalled = typeof minutes === 'number' && minutes > 0;
+
+            stall.classList.toggle('d-none', !stalled);
+
+            var stallText = stall.querySelector('[data-lane-stall-text]');
+            if (stalled && stallText) {
+                stallText.textContent = 'Nothing has been scored for ' + minutes
+                    + ' minutes, although readings are waiting.';
             }
         }
 

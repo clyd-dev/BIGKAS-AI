@@ -40,3 +40,39 @@
         min-height: 40px;
     }
 }
+
+/*
+ * The transcribing bar, and why it is indeterminate.
+ *
+ * Nothing inside Whisper is observable from the application, so there is no
+ * honest percentage to draw. This bar reports motion and nothing else: a short
+ * segment sliding across, with no value, no aria-valuenow and no inline width
+ * that could be read as a share of the work completed. The card's words carry
+ * the measurable facts (how long this run has been going, how long runs like it
+ * usually take); the bar only says that something is happening.
+ */
+.bb-progress {
+    height: 0.35rem;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+.bb-progress .progress-bar {
+    width: 40%;
+    animation: bb-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes bb-indeterminate {
+    0%   { margin-left: -40%; }
+    100% { margin-left: 100%; }
+}
+
+/* Respect a reader who has asked for less movement: the bar stays, it stops
+   sliding. The chip's spinner is Bootstrap's own and follows the same rule. */
+@media (prefers-reduced-motion: reduce) {
+    .bb-progress .progress-bar {
+        animation: none;
+        width: 100%;
+        opacity: 0.5;
+    }
+}

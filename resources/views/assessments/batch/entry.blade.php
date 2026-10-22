@@ -16,7 +16,9 @@
     one card in place - so sending or recording here never reloads the page and
     never stops a recording the teacher is listening to.
 
-    Expects: $batch, $entry, $state, $material, $questions, $answers, $session.
+    Expects: $batch, $entry, $state, $lane, $material, $questions, $answers, $session.
+    $state already carries this reading's place in the scoring lane and its wait,
+    computed once in the controller from $lane - the card never queries (R39).
 --}}
 @extends('layouts.app')
 
@@ -38,6 +40,27 @@
                    :back="route('assessments.batch.board', $batch)"
                    :back-label="$batch->title ?: 'Group Assessment'"
                    :subtitle="'Record this reading here, or let ' . $firstName . ' read it on their own device after signing in with their PIN.'" />
+
+    @if($lane['stalled_minutes'])
+        {{--
+            The same observation the board makes, for a teacher who came
+            straight to a child's panel. Observed, never diagnosed: this page
+            cannot see the server's scheduler, only that nothing has been
+            scored for far longer than a run takes.
+        --}}
+        <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+            <i class="bi bi-exclamation-triangle mt-1"></i>
+            <div>
+                <div class="fw-semibold">
+                    Nothing has been scored for {{ $lane['stalled_minutes'] }} minutes, although readings are waiting.
+                </div>
+                <div class="small">
+                    The analysis scheduler may not be running — ask whoever looks after the server to check it.
+                    Nothing is lost in the meantime: this recording stays in line.
+                </div>
+            </div>
+        </div>
+    @endif
 
     <div class="row g-3">
         <div class="col-lg-5">

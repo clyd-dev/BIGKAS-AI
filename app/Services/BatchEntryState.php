@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Assessment;
 use App\Models\AssessmentResult;
+use Carbon\Carbon;
 
 /**
  * What one card on the batch board honestly says about one child.
@@ -49,13 +50,13 @@ class BatchEntryState
      * @param  iterable<Assessment>  $entries
      * @return \Illuminate\Support\Collection<int, array>
      */
-    public static function forAll($entries)
+    public static function forAll($entries, ?array $lane = null)
     {
         $entries = collect($entries);
         $claimed = self::claimedIds($entries);
 
         return $entries->mapWithKeys(fn (Assessment $entry) => [
-            $entry->getKey() => self::for($entry, $claimed),
+            $entry->getKey() => self::for($entry, $claimed, $lane),
         ]);
     }
 
@@ -133,9 +134,16 @@ class BatchEntryState
     /**
      * @param  int[]|null  $claimedIds  the pre-fetched claimed set from claimedIds(),
      *                                  or null to ask the lane about this one entry.
-     * @return array{chip: string, label: string, tone: string, playable: bool, running: bool, action: ?string, result_url: ?string}
+     * @param  array|null  $lane  AnalysisQueueEstimator::lane()'s answer for this
+     *                            board - the real place in the serial lane and how
+     *                            long a run typically takes. Handed in by whoever
+     *                            renders, computed once for the whole board: this
+     *                            class never queries for it (R39). Null means the
+     *                            card says where the reading is, but not where in
+     *                            the line - never a made-up number.
+     * @return array{chip: string, label: string, tone: string, playable: bool, running: bool, action: ?string, result_url: ?string, position: ?int, eta_minutes: ?int}
      */
-    public static function for(Assessment $entry, ?array $claimedIds = null): array
+    public static function for(Assessment $entry, ?array $claimedIds = null, ?array $lane = null): array
     {
         $playable = $entry->hasAudio();
         $hasResult = $entry->result !== null;
@@ -146,7 +154,14 @@ class BatchEntryState
         // whether a `transcribing` chip may still offer a door off the board.
         $running = self::isRunningNow($entry);
 
-        $state = function (string $chip, string $label, string $tone, ?string $action = null) use ($playable, $resultUrl, $running) {
+        // Where this reading really stands, and the wait that follows from it.
+        // Both null unless the renderer handed the lane in.
+        $position = $lane === null ? null : ($lane['positions'][$entry->getKey()] ?? null);
+        $eta = $position === null
+            ? null
+            : max(1, (int) round(($position * (float) $lane['typical'] + (int) $lane['tick']) / 60));
+
+        $state = function (string $chip, string $label, string $tone, ?string $action = null) use ($playable, $resultUrl, $running, $position, $eta) {
             return [
                 'chip' => $chip,
                 'label' => $label,
@@ -157,6 +172,10 @@ class BatchEntryState
                 // Set the moment a result exists - at needs verdict and at done
                 // alike - so a reading is only ever read in one place.
                 'result_url' => $resultUrl,
+                // Part of the card's signature, so a reading whose place moves
+                // from third to second repaints instead of being skipped.
+                'position' => $position,
+                'eta_minutes' => $eta,
             ];
         };
 
@@ -180,7 +199,7 @@ class BatchEntryState
         }
 
         if (self::isRunning($entry)) {
-            return $state('transcribing', 'Listening to the recording now.', 'ok');
+            return $state('transcribing', self::runningLabel($entry, $running, $lane), 'ok');
         }
 
         $claimed = $claimedIds === null
@@ -190,8 +209,8 @@ class BatchEntryState
         if ($claimed) {
             // Both the engine-outage case and an unclassified result land here.
             return $hasResult && $entry->result->classification_status === AssessmentResult::STATUS_UNAVAILABLE
-                ? $state('queued', 'Measured, waiting for the model to name the weakness.', 'ok')
-                : $state('queued', 'In line for analysis.', 'ok');
+                ? $state('queued', 'Measured, waiting for the model to name the weakness.' . self::placeSuffix($position, $eta), 'ok')
+                : $state('queued', self::queuedLabel($position, $eta), 'ok');
         }
 
         if ($hasResult) {
@@ -203,5 +222,87 @@ class BatchEntryState
         // Audio saved and sent, nothing owes it a score and nothing scored it:
         // say so plainly rather than inventing a state for it.
         return $state('failed', 'This recording was not scored.', 'help', 'Analyze');
+    }
+
+    /**
+     * What a reading being transcribed honestly says about its own progress.
+     *
+     * Nothing inside Whisper is observable from here: there is no percentage to
+     * report and the card must never imply there is. What CAN be said is how
+     * long this run has been going and how long runs like it usually take, both
+     * measured - elapsed against typical, which is a fact, next to an
+     * indeterminate spinner, which claims nothing.
+     *
+     * Past the lane's staleness bound ($running false) the run is gone: the
+     * engine died, or the worker was killed, and nothing is listening to this
+     * recording any more. The chip stays `transcribing` - it was started and
+     * never finished, which is the truth - but the words stop claiming anyone
+     * is listening, because that is the sentence that had a teacher waiting on
+     * a process that no longer existed.
+     */
+    private static function runningLabel(Assessment $entry, bool $running, ?array $lane): string
+    {
+        // Parsed rather than read as a date: analysis_started_at is not in the
+        // model's casts, so it arrives as a string from the database and as a
+        // Carbon only when something has just set it.
+        $elapsed = $entry->analysis_started_at === null
+            ? null
+            : max(1, (int) round(abs(Carbon::parse($entry->analysis_started_at)->diffInSeconds(now())) / 60));
+
+        if (! $running) {
+            return $elapsed === null
+                ? 'This has been running longer than expected. Nothing may be listening to it any more.'
+                : 'Started ' . $elapsed . ' min ago and still not finished — longer than expected. '
+                    . 'Nothing may be listening to it any more.';
+        }
+
+        if ($elapsed === null || $lane === null) {
+            return 'Listening to the recording now.';
+        }
+
+        $typical = max(1, (int) round(((float) $lane['typical']) / 60));
+
+        return $elapsed <= $typical
+            ? 'Listening to the recording now — ' . $elapsed . ' of about ' . $typical . ' min.'
+            : 'Listening to the recording now — ' . $elapsed . ' min so far; these usually take about ' . $typical . ' min.';
+    }
+
+    /** "Next up for analysis — about 3 min." / "3rd in line for analysis — about 8 min." */
+    private static function queuedLabel(?int $position, ?int $eta): string
+    {
+        if ($position === null) {
+            return 'In line for analysis.';
+        }
+
+        return self::place($position) . ' for analysis — about ' . $eta . ' min.';
+    }
+
+    /** The same place, appended to a label that already says something else. */
+    private static function placeSuffix(?int $position, ?int $eta): string
+    {
+        return $position === null ? '' : ' ' . self::place($position) . ' — about ' . $eta . ' min.';
+    }
+
+    /**
+     * "Next up" rather than "1st in line": a teacher reads "1st" as a rank,
+     * and what she wants to know is that hers is the one going next.
+     */
+    private static function place(int $position): string
+    {
+        return $position === 1 ? 'Next up' : self::ordinal($position) . ' in line';
+    }
+
+    /** 2nd, 3rd, 4th … 11th, 12th, 13th … 21st, 22nd. */
+    private static function ordinal(int $n): string
+    {
+        $suffix = match (true) {
+            $n % 100 >= 11 && $n % 100 <= 13 => 'th',
+            $n % 10 === 1 => 'st',
+            $n % 10 === 2 => 'nd',
+            $n % 10 === 3 => 'rd',
+            default => 'th',
+        };
+
+        return $n . $suffix;
     }
 }

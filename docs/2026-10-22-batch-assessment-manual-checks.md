@@ -19,6 +19,20 @@ once started, so start A, then do C while it works.
    will "fail" for the wrong reason.
 3. `php artisan schedule:clear-cache` once, to be sure no stale overlap lock is
    held from an earlier killed run.
+3b. **Confirm something is actually driving the lane before you start.** This
+   has already cost one whole test run: a batch was sent, every card sat at
+   `queued` for ever, and it looked exactly like a broken feature. Nothing was
+   broken — nothing was running the scheduler.
+   - On a server: the crontab line from step 2 is what drives it.
+   - **On Windows, or anywhere locally, there is no cron.** Open a second
+     terminal and leave `php artisan schedule:work` running for the whole
+     session (or call `php artisan assessments:rescore` by hand each time you
+     want the lane to move). Check it is working: `Rescored assessment` lines
+     appear in the log within a minute of sending.
+   The board will now tell you itself — after about a quarter of an hour with
+   nothing scored it shows "Nothing has been scored for N minutes… the analysis
+   scheduler may not be running". If you see that banner during these checks,
+   it is this step you skipped, not a bug in the batch flow.
 4. Have the log open in another window:
    `tail -f storage/logs/laravel.log | grep -i 'rescor\|whisper\|error'`
 5. 15 children, or 15 learner records and 15 recordings you can make yourself.

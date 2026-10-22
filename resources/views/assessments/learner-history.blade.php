@@ -168,6 +168,14 @@
                                 <li>the comprehension answers the child gave</li>
                                 <li>the saved recording of the child reading</li>
                             </ul>
+                            {{-- intervention_logs.assessment_result_id is nullOnDelete, so an
+                                 intervention already logged is kept but stops pointing at the
+                                 reading that prompted it. Nothing is destroyed; the trail is.
+                                 Named here because a teacher cannot see it anywhere else. --}}
+                            <p class="small mb-3">
+                                Any intervention already logged for {{ $learner->first_name }} is <strong>kept</strong>,
+                                but will no longer show which reading prompted it.
+                            </p>
                             <p class="small mb-0">
                                 {{ $learner->getFullName() }}’s <strong>reading level will be recomputed</strong> from the
                                 readings that remain, which can change what their parent sees, what the Practice Center

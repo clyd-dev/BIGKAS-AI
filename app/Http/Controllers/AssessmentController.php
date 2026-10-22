@@ -220,13 +220,17 @@ class AssessmentController extends Controller
     {
         $this->authorizeLearnerAccess($assessment->learner);
 
+        // Deleting is the assessing teacher's act, per the
+        // LearnerAdminReadOnlyTest precedent, and this guard is here as well as
+        // on the route's teacher-only group so that it travels with the method
+        // if the route is ever moved.
+        //
+        // Stated positively - only a teacher - rather than as a list of who is
+        // turned away, so that a role added later is refused by default instead
+        // of admitted by omission. It is needed because
         // authorizeLearnerAccess() admits the admin (principal) to every
-        // learner by design - it is written for reading. Deleting is the
-        // assessing teacher's act, per the LearnerAdminReadOnlyTest precedent,
-        // so it is refused here as well as by the route's teacher-only group.
-        // Two guards on purpose: this one travels with the method if the route
-        // is ever moved.
-        abort_if(auth()->user()->isAdmin(), 403, 'Deleting a reading is the assessing teacher’s decision.');
+        // learner by design: it is written for reading.
+        abort_unless(auth()->user()->isTeacher(), 403, 'Deleting a reading is the assessing teacher’s decision.');
 
         $learner = $assessment->learner;
         $assessment->loadMissing(['result', 'verdict', 'material']);
@@ -243,8 +247,13 @@ class AssessmentController extends Controller
         if (($assessment->result !== null || $assessment->verdict !== null)
             && ! $this->typedNameMatches($request->input('learner_name'), $learner)) {
             return back()->withErrors([
-                'learner_name' => 'This reading has already been reviewed. To delete it, type '
-                    . $learner->getFullName() . ' to confirm.',
+                // The reason given is the true one - the reading is scored, so
+                // it counts towards the level - and the name asked for is the
+                // one the modal shows beneath the box, so the message and the
+                // field cannot disagree about what to type.
+                'learner_name' => 'This reading has been scored, so it counts towards '
+                    . $learner->first_name . '’s reading level. To delete it, type '
+                    . $learner->first_name . ' ' . $learner->last_name . ' to confirm.',
             ]);
         }
 
@@ -272,19 +281,25 @@ class AssessmentController extends Controller
             $assessment->delete();
         });
 
-        // After the commit: a deleted file is the one thing a rollback cannot
-        // bring back. Left behind it would be a child's voice that nothing on
-        // record refers to any more.
-        if ($audio) {
-            Storage::disk('public')->delete($audio);
-        }
-
         // The level must never reflect a reading that is gone. Same mechanism
         // as learners:recompute-levels - Learner::updateReadingLevel() over
         // readingLevelFromAssessments() - so the rule has one definition and
         // cannot drift between the command and this screen. When no usable
         // reading is left the level is cleared rather than kept.
+        //
+        // Before the file delete, deliberately. These are both after the
+        // commit, so order decides which survives a failure in the other: a
+        // disk error must not be able to leave the child's level describing a
+        // reading that no longer exists. An orphaned audio file is untidy; a
+        // stale reading level is what the parent sees.
         $learner->updateReadingLevel();
+
+        // A deleted file is the one thing a rollback cannot bring back, so it
+        // goes last. Left behind it would be a child's voice that nothing on
+        // record refers to any more.
+        if ($audio) {
+            Storage::disk('public')->delete($audio);
+        }
 
         // A reading still sitting on a batch board leaves a board deriving its
         // status from a card that no longer exists. A delete fires no saved
@@ -315,9 +330,14 @@ class AssessmentController extends Controller
      * surname alone or another child's name are all refused, which is the point:
      * a blind confirm-through must not pass.
      */
-    private function typedNameMatches(?string $typed, Learner $learner): bool
+    private function typedNameMatches(mixed $typed, Learner $learner): bool
     {
-        if ($typed === null || trim($typed) === '') {
+        // `mixed`, not `?string`: a form field can arrive as an array
+        // (learner_name[]=x) and a typed signature would make that a
+        // TypeError - a 500 where the honest answer is "that is not the
+        // child's name". Nothing was destroyed either way, but a crash is not
+        // a refusal.
+        if (! is_string($typed) || trim($typed) === '') {
             return false;
         }
 

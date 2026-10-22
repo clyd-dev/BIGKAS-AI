@@ -346,9 +346,15 @@ class AssessmentDeleteTest extends TestCase
             ->assertSee('The Brown Dog')
             ->assertSee('Independent')
             ->assertSee('95.5% accuracy')
-            // What goes with it, named rather than implied.
-            ->assertSee('result', false)
+            // What goes with it, named rather than implied. The result is
+            // asserted by the phrase that names its parts, not by the bare word
+            // "result" - which appears all over a history page and so proved
+            // nothing.
+            ->assertSee('accuracy, words per minute, fluency')
             ->assertSee('comprehension answers')
+            // The intervention trail: kept, but no longer pointing at this
+            // reading. nullOnDelete, so a teacher has no other way to find out.
+            ->assertSee('no longer show which reading prompted it')
             ->assertSee('reading level will be recomputed')
             // And the door itself.
             ->assertSee('Delete this reading')
@@ -464,5 +470,84 @@ class AssessmentDeleteTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->assertDatabaseMissing('assessments', ['id' => $assessment->id]);
+    }
+
+    /**
+     * A form field can arrive as an array. `learner_name[]=x` used to be a
+     * TypeError against a `?string` parameter - a 500 where the honest answer
+     * is "that is not the child's name". It failed safe, but a crash is not a
+     * refusal, and a teacher seeing a server error cannot tell which.
+     */
+    public function test_a_non_string_confirmation_is_refused_rather_than_crashing(): void
+    {
+        $teacher = $this->teacherWithClass();
+        $learner = $this->learnerOf($teacher, ['first_name' => 'Juan', 'last_name' => 'Cruz']);
+        $assessment = $this->scoredReading($learner, $teacher);
+
+        $this->actingAs($teacher)
+            ->from(route('assessments.learner-history', $learner))
+            ->delete(route('assessments.destroy', $assessment), ['learner_name' => ['Juan Cruz']])
+            ->assertRedirect(route('assessments.learner-history', $learner))
+            ->assertSessionHasErrors('learner_name');
+
+        $this->assertDatabaseHas('assessments', ['id' => $assessment->id]);
+        $this->assertSame(0, ActivityLog::where('action', 'Assessment Deleted')->count());
+    }
+
+    /**
+     * The guard is stated positively - only a teacher - so a role added later
+     * is refused by default rather than admitted by omission. Asserted against
+     * the method, with the route group's own refusal out of the picture.
+     */
+    public function test_only_a_teacher_may_delete_even_if_the_route_group_lets_someone_through(): void
+    {
+        $teacher = $this->teacherWithClass();
+        $learner = $this->learnerOf($teacher);
+        $assessment = $this->scoredReading($learner, $teacher);
+
+        $parent = User::factory()->create(['role' => 'parent']);
+        $learner->users()->attach($parent->id, ['relationship' => 'parent']);
+
+        $this->actingAs($parent)
+            ->delete(route('assessments.destroy', $assessment), ['learner_name' => $learner->getFullName()])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('assessments', ['id' => $assessment->id]);
+        $this->assertDatabaseHas('assessment_results', ['assessment_id' => $assessment->id]);
+    }
+
+    /**
+     * intervention_logs.assessment_result_id is nullOnDelete: an intervention
+     * already assigned to a child is kept, but stops pointing at the reading
+     * that prompted it. Nothing is destroyed; the provenance is. Pinned so the
+     * confirmation's promise ("kept, but will no longer show which reading")
+     * stays true if that foreign key is ever changed to a cascade.
+     */
+    public function test_an_intervention_already_logged_survives_the_deletion(): void
+    {
+        $teacher = $this->teacherWithClass();
+        $learner = $this->learnerOf($teacher);
+        $assessment = $this->scoredReading($learner, $teacher);
+
+        $intervention = \App\Models\Intervention::create([
+            'name' => 'Sound blending drill',
+            'description' => 'Blend two-phoneme words aloud.',
+            'target_weakness' => 1,
+            'instructions' => 'Say each sound, then the whole word.',
+        ]);
+        $log = \App\Models\InterventionLog::create([
+            'assessment_result_id' => $assessment->result->getKey(),
+            'intervention_id' => $intervention->getKey(),
+            'learner_id' => $learner->getKey(),
+            'assigned_by' => $teacher->getKey(),
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($teacher)
+            ->delete(route('assessments.destroy', $assessment), ['learner_name' => $learner->getFullName()])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('intervention_logs', ['id' => $log->id, 'assessment_result_id' => null]);
+        $this->assertDatabaseHas('intervention_logs', ['id' => $log->id, 'learner_id' => $learner->getKey()]);
     }
 }

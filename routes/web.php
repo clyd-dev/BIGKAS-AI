@@ -214,6 +214,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         Route::get('/assessments/{assessment}', [AssessmentController::class, 'show'])->name('assessments.show');
+        // The one place in the application where a reading can be destroyed, on
+        // the learner's own history screen. Not behind batch.enabled: it is a
+        // gap in the existing app, not part of the batch feature. Teacher-only
+        // by this group, and again inside destroy() - deleting is the assessing
+        // teacher's act, never the principal's. It cannot shadow
+        // /assessments/batch/... above: that is three segments, and POST
+        // /assessments differs from this by method.
+        Route::delete('/assessments/{assessment}', [AssessmentController::class, 'destroy'])->name('assessments.destroy');
         Route::get('/assessments/{assessment}/status', [AssessmentController::class, 'status'])->name('assessments.status');
         Route::post('/assessments/{assessment}/upload-audio', [AssessmentController::class, 'uploadAudio'])->name('assessments.upload-audio');
         Route::post('/assessments/{assessment}/retry', [AssessmentController::class, 'retry'])->name('assessments.retry');

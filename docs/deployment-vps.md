@@ -299,8 +299,9 @@ No queue worker is needed: all notifications
 
 The scheduler heartbeat below is what keeps the engine safe to lose. Every minute it runs
 `health:check` (records when the speech engine or model stops, and alerts the admin if it
-stays down for 2 minutes) and every 5 minutes `assessments:rescore` (scores recordings that were
-saved during the outage, oldest first, up to 3 tries each). Set `HEALTH_ALERT_EMAIL` in `.env`
+stays down for 2 minutes) and `assessments:rescore --limit=20` (scores recordings that were
+saved during the outage, oldest first, up to 3 tries each — see Phase 7 for why the limit
+and the overlap lock are the numbers they are). Set `HEALTH_ALERT_EMAIL` in `.env`
 for the email; with it blank the outage still shows on the admin dashboard and in the log.
 Run `php artisan migrate` after pulling, and check it by hand with `php artisan health:check`
 and `php artisan assessments:rescore`.
@@ -344,6 +345,181 @@ reach. Extract it by content instead:
 ```bash
 grep -oE '(local|production)\.(ERROR|CRITICAL):.{0,500}' storage/logs/laravel.log | tail -2
 ```
+
+## Phase 7 — Batch assessment (one teacher, a whole class)
+
+Batch assessment lets one teacher set up a reading for up to 15 children at
+once, watch a board of cards while the recordings come in, and walk away while
+the engine works through them. It ships **dark**: nothing changes on a server
+that never turns it on, and the single-child flow is untouched either way.
+
+### The flag — `BATCH_ASSESSMENT_ENABLED`
+
+Off by default. With it off, every batch route answers 404 and no batch control
+appears anywhere.
+
+```
+# .env — omit the line entirely to keep the feature closed
+BATCH_ASSESSMENT_ENABLED=true
+```
+
+The value is **cast, not taken raw** (`config/assessment.php` reads it through
+`filter_var(..., FILTER_VALIDATE_BOOLEAN)`). So an unset key, an empty
+`BATCH_ASSESSMENT_ENABLED=`, and the strings `false`, `off` and `0` all mean
+off. Only a genuinely true value — `true`, `1`, `on`, `yes` — opens the
+feature. There is no half-open state to get wrong.
+
+**Setting it in `.env` does nothing on its own.** `config:cache` freezes
+`.env` at the moment it ran, so the flag takes effect only after the config
+cache is rebuilt:
+
+```bash
+php artisan optimize:clear && php artisan optimize
+```
+
+Which is to say: **all three caches, every time** — the standing rule in
+"Every future update" above applies here too, and turning this flag on is
+exactly the kind of change that tempts you to rebuild only `config`. Don't.
+A pull that adds the batch routes leaves the old `bootstrap/cache/routes-v7.php`
+in place, and the first view that calls `route()` on a new batch name throws
+from inside a Blade template — a 500 that reads like a view bug and sends you
+looking in the wrong file. This project has made that exact mistake.
+
+### The scoring lane, and why its two numbers move together
+
+One lane, serial, oldest recording first. `routes/console.php`:
+
+```php
+Schedule::command('assessments:rescore --limit=20')->everyMinute()->withoutOverlapping(120);
+```
+
+Three numbers, one invariant:
+
+| Number | Value | Why |
+|---|---|---|
+| `--limit` | 20 | A full 15-child roster must clear in **one** run, with headroom |
+| tick | every minute | The board's wait estimate is computed from this tick |
+| `withoutOverlapping` | 120 minutes | Must outlast the worst-case run |
+
+The invariant: **`20 × 3 × 1.5 = 90 ≤ 120`** — twenty recordings, three
+minutes each at the recorder's maximum, times a 1.5 safety margin, must fit
+inside the lock.
+
+Raise `--limit` without raising the lock and the lock expires **mid-run**. The
+next minute's tick then sees no lock, starts a second run, and both runs score
+the same recordings — a child's reading scored twice, two results, and a
+teacher looking at numbers that changed by themselves.
+
+`tests/Feature/RescoreScheduleTest.php` is what fails if the two drift apart.
+It is not documentation; it asserts the arithmetic. (Verified: setting
+`--limit=60` against a 120-minute lock fails it with
+"Failed asserting that 270.0 is equal to 120 or is less than 120".)
+
+### `schedule:run` is a prerequisite, not an optimisation
+
+Without the crontab line from Phase 6, **nothing is ever rescored**. Recordings
+sit at `queued` on the board forever — no error, no failure, just a batch that
+never finishes. Confirm it before turning the flag on:
+
+```bash
+crontab -l | grep schedule:run      # must be there
+php artisan schedule:list           # assessments:rescore --limit=20, every minute
+php artisan assessments:rescore     # by hand, once, to see it work
+```
+
+### One lane, first in first out — what a teacher will think is broken
+
+A 15-child batch holds the single scoring lane for **up to an hour**. Another
+teacher's ordinary one-off assessment, created in the middle of that batch,
+**waits behind it**. That is fair — oldest recording first, nobody jumps the
+queue — but it is slow, and a teacher who has not been told will be certain the
+system is broken.
+
+Tell staff this before they first use it. The board shows an honest "about N
+minutes" estimate that already includes the work queued ahead, so the number on
+screen is the real answer; it is only surprising if nobody explained that there
+is one lane.
+
+### When a scheduled run is killed — `php artisan schedule:clear-cache`
+
+`withoutOverlapping(120)` releases its lock on normal exit. It does **not**
+release on a SIGKILL — an OOM kill, a reboot, a `systemctl stop` or a container
+stop in the middle of a run. The lock then stays held for up to two hours, and
+until it expires **nothing is rescored at all** — not the batch, and not
+outage recovery for ordinary single-child assessments either.
+
+**The symptom, as it looks at 7am:**
+
+- recordings sitting at `queued`, not moving
+- the speech engine demonstrably healthy — `curl -s http://127.0.0.1:5000/api/health` answers
+- **no `Rescored assessment` lines in the log** since the kill
+
+```bash
+grep -c 'Rescored assessment' storage/logs/laravel.log     # stops increasing
+```
+
+Nothing is lost — the queue *is* the database, so there is no queue to drain —
+but nothing moves either. The unstick command:
+
+```bash
+php artisan schedule:clear-cache
+```
+
+Then wait one minute for the next tick, and confirm the `Rescored assessment`
+lines resume.
+
+### Rolling back
+
+- Tag **`pre-batch-assessment`** (pushed) is the state before any of this work.
+- The work lives on branch **`feat/batch-assessment`**.
+- The flag defaults **off**, so a deploy that includes the code but not the
+  `.env` line is already rolled back in effect.
+- Both migrations are **additive and reversible** —
+  `create_assessment_batches_table` and `add_batch_columns_to_assessments_table`.
+  Every added column is nullable (`NULL batch_id` means a single-child
+  assessment, exactly as before) and `batch_id` is `nullOnDelete`, so deleting
+  a batch never deletes a child's assessment or result.
+
+Verified on real MySQL 8 (not only the suite's SQLite): `migrate` from empty →
+`migrate:rollback --step` over both migrations → `migrate` again, all clean.
+After the rollback the four added columns, the two indexes and the foreign key
+were all gone from `assessments`, with no orphan index left behind.
+
+```bash
+php artisan migrate:rollback --step=2 --force   # removes exactly these two
+```
+
+### Known blocker — this branch cannot `route:cache` on a clean checkout
+
+`routes/web.php` on this branch declares three committed routes:
+
+```
+GET  /users/import           → ParentImportController@form
+POST /users/import/preview   → ParentImportController@preview
+POST /users/import/confirm   → ParentImportController@confirm
+```
+
+`app/Http/Controllers/ParentImportController.php` and its two views
+(`resources/views/admin/parents-import.blade.php`,
+`resources/views/admin/parents-import-result.blade.php`) are **untracked** —
+they were captured from a working tree, and the routes went in without them.
+As observed on 2026-10-22, all three files are still untracked.
+
+On a clean clone the controller class does not exist, so `php artisan
+route:cache` fails and the deploy stops. **The fix is to commit those three
+files**; there is nothing to do on the server. Check before deploying:
+
+```bash
+git ls-files --error-unmatch app/Http/Controllers/ParentImportController.php
+```
+
+### Before you believe the batch flow works
+
+The automated suite cannot measure real transcription, and it cannot close a
+browser. `docs/2026-10-22-batch-assessment-manual-checks.md` is the by-hand
+checklist: the measured 15-child run, the close-the-browser proof, a pass over
+the real screens, and a child signing in on their own device. Run it before
+turning the flag on for a real class.
 
 ## Troubleshooting — "419 Page Expired" and sessions that won't end
 

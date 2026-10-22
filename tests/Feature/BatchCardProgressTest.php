@@ -393,4 +393,73 @@ class BatchCardProgressTest extends TestCase
 
         return $count;
     }
+
+    /**
+     * The loading indication must belong to `transcribing` alone. It shipped
+     * inside an existing class attribute - `class="progress bb-progress
+     * @class([...])"` - and Blade's @class renders a whole `class="..."`
+     * attribute, so that produced a nested one the browser discards. The bar
+     * was therefore visible on every card in every state, including `done`,
+     * which is what a teacher reported.
+     *
+     * Asserted on the markup rather than through a helper, because the defect
+     * was in the markup and a state-level assertion sailed straight past it.
+     */
+    public function test_only_a_transcribing_card_shows_the_loading_bar(): void
+    {
+        $teacher = $this->teacher();
+        $batch = $this->boardBatch($teacher);
+        $learners = $this->learnersOf($teacher);
+
+        // One card in each state that must NOT show a loading indication.
+        $recorded = $this->batchEntryWithAudio([
+            'batch_id' => $batch->id,
+            'learner_id' => $learners[0]->id,
+        ]);
+        $done = $this->sentBatchEntry([
+            'batch_id' => $batch->id,
+            'learner_id' => $learners[1]->id,
+        ]);
+        $done->createResult($this->classifiedAnalysis());
+        $done->verdict()->create($this->acceptedVerdict());
+
+        $this->assertSame('recorded', $this->stateOf($recorded)['chip']);
+        $this->assertSame('done', $this->stateOf($done)['chip']);
+
+        $html = $this->actingAs($teacher)->get(route('assessments.batch.board', $batch))
+            ->assertOk()->getContent();
+
+        // The bar's markup is always present and hidden by a class, so the
+        // assertion has to be on the thing that actually governs visibility:
+        // every data-progress element on this board must carry d-none.
+        $bars = substr_count($html, 'data-progress');
+        $this->assertSame(2, $bars, 'Each card carries one loading bar element.');
+        $this->assertSame(
+            $bars,
+            substr_count($html, 'bb-progress d-none'),
+            'A loading bar is showing on a board where nothing is being transcribed.'
+        );
+
+        // And the hiding class must be a real attribute, not a second
+        // class="..." nested inside the first - which the browser discards.
+        $this->assertStringNotContainsString('class="progress bb-progress class=', $html,
+            'The hiding class is nested inside another class attribute, so the browser drops it.');
+
+        // The chip spinner is likewise only for transcribing.
+        $spinners = substr_count($html, 'data-chip-spinner');
+        $this->assertSame(2, $spinners, 'Each card carries one spinner element.');
+        $this->assertSame(
+            $spinners,
+            substr_count($html, 'spinner-border-sm d-none'),
+            'Every spinner on a board with nothing transcribing must be hidden.'
+        );
+
+        // Neither control may carry a second class attribute: a duplicate is
+        // discarded by the browser, which is how both of these came to show in
+        // every state while the markup read correctly.
+        $this->assertSame(0, preg_match_all('/<span[^>]*class=[^>]*class=/', $html),
+            'A span carries two class attributes; the second is ignored.');
+        $this->assertSame(0, preg_match_all('/<div[^>]*class=[^>]*class=/', $html),
+            'A div carries two class attributes; the second is ignored.');
+    }
 }

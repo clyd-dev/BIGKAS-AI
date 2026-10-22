@@ -116,8 +116,14 @@
                     <a class="stretched-link text-decoration-none text-body" href="{{ $entryUrl }}">{{ $childName }}</a>
                 </h2>
                 <span class="pp-pill pp-{{ $state['tone'] }} bb-chip" data-chip>
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"
-                          data-chip-spinner @class(['d-none' => $state['chip'] !== 'transcribing'])></span>
+                    {{-- One class attribute, not two. Written as
+                         class="spinner-border spinner-border-sm" … @class([...])
+                         it rendered a second class attribute, and a duplicate
+                         attribute is discarded - so the spinner span kept only
+                         its first class list and spun on every card in every
+                         state. --}}
+                    <span @class(['spinner-border', 'spinner-border-sm', 'd-none' => $state['chip'] !== 'transcribing'])
+                          role="status" aria-hidden="true" data-chip-spinner></span>
                     <span data-chip-text>{{ $state['chip'] }}</span>
                 </span>
             </div>
@@ -140,7 +146,11 @@
                 poll can show and hide it in place without re-rendering the
                 card - the same reason the chip's spinner is built this way.
             --}}
-            <div class="progress bb-progress @class(['d-none' => $state['chip'] !== 'transcribing'])"
+            {{-- @class owns the whole attribute: written as
+                 class="progress bb-progress @class([...])" it rendered a second,
+                 nested class="..." that the browser discards, so the bar showed
+                 on every card in every state. --}}
+            <div @class(['progress', 'bb-progress', 'd-none' => $state['chip'] !== 'transcribing'])
                  data-progress role="status" aria-label="Analysis in progress">
                 <div class="progress-bar progress-bar-striped progress-bar-animated"></div>
             </div>

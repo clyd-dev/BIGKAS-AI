@@ -209,6 +209,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/assessments/batch', [AssessmentBatchController::class, 'store'])->name('assessments.batch.store');
             Route::get('/assessments/batch/{batch}', [AssessmentBatchController::class, 'board'])->name('assessments.batch.board');
             Route::get('/assessments/batch/{batch}/poll', [AssessmentBatchController::class, 'poll'])->name('assessments.batch.poll');
+            // Adding one more child to a board that is already running: the
+            // roster was frozen at creation before this, so a child who arrived
+            // late needed a whole second batch.
+            Route::get('/assessments/batch/{batch}/add', [AssessmentBatchController::class, 'addChild'])->name('assessments.batch.add');
+            Route::post('/assessments/batch/{batch}/add', [AssessmentBatchController::class, 'addEntries'])->name('assessments.batch.add.store');
             Route::get('/assessments/batch/{batch}/entry/{assessment}', [AssessmentBatchController::class, 'entry'])->name('assessments.batch.entry');
             Route::post('/assessments/batch/{batch}/entry/{assessment}/upload-audio', [AssessmentBatchController::class, 'uploadAudio'])->name('assessments.batch.upload-audio');
             Route::post('/assessments/batch/{batch}/entry/{assessment}/answers', [AssessmentBatchController::class, 'answers'])->name('assessments.batch.answers');

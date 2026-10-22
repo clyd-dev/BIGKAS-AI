@@ -133,20 +133,7 @@ class AssessmentBatchController extends Controller
     private function setupData(User $user): array
     {
         $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
-        $classes = $user->taughtClasses()->orderBy('grade_level')->orderBy('section')->get()->keyBy('id');
-
-        $groups = [];
-        foreach ($classes as $class) {
-            $groups[$class->id] = ['label' => 'Grade ' . $class->grade_level . ' - ' . $class->section, 'learners' => []];
-        }
-        foreach ($learners as $learner) {
-            // A learner attached by pivot row rather than by class still belongs
-            // on the roster; she just has no section of this teacher's to sit in.
-            $key = isset($groups[$learner->class_id]) ? $learner->class_id : 'other';
-            $groups[$key] ??= ['label' => 'Also assigned to you', 'learners' => []];
-            $groups[$key]['learners'][] = $learner;
-        }
-        $groups = array_filter($groups, fn ($group) => $group['learners'] !== []);
+        $groups = $this->rosterGroups($user, $learners);
 
         $grades = $learners->pluck('grade_level')->filter()->unique()->sort()->values();
 
@@ -166,6 +153,35 @@ class AssessmentBatchController extends Controller
             'minLearners' => $this->minLearners(),
             'maxLearners' => (int) config('assessment.batch_max_learners'),
         ];
+    }
+
+    /**
+     * The given children grouped by the teacher's own sections.
+     *
+     * Shared by the setup form and the add-a-child picker, so both screens
+     * group, label and order the roster identically - the second screen is the
+     * same roster with the children already on the board left out, not a second
+     * idea of what a roster looks like.
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Learner>  $learners
+     */
+    private function rosterGroups(User $user, $learners): array
+    {
+        $classes = $user->taughtClasses()->orderBy('grade_level')->orderBy('section')->get()->keyBy('id');
+
+        $groups = [];
+        foreach ($classes as $class) {
+            $groups[$class->id] = ['label' => 'Grade ' . $class->grade_level . ' - ' . $class->section, 'learners' => []];
+        }
+        foreach ($learners as $learner) {
+            // A learner attached by pivot row rather than by class still belongs
+            // on the roster; she just has no section of this teacher's to sit in.
+            $key = isset($groups[$learner->class_id]) ? $learner->class_id : 'other';
+            $groups[$key] ??= ['label' => 'Also assigned to you', 'learners' => []];
+            $groups[$key]['learners'][] = $learner;
+        }
+
+        return array_filter($groups, fn ($group) => $group['learners'] !== []);
     }
 
     /** Every material a teacher may pick, once, for the browser to filter. */
@@ -300,7 +316,184 @@ class AssessmentBatchController extends Controller
             // are drawn from, so the dialog cannot promise something the board
             // does not show.
             'cancelConsequences' => $this->cancelConsequences($this->cancelPlan($states)),
+            // Whether Add child is offered at all. A cancelled batch takes
+            // nothing in, and a full one has no room - in both cases the
+            // control is absent rather than present and refusing.
+            'canAdd' => $batch->status !== AssessmentBatch::STATUS_CANCELLED && $this->roomIn($batch) > 0,
         ]);
+    }
+
+    /**
+     * The add-a-child picker: the setup form's roster, minus this board.
+     *
+     * A batch is set up before the session starts, but a class is not a fixed
+     * thing on the day - a child arrives late, an absent child turns up, a
+     * teacher finds she has time for one more. Until this, the roster was
+     * frozen at creation and the only way to assess one more child was a whole
+     * second batch.
+     *
+     * It is a screen of its own rather than a control on the board because
+     * picking children is a list of fifteen names with a reading each, and the
+     * board is already a grid of cards. The rows are the setup form's own
+     * partial, unchanged, so there is one way of picking a child in this app.
+     *
+     * Language, type and the batch material are not asked again: the batch
+     * decided them, so an added child is assessed on exactly the terms the
+     * children beside them were.
+     */
+    public function addChild(Request $request, AssessmentBatch $batch)
+    {
+        $this->authorizeConduct($batch);
+
+        if ($refusal = $this->refuseIfCancelled($request, $batch)) {
+            return $refusal;
+        }
+
+        $room = $this->roomIn($batch);
+
+        if ($room < 1) {
+            return $this->refuse($request, $batch, 'This batch already holds '
+                . (int) config('assessment.batch_max_learners')
+                . ' children, which is the most one batch can take. Start another batch for anyone '
+                . 'else who still needs a reading.');
+        }
+
+        return view('assessments.batch.add', $this->addData($batch, $room));
+    }
+
+    /**
+     * Put the ticked children onto this board.
+     *
+     * All or nothing, through BatchRosterBuilder::add(): two children where the
+     * second is refused leaves neither, and no orphan session. The posted roster
+     * is read by rosterInput() - the setup form's own reader - so an unticked
+     * row that still posts its material slot is dropped here exactly as it is
+     * there; the language, type and default material it also reads are ignored
+     * by add(), which takes all three from the batch row instead.
+     */
+    public function addEntries(Request $request, AssessmentBatch $batch)
+    {
+        $this->authorizeConduct($batch);
+
+        if ($refusal = $this->refuseIfCancelled($request, $batch)) {
+            return $refusal;
+        }
+
+        $input = $this->rosterInput($request);
+
+        try {
+            $added = app(BatchRosterBuilder::class)->add($batch, $request->user(), $input);
+        } catch (ValidationException $e) {
+            return redirect()->route('assessments.batch.add', $batch)
+                ->withErrors($e->errors())
+                ->withInput($input);
+        }
+
+        return redirect()->route('assessments.batch.board', $batch)
+            ->with('success', $this->addedMessage($added));
+    }
+
+    /** How many more children this batch may hold (R13: the cap is the batch's). */
+    private function roomIn(AssessmentBatch $batch): int
+    {
+        // Every entry, not boardEntries(): a child who has moved out of this
+        // teacher's classes drops off the board but is still in the batch, and
+        // still takes up one of its fifteen places. One count query per render,
+        // never one per card.
+        return (int) config('assessment.batch_max_learners') - $batch->entries()->count();
+    }
+
+    /** Everything the add-a-child picker needs, queried once - the view never queries (R39). */
+    private function addData(AssessmentBatch $batch, int $room): array
+    {
+        $teacher = $batch->teacher;
+
+        // A child cannot be addable twice: whoever is already in the batch is
+        // left out of the query the picker is built from, which is how the setup
+        // form made duplicates structurally impossible in the first place.
+        $taken = $batch->entries()->pluck('learner_id')->filter()->all();
+
+        $learners = Directory::sortLearners(
+            $teacher->accessibleLearnersQuery()
+                ->when($taken !== [], fn ($query) => $query->whereNotIn('learners.id', $taken))
+                ->get()
+        );
+
+        $material = $batch->defaultMaterial;
+        $groups = $this->rosterGroups($teacher, $learners);
+
+        return [
+            'batch' => $batch,
+            'groups' => $groups,
+            'showGroupLabels' => count($groups) > 1,
+            'materials' => $this->addMaterialOptions($batch),
+            'defaultMaterial' => $material,
+            'room' => $room,
+            'gradeNotes' => $this->gradeNotes($learners, $material),
+        ];
+    }
+
+    /**
+     * The materials an added child may be given, already narrowed to what this
+     * batch can accept: its language, and - for a comprehension or combined
+     * batch - only materials that really carry questions.
+     *
+     * Narrowed here rather than in the browser because the batch has already
+     * answered both questions; the setup form filters client-side only because
+     * the teacher is still choosing the language and the type there.
+     */
+    private function addMaterialOptions(AssessmentBatch $batch)
+    {
+        return $this->materialOptions()
+            ->where('language', $batch->language)
+            ->when(
+                in_array($batch->assessment_type, ['comprehension', 'combined'], true),
+                fn ($materials) => $materials->where('comprehension_questions_count', '>', 0)
+            )
+            ->values();
+    }
+
+    /**
+     * Per child, the grade gap between them and the batch reading, in words.
+     *
+     * R52: a cross-grade reading is permitted and the gap is *stated*, never
+     * forbidden - a Grade 6 child reading a Grade 2 passage is precisely what
+     * Phil-IRI exists to find. What the batch material may not do is land on a
+     * child nobody chose it for, so the note asks the teacher to choose.
+     *
+     * @return array<int, string>
+     */
+    private function gradeNotes($learners, ?ReadingMaterial $material): array
+    {
+        if (! $material) {
+            return [];
+        }
+
+        $notes = [];
+
+        foreach ($learners as $learner) {
+            if ((int) $material->grade_level === (int) $learner->grade_level) {
+                continue;
+            }
+
+            $notes[$learner->id] = 'The batch reading is Grade ' . $material->grade_level . ' and '
+                . $learner->first_name . ' is in Grade ' . $learner->grade_level
+                . ' - give them a reading of their own below.';
+        }
+
+        return $notes;
+    }
+
+    /** What the board says happened, named rather than counted where it can be. */
+    private function addedMessage($added): string
+    {
+        if ($added->count() === 1) {
+            $name = $added->first()->learner?->first_name ?? 'One more child';
+
+            return $name . ' is now on this board, waiting for their reading.';
+        }
+
+        return $added->count() . ' more children are now on this board, waiting for their readings.';
     }
 
     /**

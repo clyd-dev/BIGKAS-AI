@@ -56,6 +56,7 @@ class BatchRosterBuilder
         return DB::transaction(function () use ($teacher, $input) {
             $entries = $this->entriesOf($input);
 
+            /** @var AssessmentBatch $batch */
             $batch = AssessmentBatch::create([
                 'teacher_id' => $teacher->id,
                 // Derived, never posted: the teacher has no class input to fill in.
@@ -68,38 +69,159 @@ class BatchRosterBuilder
                 'status' => AssessmentBatch::STATUS_COLLECTING,
             ]);
 
-            foreach ($entries as $entry) {
-                $assessment = Assessment::create([
-                    'batch_id' => $batch->id,
-                    'learner_id' => $entry['learner_id'],
-                    'material_id' => filled($entry['material_id'] ?? null)
-                        ? $entry['material_id']
-                        : $input['default_material_id'],
-                    'assessor_id' => $teacher->id,
-                    'language' => $input['language'],
-                    'assessment_type' => $input['assessment_type'],
-                    'status' => Assessment::STATUS_PENDING,
-                ]);
-
-                // A join code for every child, unconditionally: which route a
-                // child takes (the teacher's laptop or their own device) is
-                // decided in the moment, so the code is always there. It is the
-                // live single-child session AssessmentController::startSession()
-                // issues, made in bulk, and it shares this transaction - a
-                // failure anywhere leaves no batch, no entry and no code.
-                AssessmentSession::create([
-                    'assessment_id' => $assessment->id,
-                    'learner_id' => $assessment->learner_id,
-                    'teacher_id' => $teacher->id,
-                    'material_id' => $assessment->material_id,
-                    'session_code' => AssessmentSession::generateCode(),
-                    'status' => 'waiting',
-                    'started_at' => now(),
-                ]);
-            }
+            $this->createEntries($batch, $teacher, $entries, $input);
 
             return $batch->load('entries');
         });
+    }
+
+    /**
+     * Put one or more further children onto a batch that already exists.
+     *
+     * The same act as build()'s own loop, on a batch nobody is creating: one
+     * Assessment and one AssessmentSession per child, in one transaction, all
+     * or nothing. A class is not a fixed thing on the day - a child arrives
+     * late, an absent child turns up - and before this the roster was frozen at
+     * creation, so the only way to assess another child was a second batch.
+     *
+     * What the batch already decided is not asked again: the language, the type
+     * and the batch material come from the batch row, so an added child is
+     * assessed on exactly the terms the children beside them were.
+     *
+     * @param  array  $input  the posted roster, `entries[<learner id>][...]`
+     * @return \Illuminate\Support\Collection<int, Assessment>  the new entries
+     */
+    public function add(AssessmentBatch $batch, User $teacher, array $input)
+    {
+        $errors = $this->checkAddition($batch, $teacher, $input);
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return DB::transaction(function () use ($batch, $teacher, $input) {
+            return collect($this->createEntries(
+                $batch,
+                $teacher,
+                $this->entriesOf($input),
+                $this->batchInput($batch, $input)
+            ));
+        });
+    }
+
+    /**
+     * The verdict add() reaches, without creating anything: an empty array when
+     * the children may all be added.
+     *
+     * Two rules are this method's own, and both are about the batch rather than
+     * about a child:
+     *
+     *  - the cap is the whole batch's, never "fifteen more". The children
+     *    already on the board are counted first, so a board of fourteen takes
+     *    one and a board of fifteen takes none (R13).
+     *  - a child already in this batch is refused. The picker does not offer
+     *    them, but a hand-made post is the only way here and it gets the same
+     *    answer the roster's own duplicate rule gives: the learner ids already
+     *    in the batch are handed to the per-entry check as already seen, so
+     *    there is one implementation of "already in the batch" rather than two.
+     *
+     * @return array<string, string[]>
+     */
+    public function checkAddition(AssessmentBatch $batch, User $teacher, array $input): array
+    {
+        $entries = $this->entriesOf($input);
+        $taken = $this->learnerIdsIn($batch);
+        $max = (int) config('assessment.batch_max_learners');
+        $room = $max - count($taken);
+
+        if ($entries === []) {
+            return ['entries' => ['Tick at least one child to add to this batch.']];
+        }
+
+        if (count($entries) > $room) {
+            return ['entries' => [$room < 1
+                ? "This batch already holds {$max} children, which is the most one batch can take. "
+                    . 'Start another batch for anyone else who needs a reading.'
+                : "A batch can hold at most {$max} children and this one already has " . count($taken)
+                    . ', so you can add ' . $room . ' more.']];
+        }
+
+        return $this->checkEntries($teacher, $this->batchInput($batch, $input), $entries, $taken);
+    }
+
+    /** The learner ids this batch already holds, as a set. */
+    private function learnerIdsIn(AssessmentBatch $batch): array
+    {
+        return $batch->entries()->pluck('learner_id')
+            ->filter()
+            ->mapWithKeys(fn ($id) => [(int) $id => true])
+            ->all();
+    }
+
+    /**
+     * The roster input as an addition sees it: the posted entries, and every
+     * other term taken from the batch itself rather than from the request. A
+     * teacher adding a child answers no question the batch has already answered,
+     * and no post can change the language, the type or the batch material of a
+     * batch that is already running.
+     */
+    private function batchInput(AssessmentBatch $batch, array $input): array
+    {
+        return [
+            'language' => $batch->language,
+            'assessment_type' => $batch->assessment_type,
+            'default_material_id' => $batch->default_material_id,
+            'entries' => $input['entries'] ?? [],
+        ];
+    }
+
+    /**
+     * One Assessment and one AssessmentSession per entry, on an open batch.
+     *
+     * Shared by build() and add() so a child put onto a board mid-session is
+     * created exactly as the children beside them were - same columns, same
+     * join code, same transaction. Caller-owned transaction, deliberately: a
+     * failure anywhere leaves no entry and no orphan session.
+     *
+     * @return Assessment[]
+     */
+    private function createEntries(AssessmentBatch $batch, User $teacher, array $entries, array $input): array
+    {
+        $created = [];
+
+        foreach ($entries as $entry) {
+            $assessment = Assessment::create([
+                'batch_id' => $batch->id,
+                'learner_id' => $entry['learner_id'],
+                'material_id' => filled($entry['material_id'] ?? null)
+                    ? $entry['material_id']
+                    : $input['default_material_id'],
+                'assessor_id' => $teacher->id,
+                'language' => $input['language'],
+                'assessment_type' => $input['assessment_type'],
+                'status' => Assessment::STATUS_PENDING,
+            ]);
+
+            // A join code for every child, unconditionally: which route a
+            // child takes (the teacher's laptop or their own device) is
+            // decided in the moment, so the code is always there. It is the
+            // live single-child session AssessmentController::startSession()
+            // issues, made in bulk, and it shares this transaction - a
+            // failure anywhere leaves no batch, no entry and no code.
+            AssessmentSession::create([
+                'assessment_id' => $assessment->id,
+                'learner_id' => $assessment->learner_id,
+                'teacher_id' => $teacher->id,
+                'material_id' => $assessment->material_id,
+                'session_code' => AssessmentSession::generateCode(),
+                'status' => 'waiting',
+                'started_at' => now(),
+            ]);
+
+            $created[] = $assessment;
+        }
+
+        return $created;
     }
 
     /**
@@ -143,6 +265,30 @@ class BatchRosterBuilder
             return $errors;
         }
 
+        return $this->checkEntries($teacher, $input, $entries);
+    }
+
+    /**
+     * The per-child half of the verdict: who may be assessed, and on what.
+     *
+     * Extracted from check() so adding a child to a running batch asks exactly
+     * the same questions the setup form did, with the same messages keyed the
+     * same way - rather than a second, divergent set of rules that would rot
+     * apart from this one. The whole-roster rules (language, type, the floor and
+     * the cap) stay with the caller, because an addition counts its cap against
+     * the children already on the board.
+     *
+     * @param  array<int, true>  $taken  learner ids that already count as in the
+     *   batch, so the duplicate rule below covers them too.
+     * @return array<string, string[]>
+     */
+    private function checkEntries(User $teacher, array $input, array $entries, array $taken = []): array
+    {
+        $errors = [];
+        $add = function (string $key, string $message) use (&$errors) {
+            $errors[$key][] = $message;
+        };
+
         $materials = ReadingMaterial::active()
             ->whereIn('id', array_filter(array_merge(
                 [$input['default_material_id'] ?? null],
@@ -151,7 +297,9 @@ class BatchRosterBuilder
             ->get()
             ->keyBy('id');
 
-        $seen = [];
+        // Pre-seeded with whoever is already in the batch, so "already in the
+        // batch" has one implementation for a fresh roster and for an addition.
+        $seen = $taken;
 
         foreach ($entries as $key => $entry) {
             $learner = $entry['learner'];
@@ -160,7 +308,8 @@ class BatchRosterBuilder
                 $add("entries.$key.learner_id", 'The selected learner is invalid.');
                 continue;
             }
-            // Unreachable from the form, where the entry key IS the learner id.
+            // Unreachable from either form, where the entry key IS the learner
+            // id and the add picker does not offer a child already on the board.
             // Kept for a hand-crafted post, which is the only way here.
             if (isset($seen[$learner->id])) {
                 $add("entries.$key.learner_id", 'This learner is already in the batch.');

@@ -29,6 +29,15 @@
                 </button>
             </form>
 
+            {{-- A class is not a fixed thing on the day: a child arrives late, an
+                 absent child turns up. Absent rather than present-and-refusing
+                 when the batch is cancelled or already full - see $canAdd. --}}
+            @if($canAdd)
+                <a href="{{ route('assessments.batch.add', $batch) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-person-plus me-1"></i> Add child
+                </a>
+            @endif
+
             @if($batch->status !== \App\Models\AssessmentBatch::STATUS_CANCELLED)
                 <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelBatchModal">
                     <i class="bi bi-slash-circle me-1"></i> Cancel batch

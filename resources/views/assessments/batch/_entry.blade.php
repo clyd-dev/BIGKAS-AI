@@ -33,6 +33,14 @@
                  so the row never claims a passage that is no longer selected. --}}
             <div class="small text-muted {{ $override ? 'd-none' : '' }}" data-role="batch-reading">
                 <i class="bi bi-book me-1"></i><span data-role="batch-reading-title">the batch material</span>
+                {{-- Only the add-a-child picker passes one: this child is in
+                     another grade than the batch reading, so the gap is stated
+                     rather than the passage quietly handed over (R52). It sits
+                     inside this line so it goes away the moment she gives the
+                     child a reading of their own. --}}
+                @if($gradeNote ?? null)
+                    <div class="text-warning-emphasis mt-1">{{ $gradeNote }}</div>
+                @endif
             </div>
 
             <div class="form-check roster-override mt-1 {{ $picked ? '' : 'd-none' }}" data-role="override-wrap">

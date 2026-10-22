@@ -203,6 +203,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::middleware('batch.enabled')->group(function () {
             Route::get('/assessments/batch', [AssessmentBatchController::class, 'index'])->name('assessments.batch.index');
             Route::get('/assessments/batch/create', [AssessmentBatchController::class, 'create'])->name('assessments.batch.create');
+            // The summary step. It only reads, so nothing exists until the
+            // teacher confirms on POST /assessments/batch below.
+            Route::post('/assessments/batch/review', [AssessmentBatchController::class, 'review'])->name('assessments.batch.review');
             Route::post('/assessments/batch', [AssessmentBatchController::class, 'store'])->name('assessments.batch.store');
             Route::get('/assessments/batch/{batch}', [AssessmentBatchController::class, 'board'])->name('assessments.batch.board');
             Route::get('/assessments/batch/{batch}/poll', [AssessmentBatchController::class, 'poll'])->name('assessments.batch.poll');

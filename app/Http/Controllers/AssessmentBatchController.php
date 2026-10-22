@@ -7,6 +7,9 @@ use App\Models\AssessmentBatch;
 use App\Models\AssessmentResult;
 use App\Models\AssessmentSession;
 use App\Models\AssessmentVerdict;
+use App\Models\Learner;
+use App\Models\ReadingMaterial;
+use App\Models\User;
 use App\Services\AnalysisQueueEstimator;
 use App\Services\BatchEntryState;
 use App\Services\BatchRosterBuilder;
@@ -27,45 +30,195 @@ class AssessmentBatchController extends Controller
     {
     }
 
+    /**
+     * The setup form: a checkbox roster of the teacher's own children.
+     *
+     * There is no class input. The roster is derived from the classes she
+     * teaches, grouped with a heading per section when there is more than one,
+     * so a one-class teacher sees a plain list and a two-section teacher sees
+     * both and may legitimately assess across them - neither has to answer a
+     * question about whose class this is.
+     *
+     * Both the roster and the materials are loaded here, once: the view never
+     * queries (R39), and the material list is filtered in the browser instead of
+     * fetched per grade.
+     */
     public function create()
     {
-        $user = auth()->user();
-        $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
-        $classes = $user->taughtClasses()->orderBy('grade_level')->orderBy('section')->get();
-        $maxLearners = (int) config('assessment.batch_max_learners');
+        return view('assessments.batch.create', $this->setupData(auth()->user()));
+    }
 
-        // Materials are loaded progressively via materials.options, as on the
-        // single-child screen.
-        return view('assessments.batch.create', compact('learners', 'classes', 'maxLearners'));
+    /**
+     * The summary she confirms before anything exists.
+     *
+     * Nothing is created here: the roster is checked by the very method store()
+     * validates with, and the whole selection travels on to the confirm button
+     * as hidden fields. A teacher who backs out (or closes the tab) leaves no
+     * batch, no assessment and no session behind, because none was ever written
+     * - there is no draft row and no session-held state to clean up. "Change
+     * selection" posts the same fields back here and is redirected to the form
+     * with them as old input, so going back costs her nothing either.
+     */
+    public function review(Request $request)
+    {
+        $input = $this->rosterInput($request);
+
+        if ($request->filled('edit')) {
+            return redirect()->route('assessments.batch.create')->withInput($input);
+        }
+
+        $errors = app(BatchRosterBuilder::class)->check($request->user(), $input, $this->minLearners());
+
+        if ($errors !== []) {
+            return redirect()->route('assessments.batch.create')->withErrors($errors)->withInput($input);
+        }
+
+        return view('assessments.batch.review', $this->summaryData($input));
     }
 
     public function store(Request $request)
     {
-        // Re-index so the entries line up with the "entries.N.*" error keys, which
-        // BatchRosterBuilder numbers by position; a roster row removed on the form
-        // would otherwise leave a gap and put a message beside the wrong child.
-        $input = $request->all();
-        $input['entries'] = array_values(array_filter((array) $request->input('entries', []), 'is_array'));
+        $input = $this->rosterInput($request);
 
         try {
-            $batch = app(BatchRosterBuilder::class)->build($request->user(), [
-                'title' => filled($input['title'] ?? null) ? $input['title'] : null,
-                'language' => $input['language'] ?? null,
-                'assessment_type' => $input['assessment_type'] ?? null,
-                'default_material_id' => filled($input['default_material_id'] ?? null) ? (int) $input['default_material_id'] : null,
-                'school_class_id' => filled($input['school_class_id'] ?? null) ? (int) $input['school_class_id'] : null,
-                'entries' => array_map(fn ($e) => [
-                    'learner_id' => filled($e['learner_id'] ?? null) ? (int) $e['learner_id'] : null,
-                    'material_id' => filled($e['material_id'] ?? null) ? (int) $e['material_id'] : null,
-                    // A plain checkbox: absent when unticked, "on" when ticked.
-                    'allow_fallback' => filter_var($e['allow_fallback'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                ], $input['entries']),
-            ]);
+            $batch = app(BatchRosterBuilder::class)->build($request->user(), $input, $this->minLearners());
         } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput($input);
+            return redirect()->route('assessments.batch.create')->withErrors($e->errors())->withInput($input);
         }
 
         return redirect()->route('assessments.batch.board', $batch);
+    }
+
+    /**
+     * The roster as posted. Entries are keyed by learner id by the form itself,
+     * and those keys are kept: a per-entry message can then only ever land on the
+     * child it belongs to, and the same child cannot be in the roster twice.
+     *
+     * An unticked row still posts its material slot and no learner_id; that is
+     * how a row says "not this child", so it is dropped here.
+     */
+    private function rosterInput(Request $request): array
+    {
+        $entries = [];
+
+        foreach ((array) $request->input('entries', []) as $key => $entry) {
+            if (! is_array($entry) || ! filled($entry['learner_id'] ?? null)) {
+                continue;
+            }
+
+            $entries[$key] = [
+                'learner_id' => (int) $entry['learner_id'],
+                'material_id' => filled($entry['material_id'] ?? null) ? (int) $entry['material_id'] : null,
+            ];
+        }
+
+        return [
+            'title' => filled($request->input('title')) ? $request->input('title') : null,
+            'language' => $request->input('language'),
+            'assessment_type' => $request->input('assessment_type'),
+            'default_material_id' => filled($request->input('default_material_id'))
+                ? (int) $request->input('default_material_id')
+                : null,
+            'entries' => $entries,
+        ];
+    }
+
+    /** A batch of one is a single-child assessment, which already has its own screen. */
+    private function minLearners(): int
+    {
+        return (int) config('assessment.batch_min_learners');
+    }
+
+    /** Everything the setup form needs, queried once. */
+    private function setupData(User $user): array
+    {
+        $learners = Directory::sortLearners($user->accessibleLearnersQuery()->get());
+        $classes = $user->taughtClasses()->orderBy('grade_level')->orderBy('section')->get()->keyBy('id');
+
+        $groups = [];
+        foreach ($classes as $class) {
+            $groups[$class->id] = ['label' => 'Grade ' . $class->grade_level . ' - ' . $class->section, 'learners' => []];
+        }
+        foreach ($learners as $learner) {
+            // A learner attached by pivot row rather than by class still belongs
+            // on the roster; she just has no section of this teacher's to sit in.
+            $key = isset($groups[$learner->class_id]) ? $learner->class_id : 'other';
+            $groups[$key] ??= ['label' => 'Also assigned to you', 'learners' => []];
+            $groups[$key]['learners'][] = $learner;
+        }
+        $groups = array_filter($groups, fn ($group) => $group['learners'] !== []);
+
+        $grades = $learners->pluck('grade_level')->filter()->unique()->sort()->values();
+
+        return [
+            'groups' => $groups,
+            // One heading per section only when there is more than one section to
+            // tell apart; a single class needs no label at all.
+            'showGroupLabels' => count($groups) > 1,
+            'materials' => $this->materialOptions(),
+            'gradeNames' => config('bigkas.grade_levels', []),
+            // The material grade follows the children. One grade on the roster is
+            // the default; more than one is left blank on purpose and named in
+            // full, because silently picking one of them would hand some child a
+            // passage nobody chose for their grade.
+            'defaultGrade' => $grades->count() === 1 ? (int) $grades->first() : null,
+            'gradeSpan' => $this->spell($grades->map(fn ($g) => 'Grade ' . $g)->all()),
+            'minLearners' => $this->minLearners(),
+            'maxLearners' => (int) config('assessment.batch_max_learners'),
+        ];
+    }
+
+    /** Every material a teacher may pick, once, for the browser to filter. */
+    private function materialOptions()
+    {
+        return ReadingMaterial::active()
+            ->withCount('comprehensionQuestions')
+            ->orderBy('grade_level')
+            ->orderBy('title')
+            ->get();
+    }
+
+    /** What the teacher is about to create, in the order the roster shows it. */
+    private function summaryData(array $input): array
+    {
+        $learners = Learner::whereIn('id', array_column($input['entries'], 'learner_id'))->get()->keyBy('id');
+        $materials = ReadingMaterial::whereIn('id', array_filter(array_merge(
+            [$input['default_material_id']],
+            array_column($input['entries'], 'material_id')
+        )))->get()->keyBy('id');
+
+        $byLearner = [];
+        foreach ($input['entries'] as $key => $entry) {
+            $byLearner[$entry['learner_id']] = [$key, $entry];
+        }
+
+        $rows = [];
+        foreach (Directory::sortLearners($learners->values()) as $learner) {
+            [$key, $entry] = $byLearner[$learner->id];
+            $rows[] = [
+                'key' => $key,
+                'learner' => $learner,
+                'material' => $materials->get($entry['material_id'] ?? null) ?? $materials->get($input['default_material_id']),
+                'override' => filled($entry['material_id']),
+            ];
+        }
+
+        return [
+            'input' => $input,
+            'rows' => $rows,
+            'defaultMaterial' => $materials->get($input['default_material_id']),
+        ];
+    }
+
+    /** "Grade 3", "Grade 3 and Grade 5", "Grade 3, Grade 4 and Grade 5". */
+    private function spell(array $items): string
+    {
+        if (count($items) < 2) {
+            return (string) ($items[0] ?? '');
+        }
+        $last = array_pop($items);
+
+        return implode(', ', $items) . ' and ' . $last;
     }
 
     /**

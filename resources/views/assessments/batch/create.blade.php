@@ -5,15 +5,15 @@
 @section('content')
     <x-page-header title="Group Assessment" icon="bi-people"
                    :back="route('assessments.index')" back-label="Assessments"
-                   subtitle="Set up one batch for up to {{ $maxLearners }} children." />
+                   subtitle="Tick at least {{ $minLearners }} children and at most {{ $maxLearners }}. Everyone reads the batch material unless you give a child their own." />
 
     @php
-        $rows = old('entries');
-        $rows = is_array($rows) && count($rows) > 0 ? array_values($rows) : [[]];
-        $gradeNames = config('bigkas.grade_levels', []);
+        $oldDefault = old('default_material_id');
+        $oldDefaultMaterial = filled($oldDefault) ? $materials->firstWhere('id', (int) $oldDefault) : null;
+        $pickedCount = collect(old('entries', []))->filter(fn ($row) => is_array($row) && filled($row['learner_id'] ?? null))->count();
     @endphp
 
-    <form method="POST" action="{{ route('assessments.batch.store') }}" id="batchSetup">
+    <form method="POST" action="{{ route('assessments.batch.review') }}" id="batchSetup">
         @csrf
 
         <div class="card border-0 shadow-sm mb-3">
@@ -26,24 +26,11 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="school_class_id" class="form-label">Class <span class="text-muted">(optional)</span></label>
-                        <select class="form-select @error('school_class_id') is-invalid @enderror" id="school_class_id" name="school_class_id">
-                            <option value="">No class</option>
-                            @foreach($classes as $class)
-                                <option value="{{ $class->id }}" {{ (string) old('school_class_id') === (string) $class->id ? 'selected' : '' }}>
-                                    Grade {{ $class->grade_level }} - {{ $class->section }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('school_class_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-md-6">
                         <label for="language" class="form-label">Language <span class="text-danger">*</span></label>
                         <select class="form-select @error('language') is-invalid @enderror" id="language" name="language" required>
                             <option value="">Select a language...</option>
-                            <option value="en" {{ old('language') === 'en' ? 'selected' : '' }}>English</option>
-                            <option value="fil" {{ old('language') === 'fil' ? 'selected' : '' }}>Filipino</option>
+                            <option value="en" @selected(old('language') === 'en')>English</option>
+                            <option value="fil" @selected(old('language') === 'fil')>Filipino</option>
                         </select>
                         @error('language') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -52,187 +39,224 @@
                         <label for="assessment_type" class="form-label">Assessment Type <span class="text-danger">*</span></label>
                         <select class="form-select @error('assessment_type') is-invalid @enderror" id="assessment_type" name="assessment_type" required>
                             <option value="">Select a type...</option>
-                            <option value="oral_reading" {{ old('assessment_type') === 'oral_reading' ? 'selected' : '' }}>Oral Reading</option>
-                            <option value="comprehension" {{ old('assessment_type') === 'comprehension' ? 'selected' : '' }}>Comprehension</option>
-                            <option value="combined" {{ old('assessment_type') === 'combined' ? 'selected' : '' }}>Combined</option>
+                            <option value="oral_reading" @selected(old('assessment_type') === 'oral_reading')>Oral Reading</option>
+                            <option value="comprehension" @selected(old('assessment_type') === 'comprehension')>Comprehension</option>
+                            <option value="combined" @selected(old('assessment_type') === 'combined')>Combined</option>
                         </select>
                         @error('assessment_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         <div class="form-text">Comprehension / Combined only list materials with comprehension questions.</div>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label for="default_grade" class="form-label">Material grade</label>
-                        <select class="form-select" id="default_grade">
+                        <select class="form-select" id="default_grade" data-default="{{ $defaultGrade }}">
+                            <option value="">Choose a grade...</option>
                             @foreach($gradeNames as $grade => $name)
-                                <option value="{{ $grade }}" {{ $grade == 4 ? 'selected' : '' }}>{{ $name }}</option>
+                                <option value="{{ $grade }}" @selected($defaultGrade === (int) $grade)>{{ $name }}</option>
                             @endforeach
                         </select>
+                        @if($defaultGrade !== null)
+                            <div class="form-text">Your children are in {{ $gradeSpan }}, so that is the grade this batch reads. Change it if you need to.</div>
+                        @else
+                            <div class="form-text text-warning-emphasis">
+                                Your children are in {{ $gradeSpan }}. Choose which grade this batch reads, then give anyone from the other grades their own reading below.
+                            </div>
+                        @endif
+                        <div class="form-text text-warning-emphasis d-none" id="gradeSpanNote"></div>
                     </div>
 
-                    <div class="col-md-8">
-                        <label for="default_material_id" class="form-label">Default reading material <span class="text-danger">*</span></label>
-                        <select class="form-select" id="default_material_id" name="default_material_id" required disabled
-                                data-old="{{ old('default_material_id') }}">
+                    <div class="col-12">
+                        <label for="default_material_id" class="form-label">Batch reading material <span class="text-danger">*</span></label>
+                        <select class="form-select @error('default_material_id') is-invalid @enderror"
+                                id="default_material_id" name="default_material_id" required>
                             <option value="">Select a language and type first...</option>
+                            @if($oldDefaultMaterial)
+                                <option value="{{ $oldDefaultMaterial->id }}" selected>{{ $oldDefaultMaterial->title }} (Grade {{ $oldDefaultMaterial->grade_level }})</option>
+                            @endif
                         </select>
+                        @error('default_material_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <strong>Children <span class="text-muted" id="rosterCount"></span></strong>
-                <button type="button" class="btn btn-outline-primary btn-sm" id="addEntry">
-                    <i class="bi bi-plus-lg me-1"></i>Add child
-                </button>
+            <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <strong>Children</strong>
+                <span class="text-muted small" id="rosterCount">{{ $pickedCount }} of {{ $maxLearners }} ticked</span>
             </div>
-            <div class="card-body">
-                @error('entries') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
 
-                <div id="roster">
-                    @foreach($rows as $i => $row)
-                        @include('assessments.batch._entry', ['i' => $i, 'row' => $row, 'learners' => $learners])
+            @error('entries') <div class="alert alert-danger py-2 m-3 mb-0">{{ $message }}</div> @enderror
+
+            @if($groups === [])
+                <div class="card-body text-muted">No children are assigned to you yet.</div>
+            @else
+                <div class="list-group list-group-flush" id="roster">
+                    @foreach($groups as $group)
+                        @if($showGroupLabels)
+                            <div class="list-group-item bg-light fw-semibold small text-uppercase text-muted">{{ $group['label'] }}</div>
+                        @endif
+                        @foreach($group['learners'] as $learner)
+                            @include('assessments.batch._entry', ['learner' => $learner, 'materials' => $materials])
+                        @endforeach
                     @endforeach
                 </div>
-            </div>
+            @endif
         </div>
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-play-circle me-1"></i> Create Batch
+        <div class="position-sticky bottom-0 bg-body border-top mt-3 py-3 d-flex flex-wrap gap-2 align-items-center" style="z-index: 5">
+            <button type="submit" class="btn btn-primary" id="reviewBtn">
+                <i class="bi bi-arrow-right-circle me-1"></i> Review batch
             </button>
-            <a href="{{ route('assessments.index') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+            <a href="{{ route('assessments.index') }}" class="btn btn-outline-secondary">Cancel</a>
+            <span class="text-muted small ms-auto" id="rosterHint"></span>
         </div>
     </form>
 
-    <template id="entryTemplate">
-        @include('assessments.batch._entry', ['i' => '__INDEX__', 'row' => [], 'learners' => $learners])
+    {{-- Every material the teacher may pick, loaded once with the page. The
+         browser filters this list; the view itself never queries. --}}
+    <template id="materialOptions">
+        @foreach($materials as $material)
+            <option value="{{ $material->id }}" data-grade="{{ $material->grade_level }}"
+                    data-language="{{ $material->language }}"
+                    data-questions="{{ $material->comprehension_questions_count > 0 ? 1 : 0 }}">{{ $material->title }} (Grade {{ $material->grade_level }}, {{ $material->word_count }} words)</option>
+        @endforeach
     </template>
+
+    <style>
+        .roster-check .form-check-input.roster-pick { width: 1.3rem; height: 1.3rem; margin-top: .15rem; }
+        .roster-check .form-check-label { padding-left: .35rem; cursor: pointer; }
+        .roster-material { width: 100%; }
+        @media (min-width: 768px) { .roster-material { width: 22rem; flex: 0 0 auto; } }
+    </style>
 
 <script>
 (function () {
+    const MIN = {{ $minLearners }};
     const MAX = {{ $maxLearners }};
-    const optionsUrl = "{{ route('materials.options') }}";
+    const form = document.getElementById('batchSetup');
     const roster = document.getElementById('roster');
-    const tpl = document.getElementById('entryTemplate');
-    const addBtn = document.getElementById('addEntry');
-    const count = document.getElementById('rosterCount');
+    const tpl = document.getElementById('materialOptions');
     const langSel = document.getElementById('language');
     const typeSel = document.getElementById('assessment_type');
-    const defGrade = document.getElementById('default_grade');
+    const gradeSel = document.getElementById('default_grade');
     const defSel = document.getElementById('default_material_id');
+    const countEl = document.getElementById('rosterCount');
+    const hintEl = document.getElementById('rosterHint');
+    const spanNote = document.getElementById('gradeSpanNote');
+    const reviewBtn = document.getElementById('reviewBtn');
 
-    async function fetchOptions(grade) {
-        const params = new URLSearchParams({ grade_level: grade, language: langSel.value, assessment_type: typeSel.value });
-        const res = await fetch(optionsUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        const json = await res.json();
-        return { exact: (json.data && json.data.exact) || [], fallback: (json.data && json.data.fallback) || [] };
+    if (!roster) return;
+
+    const rows = Array.from(roster.querySelectorAll('[data-role="row"]'));
+    let gradeTouched = false;
+
+    function needsQuestions() {
+        return typeSel.value === 'comprehension' || typeSel.value === 'combined';
     }
 
-    function fill(select, placeholder, data, keep) {
+    /** The materials a teacher may choose right now, as fresh <option> nodes. */
+    function options(grade) {
+        const out = [];
+        tpl.content.querySelectorAll('option').forEach(function (opt) {
+            if (langSel.value && opt.dataset.language !== langSel.value) return;
+            if (needsQuestions() && opt.dataset.questions !== '1') return;
+            if (grade && opt.dataset.grade !== String(grade)) return;
+            out.push(opt.cloneNode(true));
+        });
+        return out;
+    }
+
+    function repopulate(select, placeholder, grade) {
+        const keep = select.value;
         select.innerHTML = '';
-        const p = document.createElement('option');
-        p.value = '';
-        p.textContent = placeholder;
-        select.appendChild(p);
-        [['exact', 'Exact grade'], ['fallback', 'Other grades']].forEach(function (pair) {
-            const list = data[pair[0]];
-            if (!list.length) return;
-            const group = document.createElement('optgroup');
-            group.label = pair[1];
-            list.forEach(function (m) {
-                const o = document.createElement('option');
-                o.value = m.id;
-                o.textContent = (pair[0] === 'fallback' ? 'Grade ' + m.grade_level + ' - ' : '') + m.title + ' (' + m.word_count + ' words)';
-                group.appendChild(o);
-            });
-            select.appendChild(group);
-        });
-        if (keep) select.value = keep;
-        select.disabled = false;
+        const first = document.createElement('option');
+        first.value = '';
+        first.textContent = placeholder;
+        select.appendChild(first);
+        options(grade).forEach(function (opt) { select.appendChild(opt); });
+        select.value = keep;
+        if (select.value !== keep) select.value = '';
     }
 
-    function ready() { return langSel.value && typeSel.value; }
-
-    async function loadDefault() {
-        if (!ready()) {
-            defSel.innerHTML = '<option value="">Select a language and type first...</option>';
-            defSel.disabled = true;
+    function loadDefault() {
+        if (!langSel.value || !typeSel.value) {
+            repopulate(defSel, 'Select a language and type first...', null);
             return;
         }
-        defSel.disabled = true;
-        try {
-            const data = await fetchOptions(defGrade.value);
-            const keep = defSel.value || defSel.dataset.old || '';
-            fill(defSel, data.exact.length || data.fallback.length ? 'Choose a material...' : 'No materials found', data, keep);
-        } catch (e) {
-            defSel.innerHTML = '<option value="">Could not load materials. Try again.</option>';
-        }
-    }
-
-    async function loadOverride(row) {
-        const sel = row.querySelector('[data-role="material"]');
-        const learner = row.querySelector('[data-role="learner"]').selectedOptions[0];
-        const grade = learner && learner.dataset.grade;
-        const keep = sel.value || sel.dataset.old || '';
-        if (!grade || !ready()) {
+        if (!gradeSel.value) {
+            repopulate(defSel, 'Choose a material grade first...', null);
             return;
         }
-        try {
-            fill(sel, 'Use the default material', await fetchOptions(grade), keep);
-        } catch (e) { /* keep whatever is there */ }
+        repopulate(defSel, 'Choose a material...', gradeSel.value);
+        if (defSel.options.length === 1) defSel.options[0].textContent = 'No materials for this grade yet';
     }
 
-    function reindex() {
-        // Names are rewritten to 0..n-1 in page order so the server's per-entry
-        // error keys ("entries.N.*") always line up with the rows shown.
-        const rows = roster.querySelectorAll('[data-role="entry"]');
-        rows.forEach(function (row, i) {
-            row.dataset.entry = i;
-            row.querySelectorAll('[name]').forEach(function (el) {
-                el.name = el.name.replace(/entries\[[^\]]*\]/, 'entries[' + i + ']');
-            });
-            const box = row.querySelector('input[type="checkbox"]');
-            const label = row.querySelector('label.form-check-label');
-            box.id = 'fallback-' + i;
-            label.htmlFor = box.id;
-            row.querySelector('[data-role="remove"]').classList.toggle('d-none', rows.length === 1);
-        });
-        count.textContent = '(' + rows.length + ' of ' + MAX + ')';
-        addBtn.disabled = rows.length >= MAX;
+    /** A child's own reading may come from any grade - choosing it is the deliberate act. */
+    function loadOverride(row) {
+        const select = row.querySelector('[data-role="material"]');
+        if (!langSel.value || !typeSel.value) return;
+        repopulate(select, 'Reads the batch material', null);
     }
 
-    function wire(row) {
-        row.querySelector('[data-role="learner"]').addEventListener('change', function () {
-            row.querySelector('[data-role="material"]').dataset.old = '';
-            loadOverride(row);
-        });
-        row.querySelector('[data-role="remove"]').addEventListener('click', function () {
-            row.remove();
-            reindex();
-        });
+    function picked() {
+        return rows.filter(function (row) { return row.querySelector('[data-role="pick"]').checked; });
     }
 
-    addBtn.addEventListener('click', function () {
-        if (roster.querySelectorAll('[data-role="entry"]').length >= MAX) return;
-        const node = tpl.content.firstElementChild.cloneNode(true);
-        roster.appendChild(node);
-        reindex();
-        wire(node);
+    function refreshSelection() {
+        const chosen = picked();
+        const grades = Array.from(new Set(chosen.map(function (row) { return row.dataset.grade; }))).sort();
+
+        rows.forEach(function (row) {
+            const box = row.querySelector('[data-role="pick"]');
+            const select = row.querySelector('[data-role="material"]');
+            select.disabled = !box.checked;
+            // A full roster still lets her untick, just not tick a sixteenth.
+            box.disabled = !box.checked && chosen.length >= MAX;
+        });
+
+        countEl.textContent = chosen.length + ' of ' + MAX + ' ticked';
+
+        if (grades.length === 1 && !gradeTouched && gradeSel.value !== grades[0]) {
+            gradeSel.value = grades[0];
+            loadDefault();
+        }
+
+        if (grades.length > 1) {
+            spanNote.textContent = 'Your ticked children are in ' + grades.map(function (g) { return 'Grade ' + g; }).join(' and ')
+                + '. Choose which grade the batch reads, then give the others their own reading.';
+            spanNote.classList.remove('d-none');
+        } else {
+            spanNote.classList.add('d-none');
+        }
+
+        const short = chosen.length < MIN;
+        reviewBtn.disabled = short;
+        hintEl.textContent = short ? 'Tick at least ' + MIN + ' children.' : '';
+    }
+
+    rows.forEach(function (row) {
+        row.querySelector('[data-role="pick"]').addEventListener('change', function () {
+            if (this.checked) loadOverride(row);
+            refreshSelection();
+        });
     });
 
-    function refreshAll() {
-        loadDefault();
-        roster.querySelectorAll('[data-role="entry"]').forEach(loadOverride);
-    }
-    langSel.addEventListener('change', refreshAll);
-    typeSel.addEventListener('change', refreshAll);
-    defGrade.addEventListener('change', function () { defSel.dataset.old = ''; defSel.value = ''; loadDefault(); });
+    [langSel, typeSel].forEach(function (el) {
+        el.addEventListener('change', function () {
+            loadDefault();
+            picked().forEach(loadOverride);
+        });
+    });
+    gradeSel.addEventListener('change', function () { gradeTouched = true; loadDefault(); });
 
-    roster.querySelectorAll('[data-role="entry"]').forEach(wire);
-    reindex();
-    refreshAll();
+    form.addEventListener('submit', function (event) {
+        if (picked().length < MIN) event.preventDefault();
+    });
+
+    loadDefault();
+    picked().forEach(loadOverride);
+    refreshSelection();
 })();
 </script>
 @endsection

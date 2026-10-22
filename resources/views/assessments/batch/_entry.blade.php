@@ -1,49 +1,40 @@
-{{-- One roster row. Errors are read by position: "entries.N.*" belongs to row N and no other. --}}
+{{-- One roster row: a tick to put this child in the batch, and an optional
+     reading of their own. Checking is the only way a child joins, so the same
+     child cannot be chosen twice. Errors are keyed by learner id, never by
+     position, so a message can only ever land on the child it belongs to. --}}
 @php
-    $learnerErrors = is_int($i) ? $errors->get("entries.$i.learner_id") : [];
-    $materialErrors = is_int($i) ? $errors->get("entries.$i.material_id") : [];
+    $picked = filled(old("entries.{$learner->id}.learner_id"));
+    $overrideId = old("entries.{$learner->id}.material_id");
+    $override = filled($overrideId) ? $materials->firstWhere('id', (int) $overrideId) : null;
+    $learnerErrors = $errors->get("entries.{$learner->id}.learner_id");
+    $materialErrors = $errors->get("entries.{$learner->id}.material_id");
 @endphp
-<div class="border rounded p-3 mb-3" data-role="entry" data-entry="{{ $i }}">
-    <div class="row g-3 align-items-start">
-        <div class="col-md-4">
-            <label class="form-label">Learner <span class="text-danger">*</span></label>
-            <select class="form-select {{ $learnerErrors ? 'is-invalid' : '' }}" name="entries[{{ $i }}][learner_id]" data-role="learner" required>
-                <option value="">Choose a learner...</option>
-                @foreach($learners as $learner)
-                    <option value="{{ $learner->id }}" data-grade="{{ $learner->grade_level }}"
-                        {{ (string) ($row['learner_id'] ?? '') === (string) $learner->id ? 'selected' : '' }}>
-                        {{ $learner->full_name }} (Grade {{ $learner->grade_level }})
-                    </option>
-                @endforeach
-            </select>
-            @foreach($learnerErrors as $message)
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-            @endforeach
+<div class="list-group-item py-3 {{ ($learnerErrors || $materialErrors) ? 'bg-danger-subtle' : '' }}"
+     data-role="row" data-learner="{{ $learner->id }}" data-grade="{{ $learner->grade_level }}">
+    <div class="d-flex flex-column flex-md-row gap-2 gap-md-3 align-items-md-center">
+        <div class="form-check roster-check mb-0 flex-md-grow-1">
+            <input class="form-check-input roster-pick" type="checkbox" value="{{ $learner->id }}"
+                   name="entries[{{ $learner->id }}][learner_id]" id="child-{{ $learner->id }}"
+                   data-role="pick" @checked($picked)>
+            <label class="form-check-label" for="child-{{ $learner->id }}">
+                <span class="fw-semibold">{{ $learner->full_name }}</span>
+                <span class="text-muted small ms-md-2 d-block d-md-inline">Grade {{ $learner->grade_level }}</span>
+            </label>
         </div>
 
-        <div class="col-md-5">
-            <label class="form-label">Material <span class="text-muted">(optional override)</span></label>
-            <select class="form-select {{ $materialErrors ? 'is-invalid' : '' }}" name="entries[{{ $i }}][material_id]"
-                    data-role="material" data-old="{{ $row['material_id'] ?? '' }}">
-                <option value="">Use the default material</option>
-                @if(filled($row['material_id'] ?? null))
-                    <option value="{{ $row['material_id'] }}" selected>Selected material</option>
+        <div class="roster-material">
+            <select class="form-select form-select-sm {{ $materialErrors ? 'is-invalid' : '' }}"
+                    name="entries[{{ $learner->id }}][material_id]" data-role="material"
+                    aria-label="Reading for {{ $learner->full_name }}" @disabled(! $picked)>
+                <option value="">Reads the batch material</option>
+                @if($override)
+                    <option value="{{ $override->id }}" selected>{{ $override->title }} (Grade {{ $override->grade_level }})</option>
                 @endif
             </select>
-            @foreach($materialErrors as $message)
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-            @endforeach
-            <div class="form-check mt-2">
-                <input class="form-check-input" type="checkbox" name="entries[{{ $i }}][allow_fallback]" value="1"
-                       id="fallback-{{ $i }}" {{ filter_var($row['allow_fallback'] ?? false, FILTER_VALIDATE_BOOLEAN) ? 'checked' : '' }}>
-                <label class="form-check-label" for="fallback-{{ $i }}">Allow a material from another grade</label>
-            </div>
-        </div>
-
-        <div class="col-md-3 text-md-end">
-            <button type="button" class="btn btn-outline-danger btn-sm" data-role="remove">
-                <i class="bi bi-x-lg me-1"></i>Remove
-            </button>
         </div>
     </div>
+
+    @foreach(array_merge($learnerErrors, $materialErrors) as $message)
+        <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+    @endforeach
 </div>

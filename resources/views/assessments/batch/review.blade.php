@@ -116,6 +116,28 @@
                 formaction="{{ route('assessments.batch.review') }}">
             <i class="bi bi-pencil me-1"></i> Change selection
         </button>
-        <a href="{{ route('assessments.index') }}" class="btn btn-link text-muted">Cancel</a>
     </form>
+
+    {{-- Its own form, outside the one above: Cancel must not carry the selection
+         anywhere, and a link styled as faint text sat unnoticed beside two real
+         buttons. Nothing has been created yet, so this discards the ticks and
+         nothing else - which is exactly what it says, because a teacher who
+         loses fifteen ticks to an unlabelled click will not trust the screen
+         again. --}}
+    <form method="GET" action="{{ route('assessments.batch.index') }}" class="mt-2">
+        <button type="submit" class="btn btn-outline-danger"
+                data-confirm="Discard this batch and lose the children you ticked? Nothing has been created yet.">
+            <i class="bi bi-x-circle me-1"></i> Cancel and discard
+        </button>
+    </form>
+
+    <script>
+        // Not an inline onsubmit: the message is read from a data attribute, which
+        // Blade escapes correctly, so no name or title can ever break the handler.
+        document.querySelectorAll('[data-confirm]').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                if (!window.confirm(button.dataset.confirm)) event.preventDefault();
+            });
+        });
+    </script>
 @endsection

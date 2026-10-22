@@ -624,4 +624,95 @@ class BatchSetupTest extends TestCase
         $this->assertStringNotContainsString('will read a Grade', $html);
         $this->assertStringNotContainsString('their own grade', $html);
     }
+
+    /**
+     * The ordinary case: the teacher picks one passage for the batch and says
+     * nothing per child. The row must then *state* what the child will read
+     * rather than offer a dropdown asking a question she has already answered
+     * above, and it must send no material_id at all.
+     */
+    public function test_a_row_states_the_batch_reading_and_offers_an_override_tick(): void
+    {
+        $teacher = $this->teacher();
+        $learner = $this->learnersOf($teacher)[0];
+
+        $page = $this->actingAs($teacher)->get(route('assessments.batch.create'))->assertOk();
+
+        // The override is a tick, named for the child, and it is not part of the
+        // submitted entry - it only governs the dropdown.
+        $page->assertSee('override-' . $learner->id, false)
+            ->assertSee('A different reading for ' . $learner->first_name);
+
+        // The stated reading is present for the script to fill in, and the
+        // dropdown ships hidden rather than merely disabled.
+        $page->assertSee('data-role="batch-reading-title"', false)
+            ->assertSee('d-none', false);
+
+        $html = $page->getContent();
+        $select = strpos($html, 'name="entries[' . $learner->id . '][material_id]"');
+        $this->assertNotFalse($select, 'The per-child select must still exist.');
+        $this->assertStringContainsString(
+            'disabled',
+            substr($html, $select - 400, 600),
+            'The select must ship disabled, so an untouched row submits no material_id.'
+        );
+    }
+
+    /**
+     * Coming back from a validation error with an override already chosen, the
+     * tick must be on and the dropdown showing - otherwise her choice is
+     * invisible and she would have to make it again.
+     */
+    public function test_an_override_already_chosen_comes_back_ticked_and_showing(): void
+    {
+        $teacher = $this->teacher();
+        $learners = $this->learnersOf($teacher);
+        $default = ReadingMaterial::factory()->create([
+            'grade_level' => $learners[0]->grade_level,
+            'language' => 'en',
+        ]);
+        $own = ReadingMaterial::factory()->create(['grade_level' => 1, 'language' => 'en']);
+
+        // One child is given their own reading, and the post fails on the floor
+        // of two so the form is redisplayed with her input.
+        $payload = $this->payload([$learners[0]], $default, [$learners[0]->id => $own->id]);
+
+        $this->actingAs($teacher)
+            ->from(route('assessments.batch.create'))
+            ->post(route('assessments.batch.review'), $payload)
+            ->assertRedirect(route('assessments.batch.create'));
+
+        $page = $this->actingAs($teacher)->get(route('assessments.batch.create'))->assertOk();
+        $html = $page->getContent();
+
+        $tick = strpos($html, 'id="override-' . $learners[0]->id . '"');
+        $this->assertNotFalse($tick);
+        $this->assertStringContainsString('checked', substr($html, $tick, 200));
+        $page->assertSee($own->title, false);
+    }
+
+    /** Cancel on the summary is a real button that goes somewhere, and warns first. */
+    public function test_the_summary_cancel_is_a_visible_button_that_leaves_the_batch_uncreated(): void
+    {
+        $teacher = $this->teacher();
+        $learners = $this->learnersOf($teacher);
+        $default = ReadingMaterial::factory()->create([
+            'grade_level' => $learners[0]->grade_level,
+            'language' => 'en',
+        ]);
+
+        $page = $this->actingAs($teacher)
+            ->post(route('assessments.batch.review'), $this->payload([$learners[0], $learners[1]], $default))
+            ->assertOk();
+
+        $page->assertSee(route('assessments.batch.index'), false)
+            ->assertSee('Cancel and discard')
+            ->assertSee('btn-outline-danger', false)
+            // It asks before throwing away the ticks, through a data attribute
+            // rather than an inline handler a name could break.
+            ->assertSee('data-confirm', false)
+            ->assertDontSee('btn btn-link text-muted', false);
+
+        $this->assertNothingCreated();
+    }
 }

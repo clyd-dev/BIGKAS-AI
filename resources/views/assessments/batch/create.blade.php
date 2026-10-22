@@ -124,8 +124,19 @@
     </template>
 
     <style>
-        .roster-check .form-check-input.roster-pick { width: 1.3rem; height: 1.3rem; margin-top: .15rem; }
-        .roster-check .form-check-label { padding-left: .35rem; cursor: pointer; }
+        /* The tick is the whole interaction on this page, so it is sized to be
+           seen and hit on a phone rather than to match a form checkbox. */
+        .roster-check .form-check-input.roster-pick {
+            width: 1.6rem; height: 1.6rem; margin-top: .1rem;
+            border: 2px solid #6c757d; cursor: pointer;
+        }
+        .roster-check .form-check-input.roster-pick:checked { border-color: #0d6efd; }
+        .roster-check .form-check-input.roster-pick:hover:not(:disabled) { border-color: #0d6efd; }
+        .roster-check { padding-left: 2.2rem; }
+        .roster-check .form-check-input.roster-pick { margin-left: -2.2rem; }
+        .roster-check .form-check-label { padding-left: .5rem; cursor: pointer; }
+        /* The row a teacher has ticked should be obvious down a list of fifteen. */
+        [data-role="row"]:has(.roster-pick:checked) { background-color: #f0f6ff; }
         .roster-material { width: 100%; }
         @media (min-width: 768px) { .roster-material { width: 22rem; flex: 0 0 auto; } }
     </style>
@@ -196,7 +207,43 @@
     function loadOverride(row) {
         const select = row.querySelector('[data-role="material"]');
         if (!langSel.value || !typeSel.value) return;
-        repopulate(select, 'Reads the batch material', null);
+        repopulate(select, 'Choose a reading...', null);
+    }
+
+    /**
+     * Write the batch material's name into every row that is not overriding, so
+     * a row never names a passage she has since changed. Read from the selected
+     * option rather than kept in a second variable: one source of truth.
+     */
+    function syncBatchReading() {
+        const chosen = defSel.options[defSel.selectedIndex];
+        const label = (defSel.value && chosen) ? chosen.textContent : 'no batch material chosen yet';
+
+        rows.forEach(function (row) {
+            row.querySelector('[data-role="batch-reading-title"]').textContent = label;
+        });
+    }
+
+    /**
+     * The override tick governs the dropdown: hidden and not submitted while it
+     * is off, so an untouched row sends no material_id and the builder gives the
+     * child the batch material. Turning it off clears the value as well as
+     * hiding it - a hidden control that still submits is a lie.
+     */
+    function applyOverride(row) {
+        const on = row.querySelector('[data-role="override"]').checked;
+        const select = row.querySelector('[data-role="material"]');
+        const stated = row.querySelector('[data-role="batch-reading"]');
+
+        select.classList.toggle('d-none', !on);
+        select.disabled = !on;
+        stated.classList.toggle('d-none', on);
+
+        if (on) {
+            loadOverride(row);
+        } else {
+            select.value = '';
+        }
     }
 
     function picked() {
@@ -209,8 +256,16 @@
 
         rows.forEach(function (row) {
             const box = row.querySelector('[data-role="pick"]');
-            const select = row.querySelector('[data-role="material"]');
-            select.disabled = !box.checked;
+            const over = row.querySelector('[data-role="override"]');
+
+            // The override offer belongs only to a child who is in the batch.
+            // Unticking a child takes her override with it, so a row cannot
+            // keep a reading for a child who is no longer being assessed.
+            row.querySelector('[data-role="override-wrap"]').classList.toggle('d-none', !box.checked);
+            if (!box.checked && over.checked) over.checked = false;
+            applyOverride(row);
+            row.querySelector('[data-role="batch-reading"]').classList.toggle('d-none', !box.checked || over.checked);
+
             // A full roster still lets her untick, just not tick a sixteenth.
             box.disabled = !box.checked && chosen.length >= MAX;
         });
@@ -236,26 +291,30 @@
     }
 
     rows.forEach(function (row) {
-        row.querySelector('[data-role="pick"]').addEventListener('change', function () {
-            if (this.checked) loadOverride(row);
-            refreshSelection();
+        row.querySelector('[data-role="pick"]').addEventListener('change', refreshSelection);
+        row.querySelector('[data-role="override"]').addEventListener('change', function () {
+            applyOverride(row);
         });
     });
 
     [langSel, typeSel].forEach(function (el) {
         el.addEventListener('change', function () {
             loadDefault();
-            picked().forEach(loadOverride);
+            syncBatchReading();
+            picked().forEach(function (row) {
+                if (row.querySelector('[data-role="override"]').checked) loadOverride(row);
+            });
         });
     });
-    gradeSel.addEventListener('change', function () { gradeTouched = true; loadDefault(); });
+    gradeSel.addEventListener('change', function () { gradeTouched = true; loadDefault(); syncBatchReading(); });
+    defSel.addEventListener('change', syncBatchReading);
 
     form.addEventListener('submit', function (event) {
         if (picked().length < MIN) event.preventDefault();
     });
 
     loadDefault();
-    picked().forEach(loadOverride);
+    syncBatchReading();
     refreshSelection();
 })();
 </script>

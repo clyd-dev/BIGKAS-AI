@@ -329,6 +329,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/users/{user}/deactivate', [AdminController::class, 'deactivateUser'])->name('users.deactivate');
         Route::post('/users/{user}/reset-password', [AdminController::class, 'resetUserPassword'])->name('users.reset-password');
 
+        // Bulk-create parent accounts for families with no email (e.g. a whole-school pilot)
+        Route::get('/users/import', [\App\Http\Controllers\ParentImportController::class, 'form'])->name('users.import');
+        Route::post('/users/import/preview', [\App\Http\Controllers\ParentImportController::class, 'preview'])->name('users.import.preview');
+        Route::post('/users/import/confirm', [\App\Http\Controllers\ParentImportController::class, 'confirm'])->name('users.import.confirm');
+        // Same for teachers (name login, shared pilot password, grade & section from the sheet)
+        Route::get('/teachers/import', [\App\Http\Controllers\TeacherImportController::class, 'form'])->name('teachers.import');
+        Route::post('/teachers/import/preview', [\App\Http\Controllers\TeacherImportController::class, 'preview'])->name('teachers.import.preview');
+        Route::post('/teachers/import/confirm', [\App\Http\Controllers\TeacherImportController::class, 'confirm'])->name('teachers.import.confirm');
+
         // School management
         Route::get('/schools', [AdminController::class, 'schools'])->name('schools');
         Route::post('/schools', [AdminController::class, 'storeSchool'])->name('schools.store');

@@ -13,9 +13,11 @@ use App\Models\ReadingMaterial;
 use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 /**
@@ -508,9 +510,33 @@ class AssessmentDeleteTest extends TestCase
         $parent = User::factory()->create(['role' => 'parent']);
         $learner->users()->attach($parent->id, ['relationship' => 'parent']);
 
+        // Over HTTP first: the route's teacher-only group refuses, which is the
+        // door a parent actually reaches.
         $this->actingAs($parent)
             ->delete(route('assessments.destroy', $assessment), ['learner_name' => $learner->getFullName()])
             ->assertForbidden();
+
+        // And then the method on its own, with the route group out of the
+        // picture. Without this the in-method guard is unprovable: deleting it
+        // breaks no test, because the group answers first. That is precisely
+        // the state the guard exists to survive - someone moving this action
+        // onto a different route later.
+        $this->actingAs($parent);
+        $thrown = null;
+
+        try {
+            app(\App\Http\Controllers\AssessmentController::class)->destroy(
+                Request::create(route('assessments.destroy', $assessment), 'DELETE', [
+                    'learner_name' => $learner->getFullName(),
+                ]),
+                $assessment
+            );
+        } catch (HttpException $e) {
+            $thrown = $e;
+        }
+
+        $this->assertNotNull($thrown, 'The method must refuse a non-teacher on its own, not rely on the route group.');
+        $this->assertSame(403, $thrown->getStatusCode());
 
         $this->assertDatabaseHas('assessments', ['id' => $assessment->id]);
         $this->assertDatabaseHas('assessment_results', ['assessment_id' => $assessment->id]);

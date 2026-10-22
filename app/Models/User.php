@@ -102,6 +102,38 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withTimestamps();
     }
 
+    public function parentGrades(): HasMany
+    {
+        return $this->hasMany(ParentGrade::class);
+    }
+
+    /** Grade levels this parent account belongs to, ascending (e.g. [3, 4]). */
+    public function grades(): array
+    {
+        return $this->parentGrades->pluck('grade_level')->map(fn ($g) => (int) $g)->sort()->values()->all();
+    }
+
+    /** Add a grade to a parent (no-op if already there). */
+    public function addParentGrade(?int $grade): void
+    {
+        if ($grade) {
+            $this->parentGrades()->firstOrCreate(['grade_level' => $grade]);
+            $this->unsetRelation('parentGrades');
+        }
+    }
+
+    /** Replace a parent's grades with exactly this list. */
+    public function syncParentGrades(array $grades): void
+    {
+        $grades = collect($grades)->map(fn ($g) => (int) $g)->filter(fn ($g) => $g >= 1 && $g <= 12)->unique();
+
+        $this->parentGrades()->whereNotIn('grade_level', $grades->all())->delete();
+        foreach ($grades as $grade) {
+            $this->parentGrades()->firstOrCreate(['grade_level' => $grade]);
+        }
+        $this->unsetRelation('parentGrades');
+    }
+
     public function assessments(): HasMany
     {
         return $this->hasMany(Assessment::class, 'assessor_id');

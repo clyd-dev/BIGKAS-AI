@@ -24,6 +24,7 @@ use App\Http\Controllers\ClassReportController;
 use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\GstScreeningController;
 use App\Http\Controllers\Form2Controller;
+use App\Http\Controllers\LearnerMasterListController;
 use App\Http\Controllers\LearnerForm4Controller;
 use App\Http\Controllers\AssessmentForm3Controller;
 use App\Http\Controllers\VerificationCodeController;
@@ -146,6 +147,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/learners', [LearnerController::class, 'store'])->name('learners.store');
             Route::post('/learners/import/preview', [LearnerImportController::class, 'preview'])->name('learners.import.preview');
             Route::post('/learners/import/confirm', [LearnerImportController::class, 'confirm'])->name('learners.import.confirm');
+
+            // Printable reading list of the teacher's own section (the section is taken from the account, not the URL).
+            Route::get('/my-class/master-list', [LearnerMasterListController::class, 'mine'])->name('learners.master-list');
+            Route::get('/my-class/master-list/print', [LearnerMasterListController::class, 'minePrint'])->name('learners.master-list.print');
+            Route::get('/my-class/master-list/pdf', [LearnerMasterListController::class, 'minePdf'])->name('learners.master-list.pdf');
         });
 
         // The teacher who adds a learner issues the student-portal PIN (admin does not).
@@ -317,6 +323,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/reports/form2/submit', [Form2Controller::class, 'submit'])->name('reports.form2.submit');
         Route::get('/reports/form2/submissions/{depedSubmission}', [Form2Controller::class, 'show'])->name('reports.form2.show');
 
+        // Principal: printable master list of every learner's reading results (read-only)
+        Route::get('/reports/master-list', [LearnerMasterListController::class, 'index'])->name('reports.master-list.index');
+        Route::get('/reports/master-list/print', [LearnerMasterListController::class, 'print'])->name('reports.master-list.print');
+        Route::get('/reports/master-list/pdf', [LearnerMasterListController::class, 'pdf'])->name('reports.master-list.pdf');
+
         Route::post('/reports/submissions/{classReport}/review', [ClassReportController::class, 'review'])->name('reports.submissions.review');
     });
     Route::middleware('role:admin,teacher')->group(function () {
@@ -369,6 +380,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/users/import', [\App\Http\Controllers\ParentImportController::class, 'form'])->name('users.import');
         Route::post('/users/import/preview', [\App\Http\Controllers\ParentImportController::class, 'preview'])->name('users.import.preview');
         Route::post('/users/import/confirm', [\App\Http\Controllers\ParentImportController::class, 'confirm'])->name('users.import.confirm');
+        // Same for teachers (name login, shared pilot password, grade & section from the sheet)
+        Route::get('/teachers/import', [\App\Http\Controllers\TeacherImportController::class, 'form'])->name('teachers.import');
+        Route::post('/teachers/import/preview', [\App\Http\Controllers\TeacherImportController::class, 'preview'])->name('teachers.import.preview');
+        Route::post('/teachers/import/confirm', [\App\Http\Controllers\TeacherImportController::class, 'confirm'])->name('teachers.import.confirm');
 
         // School management
         Route::get('/schools', [AdminController::class, 'schools'])->name('schools');

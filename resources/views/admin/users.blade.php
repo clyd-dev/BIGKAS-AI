@@ -5,6 +5,12 @@
 @section('content')
     <x-page-header title="Manage Users" icon="bi-person-badge">
         <x-slot:actions>
+            <a href="{{ route('admin.users.import') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-upload me-1"></i> Import Parents
+            </a>
+            <a href="{{ route('admin.teachers.import') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-upload me-1"></i> Import Teachers
+            </a>
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
                 <i class="bi bi-person-plus me-1"></i> Create User
             </button>

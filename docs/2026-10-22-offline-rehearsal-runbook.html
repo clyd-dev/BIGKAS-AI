@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIGKAS-AI Offline Rehearsal Runbook</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --card: #ffffff; --text: #1c2430; --muted: #5b6676; --line: #dfe3ea;
+    --accent: #1f6feb; --ok: #1a7f37; --warn: #9a6700; --bad: #cf222e;
+    --code-bg: #f0f2f6; --warn-bg: #fff8e1; --bad-bg: #ffeef0; --ok-bg: #e9f7ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f141a; --card: #171e27; --text: #e6ebf2; --muted: #9aa6b5; --line: #2a3441;
+      --accent: #5aa2ff; --ok: #4cc26b; --warn: #e3b341; --bad: #ff7b72;
+      --code-bg: #0c1117; --warn-bg: #2a2410; --bad-bg: #2d1518; --ok-bg: #11271a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f141a; --card: #171e27; --text: #e6ebf2; --muted: #9aa6b5; --line: #2a3441;
+    --accent: #5aa2ff; --ok: #4cc26b; --warn: #e3b341; --bad: #ff7b72;
+    --code-bg: #0c1117; --warn-bg: #2a2410; --bad-bg: #2d1518; --ok-bg: #11271a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  h2 { font-size: 1.25rem; margin: 40px 0 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+  h3 { font-size: 1.05rem; margin: 22px 0 8px; }
+  p, li { color: var(--text); }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  nav { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin: 16px 0; }
+  nav a { color: var(--accent); text-decoration: none; display: inline-block; margin: 2px 12px 2px 0; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+  .step { display: flex; gap: 12px; margin: 14px 0; }
+  .num { flex: 0 0 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff;
+         display: grid; place-items: center; font-weight: 700; font-size: .9rem; margin-top: 2px; }
+  .step > div { flex: 1; min-width: 0; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+        overflow-x: auto; margin: 8px 0; font: 13.5px/1.5 ui-monospace, Consolas, "Cascadia Mono", monospace; }
+  code { font: 0.92em ui-monospace, Consolas, monospace; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre code { background: none; padding: 0; }
+  .note, .warn, .danger, .good { border-radius: 8px; padding: 10px 14px; margin: 10px 0; border: 1px solid var(--line); }
+  .note { background: var(--code-bg); }
+  .warn { background: var(--warn-bg); border-color: var(--warn); }
+  .danger { background: var(--bad-bg); border-color: var(--bad); }
+  .good { background: var(--ok-bg); border-color: var(--ok); }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: .94rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+  .tablewrap { overflow-x: auto; }
+  .tag { display: inline-block; font-size: .75rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  .check li { list-style: none; margin-left: -20px; }
+  .check li::before { content: "\2610  "; color: var(--muted); }
+  footer { margin-top: 40px; color: var(--muted); font-size: .88rem; }
+  @media (max-width: 520px) { h1 { font-size: 1.4rem; } .step { gap: 8px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>BIGKAS-AI Offline Rehearsal Runbook</h1>
+<p class="sub">Laptop as the server &middot; HTTPS on the LAN &middot; local Whisper &amp; classifier &middot; prepared 2026-10-22</p>
+
+<nav>
+  <a href="#overview">1. What we changed</a>
+  <a href="#start">2. Start the system</a>
+  <a href="#verify">3. Verify</a>
+  <a href="#devices">4. Connect devices</a>
+  <a href="#rehearsal">5. Rehearsal checklist</a>
+  <a href="#newip">6. If the IP changes</a>
+  <a href="#stop">7. Shut down</a>
+  <a href="#rollback">8. Rollback</a>
+  <a href="#trouble">9. Troubleshooting</a>
+  <a href="#handoff">10. After testing</a>
+</nav>
+
+<div class="warn"><strong>Facts this runbook depends on.</strong> Laptop Wi-Fi IP when set up: <code>10.38.134.4</code> (it will differ on the school router &mdash; see section 6). Project: <code>F:\MyApp\BIGKAS-AI</code>. XAMPP: <code>F:\xampp</code>. mkcert: <code>F:\MyApp\_tools\mkcert</code>. Backups: <code>F:\MyApp\_backups</code>.</div>
+
+<!-- ============================================================ -->
+<h2 id="overview">1. What we changed on this machine</h2>
+
+<div class="tablewrap">
+<table>
+  <tr><th>Item</th><th>What / where</th><th>Rollback (see section 8)</th></tr>
+  <tr><td><strong>Database backup</strong></td><td><code>F:\MyApp\_backups\bigkas_ai-20261022-1210.sql</code> &mdash; full dump of the fake test data (39 tables) taken <em>before</em> the wipe.</td><td>R1</td></tr>
+  <tr><td><strong>Files backup</strong></td><td><code>storage-app-20261022-1210.tgz</code> &mdash; the fake audio recordings.</td><td>R1</td></tr>
+  <tr><td><strong>Data wipe</strong></td><td>Removed all learners, teachers, parents, assessments (+results, sessions, batches), messages, notifications, activity logs, sessions and the audio files. Class teacher assignments cleared.
+      <br><span class="tag">kept</span> admin, school, 5 classes, 19 reading materials, 8 comprehension questions, 20 interventions, 174 practice items, 12 badges, 13 settings.</td><td>R1</td></tr>
+  <tr><td><strong>mkcert</strong></td><td>Portable <code>mkcert.exe</code> v1.4.4 in <code>F:\MyApp\_tools\mkcert</code>. <code>mkcert -install</code> created a local certificate authority (CA) and added it to the <em>Windows trust store</em>. CA files live in <code>C:\Users\NEC\AppData\Local\mkcert</code>.</td><td>R5</td></tr>
+  <tr><td><strong>Server certificate</strong></td><td><code>F:\MyApp\_tools\mkcert\certs\bigkas.pem</code> + <code>bigkas-key.pem</code>, valid for <code>localhost</code>, <code>127.0.0.1</code>, <code>10.38.134.4</code> until Jan 2029.</td><td>R5</td></tr>
+  <tr><td><strong>Apache HTTPS vhost</strong></td><td>New file <code>F:\xampp\apache\conf\extra\httpd-bigkas-ssl.conf</code> (serves <code>public/</code> on port 443, 420 s timeout) + one added <code>Include</code> line in <code>httpd.conf</code> before <code>httpd-ssl.conf</code>.</td><td>R3</td></tr>
+  <tr><td><strong>.env</strong></td><td><code>APP_URL</code> changed from <code>http://localhost/bigkas-ai</code> to <code>https://10.38.134.4</code>.</td><td>R4</td></tr>
+  <tr><td><strong>Windows Firewall</strong></td><td>Inbound rule <code>BIGKAS HTTPS</code>: TCP 443, Allow, <strong>Private</strong> profile only.</td><td>R2</td></tr>
+  <tr><td><strong>Network profile</strong></td><td>Wi-Fi set from Public to <strong>Private</strong> (needed for the rule above).</td><td>R2</td></tr>
+  <tr><td><strong>ML service</strong></td><td>Flask app in <code>ml-service/</code>, port 5000, loopback only. Whisper <code>small</code> (pre-trained, int8, CPU) from the local cache + the weakness classifier. Runs fully offline.</td><td>R6</td></tr>
+</table>
+</div>
+
+<div class="note"><strong>Not changed:</strong> application code, migrations, the VPS, <code>php.ini</code>. (<code>max_execution_time</code> is still 120 s &mdash; see troubleshooting if a long reading times out.)</div>
+
+<!-- ============================================================ -->
+<h2 id="start">2. Start the system (every test session)</h2>
+
+<p>Do these in order. Use <strong>PowerShell</strong> for the commands. You need <strong>four things running</strong>: MySQL, Apache, the ML service, and the scheduler.</p>
+
+<div class="step"><div class="num">1</div><div>
+<strong>Connect the laptop to the test router and plug it in.</strong>
+<p>Windows &rarr; Settings &rarr; Power: set sleep to <em>Never</em> while plugged in. Then check the IP and the network profile:</p>
+<pre><code>ipconfig | Select-String "IPv4"
+Get-NetConnectionProfile</code></pre>
+<p>The profile must say <strong>Private</strong>. If it says Public (it often does on a new network), run in an <em>Administrator</em> PowerShell:</p>
+<pre><code>Set-NetConnectionProfile -InterfaceAlias "Wi-Fi" -NetworkCategory Private</code></pre>
+<p>If the IP is not <code>10.38.134.4</code>, do <a href="#newip">section 6</a> first.</p>
+</div></div>
+
+<div class="step"><div class="num">2</div><div>
+<strong>Start MySQL and Apache.</strong>
+<p>Open the <strong>XAMPP Control Panel</strong> &rarr; click <em>Start</em> next to <strong>MySQL</strong> and next to <strong>Apache</strong>. Both turn green. (<code>php artisan serve</code> is <em>not</em> needed any more &mdash; Apache serves the app.)</p>
+</div></div>
+
+<div class="step"><div class="num">3</div><div>
+<strong>Start the AI &amp; STT service (Whisper + classifier).</strong>
+<p>Open a PowerShell window and leave it open:</p>
+<pre><code>cd F:\MyApp\BIGKAS-AI\ml-service
+$env:HF_HUB_OFFLINE = '1'
+.\venv\Scripts\python.exe app.py</code></pre>
+<p>Wait about 30&ndash;45 seconds until you see <code>Whisper 'small' model loaded</code> and <code>Serving Flask app 'app'</code>. <code>HF_HUB_OFFLINE=1</code> stops it trying to reach the internet.</p>
+<div class="note">This runs Flask in debug mode (hard-coded in <code>app.py</code>). If you edit a Python file while it runs, it reloads and the model takes ~40 s to load again. Don't touch <code>ml-service/</code> files during a session.</div>
+</div></div>
+
+<div class="step"><div class="num">4</div><div>
+<strong>Start the scheduler</strong> (needed for batch assessments).
+<p>Open a second PowerShell window and leave it open:</p>
+<pre><code>cd F:\MyApp\BIGKAS-AI
+F:\xampp\php\php.exe artisan schedule:work</code></pre>
+<div class="warn"><strong>Do not skip this.</strong> Batch recordings are scored by <code>assessments:rescore</code>, run every minute by the scheduler. Without <code>schedule:work</code> they stay at &ldquo;queued&rdquo; forever, with no error. <code>health:check</code> also runs from here.</div>
+</div></div>
+
+<!-- ============================================================ -->
+<h2 id="verify">3. Verify before anyone arrives</h2>
+
+<ul class="check">
+  <li>ML service health &mdash; PowerShell:
+    <pre><code>curl.exe -s http://127.0.0.1:5000/api/health</code></pre>
+    Must show <code>"status": "ok"</code>, <code>"whisper_loaded": true</code>, <code>"classifier_loaded": true</code>.</li>
+  <li>HTTPS on the laptop &mdash; open <code>https://10.38.134.4/login</code> in Chrome. Padlock, no warning.
+    <br><small>(Command-line check needs <code>curl.exe -s --ssl-no-revoke -o NUL -w "%{http_code}" https://10.38.134.4/login</code> &rarr; <code>200</code>; plain curl fails on mkcert certs because of a Windows revocation quirk, not a real fault.)</small></li>
+  <li>Log in as <strong>admin</strong>. The <em>AI</em> and <em>STT</em> badges show online.</li>
+  <li>From a phone on the same Wi-Fi, open <code>https://10.38.134.4/login</code> (see next section).</li>
+  <li>Make one test recording from a phone and confirm it transcribes. <em>Done once on 2026-10-22: worked.</em></li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="devices">4. Connect devices (children, teachers)</h2>
+
+<div class="good"><strong>Decision:</strong> children's and teachers' devices will <em>not</em> get the CA installed. They accept the one-time warning instead. The microphone still works because the page is still <code>https://</code>.</div>
+
+<h3>Without the CA (default)</h3>
+<ol>
+  <li>Connect the device to the test Wi-Fi (no internet needed).</li>
+  <li>Open <strong>Chrome</strong> (not Firefox) and go to <code>https://10.38.134.4</code>.</li>
+  <li>On the warning page tap <strong>Advanced &rarr; Proceed to 10.38.134.4 (unsafe)</strong>. iPhone Safari: <em>Show Details &rarr; visit this website</em>.</li>
+  <li>When asked, tap <strong>Allow</strong> for the microphone.</li>
+</ol>
+<div class="warn">The warning can return after the browser closes, and the mic permission is asked each time. Print a slip for children: <em>&ldquo;Tap Advanced &rarr; Proceed. It is safe.&rdquo;</em></div>
+
+<h3>Optional: install the CA on a device (removes the warning)</h3>
+<p>The file is <code>C:\Users\NEC\AppData\Local\mkcert\rootCA.pem</code>. Send <strong>only</strong> this file &mdash; <strong>never</strong> <code>rootCA-key.pem</code>. Move it by USB, Bluetooth, or temporarily copy it to <code>F:\MyApp\BIGKAS-AI\public\rootCA.pem</code> and open <code>https://10.38.134.4/rootCA.pem</code> on the device (delete it from <code>public\</code> afterwards).</p>
+<div class="tablewrap">
+<table>
+  <tr><th>Device</th><th>Steps</th></tr>
+  <tr><td>Android</td><td>Settings &rarr; Security (or Security &amp; privacy) &rarr; More security settings &rarr; Encryption &amp; credentials &rarr; <em>Install a certificate</em> &rarr; <em>CA certificate</em> &rarr; Install anyway &rarr; pick <code>rootCA.pem</code> (rename to <code>rootCA.crt</code> if it is not listed). Fully restart Chrome.</td></tr>
+  <tr><td>iPhone / iPad</td><td>Open the file, allow the profile download &rarr; Settings &rarr; General &rarr; VPN &amp; Device Management &rarr; install &ldquo;mkcert&rdquo; &rarr; then Settings &rarr; General &rarr; About &rarr; <strong>Certificate Trust Settings</strong> &rarr; turn on full trust.</td></tr>
+  <tr><td>Windows</td><td>Double-click <code>rootCA.pem</code> &rarr; Install Certificate &rarr; place in <em>Trusted Root Certification Authorities</em>. Restart the browser.</td></tr>
+  <tr><td>Chromebook</td><td>Chrome &rarr; Settings &rarr; Privacy and security &rarr; Security &rarr; Manage certificates &rarr; Authorities &rarr; Import; tick &ldquo;Trust this certificate for identifying websites&rdquo;.</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="rehearsal">5. Dress-rehearsal checklist</h2>
+
+<ul class="check">
+  <li>Admin: create the <strong>real teachers</strong> and attach them to the 5 classes (the assignments were cleared by the wipe).</li>
+  <li>Create 5&ndash;8 <strong>sample learners</strong> across grades 3&ndash;6 and a couple of parent accounts. (They can be wiped again afterwards &mdash; see R1.)</li>
+  <li>Connect <strong>5 or more devices</strong> of different kinds (Android, iPhone, tablet, laptop).</li>
+  <li>Run a <strong>batch assessment</strong>: issue join codes, have several children read at once.</li>
+  <li>Check on the batch board that recordings move from <em>queued</em> to <em>scored</em> (this proves the scheduler is running).</li>
+  <li><strong>Time it:</strong> submit ~10 readings close together. Note how long the last one takes. Whisper <code>small</code> on CPU is slower than real time; the batch board shows a &ldquo;about N minutes&rdquo; estimate.</li>
+  <li>Open the <strong>results page</strong> as a teacher and as a parent for one child.</li>
+  <li>Stagger the real sessions in groups of 5&ndash;8 children, one grade per slot.</li>
+  <li>Keep a fallback: record first, let scoring catch up later. Nothing is lost.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="newip">6. If the laptop's IP changes (new router)</h2>
+
+<p>The IP is written into the certificate, the Apache vhost, and <code>.env</code>. The simplest fix is to give the laptop a <strong>fixed IP / DHCP reservation</strong> on the router. Otherwise, with <code>NEW_IP</code> as the new address:</p>
+
+<div class="step"><div class="num">1</div><div>Reissue the certificate (the CA stays the same, so devices that already trusted it keep trusting it):
+<pre><code>cd F:\MyApp\_tools\mkcert\certs
+F:\MyApp\_tools\mkcert\mkcert.exe -cert-file bigkas.pem -key-file bigkas-key.pem localhost 127.0.0.1 NEW_IP</code></pre></div></div>
+<div class="step"><div class="num">2</div><div>Edit <code>F:\xampp\apache\conf\extra\httpd-bigkas-ssl.conf</code>: change <code>ServerName 10.38.134.4</code> to <code>ServerName NEW_IP</code>.</div></div>
+<div class="step"><div class="num">3</div><div>Edit <code>F:\MyApp\BIGKAS-AI\.env</code>: <code>APP_URL=https://NEW_IP</code>, then:
+<pre><code>cd F:\MyApp\BIGKAS-AI
+F:\xampp\php\php.exe artisan config:clear</code></pre></div></div>
+<div class="step"><div class="num">4</div><div>Restart Apache from the XAMPP Control Panel. Make sure the new Wi-Fi network is <strong>Private</strong> (section 2, step 1).</div></div>
+
+<!-- ============================================================ -->
+<h2 id="stop">7. Shut down at the end of a session</h2>
+
+<ol>
+  <li>Close the scheduler window (<kbd>Ctrl</kbd>+<kbd>C</kbd>).</li>
+  <li>Close the ML service window (<kbd>Ctrl</kbd>+<kbd>C</kbd>). If it was started in the background and the window is gone, stop it by port:
+    <pre><code>Get-NetTCPConnection -LocalPort 5000 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }</code></pre></li>
+  <li>XAMPP Control Panel: <em>Stop</em> Apache, then MySQL.</li>
+  <li>Take a backup of the real data collected (do this <strong>after every session</strong>):
+    <pre><code>$ts = Get-Date -Format yyyyMMdd-HHmm
+F:\xampp\mysql\bin\mysqldump.exe -u root --single-transaction --routines --triggers bigkas_ai &gt; F:\MyApp\_backups\session-$ts.sql
+tar -czf F:\MyApp\_backups\session-files-$ts.tgz -C F:\MyApp\BIGKAS-AI storage/app</code></pre></li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="rollback">8. Rollback</h2>
+
+<div class="danger"><strong>R1 overwrites the current database.</strong> It restores the <em>fake</em> data. If you have already collected real data, take a fresh backup first (section 7, step 4) and do not run R1.</div>
+
+<h3>R1 &mdash; Restore the original fake data (database + audio)</h3>
+<pre><code># 1. Restore the database (the dump drops and recreates every table)
+F:\xampp\mysql\bin\mysql.exe -u root bigkas_ai &lt; F:\MyApp\_backups\bigkas_ai-20261022-1210.sql
+
+# 2. Restore the audio files
+tar -xzf F:\MyApp\_backups\storage-app-20261022-1210.tgz -C F:\MyApp\BIGKAS-AI
+
+# 3. Clear caches
+cd F:\MyApp\BIGKAS-AI
+F:\xampp\php\php.exe artisan optimize:clear</code></pre>
+<p>Verify: <code>F:\xampp\mysql\bin\mysql.exe -u root bigkas_ai -e "select count(*) from learners"</code> should return <strong>44</strong>.</p>
+
+<h3>R1b &mdash; Wipe the data again (back to a clean slate for the real test)</h3>
+<p>If you restored fake data and want it empty again, or want to clear the <em>rehearsal</em> data before the real sessions, ask Claude to re-run the wipe: it removes learners, non-admin users, assessments and their dependents, and the audio files, and keeps reading materials, interventions, practice items, badges, settings, school, classes and the admin.</p>
+
+<h3>R2 &mdash; Windows Firewall and network profile</h3>
+<p>Administrator PowerShell:</p>
+<pre><code>Remove-NetFirewallRule -DisplayName "BIGKAS HTTPS"
+Set-NetConnectionProfile -InterfaceAlias "Wi-Fi" -NetworkCategory Public</code></pre>
+<p>Verify: <code>Get-NetFirewallRule -DisplayName "BIGKAS HTTPS"</code> should say it cannot find the rule.</p>
+
+<h3>R3 &mdash; Apache HTTPS vhost</h3>
+<pre><code>Copy-Item F:\xampp\apache\conf\httpd.conf.bak-bigkas F:\xampp\apache\conf\httpd.conf -Force
+Remove-Item F:\xampp\apache\conf\extra\httpd-bigkas-ssl.conf
+F:\xampp\apache\bin\httpd.exe -t</code></pre>
+<p>It should print <code>Syntax OK</code>. Then restart Apache from the XAMPP Control Panel. (The backup was taken right before the change, so this undoes only the vhost line. If you have edited <code>httpd.conf</code> since, remove just the line <code>Include conf/extra/httpd-bigkas-ssl.conf</code> instead.)</p>
+
+<h3>R4 &mdash; .env</h3>
+<pre><code>Copy-Item F:\MyApp\_backups\env-20261022.bak F:\MyApp\BIGKAS-AI\.env -Force
+cd F:\MyApp\BIGKAS-AI
+F:\xampp\php\php.exe artisan config:clear</code></pre>
+<p>This restores <code>APP_URL=http://localhost/bigkas-ai</code>. It also reverts any other <code>.env</code> change since 2026-10-22 &mdash; if you changed anything else, edit just the <code>APP_URL</code> line by hand instead.</p>
+
+<h3>R5 &mdash; mkcert, the certificate, and the trusted CA</h3>
+<pre><code># Remove the CA from the Windows trust store (and Firefox/Java stores if present)
+F:\MyApp\_tools\mkcert\mkcert.exe -uninstall
+
+# Delete the server certificate and the tool
+Remove-Item -Recurse -Force F:\MyApp\_tools\mkcert\certs
+# Optional: delete the CA itself, INCLUDING its private key. Do this only when you are finished with HTTPS.
+# Remove-Item -Recurse -Force "$env:LOCALAPPDATA\mkcert"
+# Remove-Item -Recurse -Force F:\MyApp\_tools\mkcert</code></pre>
+<p><strong>Devices where you installed <code>rootCA.pem</code>:</strong> remove it there too.</p>
+<ul>
+  <li>Android: Settings &rarr; Security &rarr; Encryption &amp; credentials &rarr; User credentials &rarr; tap the mkcert certificate &rarr; Uninstall.</li>
+  <li>iPhone/iPad: Settings &rarr; General &rarr; VPN &amp; Device Management &rarr; mkcert &rarr; Remove Profile.</li>
+  <li>Windows: <kbd>Win</kbd>+<kbd>R</kbd> &rarr; <code>certmgr.msc</code> &rarr; Trusted Root Certification Authorities &rarr; Certificates &rarr; delete the &ldquo;mkcert &hellip;&rdquo; entry.</li>
+</ul>
+<div class="warn">If you delete the CA's key and later re-run <code>mkcert -install</code>, a <em>new</em> CA is created and every device that trusted the old one must install the new <code>rootCA.pem</code>.</div>
+
+<h3>R6 &mdash; ML service and scheduler</h3>
+<p>They change nothing on disk apart from logs in <code>F:\MyApp\_backups\ml-service.*.log</code>. Rolling back means stopping them (section 7). The Whisper weights remain in <code>%USERPROFILE%\.cache\huggingface\hub</code> and are reused next time.</p>
+
+<h3>Full back-out to the original setup</h3>
+<p>Do R2 &rarr; R3 &rarr; R4 &rarr; R5, then restart Apache, then run the app the old way: <code>cd F:\MyApp\BIGKAS-AI; php artisan serve</code>. Add R1 only if you also want the fake data back.</p>
+
+<!-- ============================================================ -->
+<h2 id="trouble">9. Troubleshooting</h2>
+
+<div class="tablewrap">
+<table>
+  <tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr>
+  <tr><td>Phone times out on <code>https://IP</code></td><td>Network is Public, or router has client isolation / AP isolation on, or wrong IP.</td><td>Set profile to Private (section 2). Check the router&rsquo;s &ldquo;AP isolation&rdquo; setting is off. Re-check <code>ipconfig</code>.</td></tr>
+  <tr><td>Admin shows <strong>AI / STT offline</strong></td><td>ML service not running (or still loading).</td><td>Start it (section 2, step 3). Wait ~45 s. Check <code>/api/health</code>.</td></tr>
+  <tr><td>Batch recordings stay <em>queued</em></td><td>Scheduler not running.</td><td>Start <code>schedule:work</code> (section 2, step 4).</td></tr>
+  <tr><td>Browser says the page is <em>unsafe</em> / mic does not prompt</td><td>Warning not accepted, or an HTTP link was used.</td><td>Use <code>https://</code>, accept Advanced &rarr; Proceed, use Chrome.</td></tr>
+  <tr><td>Reading fails after ~2 minutes</td><td>PHP <code>max_execution_time</code> is 120 s; Whisper needs longer.</td><td>Raise <code>max_execution_time</code> in <code>F:\xampp\php\php.ini</code> to 360 and restart Apache. (Not changed yet.)</td></tr>
+  <tr><td>Apache won&rsquo;t start</td><td>Port 443 in use, or config error.</td><td><code>F:\xampp\apache\bin\httpd.exe -t</code>; read <code>F:\xampp\apache\logs\error.log</code>. Fall back to R3.</td></tr>
+  <tr><td>Site shows a 500 error</td><td>Stale config cache after an <code>.env</code> change, or MySQL not started.</td><td><code>php artisan config:clear</code>; start MySQL.</td></tr>
+  <tr><td>Everything slow with many children</td><td>One scoring lane and a CPU-only Whisper <code>small</code>. This is expected.</td><td>Stagger groups of 5&ndash;8; tell teachers the board&rsquo;s estimate is the real wait.</td></tr>
+  <tr><td>Laptop sleeps mid-session</td><td>Power plan.</td><td>Plug in; set sleep to Never; disable the lid-close action.</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="handoff">10. After the offline testing &rarr; parents on the VPS</h2>
+
+<ol>
+  <li>Take a final backup of the laptop DB and <code>storage/app</code> (section 7, step 4).</li>
+  <li><strong>Back up the VPS database first.</strong> It currently holds only passages, interventions and similar content.</li>
+  <li>The VPS must use the <strong>same <code>APP_KEY</code></strong> as the laptop: user emails and names are stored <em>encrypted</em>, and a different key makes them unreadable.</li>
+  <li>Run the same migrations on the VPS, then import the laptop dump and copy the audio files. Rebuild all three caches afterwards (<code>config:cache</code>, <code>route:cache</code>, <code>view:cache</code>) &mdash; skipping <code>route:cache</code> after a pull gives a 500 inside a Blade view.</li>
+  <li>Confirm the weakness model version matches and migrate before analysing.</li>
+  <li>Verify one parent login and one results page before handing credentials to parents.</li>
+</ol>
+<div class="note">The laptop is the source of truth for the test week. Push one way only; do not edit records on both sides.</div>
+
+<footer>Generated for the Old Sagay Elementary School system test. Paths and the IP above reflect the setup on 2026-10-22.</footer>
+</div>
+</body>
+</html>

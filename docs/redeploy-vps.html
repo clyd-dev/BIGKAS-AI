@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIGKAS-AI VPS Redeploy Runbook</title>
+<style>
+  :root{
+    --ink:#1b1f24; --muted:#555f6b; --line:#cfd6de; --soft:#f3f5f8; --bg:#fff;
+    --accent:#1d4ed8; --accent-soft:#e8efff;
+    --warn:#8a4300; --warn-soft:#fff3e0;
+    --stop:#9c1c22; --stop-soft:#fdecec;
+    --go:#1b6b3c; --go-soft:#e8f6ee;
+    --term-bg:#12161c; --term-ink:#e6edf3; --term-dim:#8b98a6; --term-ok:#5fd38d;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#e6edf3; --muted:#9aa7b4; --line:#2e3844; --soft:#1a2029; --bg:#0f141a;
+      --accent:#7aa2ff; --accent-soft:#16213a;
+      --warn:#ffb86b; --warn-soft:#2b2014;
+      --stop:#ff8b92; --stop-soft:#2c1517;
+      --go:#6fdc9a; --go-soft:#12261b;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#e6edf3; --muted:#9aa7b4; --line:#2e3844; --soft:#1a2029; --bg:#0f141a;
+    --accent:#7aa2ff; --accent-soft:#16213a;
+    --warn:#ffb86b; --warn-soft:#2b2014;
+    --stop:#ff8b92; --stop-soft:#2c1517;
+    --go:#6fdc9a; --go-soft:#12261b;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+  .page{max-width:900px;margin:0 auto;padding:32px 16px 80px}
+  h1{font-size:28px;line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+  h2{font-size:20px;margin:42px 0 6px;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+  h3{font-size:16px;margin:0}
+  p{margin:0 0 10px}
+  ul,ol{margin:0 0 11px;padding-left:22px}
+  li{margin:0 0 4px}
+  code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.87em;background:var(--soft);padding:0 4px;border-radius:3px;border:1px solid var(--line);overflow-wrap:anywhere}
+  .sub{color:var(--muted);font-size:16px;margin:0 0 14px}
+  .meta{font-size:13px;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 0;margin:14px 0 20px;display:flex;gap:6px 18px;flex-wrap:wrap}
+  .box{border:1px solid var(--line);border-left:5px solid var(--accent);background:var(--accent-soft);padding:11px 15px;margin:12px 0;border-radius:4px}
+  .box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+  .box.stop{border-left-color:var(--stop);background:var(--stop-soft)}
+  .box.go{border-left-color:var(--go);background:var(--go-soft)}
+  .box p:last-child,.box ul:last-child{margin-bottom:0}
+  .box b.t{display:block;margin-bottom:3px}
+  .where{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);margin-left:8px;vertical-align:middle}
+  .where.laptop{color:var(--accent);border-color:var(--accent)}
+  .where.server{color:var(--go);border-color:var(--go)}
+
+  /* steps */
+  .step{display:flex;gap:12px;align-items:flex-start;margin:22px 0 4px}
+  .step input{margin-top:5px;width:18px;height:18px;flex:none;accent-color:var(--go)}
+  .step .num{flex:none;min-width:34px;height:26px;padding:0 6px;display:inline-grid;place-items:center;border-radius:6px;background:var(--ink);color:var(--bg);font-weight:700;font-size:13px}
+  .step.done h3{text-decoration:line-through;color:var(--muted)}
+  .body{margin-left:30px}
+  .why{color:var(--muted);font-size:14px;margin:4px 0 8px}
+
+  /* code + terminal output */
+  .cmd{position:relative;margin:8px 0 6px}
+  .cmd pre{margin:0;font-family:Consolas,"SF Mono",Menlo,monospace;font-size:13px;line-height:1.5;background:var(--term-bg);color:var(--term-ink);border-radius:6px 6px 0 0;padding:12px 76px 12px 14px;overflow-x:auto;white-space:pre}
+  .cmd pre .c{color:var(--term-dim)}
+  .cmd button{position:absolute;top:8px;right:8px;font:600 12px "Segoe UI",system-ui,sans-serif;padding:4px 10px;border-radius:5px;border:1px solid #3b4654;background:#222a35;color:#e6edf3;cursor:pointer}
+  .cmd button:hover{background:#2c3644}
+  .cmd button:focus-visible,.top button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .out{margin:0 0 12px;font-family:Consolas,"SF Mono",Menlo,monospace;font-size:12.5px;line-height:1.5;background:var(--soft);border:1px solid var(--line);border-top:0;border-radius:0 0 6px 6px;padding:8px 14px;overflow-x:auto;white-space:pre;color:var(--ink)}
+  .out b{color:var(--go)}
+  .out .lbl{display:block;font:700 11px "Segoe UI",system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .cmd.solo pre{border-radius:6px}
+
+  table{border-collapse:collapse;width:100%;margin:8px 0 16px;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+  th{background:var(--soft)}
+  .scroll{overflow-x:auto}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .top button{font:600 13px "Segoe UI",system-ui,sans-serif;padding:5px 12px;border-radius:6px;border:1px solid var(--line);background:var(--soft);color:var(--ink);cursor:pointer}
+  .progress{font-size:13px;color:var(--muted)}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+  nav.toc a{font-size:13px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;color:var(--ink);text-decoration:none}
+  nav.toc a:hover{border-color:var(--accent);color:var(--accent)}
+  @media print{ .cmd button,.top button,nav.toc{display:none} body{background:#fff;color:#000} .cmd pre{white-space:pre-wrap} }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="top">
+  <h1>Redeploy the latest changes to the VPS</h1>
+  <button type="button" id="reset">Reset checklist</button>
+</div>
+<p class="sub">BIGKAS-AI on Contabo, <code>/var/www/bigkas-ai</code>, branch <code>master</code>. Tick each step as you finish it. Your progress is saved in this browser.</p>
+<div class="meta">
+  <span><b>Time:</b> about 10 minutes</span>
+  <span><b>Downtime:</b> a few seconds while services restart</span>
+  <span class="progress" id="progress">0 of 0 steps done</span>
+</div>
+
+<nav class="toc" aria-label="Sections">
+  <a href="#a">A. Laptop</a><a href="#b">B. Server</a><a href="#c">C. Verify</a><a href="#d">D. Roll back</a><a href="#e">E. Pitfalls</a><a href="#f">One-shot script</a>
+</nav>
+
+<div class="box stop">
+  <b class="t">Not within 3 days of the defense</b>
+  <p>Freeze code before the defense. If you must deploy, take a backup first (step B1) and test one full assessment afterwards.</p>
+</div>
+
+<!-- ============ A ============ -->
+<h2 id="a">A. Prepare on your laptop <span class="where laptop">Laptop</span></h2>
+<p>The server only gets what is on GitHub. Anything uncommitted stays on your machine.</p>
+
+<div class="step"><input type="checkbox" id="s-a1" aria-labelledby="t-a1"><h3 id="t-a1"><span class="num">A1</span> Run the tests</h3></div>
+<div class="body">
+  <p class="why">Catch a broken build before the server does.</p>
+  <div class="cmd"><pre><code>cd F:\MyApp\BIGKAS-AI
+php artisan test</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span>Tests:  <b>NN passed</b>
+Duration: ...</div>
+  <p>Any failure means stop and fix it first.</p>
+</div>
+
+<div class="step"><input type="checkbox" id="s-a2" aria-labelledby="t-a2"><h3 id="t-a2"><span class="num">A2</span> Check what you are about to commit</h3></div>
+<div class="body">
+  <p class="why">A 1.6 GB training zip once blocked a push. Look for anything large, secret, or unintended.</p>
+  <div class="cmd"><pre><code>git status --short
+git diff --stat | tail -1</code></pre><button type="button">Copy</button></div>
+  <div class="box warn"><b class="t">Never commit</b>
+    <ul>
+      <li><code>.env</code> (secrets), <code>ml-service/venv/</code>, audio files, <code>*.zip</code></li>
+      <li>Anything over about 50 MB. GitHub refuses files over 100 MB.</li>
+    </ul>
+  </div>
+  <p>Stage files by name or by folder when unsure. Use <code>git add -A</code> only after reading the status above.</p>
+</div>
+
+<div class="step"><input type="checkbox" id="s-a3" aria-labelledby="t-a3"><h3 id="t-a3"><span class="num">A3</span> Commit and push</h3></div>
+<div class="body">
+  <div class="cmd"><pre><code>git add -A
+git commit -m "feat: describe what changed"
+git push origin master</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span>To https://github.com/clyd-dev/BIGKAS-AI.git
+   <b>abc1234..def5678  master -> master</b></div>
+  <p>Confirm it landed: <code>git status -sb</code> should show <code>## master...origin/master</code> with no "ahead".</p>
+</div>
+
+<div class="step"><input type="checkbox" id="s-a4" aria-labelledby="t-a4"><h3 id="t-a4"><span class="num">A4</span> Note what changed</h3></div>
+<div class="body">
+  <p class="why">This decides which optional steps you need on the server (B5 front-end build, B6 migrations).</p>
+  <div class="cmd"><pre><code>git diff --stat HEAD~1 -- package.json resources/js resources/css database/migrations ml-service</code></pre><button type="button">Copy</button></div>
+  <table>
+    <tr><th>If the diff touches</th><th>You need on the server</th></tr>
+    <tr><td><code>resources/js</code>, <code>resources/css</code>, <code>package.json</code></td><td>B5 (<code>npm run build</code>)</td></tr>
+    <tr><td><code>database/migrations</code></td><td>B6 (<code>migrate</code>), already in the standard flow</td></tr>
+    <tr><td><code>ml-service/</code></td><td>B8 restart <code>bigkas-ml</code>; also <code>pip install</code> if <code>requirements.txt</code> changed</td></tr>
+    <tr><td><code>composer.json</code> / <code>composer.lock</code></td><td>B4 (<code>composer install</code>), already in the standard flow</td></tr>
+  </table>
+</div>
+
+<!-- ============ B ============ -->
+<h2 id="b">B. Deploy on the server <span class="where server">Server</span></h2>
+
+<div class="step"><input type="checkbox" id="s-b0" aria-labelledby="t-b0"><h3 id="t-b0"><span class="num">B0</span> Connect</h3></div>
+<div class="body">
+  <div class="cmd solo"><pre><code>ssh root@84.247.158.7</code></pre><button type="button">Copy</button></div>
+  <p>The prompt should look like <code>root@vmi...:~#</code>. Then move into the app folder for everything below:</p>
+  <div class="cmd solo"><pre><code>cd /var/www/bigkas-ai</code></pre><button type="button">Copy</button></div>
+</div>
+
+<div class="step"><input type="checkbox" id="s-b1" aria-labelledby="t-b1"><h3 id="t-b1"><span class="num">B1</span> Take a backup first</h3></div>
+<div class="body">
+  <p class="why">If the deploy goes wrong, this is your way back (see section D).</p>
+  <div class="cmd"><pre><code>/usr/local/bin/bigkas-backup.sh &amp;&amp; ls -lh /backups | tail -n 4</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span>-rw------- 1 root root  <b>1.2M</b> Oct 20 14:02 db_20261020.sql.gz
+-rw------- 1 root root  <b>85M</b>  Oct 20 14:02 storage_20261020.tar.gz</div>
+  <p>Both files should have today's date and a non-zero size.</p>
+</div>
+
+<div class="step"><input type="checkbox" id="s-b2" aria-labelledby="t-b2"><h3 id="t-b2"><span class="num">B2</span> Make sure the server copy is clean</h3></div>
+<div class="body">
+  <p class="why">Never edit code on the server. Local changes there make <code>git pull</code> fail.</p>
+  <div class="cmd"><pre><code>git status --short</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span>(no output)</div>
+  <p>If files are listed, see "git pull refuses" in section E.</p>
+</div>
+
+<div class="step"><input type="checkbox" id="s-b3" aria-labelledby="t-b3"><h3 id="t-b3"><span class="num">B3</span> Pull the new code</h3></div>
+<div class="body">
+  <div class="cmd"><pre><code>git pull origin master</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span>From https://github.com/clyd-dev/BIGKAS-AI
+   abc1234..def5678  master     -> origin/master
+Updating abc1234..def5678
+<b>Fast-forward</b>
+ NN files changed, NNN insertions(+), NN deletions(-)</div>
+  <p>"Already up to date" means your push did not reach GitHub. Go back to A3.</p>
+</div>
+
+<div class="step"><input type="checkbox" id="s-b4" aria-labelledby="t-b4"><h3 id="t-b4"><span class="num">B4</span> Install PHP dependencies</h3></div>
+<div class="body">
+  <div class="cmd"><pre><code>COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader --no-interaction</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span>Installing dependencies from lock file
+Generating optimized autoload files
+<b>No security vulnerability advisories found.</b></div>
+</div>
+
+<div class="step"><input type="checkbox" id="s-b5" aria-labelledby="t-b5"><h3 id="t-b5"><span class="num">B5</span> Build the front end <em style="font-weight:400;color:var(--muted)">(only if JS, CSS or package.json changed)</em></h3></div>
+<div class="body">
+  <div class="cmd"><pre><code>npm ci --no-audit --no-fund &amp;&amp; npm run build</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span>vite v... building for production...
+<b>✓ built in 8.52s</b></div>
+  <p>Skipping this when only PHP or Blade files changed is fine.</p>
+</div>
+
+<div class="step"><input type="checkbox" id="s-b6" aria-labelledby="t-b6"><h3 id="t-b6"><span class="num">B6</span> Migrate the database</h3></div>
+<div class="body">
+  <p class="why">Run this before any analysis happens. New columns (for example <code>classification_status</code>) must exist first.</p>
+  <div class="cmd"><pre><code>sudo -u www-data php artisan migrate --force</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span>INFO  Running migrations.
+2026_10_xx_xxxxxx_add_classification_status ........ <b>DONE</b>
+<span class="c">or: INFO  Nothing to migrate.</span></div>
+  <p>Want to preview first? Run <code>php artisan migrate --pretend</code>.</p>
+</div>
+
+<div class="step"><input type="checkbox" id="s-b7" aria-labelledby="t-b7"><h3 id="t-b7"><span class="num">B7</span> Rebuild all three caches</h3></div>
+<div class="body">
+  <div class="box stop"><b class="t">Do all three, every time</b>
+    <p>A previous deploy rebuilt only <code>config</code> and <code>view</code>. The stale route cache lacked the new route, so the admin dashboard threw a 500 from inside a Blade view. The error looked like a view bug but was not.</p></div>
+  <div class="cmd"><pre><code>sudo -u www-data php artisan config:clear &amp;&amp; sudo -u www-data php artisan config:cache
+sudo -u www-data php artisan route:clear  &amp;&amp; sudo -u www-data php artisan route:cache
+sudo -u www-data php artisan view:clear   &amp;&amp; sudo -u www-data php artisan view:cache</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span>INFO  Configuration cache cleared successfully.
+INFO  Configuration cached successfully.
+INFO  Route cache cleared successfully.
+INFO  Routes cached successfully.
+INFO  Compiled views cleared successfully.
+INFO  Blade templates cached successfully.</div>
+  <p>Run them as <code>www-data</code>. If you run them as root, the cache files become root-owned and PHP cannot rewrite them.</p>
+</div>
+
+<div class="step"><input type="checkbox" id="s-b8" aria-labelledby="t-b8"><h3 id="t-b8"><span class="num">B8</span> Fix permissions and restart services</h3></div>
+<div class="body">
+  <div class="cmd"><pre><code>chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
+systemctl reload php8.3-fpm
+systemctl restart bigkas-ml bigkas-queue</code></pre><button type="button">Copy</button></div>
+  <p class="why">The queue worker keeps old code in memory until restarted. The Flask service restart loads the new model files and the new <code>/api/health</code> fields. Whisper takes about 20 to 60 seconds to load again.</p>
+  <p>If <code>requirements.txt</code> changed, install first:</p>
+  <div class="cmd"><pre><code>sudo -u www-data ml-service/venv/bin/pip install -r ml-service/requirements.txt
+systemctl restart bigkas-ml</code></pre><button type="button">Copy</button></div>
+</div>
+
+<div class="step"><input type="checkbox" id="s-b9" aria-labelledby="t-b9"><h3 id="t-b9"><span class="num">B9</span> One-time post-upgrade command <em style="font-weight:400;color:var(--muted)">(first deploy of the "never score without a measurement" change only)</em></h3></div>
+<div class="body">
+  <p class="why">Recomputes learner levels after readings that were not measured from the child's voice are excluded. Preview, then apply.</p>
+  <div class="cmd"><pre><code>sudo -u www-data php artisan learners:recompute-levels --dry-run
+sudo -u www-data php artisan learners:recompute-levels</code></pre><button type="button">Copy</button></div>
+  <p>Skip if you already ran it on this server.</p>
+</div>
+
+<!-- ============ C ============ -->
+<h2 id="c">C. Verify <span class="where server">Server + browser</span></h2>
+
+<div class="step"><input type="checkbox" id="s-c1" aria-labelledby="t-c1"><h3 id="t-c1"><span class="num">C1</span> All services are running</h3></div>
+<div class="body">
+  <div class="cmd"><pre><code>systemctl is-active nginx php8.3-fpm mysql bigkas-ml bigkas-queue</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span><b>active
+active
+active
+active
+active</b></div>
+</div>
+
+<div class="step"><input type="checkbox" id="s-c2" aria-labelledby="t-c2"><h3 id="t-c2"><span class="num">C2</span> The ML service is up with the model loaded</h3></div>
+<div class="body">
+  <div class="cmd"><pre><code>curl -s http://127.0.0.1:5000/api/health; echo
+journalctl -u bigkas-ml -n 20 --no-pager</code></pre><button type="button">Copy</button></div>
+  <p>The health JSON must report the classifier as loaded. If it does not, the app saves results as "classification unavailable" instead of guessing a weakness. That is the intended behavior, so a missing model is a real outage, not a cosmetic one.</p>
+</div>
+
+<div class="step"><input type="checkbox" id="s-c3" aria-labelledby="t-c3"><h3 id="t-c3"><span class="num">C3</span> No new errors in the Laravel log</h3></div>
+<div class="body">
+  <p class="why">Laravel writes each error on one very long line, so <code>tail</code> is hard to read. This pulls out just the error heads.</p>
+  <div class="cmd"><pre><code>grep -oE '(local|production)\.(ERROR|CRITICAL):.{0,300}' storage/logs/laravel.log | tail -n 3</code></pre><button type="button">Copy</button></div>
+  <div class="out"><span class="lbl">Expected</span>(nothing from today)</div>
+</div>
+
+<div class="step"><input type="checkbox" id="s-c4" aria-labelledby="t-c4"><h3 id="t-c4"><span class="num">C4</span> The scheduler is firing</h3></div>
+<div class="body">
+  <p class="why">The app runs <code>health:check</code> every minute and <code>assessments:rescore</code> every five minutes, so outage alerts depend on it.</p>
+  <div class="cmd"><pre><code>sudo -u www-data php artisan schedule:list
+cat /etc/cron.d/bigkas-scheduler</code></pre><button type="button">Copy</button></div>
+</div>
+
+<div class="step"><input type="checkbox" id="s-c5" aria-labelledby="t-c5"><h3 id="t-c5"><span class="num">C5</span> Click through in the browser</h3></div>
+<div class="body">
+  <p class="why">Open <code>https://bigkas-ai.duckdns.org</code>. Use a private window so you do not see a cached page.</p>
+  <div class="scroll"><table>
+    <tr><th>Check</th><th>Pass looks like</th></tr>
+    <tr><td>Landing page</td><td>Loads with a padlock</td></tr>
+    <tr><td>Log in as admin, open the dashboard</td><td>No 500 error (this page caught the stale-route bug before)</td></tr>
+    <tr><td>Open a page that shipped in this release</td><td>Renders with the new content</td></tr>
+    <tr><td>Run one assessment with the microphone and submit</td><td>Result appears. Note the seconds it took.</td></tr>
+    <tr><td>Open the result</td><td>Weakness shown, or an honest "classification unavailable" with Re-analyze</td></tr>
+  </table></div>
+</div>
+
+<div class="box go"><b class="t">Done</b><p>Services active, health OK, log clean, one assessment finished. Write the date and commit hash (<code>git log --oneline -1</code>) somewhere safe so you know what is live.</p></div>
+
+<!-- ============ D ============ -->
+<h2 id="d">D. If it goes wrong: roll back <span class="where server">Server</span></h2>
+<table>
+  <tr><th>Situation</th><th>Fix</th></tr>
+  <tr><td>Code is broken, no migration ran</td><td>Check out the previous commit, then redo B4, B7 and B8:
+    <div class="cmd" style="margin-top:6px"><pre><code>git log --oneline -5
+git checkout &lt;previous-commit&gt;</code></pre><button type="button">Copy</button></div>
+    To return to normal later: <code>git checkout master</code>.</td></tr>
+  <tr><td>A migration ran and broke data</td><td>Restore the B1 backup:
+    <div class="cmd" style="margin-top:6px"><pre><code>systemctl stop bigkas-queue
+gunzip &lt; /backups/db_YYYYMMDD.sql.gz | mysql bigkas_db
+systemctl start bigkas-queue</code></pre><button type="button">Copy</button></div>
+    Then roll the code back as in the row above.</td></tr>
+  <tr><td>Site shows a blank page or 500 and you are unsure why</td><td>Clear everything, then rebuild:
+    <div class="cmd" style="margin-top:6px"><pre><code>sudo -u www-data php artisan optimize:clear
+sudo -u www-data php artisan optimize</code></pre><button type="button">Copy</button></div></td></tr>
+</table>
+
+<!-- ============ E ============ -->
+<h2 id="e">E. Common pitfalls</h2>
+<div class="scroll"><table>
+  <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+  <tr><td>500 error on a page that exists in the new code</td><td>Stale <code>routes-v7.php</code></td><td>B7, all three caches</td></tr>
+  <tr><td>"Already up to date" but your change is missing</td><td>Not pushed, or wrong branch</td><td>Back to A3, then <code>git branch</code> to confirm <code>master</code></td></tr>
+  <tr><td><code>git pull</code> refuses: local changes would be overwritten</td><td>Files edited on the server</td><td><code>git status</code>. Save what you want (<code>git diff &gt; /root/server-changes.patch</code>), then <code>git checkout -- &lt;file&gt;</code></td></tr>
+  <tr><td>"Permission denied" writing logs or cache</td><td>An artisan command ran as root</td><td><code>chown -R www-data:www-data storage bootstrap/cache</code></td></tr>
+  <tr><td>Edited <code>.env</code> but nothing changed</td><td>Config is cached</td><td><code>sudo -u www-data php artisan config:cache</code></td></tr>
+  <tr><td>New field or column missing, SQL error</td><td>Migration not run, or run after analyses</td><td>B6, then B7</td></tr>
+  <tr><td>Assessments say "classification unavailable"</td><td>Flask down, model missing, or <code>ML_API_ENABLED</code> is false</td><td>C2. Check <code>.env</code> then <code>config:cache</code>. Do not add a rule-based stand-in; this state is intentional.</td></tr>
+  <tr><td><code>npm</code> killed or out of memory</td><td>Build needs RAM</td><td><code>free -h</code>. The 2 GB swap should cover it. Retry once nothing else is running.</td></tr>
+  <tr><td>Changes not visible in browser</td><td>Browser cache or an unbuilt front end</td><td>Hard refresh (Ctrl+F5). If JS or CSS changed, run B5.</td></tr>
+</table></div>
+
+<!-- ============ F ============ -->
+<h2 id="f">One-shot script (when you know the steps)</h2>
+<p>Once you have done the steps by hand a couple of times, this does B1 to B8 in order and stops at the first error. Save it as <code>/root/redeploy.sh</code> and run <code>bash /root/redeploy.sh</code>.</p>
+<div class="cmd"><pre><code>#!/usr/bin/env bash
+set -euo pipefail
+cd /var/www/bigkas-ai
+art() { sudo -u www-data php artisan "$@"; }
+
+echo "==&gt; backup";     /usr/local/bin/bigkas-backup.sh
+echo "==&gt; pull";       git pull origin master
+echo "==&gt; composer";   COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev -o --no-interaction
+echo "==&gt; frontend";   npm ci --no-audit --no-fund &amp;&amp; npm run build
+echo "==&gt; migrate";    art migrate --force
+echo "==&gt; caches";     art config:clear &amp;&amp; art config:cache
+                     art route:clear  &amp;&amp; art route:cache
+                     art view:clear   &amp;&amp; art view:cache
+echo "==&gt; permissions"; chown -R www-data:www-data storage bootstrap/cache
+                     chmod -R 775 storage bootstrap/cache
+echo "==&gt; restart";    systemctl reload php8.3-fpm
+                     systemctl restart bigkas-ml bigkas-queue
+echo "==&gt; status";     systemctl is-active nginx php8.3-fpm mysql bigkas-ml bigkas-queue
+echo "Deployed: $(git log --oneline -1)"</code></pre><button type="button">Copy</button></div>
+<div class="box warn"><b class="t">Still verify by hand</b><p>The script cannot tell you the app works. Always finish with section C, at least the browser click-through.</p></div>
+
+</div>
+
+<script>
+(function () {
+  var KEY = 'bigkas-redeploy-checklist';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.step input[type=checkbox]'));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+
+  function paint() {
+    var done = 0;
+    boxes.forEach(function (b) {
+      b.closest('.step').classList.toggle('done', b.checked);
+      if (b.checked) done++;
+    });
+    document.getElementById('progress').textContent = done + ' of ' + boxes.length + ' steps done';
+  }
+  function save() {
+    var o = {};
+    boxes.forEach(function (b) { if (b.checked) o[b.id] = 1; });
+    try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {}
+  }
+  boxes.forEach(function (b) {
+    if (saved[b.id]) b.checked = true;
+    b.addEventListener('change', function () { paint(); save(); });
+  });
+  paint();
+
+  document.getElementById('reset').addEventListener('click', function () {
+    boxes.forEach(function (b) { b.checked = false; });
+    paint(); save();
+  });
+
+  document.querySelectorAll('.cmd button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var text = btn.parentNode.querySelector('pre').innerText.replace(/\u00a0/g, ' ');
+      function ok() { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1400); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); ok(); } catch (e) { btn.textContent = 'Select + Ctrl+C'; }
+        document.body.removeChild(ta);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(ok, fallback);
+      } else { fallback(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

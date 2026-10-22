@@ -105,7 +105,7 @@ class LearnerController extends Controller
         }
 
         $schoolName  = School::orderBy('id')->value('name') ?? 'Old Sagay Elementary School';
-        $parents     = Directory::sortUsers(User::where('role', 'parent')->get());
+        $parents     = Directory::sortUsers(User::linkableParentsFor($user)->with('parentGrades')->get());
 
         return view('learners.create', compact('allClasses', 'lockedClass', 'schoolName', 'parents'));
     }
@@ -121,7 +121,7 @@ class LearnerController extends Controller
             'birth_date'  => 'nullable|date',
             'gender'      => 'nullable|in:male,female',
             'parent_ids'  => 'nullable|array',
-            'parent_ids.*'=> 'exists:users,id',
+            'parent_ids.*'=> [\Illuminate\Validation\Rule::exists('users', 'id')->where('role', 'parent')],
         ];
 
         // Admins choose grade/section explicitly. Teachers are locked to their
@@ -132,6 +132,7 @@ class LearnerController extends Controller
         }
 
         $request->validate($rules);
+        $this->assertParentsLinkable($request->input('parent_ids', []));
 
         if ($user->isAdmin()) {
             // Derive grade_level from the chosen class if provided.
@@ -169,6 +170,7 @@ class LearnerController extends Controller
             foreach ($request->parent_ids as $parentId) {
                 $learner->users()->attach($parentId, ['relationship' => 'parent']);
             }
+            $this->syncParentGrades($learner);
         }
 
         // The teacher who adds the learner issues the student-portal PIN (stored encrypted, visible to the teacher).
@@ -221,7 +223,7 @@ class LearnerController extends Controller
         }
         
         $schoolName  = School::orderBy('id')->value('name') ?? 'Old Sagay Elementary School';
-        $parents     = Directory::sortUsers(User::where('role', 'parent')->get());
+        $parents     = Directory::sortUsers(User::linkableParentsFor($user)->with('parentGrades')->get());
 
         return view('learners.edit', compact('learner', 'allClasses', 'schoolName', 'parents'));
     }
@@ -236,7 +238,10 @@ class LearnerController extends Controller
             'grade_level' => 'required|integer|min:1|max:12',
             'lrn'         => ['nullable', 'string', 'max:20', \App\Rules\UniqueBlindIndex::lrn($learner->id)],
             'class_id'    => 'nullable|exists:classes,id',
+            'parent_ids'  => 'nullable|array',
+            'parent_ids.*'=> [\Illuminate\Validation\Rule::exists('users', 'id')->where('role', 'parent')],
         ]);
+        $this->assertParentsLinkable($request->input('parent_ids', []));
 
         // If a class is assigned, derive grade_level from the class record.
         $gradeLevel = $request->grade_level;
@@ -273,11 +278,35 @@ class LearnerController extends Controller
                 $learner->users()->attach($parentId, ['relationship' => 'parent']);
             }
         }
+        $this->syncParentGrades($learner);
 
         ActivityLog::log('update_learner', "Updated learner: {$learner->first_name} {$learner->last_name}", 'learner', $learner->id);
 
         return redirect()->route('learners.show', $learner)
             ->with('success', 'Learner updated successfully.');
+    }
+
+    /**
+     * A teacher may only link parents assigned to their own grade (or already linked to a
+     * learner they can access). Admins may link any parent. Blocks a forged form post.
+     */
+    private function assertParentsLinkable(array $parentIds): void
+    {
+        $parentIds = array_unique(array_map('intval', $parentIds));
+        if (empty($parentIds)) {
+            return;
+        }
+
+        $allowed = User::linkableParentsFor(auth()->user())->pluck('users.id')->map(fn ($id) => (int) $id)->all();
+
+        abort_if(array_diff($parentIds, $allowed) !== [], 403, 'You can only link parents assigned to your grade.');
+    }
+
+    /** Every parent linked to this learner belongs to the learner's grade too (a parent of Grade 3 and 4 children gets both). */
+    private function syncParentGrades(Learner $learner): void
+    {
+        $learner->users()->where('role', 'parent')->get()
+            ->each(fn (User $parent) => $parent->addParentGrade((int) $learner->grade_level));
     }
 
     public function destroy(Learner $learner)

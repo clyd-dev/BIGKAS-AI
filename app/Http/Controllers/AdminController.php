@@ -52,13 +52,22 @@ class AdminController extends Controller
 
     public function users(Request $request)
     {
-        $query = User::with('school');
+        $query = User::with(['school', 'parentGrades']);
 
         if ($request->filled('role')) {
             $query->where('role', $request->role);
         }
         if ($request->filled('status')) {
             $query->where('is_active', $request->status === 'active');
+        }
+        if ($request->filled('grade')) {
+            // Parents only: by the grade(s) they are assigned to, or those with no grade yet.
+            $query->where('role', 'parent');
+            if ($request->grade === 'none') {
+                $query->doesntHave('parentGrades');
+            } else {
+                $query->whereHas('parentGrades', fn ($g) => $g->where('grade_level', (int) $request->grade));
+            }
         }
         if ($request->boolean('unassigned')) {
             // Teachers who have no grade & section yet.
@@ -72,6 +81,9 @@ class AdminController extends Controller
         }
         $users = Directory::paginate(Directory::sortUsers($found), 10);
 
+        // For parents on this page: which children are linked to them.
+        $users->getCollection()->where('role', 'parent')->load('learners.schoolClass');
+
         // All classes for dropdowns
         $allClasses = SchoolClass::with('teacher')
             ->orderBy('grade_level')->orderBy('section')->get();
@@ -84,7 +96,13 @@ class AdminController extends Controller
 
         $pendingTeachers = User::where('role', 'teacher')->where('is_active', true)->whereDoesntHave('taughtClasses')->count();
 
-        return view('admin.users', compact('users', 'allClasses', 'teacherClasses', 'pendingTeachers'));
+        $gradeOptions = $allClasses->pluck('grade_level')->unique()->sort()->values();
+        if ($gradeOptions->isEmpty()) {
+            $gradeOptions = collect(range(1, 6));
+        }
+        $parentsWithoutGrade = User::where('role', 'parent')->doesntHave('parentGrades')->count();
+
+        return view('admin.users', compact('users', 'allClasses', 'teacherClasses', 'pendingTeachers', 'gradeOptions', 'parentsWithoutGrade'));
     }
 
     public function updateUserRole(Request $request, User $user)
@@ -139,6 +157,8 @@ class AdminController extends Controller
             'role'     => 'required|in:admin,teacher,parent',
             'password' => \App\Support\PasswordPolicy::rules(),
             'class_id' => 'nullable|exists:classes,id',
+            'grades'   => 'nullable|array',
+            'grades.*' => 'integer|min:1|max:12',
         ], \App\Support\PasswordPolicy::messages());
 
         if ($request->role === 'teacher' && ($taken = $this->classTakenMessage($request->class_id, null))) {
@@ -170,6 +190,11 @@ class AdminController extends Controller
                 ->update(['teacher_id' => $user->id]);
         }
 
+        // A parent belongs to grade(s): only those grades' teachers can see and link them.
+        if ($request->role === 'parent') {
+            $user->syncParentGrades($request->input('grades', []));
+        }
+
         ActivityLog::log('admin_create_user', "Created {$request->role} user: {$request->name} ({$request->email})", 'user', $user->id);
 
         return redirect()->route('admin.users')
@@ -181,6 +206,8 @@ class AdminController extends Controller
         $request->validate([
             'role'     => 'required|in:admin,teacher,parent',
             'class_id' => 'nullable|exists:classes,id',
+            'grades'   => 'nullable|array',
+            'grades.*' => 'integer|min:1|max:12',
         ]);
 
         if ($request->role === 'teacher' && ($taken = $this->classTakenMessage($request->class_id, $user))) {
@@ -201,6 +228,11 @@ class AdminController extends Controller
         if ($assignClass) {
             SchoolClass::where('id', $request->class_id)
                 ->update(['teacher_id' => $user->id]);
+        }
+
+        // Parent grades are only edited from the parent's edit form (it posts sync_grades).
+        if ($request->role === 'parent' && $request->has('sync_grades')) {
+            $user->syncParentGrades($request->input('grades', []));
         }
 
         $changes = [];

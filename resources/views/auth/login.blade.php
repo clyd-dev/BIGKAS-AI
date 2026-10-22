@@ -23,12 +23,13 @@
         @csrf
 
         <div class="mb-3">
-            <label for="email" class="form-label">Email Address</label>
+            <label for="email" class="form-label">Email or Full Name</label>
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <input type="email" class="form-control @error('email') is-invalid @enderror"
+                <input type="text" class="form-control @error('email') is-invalid @enderror"
                        id="email" name="email" value="{{ old('email') }}" required autofocus
-                       placeholder="your@email.com">
+                       placeholder="your@email.com or your full name">
+                <div class="form-text w-100">If your account was set up with your name instead of an email, type your full name exactly as printed on your login slip.</div>
                 @error('email')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror

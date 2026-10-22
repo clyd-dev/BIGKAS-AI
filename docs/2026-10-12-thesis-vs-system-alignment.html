@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIGKAS-AI Thesis vs System Alignment Review</title>
+<style>
+  :root{
+    --ink:#1b1f24; --muted:#555f6b; --line:#cfd6de; --soft:#f3f5f8;
+    --accent:#1d4ed8; --accent-soft:#e8efff;
+    --warn:#8a4300; --warn-soft:#fff3e0;
+    --stop:#9c1c22; --stop-soft:#fdecec;
+    --go:#1b6b3c; --go-soft:#e8f6ee;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#fff;color:var(--ink);font:14.5px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+  .page{max-width:980px;margin:0 auto;padding:36px 22px 70px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.02em}
+  h2{font-size:21px;margin:40px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--ink);break-after:avoid}
+  h3{font-size:16px;margin:22px 0 6px;break-after:avoid}
+  p{margin:0 0 10px}
+  ul,ol{margin:0 0 11px;padding-left:22px}
+  li{margin:0 0 4px}
+  code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.87em;background:var(--soft);padding:0 4px;border-radius:3px;border:1px solid var(--line);overflow-wrap:anywhere}
+  .sub{color:var(--muted);font-size:16px;margin:0 0 16px}
+  .meta{font-size:13px;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 0;margin:14px 0 20px}
+  .box{border:1px solid var(--line);border-left:5px solid var(--accent);background:var(--accent-soft);padding:11px 15px;margin:12px 0;border-radius:4px;break-inside:avoid}
+  .box.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+  .box.stop{border-left-color:var(--stop);background:var(--stop-soft)}
+  .box.go{border-left-color:var(--go);background:var(--go-soft)}
+  .box p:last-child,.box ul:last-child{margin-bottom:0}
+  .box b.t{display:block;margin-bottom:3px}
+  table{border-collapse:collapse;width:100%;margin:8px 0 16px;font-size:13.2px}
+  th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft);font-weight:700}
+  tr{break-inside:avoid}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  .tw{overflow-x:auto}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:0 7px;border-radius:99px;border:1px solid currentColor;vertical-align:middle;white-space:nowrap}
+  .tag.g{color:var(--go)} .tag.o{color:var(--warn)} .tag.r{color:var(--stop)} .tag.b{color:var(--accent)}
+  .score{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 6px}
+  .score div{border:1px solid var(--line);border-radius:6px;padding:10px 12px;text-align:center}
+  .score b{display:block;font-size:26px;line-height:1.1}
+  .score span{font-size:12px;color:var(--muted)}
+  .score .g b{color:var(--go)} .score .o b{color:var(--warn)} .score .r b{color:var(--stop)} .score .b b{color:var(--accent)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .small{font-size:12.5px;color:var(--muted)}
+  pre{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:12.3px;line-height:1.45;background:var(--soft);border:1px solid var(--line);border-radius:5px;padding:10px 12px;overflow:auto;margin:8px 0 6px;break-inside:avoid}
+  pre code{background:none;border:0;padding:0;font-size:inherit}
+  .src{font-size:12px;color:var(--muted);margin:0 0 14px}
+  .src code{font-size:11.5px}
+  .formula{border:1px dashed var(--accent);background:#fff;border-radius:5px;padding:9px 14px;margin:10px 0;font-family:Consolas,"SF Mono",Menlo,monospace;font-size:13px;overflow-wrap:anywhere;break-inside:avoid}
+  .formula b{font-family:"Segoe UI",system-ui,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);display:block;margin-bottom:3px}
+  .flow{display:flex;gap:6px;align-items:stretch;margin:12px 0;flex-wrap:wrap}
+  .flow div{flex:1 1 130px;border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--soft);font-size:13px;position:relative}
+  .flow div b{display:block;color:var(--accent);font-size:12px;margin-bottom:2px}
+  .flow div+div::before{content:"\2192";position:absolute;left:-12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px}
+  .yes{color:var(--stop);font-weight:700} .no{color:var(--go);font-weight:700}
+  .toc a{color:var(--accent)}
+  @media (max-width:640px){.flow div+div::before{display:none}}
+  @media (max-width:640px){
+    .page{padding:22px 16px 50px}
+    .score{grid-template-columns:repeat(2,1fr)}
+    .cols{grid-template-columns:1fr}
+    .tw table{min-width:680px}
+    h1{font-size:25px}
+  }
+  @media print{
+    .page{padding:0;max-width:none}
+    h2{margin-top:26px}
+    a{color:inherit;text-decoration:none}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>BIGKAS-AI: Chapters 1 to 3 vs the Built System</h1>
+<p class="sub">Does the system we built match what the paper says it is, and what it set out to do?</p>
+<div class="meta">
+  Document reviewed: <code>docs/IT-B8-Soquita-BIGKAS-AI_revised2.docx</code> (Chapters I to III, references) &middot;
+  System reviewed: this repository at <code>master</code> (HEAD <code>2b45292</code>) &middot;
+  Review date: 2026-10-12<br>
+  Method: read the full text of the three chapters, then checked each claim against routes, services, models, migrations,
+  <code>ml-service/</code> (app, training scripts, <code>model_metadata.json</code>, labelled dataset), the README and the test suite.
+  Nothing was run against the live server, so runtime behaviour is judged from code and stored artefacts only.
+</div>
+<p class="toc small"><b>For the panel:</b> two plain-language explainers sit at the end of this file.
+  <a href="#part-a">Part A, how a mispronunciation, substitution, omission, repetition or insertion is detected</a> and
+  <a href="#part-b">Part B, how a reading is judged phonemic, decoding, fluency or comprehension</a>.</p>
+
+<h2>1. Bottom line</h2>
+
+<div class="box go">
+  <b class="t">The system delivers what the objectives ask for.</b>
+  <p>Objectives 1 and 2 (the assessment and intervention engine, and role-based dashboards) are implemented end to end, and in several places
+  go further than the paper describes. Nothing in the objectives is missing from the product.</p>
+</div>
+<div class="box warn">
+  <b class="t">The paper describes a different system in a handful of places, and a panel can find them.</b>
+  <p>The gaps are not missing features. They are statements in Chapters 1 to 3 that the repository contradicts or cannot back up: which speech engine runs,
+  what the training data covers, whether audio is encrypted, which evaluation metrics were actually produced, and which questionnaire is used.
+  Most are fixed by editing the paper. Two (audio storage, WER measurement) are small system or evidence tasks.</p>
+</div>
+
+<div class="score">
+  <div class="g"><b>9</b><span>of 14 scope / limitation claims fully aligned</span></div>
+  <div class="o"><b>3</b><span>partly aligned (wording drifts)</span></div>
+  <div class="r"><b>1</b><span>contradicted by the data</span></div>
+  <div class="b"><b>1</b><span>cannot be checked from code</span></div>
+</div>
+<p class="small">Counts cover the 7 scope items and 7 limitations in Chapter 1 (section 3). Chapter 3 design and method claims are scored separately in section 4.</p>
+
+<h2>2. Objectives, one by one</h2>
+<div class="tw"><table>
+<tr><th style="width:23%">Objective (Chapter 1)</th><th style="width:12%">Verdict</th><th>Evidence in the system</th><th style="width:27%">What to watch</th></tr>
+
+<tr>
+  <td><b>1.</b> Develop an AI/ML-assisted web assessment and intervention system covering phonemic awareness, decoding accuracy, oral reading fluency and comprehension, with personalised intervention recommendations.</td>
+  <td><span class="tag g">Delivered</span></td>
+  <td>Audio capture, transcription (<code>SpeechToTextService</code>), word alignment and miscue labelling (<code>ReadingAnalyzerService</code>, <code>MiscueClassifierService</code>),
+  DepEd cut-offs (<code>PhilIriLevels</code>: 97 / 90 for word reading, 80 / 59 for comprehension), a Flask Random Forest with a rule-based fallback
+  (<code>MLClassificationService</code>), multiple-choice comprehension scoring (<code>ComprehensionService</code>) and activity recommendations
+  (<code>Assessment::getRecommendedInterventions()</code> on the web results page; <code>InterventionRecommenderService</code> on the REST API).</td>
+  <td>"Evaluates four domains" is true as a report, but not as a model. The forest picks one of five labels. Comprehension comes from the questions, not the voice (3 training examples). "Phonemic awareness" is inferred from sound-alike errors in a transcript, which matches the paper's own operational definition but is not a sound-manipulation test.</td>
+</tr>
+
+<tr>
+  <td><b>2.</b> Role-based monitoring and decision support with intelligent dashboards for administrators, teachers, parents and students: real-time monitoring, progress tracking, classroom analytics, home-based intervention strategies.</td>
+  <td><span class="tag g">Delivered</span></td>
+  <td>Four roles with separate access (staff session auth plus PIN-based student portal). Admin dashboard, classrooms overview, activity logs; teacher dashboard with a class watchlist; parent portal with child profile, assessment history, home interventions with status updates and teacher messaging; student dashboard with activities, badges and leaderboard. Progress charts and PDF / print reports.</td>
+  <td>"Real-time" means pages refresh on load and live sessions poll every 3 seconds. There is no push or WebSocket layer, which the README states openly. Reword to "timely" or "up to date" in the paper.</td>
+</tr>
+
+<tr>
+  <td><b>3.</b> Evaluate system quality using McCall's Software Quality Model.</td>
+  <td><span class="tag b">Not in repo</span></td>
+  <td>This is a human evaluation, so the code cannot prove it either way. What the repo does offer as supporting evidence: 371 test methods across about 50 feature-test files (auth, lockout, encryption of identity, Phil-IRI forms, miscue detection, weakness-matches-evidence, speech-engine-required, HTTPS and security headers).</td>
+  <td>Have the completed IT-expert checklists and the weighted means ready. Testing is mostly feature-level, <code>tests/Unit</code> is empty and there are no Python tests, so avoid describing the testing as unit and integration testing of the ML modules.</td>
+</tr>
+
+<tr>
+  <td><b>4.</b> Determine usability using the CSUQ.</td>
+  <td><span class="tag b">Not in repo</span></td>
+  <td>Same situation: a survey outcome, not a code property.</td>
+  <td>The paper names the instrument inconsistently (see section 5). Settle it before the panel does.</td>
+</tr>
+</table></div>
+
+<h2>3. Chapter 1 scope and limitations vs the code</h2>
+
+<h3>3.1 What the system is designed to do</h3>
+<div class="tw"><table>
+<tr><th style="width:4%">#</th><th style="width:22%">Claim in the paper</th><th style="width:11%">Status</th><th>What the repository shows</th></tr>
+
+<tr><td>S1</td><td>Record audio, transcribe with the <b>OpenAI Whisper API</b>, align against reference passages, English and Filipino, Grades 3 to 6.</td>
+<td><span class="tag o">Partial</span></td>
+<td>The primary engine is <b>self-hosted faster-whisper (stock "small" model)</b> running in the Flask service. The OpenAI API is an optional second choice, and a mock transcript is blocked outside local/testing. The service also measures recording quality and returns no transcript for silence. Materials exist for Grades 3 to 6 in both languages. The paper's wording, cost line (Whisper API usage, PHP 15,000 a year) and privacy story all assume the cloud API.</td></tr>
+
+<tr><td>S2</td><td>Accuracy, WPM, fluency, error categories via dynamic programming alignment; Independent / Instructional / Frustration per Phil-IRI.</td>
+<td><span class="tag g">Aligned</span></td>
+<td>Levenshtein-based alignment in <code>ReadingAnalyzerService</code>; substitutions, omissions, insertions and self-corrections tracked as rates; Phil-IRI cut-offs fixed to the DepEd Form 4 workbook rather than editable settings.</td></tr>
+
+<tr><td>S3</td><td>Random Forest classifier, with rule-based fallback, over four reading domains.</td>
+<td><span class="tag o">Partial</span></td>
+<td>Random Forest and fallback both exist and work as described. But the forest is a 12-feature, 5-class weakness model, and the stored weakness is only kept when measured evidence backs it (<code>WeaknessEvidence</code>). Test accuracy is 62.5% on 104 clips, cross-validation 49.9% (+/- 10.5), and the README gives a 41% majority baseline and about 57% when split by learner.</td></tr>
+
+<tr><td>S4</td><td>Recommend targeted interventions; teachers and parents assign, track and monitor.</td>
+<td><span class="tag g">Aligned</span></td>
+<td>On the web results page, <code>Assessment::getRecommendedInterventions()</code> looks up active interventions for the stored primary weakness within the learner's grade range, ordered by effectiveness score (top 5). <code>InterventionLog</code> tracks status; parents update progress; teachers assign from a results modal. This is a rule-based lookup keyed on the (ML-suggested, evidence-gated) weakness, not a model. The richer <code>InterventionRecommenderService</code> (priority, heuristic "estimated impact", randomly chosen reason text) is only called from the REST API, so do not describe it as part of the web flow.</td></tr>
+
+<tr><td>S5</td><td>Role dashboards with progress charts; downloadable class and learner reports.</td>
+<td><span class="tag g">Aligned</span></td>
+<td>Chart.js trends, level distribution and skill breakdown; learner PDF and print; class report; plus DepEd Forms 1A/1B, 2, 3A/3B and 4.</td></tr>
+
+<tr><td>S6</td><td>Four-role multi-user access control.</td>
+<td><span class="tag g">Aligned</span></td>
+<td><code>role</code> middleware, teacher-only vs admin read-only splits, parent limited to linked children, student PIN portal (PINs hashed then stored encrypted), OTP email verification, login throttling and lockout.</td></tr>
+
+<tr><td>S7</td><td>Practice Center: guided reading, phonemic exercises, sight-word drills.</td>
+<td><span class="tag g">Aligned</span></td>
+<td><code>PracticeController</code> (teacher side) and student flash cards, guided reading and assigned activities; practice items seeded in English and Filipino.</td></tr>
+</table></div>
+
+<h3>3.2 Stated limitations</h3>
+<div class="tw"><table>
+<tr><th style="width:4%">#</th><th style="width:22%">Limitation in the paper</th><th style="width:11%">Status</th><th>What the repository shows</th></tr>
+
+<tr><td>L1</td><td>English and Filipino only; no Hiligaynon or Cebuano ASR.</td><td><span class="tag g">Aligned</span></td>
+<td>Consistent. <code>hil</code> still appears as a schema or locale value and is mapped to the Tagalog recogniser, so keep the wording "not supported for assessment".</td></tr>
+
+<tr><td>L2</td><td>Accuracy depends on the OpenAI Whisper API; noise, microphone and accents affect results.</td><td><span class="tag o">Partial</span></td>
+<td>The dependency is on a local Whisper model, not the paid API. The limitation itself is real, and the system now measures it (speech vs background, noise level) and warns the teacher, which the paper does not mention.</td></tr>
+
+<tr><td>L3</td><td>Classifier trained on recordings of <b>Grade 3 to Grade 6</b> learners at Old Sagay Elementary, manually transcribed and scored by the researchers.</td><td><span class="tag r">Contradicted</span></td>
+<td><code>labeled_features_master_confirmed.csv</code> has 527 rows: <b>306 Grade 3 and 221 Grade 4, none from Grades 5 or 6</b>; 419 Filipino and 108 English. Training used 519 usable clips from 36 learners. Class counts: fluency 217, phonemic 145, decoding 86, independent 68, <b>comprehension 3</b>. <code>model_metadata.json</code> itself says "Grade 3-6", which is also wrong. Labels were teacher-confirmed after provisional rule-based labels, not purely researcher scored.</td></tr>
+
+<tr><td>L4</td><td>Deployment and testing limited to Old Sagay Elementary School.</td><td><span class="tag b">Unverified</span></td>
+<td>Cannot be judged from code. The data model supports multiple schools, so this is a project boundary rather than a technical one.</td></tr>
+
+<tr><td>L5</td><td>Reliability depends on supervised, consistent test conditions.</td><td><span class="tag g">Aligned</span></td>
+<td>Consistent, and partly mitigated: teacher verdict (accept, override with reason, invalidate) and recording-quality warnings.</td></tr>
+
+<tr><td>L6</td><td>Web-based, internet required; no offline mode or native apps.</td><td><span class="tag g">Aligned</span></td>
+<td>Consistent. A Sanctum REST API exists, but no mobile client is built.</td></tr>
+
+<tr><td>L7</td><td>Comprehension limited to multiple-choice; no open-ended scoring.</td><td><span class="tag g">Aligned</span></td>
+<td>Consistent with <code>ComprehensionService</code> (options A to D).</td></tr>
+</table></div>
+
+<h2>4. Chapter 3 method and design vs the system</h2>
+<div class="tw"><table>
+<tr><th style="width:24%">Statement in Chapter 3</th><th style="width:11%">Status</th><th>Evidence and what to change</th></tr>
+
+<tr><td>Stack: Laravel, Python, MySQL, Whisper, Scikit-learn.</td><td><span class="tag g">Aligned</span></td>
+<td>Laravel 12, Flask, scikit-learn, faster-whisper; MySQL in production. Add Flask, faster-whisper, Bootstrap, Chart.js, DomPDF and PhpSpreadsheet to the tool list for completeness.</td></tr>
+
+<tr><td>Architecture (Fig. 9): "secure encrypted storage system for audio recordings".</td><td><span class="tag r">Not true yet</span></td>
+<td>Audio is written with <code>storeAs(..., 'public')</code> under <code>assessments/audio</code>, with names like <code>assessment_{id}_{timestamp}</code>. The README lists this as a known limitation. What <i>is</i> encrypted: learner and user names, LRN, email, phone, birth date and the student PIN.</td></tr>
+
+<tr><td>Ethics: encryption "safeguards stored and transmitted data, particularly reading audio files".</td><td><span class="tag r">Not true yet</span></td>
+<td>Transmission is covered (HTTPS enforcement and security-header tests exist). Stored audio is not encrypted and sits on the public disk. Either move audio to a private disk behind an authorised route, or reword to "encrypted identity fields; audio protected by role-based access".</td></tr>
+
+<tr><td>Ethics: consent considered, digital consent planned.</td><td><span class="tag g">Aligned</span></td>
+<td>Matches the privacy notice and README, which say plainly that no consent workflow or retention rule exists yet.</td></tr>
+
+<tr><td>Data analysis: Word Error Rate for Whisper (Chapter 3 says it was computed on manually transcribed recordings).</td><td><span class="tag r">Not produced</span></td>
+<td>README: "no WER" has been measured, and the fine-tuning script (<code>train_whisper_lora.py</code>, which would report baseline and tuned WER) has not been run. The 519 annotated clips are exactly what a baseline WER needs.</td></tr>
+
+<tr><td>Model evaluation: Accuracy, Precision, Recall, F1.</td><td><span class="tag o">Partial</span></td>
+<td>The training script prints a full classification report, but only test accuracy and CV are saved to <code>model_metadata.json</code>. Save the per-class report so the paper can quote it.</td></tr>
+
+<tr><td>Model selection compared Random Forest, SVM and Naive Bayes in Google Colab; confusion matrices and ROC curves.</td><td><span class="tag b">Not in repo</span></td>
+<td>No SVM, Naive Bayes, ROC or saved confusion matrix appears in <code>ml/</code> or <code>ml-service/</code>. If the Colab notebook exists, add it to the repo or the appendix; otherwise soften the sentence.</td></tr>
+
+<tr><td>80/20 train/test split "to prevent overfitting".</td><td><span class="tag o">Partial</span></td>
+<td>The split is a stratified random 80/20 on clips, so the same learner can sit in train and test. The README's learner-grouped figure (about 57%) is the honest number to pair with it. A split does not by itself prevent overfitting.</td></tr>
+
+<tr><td>Levels: "Non-Reader, Frustration, Instructional, Independent"; risk "Low / Medium / High".</td><td><span class="tag r">Not in system</span></td>
+<td>The system has three Phil-IRI levels plus five weakness labels, and a watchlist signal set (frustration level, declining trend, stalled intervention, never assessed). There is no non-reader level and no Low/Medium/High risk field. Use one vocabulary throughout.</td></tr>
+
+<tr><td>Level 1 DFD: authentication, material management, AI assessment, performance analysis, intervention recommendations.</td><td><span class="tag g">Aligned</span></td>
+<td>Each process maps to a controller and service group.</td></tr>
+
+<tr><td>ERD (Fig. 10) entities.</td><td><span class="tag o">Out of date</span></td>
+<td>Missing from the paper: assessment verdicts, comprehension questions and answers, assessment sessions, GST results, DepEd submissions, class reports, badges, messages, notifications, progress snapshots, email verification codes.</td></tr>
+
+<tr><td>Use case (Fig. 5): four actors and their functions.</td><td><span class="tag g">Aligned</span></td>
+<td>All listed functions exist. Several more exist that the figure omits (section 6).</td></tr>
+
+<tr><td>Dashboards "immediately update" (Real-Time Data Visualization definition).</td><td><span class="tag o">Overstated</span></td>
+<td>Updates on page load; live sessions use 3-second polling.</td></tr>
+
+<tr><td>Deployment and maintenance phases.</td><td><span class="tag g">Aligned</span></td>
+<td>VPS deployment guide in <code>docs/deployment-vps.md</code>; admin system-status card for the classifier and Whisper health.</td></tr>
+
+<tr><td>McCall's and CSUQ evaluation with 15 respondents.</td><td><span class="tag b">Not in repo</span></td>
+<td>Outcome data belongs in Chapter 4. Confirm the instruments and respondent counts match across Table 2 and Table 6.</td></tr>
+</table></div>
+
+<h2>5. Inconsistencies inside the paper</h2>
+<p>These do not depend on the code at all. They are the quickest wins, and the easiest for a reader to spot.</p>
+<div class="tw"><table>
+<tr><th style="width:26%">Where</th><th>Problem</th></tr>
+<tr><td>Instruments</td><td>Data Analysis Techniques list the <b>System Usability Scale (SUS)</b>; everywhere else the instrument is the <b>CSUQ</b>. Parents are given "Adapted Usability Questionnaire (CSUQ)" in Table 2 and "CSUQ with parent-facing language adaptations" in Table 6. Students are given a "Simplified Age-Appropriate Usability Questionnaire" in Table 2 and an "Adaptive 5-Point Pictorial Usability Checklist" in Table 6. Table 2 and Table 6 are near-duplicates and should be one table.</td></tr>
+<tr><td>Table numbering</td><td>Text under the cost table says "Table 2 presents" (it is Table 3); the benefits text says "Table 3" (it is Table 4); the CBA text says "Table 4" (it is Table 5). The list of tables and list of figures do not match the body (Fig. 10.0 to 10.10 listed, 10.1 to 10.11 in the text; "Fig. 107").</td></tr>
+<tr><td>Citations missing from References</td><td>21 in-text citations have no entry in the reference list: Al-Husban &amp; Alabri 2025; Al-Zahrani &amp; Alasmari 2024; Alshayeb &amp; Mahmoud 2021; Breiman 2001; Cunningham &amp; Robertson 2025; Fielding &amp; Taylor 2024; Gough &amp; Tunmer 1986; Jordan &amp; Mitchell 2024; Jurafsky &amp; Martin 2024; Levenshtein 1966; Nielsen 2025; Petscher &amp; Gaab 2024; Pressman &amp; Maxim 2022; Schneier 2024; Siemens 2025; Silor 2025; Smith 2024; Snow 2002; Tufte 2024; United Nations 2021; Wendt et al. 2025. Lewis is cited as 2022 but listed as 1995.</td></tr>
+<tr><td>References never cited</td><td>Cutting &amp; Scarborough 2006; National Reading Panel 2000; Republic Act 12028; Sabatini et al. 2019.</td></tr>
+<tr><td>AI-assisted drafting</td><td>The disclaimer says AI tools drafted parts of the background and literature support. Several of the missing citations (for example Tufte 2024, Siemens 2025, Schneier 2024) carry years that do not match the well-known works under those names. Check that every one of them exists and says what the definition claims before the defense.</td></tr>
+<tr><td>Gap analysis (Table 1)</td><td>BIGKAS-AI is marked as fully supporting "Pronunciation Analysis". The system infers sound-alike errors from transcript text; it does not analyse pronunciation acoustically. "Limited" is the defensible mark, or define the column as "transcript-based error analysis". The "Machine Learning Analysis" tick is fair but should carry the 62.5% context.</td></tr>
+<tr><td>Overclaiming language</td><td>Chapter 1 promises "timely, accurate, and actionable insights", and the cost-benefit lists "prevent dropouts" (PHP 125,000) as a tangible annual benefit. The first is not supportable at 62.5% classifier accuracy; the second is a speculative figure. The landing page was already toned down (commit <code>2b45292</code>); the chapters should follow.</td></tr>
+<tr><td>Cost-benefit arithmetic</td><td>Checked and consistent: Year 0 PHP 316,500, annual operating PHP 78,188, NPV PHP 596,851.09, ROI 95.56%, payback 1.56 years. Only the narrative needs care: the text says "reduced staffing needs" for a row labelled "saved teacher man-hours", and says no developers are hired while a labour line of PHP 225,000 is costed.</td></tr>
+<tr><td>Terminology</td><td>"Intelligent Dual-Access Dashboard" is defined as teacher plus parent only, but the system has four role views. "Non-Reader" and "Low / Medium / High risk" appear in definitions and the model section but nowhere in the product.</td></tr>
+<tr><td>Typos</td><td>"Fluecny" (Table 1), "Distribustion" (list of tables), "Ngo &amp; Che", "Adnin Dashboard", "weFiaknesses" (Fig. 10.4 text), "Fig. 107".</td></tr>
+</table></div>
+
+<h2>6. Built but not in Chapters 1 to 3</h2>
+<p>The system is ahead of the paper here. Adding these to Scope, the use case and the ERD makes the document match the product, and several are strong defense points.</p>
+<div class="tw"><table>
+<tr><th style="width:30%">Feature</th><th>Why it matters</th></tr>
+<tr><td>Teacher verdict on every AI result (accept, override with reason, invalidate); AI's original value stored beside it</td><td>The human-in-the-loop answer to "what if the model is wrong?". It is also the strongest argument for describing the system as decision support.</td></tr>
+<tr><td>Evidence gate on the weakness label (<code>WeaknessEvidence</code>)</td><td>Explains how a 62.5% classifier is still safe to show: a label is stored only when measured evidence supports it.</td></tr>
+<tr><td>Recording-quality check and verbatim transcription prompt</td><td>Addresses the "Whisper tidies up miscues" problem directly; no-speech audio is rejected instead of invented.</td></tr>
+<tr><td>Phil-IRI paperwork: Group Screening Test (Forms 1A/1B), consolidated Form 2 with a submission record, Form 3A/3B, Form 4, SF1 roster import</td><td>Turns the tool from an assessment aid into something a school can file. This is the practical value most paper-based Phil-IRI users will care about.</td></tr>
+<tr><td>Teacher to principal class-report submission and review</td><td>A real workflow for the administrator role beyond "viewing analytics".</td></tr>
+<tr><td>Class watchlist and intervention modal</td><td>Four ranked signals (frustration level, declining accuracy, stalled intervention, never assessed) with the reason attached. Fits the "early identification" outcome in the conceptual framework.</td></tr>
+<tr><td>Security hardening: OTP email verification, lockout, throttling, encrypted identity fields, session and header tests</td><td>Backs the data-protection section of the ethics chapter with specifics, as long as the audio claim is corrected.</td></tr>
+<tr><td>Privacy notice page and admin system-status card</td><td>Shows data handling and model health openly.</td></tr>
+</table></div>
+
+<h2>7. What to do, in order</h2>
+
+<div class="cols">
+<div class="box">
+  <b class="t">Edit the paper (no code)</b>
+  <ol>
+    <li>Name the speech engine correctly: self-hosted faster-whisper "small", with the OpenAI API as an optional fallback. Update Scope, definitions, cost line and ethics text to match.</li>
+    <li>Rewrite the ML data limitation: 519 clips, 36 learners, Grades 3 and 4 only, 419 Filipino vs 108 English, comprehension class has 3 samples.</li>
+    <li>Report the model results as they are: 62.5% test (n = 104), 49.9% CV, 41% majority baseline, about 57% by learner. Frame as a suggestion the teacher confirms.</li>
+    <li>Pick one usability story: CSUQ for administrator and teachers, adapted CSUQ for parents, pictorial checklist for students. Remove SUS and merge Tables 2 and 6.</li>
+    <li>Use one level vocabulary; drop "Non-Reader" and "Low/Medium/High" or add them to the system.</li>
+    <li>Add section 6 features to Scope, the use case and the ERD.</li>
+    <li>Repair the reference list and table/figure numbering (section 5).</li>
+    <li>Change "Pronunciation Analysis" in Table 1 to "Limited", and replace "real-time" with "timely".</li>
+  </ol>
+</div>
+<div class="box warn">
+  <b class="t">Small system or evidence tasks</b>
+  <ol>
+    <li><b>Move audio to a private disk</b> behind an authorised route (the README already recommends this). It makes the architecture and ethics statements true and is the most likely security question.</li>
+    <li><b>Measure baseline WER</b> of the current Whisper model on the annotated clips, per language. The script and the transcripts exist; it turns a stated method into a result.</li>
+    <li><b>Save the per-class report and confusion matrix</b> to the metadata file, and add a learner-grouped split so the quoted figure is not inflated.</li>
+    <li>If an SVM / Naive Bayes comparison was done in Colab, commit it. If not, say Random Forest was chosen for its fit with small tabular data, not that it won a comparison.</li>
+    <li><b>Point the skill-breakdown bars at the evidence rules</b> (quiz score for comprehension, the Part B checks for the rest). They currently read an older estimate and can disagree with the results page (Part B, B5).</li>
+    <li>Keep consent and retention in "future work", worded as it is on the privacy page.</li>
+  </ol>
+</div>
+</div>
+
+<div class="box">
+  <b class="t">Suggested defense line</b>
+  <p>"BIGKAS-AI is an assessment and decision-support tool. It automates the measurement (accuracy, pace, miscues, Phil-IRI level), uses a small classifier to suggest a reading weakness, and keeps the teacher as the decision-maker. The suggestion is only stored when the measured evidence supports it, and the teacher can accept, override or invalidate it. The classifier is a first model trained on Grade 3 and 4 recordings; its accuracy is modest and reported openly, and extending it to Grades 5 and 6 is the next data task."</p>
+</div>
+
+<!-- ============================================================ PART A -->
+<h2 id="part-a">Part A. How the system knows what kind of reading mistake it is</h2>
+<p class="small">Written for panelists who are not programmers. Every rule below is quoted from the source file and line shown, and the worked example at the end is the real output of the system's own code (run on 2026-10-12), not a mock-up.</p>
+
+<h3>A1. The idea in one minute</h3>
+<div class="box">
+  <b class="t">The system does not "hear" pronunciation the way a teacher's ear does. It compares written words.</b>
+  <p>A speech-to-text engine writes down what the child said. The system lines that text up against the passage and applies a short list of rules to every place the two differ. Each rule is something a teacher would also check: was the word skipped, replaced by something that sounds alike, replaced by something unrelated, said twice, or added?</p>
+</div>
+<div class="flow">
+  <div><b>1. Child reads</b>Teacher or student records the passage.</div>
+  <div><b>2. Speech to text</b>Whisper writes each word with its start time, end time and confidence.</div>
+  <div><b>3. Line up</b>Spoken words are placed opposite the passage words.</div>
+  <div><b>4. Name each difference</b>Rules label it: omission, mispronunciation, repetition...</div>
+  <div><b>5. Count and score</b>Accuracy, words per minute, reading level.</div>
+</div>
+
+<h3>A2. Step 3: lining up the child's words with the passage</h3>
+<p><b>In plain words.</b> Picture two strips of paper, one with the passage and one with what the child said. Slide them so that as many words as possible sit opposite their partner, using as few changes as possible. Whatever cannot be matched falls into one of three piles: a passage word with nothing opposite it (skipped), a spoken word with nothing opposite it (extra), or two different words facing each other (replaced).</p>
+<p>This is the "Levenshtein / edit distance" method named in Chapter 3. The program tries every line-up and keeps the cheapest one.</p>
+<div class="formula"><b>Formula</b>
+cost of a matched word pair = &minus;1 (a reward)<br>
+cost of any edit (skip, extra word, replacement) = m + n + 1&nbsp;&nbsp;where m = passage words, n = spoken words<br>
+choose the line-up with the lowest total cost; on a tie, keep the earliest matches so unread words fall at the end</div>
+<pre><code>$edit = $m + $n + 1;                                          // cost of any edit
+$step = $reference[$i - 1] === $spoken[$j - 1] ? -1 : $edit;  // a match earns 1 back
+$dp[$i][$j] = min(
+    $dp[$i - 1][$j] + $edit,        // passage word skipped   (omission)
+    $dp[$i][$j - 1] + $edit,        // extra spoken word      (insertion)
+    $dp[$i - 1][$j - 1] + $step     // matched or replaced word
+);</code></pre>
+<p class="src">Source: <code>app/Services/ReadingAnalyzerService.php</code> lines 527&ndash;548 (<code>alignTexts</code>). Before this step, both texts are lower-cased and stripped of punctuation (<code>tokenizeText</code>, lines 326&ndash;332), so capital letters and commas never count as mistakes.</p>
+<p><b>Why the edit cost is large.</b> The code comment (lines 517&ndash;526) explains that a match is only allowed to break a tie, never to justify an extra edit. So the line-up always has the fewest edits first, and only then the most matches.</p>
+
+<h3>A3. Step 4: naming each difference</h3>
+<p>The line-up only knows three things: matched, replaced, or no partner. <code>MiscueClassifierService</code> turns those into the labels a reading teacher uses. The rules are applied in this order (lines 63&ndash;67), so a word can only receive one label:</p>
+<pre><code>$this-&gt;markNotReached($details);                    // 1. did the child stop early?
+$this-&gt;markOffPassageAndPhraseRepetitions($details); // 2. long runs of extra words
+$this-&gt;markSingleInsertions($details);              // 3. single extra words
+$this-&gt;markReplacements($details);                  // 4. replaced words
+$this-&gt;markPauses($details);                        // 5. silences between words</code></pre>
+<p class="src">Source: <code>app/Services/MiscueClassifierService.php</code> lines 59&ndash;74.</p>
+
+<div class="tw"><table>
+<tr><th style="width:13%">Label</th><th style="width:20%">In plain words</th><th>The rule the code applies</th><th style="width:9%">Counts as a mistake?</th><th style="width:13%">Source (MiscueClassifierService.php)</th></tr>
+<tr><td><b>Correct</b></td><td>Said exactly as written.</td><td>Spoken word equals the passage word.</td><td class="no">No</td><td>line 89</td></tr>
+<tr><td><b>Omission</b></td><td>Skipped a word in the middle of the passage.</td><td>A passage word has no spoken partner in the line-up.</td><td class="yes">Yes</td><td>line 88</td></tr>
+<tr><td><b>Not reached</b></td><td>Stopped before the end of the passage.</td><td>The last <b>3 or more</b> passage words have no spoken partner (<code>NOT_REACHED_MIN_WORDS = 3</code>). Fewer than 3 are treated as ordinary omissions.</td><td class="yes">Yes</td><td>lines 52, 126&ndash;138</td></tr>
+<tr><td><b>Mispronunciation</b></td><td>Said a different word that looks or sounds like the right one, e.g. "litel" for "little".</td><td>A replaced word that passes the <i>sounds-like</i> test: letter similarity of <b>0.5 or more</b>, <i>or</i> the same Soundex / Metaphone sound code as the target.</td><td class="yes">Yes</td><td>lines 35, 268&ndash;281, 355&ndash;371</td></tr>
+<tr><td><b>Substitution</b></td><td>Said an unrelated word, e.g. "house" for "barn".</td><td>A replaced word that fails the sounds-like test.</td><td class="yes">Yes</td><td>lines 86&ndash;91</td></tr>
+<tr><td><b>Insertion</b></td><td>Added a word that is not in the passage.</td><td>A spoken word with no passage partner that is <i>not</i> a repeat, a false start or a corrected mistake.</td><td class="yes">Yes</td><td>lines 87, 203&ndash;227</td></tr>
+<tr><td><b>Repetition</b></td><td>Said a word or phrase again, or started a word and restarted it ("ma- mabilis").</td><td>Any one of: (a) the extra word equals a word within <b>2 positions</b> either side; (b) the extra word is a shorter beginning of the next word; (c) a run of <b>4 or more</b> extra words (3 at the start or end) where <b>60% or more</b> were just read nearby.</td><td class="yes">Yes</td><td>lines 49, 144&ndash;200, 229&ndash;251</td></tr>
+<tr><td><b>Self-correction</b></td><td>Got a word wrong, then fixed it ("tu... to").</td><td>An extra word that sounds like, but is not, the next passage word, which is then read correctly. Recorded with the word it was corrected to.</td><td class="no">No</td><td>lines 217&ndash;225</td></tr>
+<tr><td><b>Off-passage talk</b></td><td>Talking to the teacher, reading a title, another voice. Not reading.</td><td>A run of <b>3 or more</b> extra words at the start or end (<b>4 or more</b> in the middle) that is not a re-read phrase.</td><td class="no">No</td><td>lines 44&ndash;46, 171</td></tr>
+<tr><td><b>Hesitation</b></td><td>A short silence before a word.</td><td>Gap from the end of the previous word to the start of this one is <b>1.0 second or more</b>.</td><td class="no">No (feeds fluency)</td><td>lines 38, 296&ndash;298</td></tr>
+<tr><td><b>Long pause</b></td><td>A long silence before a word.</td><td>The same gap is <b>3.0 seconds or more</b>.</td><td class="no">No (feeds fluency)</td><td>lines 39, 296&ndash;298</td></tr>
+<tr><td><b>Unclear</b></td><td>The speech engine was guessing at this word.</td><td>Engine confidence for the word is below <b>0.5</b>. A flag only; it does not change the label.</td><td class="no">No</td><td>lines 42, 109&ndash;111</td></tr>
+</table></div>
+
+<div class="formula"><b>Formula: "sounds like" (how a replaced word becomes a mispronunciation)</b>
+similarity(a, b) = 1 &minus; Levenshtein(a, b) &divide; length of the longer word<br>
+sounds like = similarity &ge; 0.5, OR Soundex(a) = Soundex(b), OR Metaphone(a) = Metaphone(b) (the last two only for plain a&ndash;z words)</div>
+<pre><code>private function soundsLike(string $a, string $b): bool
+{
+    if ($this-&gt;similarity($a, $b) &gt;= 0.5) { return true; }
+    if (preg_match('/^[a-z]+$/', $a) &amp;&amp; preg_match('/^[a-z]+$/', $b)) {
+        return soundex($a) === soundex($b) || metaphone($a) === metaphone($b);
+    }
+    return false;
+}</code></pre>
+<p class="src">Source: <code>MiscueClassifierService.php</code> lines 355&ndash;378. Real values from the system: "litel" vs "little" = 1 &minus; 2/6 = <b>0.67</b>, so mispronunciation. "bag" vs "big" = <b>0.67</b>, so mispronunciation. "house" vs "barn" = 1 &minus; 5/5 = <b>0.00</b>, different Soundex (H200 vs B650), so substitution.</p>
+
+<h3>A4. From labels to the numbers on the results page</h3>
+<div class="formula"><b>Formulas</b>
+mistakes counted = mispronunciation + substitution + omission + not reached + insertion + repetition<br>
+NOT counted = self-correction, off-passage talk, pauses, unclear<br>
+accuracy % = correct words &divide; words in the passage &times; 100<br>
+words per minute = correct words &divide; seconds spent reading &times; 60<br>
+reading level = Independent if accuracy &ge; 97, Instructional if &ge; 90, otherwise Frustration</div>
+<pre><code>'error_count' =&gt; $miscues['counts']['mispronunciation']
+    + $miscues['counts']['substitution']
+    + $miscues['counts']['omission']
+    + $miscues['counts']['not_reached']
+    + $miscues['counts']['insertion']
+    + $miscues['counts']['repetition'],</code></pre>
+<p class="src">Sources: <code>ReadingAnalyzerService.php</code> lines 61&ndash;68 (accuracy and words per minute), 131&ndash;136 (mistakes counted); <code>PhilIriLevels.php</code> lines 18&ndash;19 and 28&ndash;38 (97 / 90 DepEd cut-offs). Note that words per minute uses <i>correct</i> words only, so guessing fast does not raise it.</p>
+
+<h3>A5. Worked example, run through the real code</h3>
+<p><b>Passage (16 words):</b> "The little dog ran to the big red barn and then he jumped over the fence."<br>
+<b>What the child said (as written by the speech engine):</b> "is this okay the litel dog ran ran tu to the red house and very then he" &mdash; then stopped. Recording length 13.9 seconds, with a 3.5 s silence before "red" and a 1.4 s silence before "and".</p>
+<div class="tw"><table>
+<tr><th>Passage word</th><th>Child said</th><th>Label</th><th>Why the rule fired</th></tr>
+<tr><td>&mdash;</td><td>is, this, okay</td><td><b>Off-passage talk</b> &times;3</td><td>3 extra words before reading started; not a re-read. Not a mistake.</td></tr>
+<tr><td>the</td><td>the</td><td>Correct</td><td>Identical.</td></tr>
+<tr><td>little</td><td>litel</td><td><b>Mispronunciation</b></td><td>Replaced; similarity 0.67 (&ge; 0.5) and same Soundex L340.</td></tr>
+<tr><td>dog</td><td>dog</td><td>Correct</td><td></td></tr>
+<tr><td>&mdash;</td><td>ran</td><td><b>Repetition</b></td><td>Extra "ran" next to the real "ran" (within 2 positions).</td></tr>
+<tr><td>ran</td><td>ran</td><td>Correct</td><td></td></tr>
+<tr><td>&mdash;</td><td>tu</td><td><b>Self-correction</b></td><td>Extra word sounds like "to" (similarity 0.50) and "to" follows, read correctly. Not a mistake.</td></tr>
+<tr><td>to, the</td><td>to, the</td><td>Correct</td><td></td></tr>
+<tr><td>big</td><td>&mdash;</td><td><b>Omission</b></td><td>Passage word with no partner, mid-passage.</td></tr>
+<tr><td>red</td><td>red</td><td>Correct + <b>Long pause</b> (3.5 s)</td><td>Gap of 3.5 s &ge; 3.0 s.</td></tr>
+<tr><td>barn</td><td>house</td><td><b>Substitution</b></td><td>Replaced; similarity 0.00, different Soundex.</td></tr>
+<tr><td>and</td><td>and</td><td>Correct + <b>Hesitation</b> (1.4 s)</td><td>Gap of 1.4 s is &ge; 1.0 s but &lt; 3.0 s.</td></tr>
+<tr><td>&mdash;</td><td>very</td><td><b>Insertion</b></td><td>Extra word; repeats no neighbour; not a false start; does not sound like "then".</td></tr>
+<tr><td>then, he</td><td>then, he</td><td>Correct</td><td></td></tr>
+<tr><td>jumped, over, the, fence</td><td>&mdash;</td><td><b>Not reached</b> &times;4</td><td>Last 4 passage words never attempted (&ge; 3).</td></tr>
+</table></div>
+<div class="box go">
+  <b class="t">Resulting numbers (exactly as the program returned them)</b>
+  <ul>
+    <li>Correct words 9 of 16, so accuracy = 9 &divide; 16 &times; 100 = <b>56.3%</b>, reading level <b>Frustration</b> (below 90).</li>
+    <li>Words per minute = 9 &divide; 13.9 &times; 60 = <b>38.8</b>.</li>
+    <li>Mistakes counted = 1 mispronunciation + 1 substitution + 1 omission + 4 not reached + 1 insertion + 1 repetition = <b>9</b>. The 3 off-passage words, 1 self-correction, 1 hesitation and 1 long pause are shown to the teacher but not counted as mistakes.</li>
+  </ul>
+</div>
+<p class="small">The timings in this example were supplied by hand to exercise every rule; the labels and numbers are what <code>ReadingAnalyzerService::analyze()</code> produced.</p>
+
+<h3>A6. What a panelist should know about the limits</h3>
+<div class="box warn">
+  <ul>
+    <li><b>It reads text, not sound.</b> If the speech engine quietly writes the correct word for a mispronounced one, the mistake is invisible. The file header says so (lines 27&ndash;30). The Flask service reduces this by prompting Whisper to keep stumbles and not to reuse its own earlier output (<code>ml-service/app.py</code>, <code>VERBATIM_PROMPTS</code> and <code>condition_on_previous_text = False</code>).</li>
+    <li><b>"Mispronunciation" means "a wrong word that looks or sounds like the right one."</b> The system cannot tell a slip of the tongue from a wrong guess.</li>
+    <li><b>The numbers 0.5, 1 s, 3 s, 2 words and 60% are design choices</b>, not DepEd rules. Only the Phil-IRI cut-offs (97 / 90 for word reading, 80 / 59 for comprehension) come from DepEd.</li>
+    <li><b>Not yet compared with a teacher's own marking</b> of the same recordings (README: "no end-to-end validation"). A simple check before the defense: have a teacher mark 15 to 20 recordings by hand and compare the counts per category.</li>
+  </ul>
+</div>
+
+<!-- ============================================================ PART B -->
+<h2 id="part-b">Part B. How the system decides: phonemic, decoding, fluency or comprehension</h2>
+
+<h3>B1. The idea in one minute</h3>
+<div class="box">
+  <b class="t">Two things happen, and they must agree.</b>
+  <p><b>First,</b> four simple checks look at the evidence for each skill and give it a colour: green (OK), amber (watch) or red (concern). These are rules a teacher can follow with a pencil.<br>
+  <b>Second,</b> a machine-learning model (Random Forest) suggests one main weakness. The system only keeps the suggestion if the matching check is amber or red. This is called the <b>evidence gate</b>.</p>
+  <p>The teacher always sees all four colours, and can accept, override or invalidate the stored weakness.</p>
+</div>
+<div class="flow">
+  <div><b>Counts from Part A</b>Mistakes, pauses, accuracy, pace, quiz score.</div>
+  <div><b>Four skill checks</b>Each gives green, amber or red.</div>
+  <div><b>Random Forest</b>Suggests one weakness with probabilities.</div>
+  <div><b>Evidence gate</b>Keeps it only if the matching skill is amber or red.</div>
+  <div><b>Teacher decides</b>Accept, override or invalidate.</div>
+</div>
+
+<h3>B2. The four skill checks</h3>
+<div class="tw"><table>
+<tr><th style="width:13%">Skill</th><th style="width:18%">The plain question</th><th>What the system measures and the rule</th><th style="width:14%">Source</th></tr>
+<tr><td><b>Phonemic awareness</b><br><span class="small">matching letters to sounds</span></td>
+<td>"Is the child mixing up letter sounds?"</td>
+<td>Of all the slips made, how many were wrong words that <i>sound like</i> the right word (mispronunciations)?<br>
+<code>sound-alike = mispronunciations</code><br>
+<code>slips = mispronunciation + substitution + omission + insertion + repetition</code><br>
+<code>share = sound-alike &divide; slips</code><br>
+<span class="tag r">Concern</span> if sound-alike &ge; 3 <i>and</i> share &ge; 40%. <span class="tag o">Watch</span> if sound-alike &ge; 1 <i>and</i> share &ge; 40%. Otherwise <span class="tag g">OK</span>.<br>
+<span class="small">One slip out of twenty is never called a phonics pattern, however it was labelled.</span></td>
+<td><code>WeaknessEvidence.php</code> 65&ndash;72, 143&ndash;144, 157</td></tr>
+
+<tr><td><b>Decoding accuracy</b><br><span class="small">reading words correctly</span></td>
+<td>"Of the words the child actually tried, how many were right?"</td>
+<td><code>attempted = words in passage &minus; words not reached</code><br>
+<code>accuracy = correct &divide; attempted &times; 100</code><br>
+<span class="tag r">Concern</span> below 90%. <span class="tag o">Watch</span> 90% to under 97%. <span class="tag g">OK</span> 97% or more.<br>
+<span class="small">Words never reached are left out, so stopping early is not mistaken for being unable to read words.</span></td>
+<td><code>WeaknessEvidence.php</code> 77&ndash;84, 146&ndash;154; cut-offs in <code>PhilIriLevels.php</code> 18&ndash;19, 28&ndash;38</td></tr>
+
+<tr><td><b>Oral reading fluency</b><br><span class="small">pace and smoothness</span></td>
+<td>"Is the child reading at the speed and smoothness expected for the grade?"</td>
+<td>Words per minute against the grade benchmark (below), plus pauses and repeats. The worst result wins.<br>
+<span class="tag r">Concern</span> if WPM &lt; grade minimum, or 3 or more long pauses.<br>
+<span class="tag o">Watch</span> if WPM &lt; grade target, or 1 or more long pause, or 3 or more hesitations, or 3 or more repeats.<br>
+Otherwise <span class="tag g">OK</span>.</td>
+<td><code>WeaknessEvidence.php</code> 87&ndash;112; benchmarks <code>config/bigkas.php</code> 97&ndash;103</td></tr>
+
+<tr><td><b>Reading comprehension</b><br><span class="small">understanding the passage</span></td>
+<td>"Did the child understand what was read?"</td>
+<td>Only the multiple-choice questions after reading. Voice never decides this.<br>
+<code>score = correct answers &divide; questions &times; 100</code><br>
+<span class="tag g">OK</span> 80% or more. <span class="tag o">Watch</span> 59% to 79%. <span class="tag r">Concern</span> 58% or below. <span class="tag b">Unknown</span> if no questions were asked.</td>
+<td><code>ComprehensionService.php</code> 23&ndash;71; <code>PhilIriLevels.php</code> 22&ndash;23, 41&ndash;52; <code>WeaknessEvidence.php</code> 115&ndash;124</td></tr>
+</table></div>
+
+<div class="tw"><table style="max-width:520px">
+<tr><th>Grade</th><th class="n">Minimum WPM</th><th class="n">Target WPM</th></tr>
+<tr><td>Grade 3</td><td class="n">70</td><td class="n">110</td></tr>
+<tr><td>Grade 4</td><td class="n">90</td><td class="n">120</td></tr>
+<tr><td>Grade 5</td><td class="n">100</td><td class="n">130</td></tr>
+<tr><td>Grade 6</td><td class="n">110</td><td class="n">140</td></tr>
+</table></div>
+<p class="src">Source: <code>config/bigkas.php</code> lines 97&ndash;103 (<code>wpm_benchmarks</code>). These are configurable school settings, not a DepEd table.</p>
+
+<pre><code>public static function phonemicStatus(int $soundAlike, int $slips): string
+{
+    $share = $slips &gt; 0 ? $soundAlike / $slips : 0;
+    return match (true) {
+        $soundAlike &gt;= 3 &amp;&amp; $share &gt;= 0.4 =&gt; 'concern',
+        $soundAlike &gt;= 1 &amp;&amp; $share &gt;= 0.4 =&gt; 'watch',
+        default                            =&gt; 'ok',
+    };
+}</code></pre>
+<p class="src">Source: <code>app/Services/WeaknessEvidence.php</code> lines 65&ndash;72.</p>
+
+<h3>B3. Where machine learning comes in, and why the gate exists</h3>
+<p><b>What the model sees.</b> Twelve numbers computed from the reading: accuracy, words per minute, a 0&ndash;10 fluency score, and rates for substitutions, omissions, insertions, three sound-pattern shares, self-corrections, pauses and a 0&ndash;10 expression estimate (<code>ReadingAnalyzerService.php</code> lines 103&ndash;116).</p>
+<p><b>What it does.</b> A Random Forest is a committee of 100 small decision trees. Each tree votes for one of five labels (0 none, 1 phonemic, 2 decoding, 3 fluency, 4 comprehension); the share of votes becomes the probability shown. It was trained on 519 teacher-confirmed clips (see section 3.2, L3).</p>
+<p><b>Why a gate.</b> The three sound-pattern numbers are <i>shares of the reader's mistakes</i>, not counts per word. A single vowel-like slip makes the share 100%, so the model (and the older hand-written rules) kept answering "phonemic awareness" for readers whose real trouble was decoding or pace. The source comment says exactly this (<code>WeaknessEvidence.php</code> lines 8&ndash;24).</p>
+<div class="formula"><b>The evidence gate, step by step</b>
+1. Take the model's highest-probability label.<br>
+2. Keep it if it is "no weakness" (0), or if that skill's check is amber or red.<br>
+3. Otherwise go down the model's ranking and keep the first label that is "no weakness" or has an amber/red check.<br>
+4. If none qualifies, store the clearest measured problem (red before amber, lower skill number on ties). If nothing shows a problem, store no weakness.</div>
+<pre><code>if ($id === null || $id === 0 || WeaknessEvidence::showsProblem($statuses[$id] ?? null)) {
+    return $id;                                   // step 2
+}
+$scores = $classification['all_scores'] ?? [];    // step 3
+if (count($scores) === 5) {
+    arsort($scores);
+    foreach (array_keys($scores) as $candidate) {
+        if ((int) $candidate === 0 || WeaknessEvidence::showsProblem($statuses[(int) $candidate] ?? null)) {
+            return (int) $candidate;
+        }
+    }
+}
+return WeaknessEvidence::clearestProblem($statuses);   // step 4</code></pre>
+<p class="src">Source: <code>app/Services/MLClassificationService.php</code> lines 69&ndash;96, called from <code>AssessmentController.php</code> lines 305&ndash;318.</p>
+<p><b>If the model service is down.</b> A plain rule list takes over and the result is labelled "rule-based" (<code>MLClassificationService.php</code> lines 129&ndash;170): independent if accuracy &ge; 95, pace &ge; 60 WPM and fluency &ge; 8; decoding if substitution rate &gt; 10% and accuracy &lt; 90; fluency if accuracy &ge; 90 and (pace &lt; 80 WPM, fluency &lt; 6, or frequent pauses); phonemic if sound-pattern shares sum above 0.8 and accuracy &lt; 85; comprehension guess if omission rate &gt; 10% and accuracy &ge; 85. The gate still applies afterwards.</p>
+
+<h3>B4. Worked example, continued</h3>
+<p>Same reading as Part A (Grade 3 learner). Real output of <code>WeaknessEvidence::statuses()</code> and the shipped Random Forest:</p>
+<div class="tw"><table>
+<tr><th style="width:17%">Skill</th><th>Evidence from the reading</th><th style="width:14%">Check result</th></tr>
+<tr><td>Phonemic awareness</td><td>1 sound-alike slip out of 5 slips = 20% (needs at least 3 and at least 40%).</td><td><span class="tag g">OK</span></td></tr>
+<tr><td>Decoding accuracy</td><td>9 correct of 12 attempted (4 words never reached) = 75%, below 90%.</td><td><span class="tag r">Concern</span></td></tr>
+<tr><td>Oral reading fluency</td><td>38.8 WPM, below the Grade 3 minimum of 70; also 1 long pause.</td><td><span class="tag r">Concern</span></td></tr>
+<tr><td>Reading comprehension</td><td>No questions were asked in this example.</td><td><span class="tag b">Unknown</span></td></tr>
+</table></div>
+<div class="tw"><table style="max-width:640px">
+<tr><th>Random Forest output (probability)</th><th class="n">Comprehension</th><th class="n">Fluency</th><th class="n">Phonemic</th><th class="n">Decoding</th><th class="n">None</th></tr>
+<tr><td>For this reading</td><td class="n">0.45</td><td class="n">0.20</td><td class="n">0.18</td><td class="n">0.14</td><td class="n">0.04</td></tr>
+</table></div>
+<div class="box go">
+  <b class="t">What the gate does with it</b>
+  <ol>
+    <li>The model's top label is <b>Comprehension</b> (0.45), but comprehension is "Unknown": no questions, so no evidence. It is <b>not kept</b>.</li>
+    <li>Next in the model's ranking is <b>Oral Reading Fluency</b> (0.20), and fluency is red. It is <b>kept</b>: stored weakness = Oral Reading Fluency.</li>
+    <li>Decoding is also red and the teacher sees that row, but the stored label follows the model's ranking among labels the evidence supports.</li>
+    <li>Change one input and the answer changes: if the learner also answered the questions with <b>40%</b>, comprehension becomes red and the stored weakness becomes <b>Comprehension</b>. With <b>80%</b>, comprehension is green and the stored weakness stays Fluency.</li>
+  </ol>
+</div>
+<p class="small">Results of the three runs above, from the real code: comprehension not asked &rarr; stored 3 (fluency); quiz 80% &rarr; stored 3; quiz 40% &rarr; stored 4. The forest probabilities were produced locally with the repository's model file; the Python environment there uses scikit-learn 1.9.0 while the model was saved with 1.8.0, so treat the exact decimals as illustrative.</p>
+
+<h3>B5. Things to be ready to explain</h3>
+<div class="box warn">
+  <ul>
+    <li><b>The model leaned towards "Comprehension" here although it saw only 3 comprehension examples in training.</b> That is the reason the gate exists: a comprehension label is never stored unless the quiz backs it. Say this plainly if asked; do not describe the forest as measuring comprehension.</li>
+    <li><b>Two different "skill" displays exist in the code.</b> The four coloured rows on the results page use the rules in B2. The skill-breakdown bars on the learner profile, parent report and learner report come from an older estimate (<code>Learner::getSkillBreakdown()</code>, <code>Learner.php</code> lines 226&ndash;250, reading <code>ReadingAnalyzerService::calculateSkillScores()</code> lines 901&ndash;924). In that estimate "phonemic" is 100 minus 10 per sound-pattern slip and "comprehension" is <code>accuracy &times; 0.3 + fluency &times; 7</code>, a guess even when the real quiz score exists. The two can disagree. Recommended fix: feed the bars from the B2 results (quiz score for comprehension).</li>
+    <li><b>Accuracy of the suggestion is modest</b> (62.5% test, about 50% cross-validated, 41% majority baseline). That is why the stored weakness is presented as a suggestion with the measured evidence beside it, and why the teacher has the final say.</li>
+    <li><b>Recommendations come after the weakness.</b> The activities shown on the results page are a look-up by stored weakness and grade (<code>Assessment::getRecommendedInterventions()</code>), so any error in the weakness carries through to the activities.</li>
+  </ul>
+</div>
+
+<p class="small">Scope note: this review compares the documents with the code and stored artefacts. It does not assess the questionnaire results, Chapter 4 or 5, or whether the thesis meets the university's formatting rules.</p>
+
+</div>
+</body>
+</html>

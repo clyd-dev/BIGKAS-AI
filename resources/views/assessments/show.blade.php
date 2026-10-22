@@ -26,10 +26,37 @@
                 </div>
             </div>
 
+            {{--
+                A reading that belongs to a group assessment is conducted from
+                the batch board, where each recording waits until the teacher
+                listens and sends it. None of the conduct controls below belong
+                to it: this screen knows nothing about the batch, so recording
+                or re-recording here would bypass that Send. The controller
+                refuses all of it (AssessmentController::refuseIfInBatch()) -
+                this only stops offering a teacher a button that cannot work.
+            --}}
+            @if($assessment->batch_id !== null)
+                <div class="alert alert-info border-0 shadow-sm mt-3 mb-0">
+                    <div class="fw-semibold mb-1">
+                        <i class="bi bi-people me-1"></i>Part of a group assessment
+                    </div>
+                    @if(config('assessment.batch_enabled'))
+                        This child’s reading is conducted on the batch board, so it is not recorded or
+                        re-recorded from here.
+                        <a href="{{ route('assessments.batch.entry', [$assessment->batch_id, $assessment]) }}">
+                            Open this child’s panel</a>.
+                    @else
+                        This child’s reading is conducted on the batch board, so it is not recorded or
+                        re-recorded from here. Group assessment is switched off on this system, so the
+                        board cannot be opened - ask your administrator to switch it on.
+                    @endif
+                </div>
+            @endif
+
             {{-- Audio Upload. "failed" is included on purpose: an attempt that
                  never produced a score must stay recoverable, or the saved
                  recording becomes unreachable and the learner has to read again. --}}
-            @if(in_array($assessment->status, ['pending', 'processing', 'failed'], true))
+            @if($assessment->batch_id === null && in_array($assessment->status, ['pending', 'processing', 'failed'], true))
                 <div class="card border-0 shadow-sm mt-3">
                     <div class="card-header bg-white"><h6 class="mb-0">Audio Recording</h6></div>
                     <div class="card-body">

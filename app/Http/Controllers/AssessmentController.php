@@ -387,9 +387,70 @@ class AssessmentController extends Controller
         return response()->json(['status' => $assessment->status]);
     }
 
+    /**
+     * The convergence guard on the single-child doors.
+     *
+     * The same shape and the same position as the batch side's
+     * AssessmentBatchController::refuseIfAnalysed() and the student side's
+     * StudentAssessmentController::refuseIfSent(): called before anything is
+     * validated, written or deleted, returning a response to send straight back
+     * when it refuses and null when there is nothing to refuse.
+     *
+     * What it protects is the governing principle of the batch feature: a
+     * recording rests at `recorded` and consumes no analysis time until the
+     * teacher listens and deliberately sends it. These two actions predate the
+     * feature and know nothing about it - uploadAudio() would leave `processing`
+     * with no send stamp, which scopeAwaitingRescore() claims once it is stale,
+     * and retry() would delete an unsent recording off the disk - and both are
+     * reachable from a learner's history, so a teacher gets here by following a
+     * link rather than by meaning any harm. She is pointed at the screen the
+     * action really belongs to instead.
+     *
+     * A single-child reading has batch_id === null and is handed straight back
+     * to the identical path: nothing about it changes.
+     */
+    private function refuseIfInBatch(Request $request, Assessment $assessment)
+    {
+        if ($assessment->batch_id === null) {
+            return null;
+        }
+
+        $message = 'This reading belongs to a group assessment, so it is conducted from the batch board: '
+            . 'each child’s recording waits there until you listen to it and send it yourself.';
+
+        // The recorder on the single-child screen posts here with fetch, so a
+        // redirect would be swallowed; it gets the refusal as a 409 it can read,
+        // the same code the student door answers an already-sent reading with.
+        if ($request->expectsJson()) {
+            return response()->json(['success' => false, 'message' => $message], 409);
+        }
+
+        // With the feature switched off the batch routes 404, so sending her
+        // there would strand her. The learner's own history is where the link
+        // she followed came from, it is flag-independent, and - unlike going
+        // back to this reading's page - it does not offer the same button
+        // again. She is told plainly why there is nothing she can do here.
+        if (! config('assessment.batch_enabled')) {
+            return redirect()->route('assessments.learner-history', $assessment->learner_id)
+                ->with('error', $message . ' Group assessment is switched off on this system, so the board '
+                    . 'cannot be opened - ask your administrator to switch it on.');
+        }
+
+        return redirect()
+            ->route('assessments.batch.entry', [$assessment->batch_id, $assessment])
+            ->with('error', $message);
+    }
+
     public function uploadAudio(Request $request, Assessment $assessment)
     {
         $this->authorizeLearnerAccess($assessment->learner);
+
+        // Before the validation and before any file is written - see
+        // refuseIfInBatch().
+        if ($refusal = $this->refuseIfInBatch($request, $assessment)) {
+            return $refusal;
+        }
+
         $request->validate([
             'audio' => 'required|file|max:25600',
         ]);
@@ -414,9 +475,15 @@ class AssessmentController extends Controller
         ]);
     }
 
-    public function retry(Assessment $assessment)
+    public function retry(Request $request, Assessment $assessment)
     {
         $this->authorizeLearnerAccess($assessment->learner);
+
+        // Before storage is touched: one click here used to delete a batch
+        // entry's unsent recording. See refuseIfInBatch().
+        if ($refusal = $this->refuseIfInBatch($request, $assessment)) {
+            return $refusal;
+        }
 
         // Delete the existing audio file if it exists
         if ($assessment->audio_file && Storage::disk('public')->exists($assessment->audio_file)) {

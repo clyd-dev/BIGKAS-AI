@@ -525,4 +525,103 @@ class BatchSetupTest extends TestCase
         config(['assessment.batch_enabled' => false]);
         $this->actingAs($teacher)->get(route('assessments.create'))->assertOk()->assertDontSee($link, false);
     }
+
+    // ------------------------------------------------- the grade gap (R52)
+
+    /**
+     * The ±1 material cap is gone, deliberately: a Grade 6 child reading at
+     * Grade 1 is exactly what Phil-IRI exists to find, and a cap would refuse
+     * the case the assessment is for. What replaces it is not a rule but a
+     * sentence - the summary says the gap out loud, per child, so a mis-tap is
+     * caught by reading the page she is already being asked to read.
+     */
+    public function test_the_summary_states_the_grade_gap_in_words(): void
+    {
+        $teacher = $this->bareTeacher();
+        $class = $this->classFor($teacher, 6, 'Rizal', 2);
+        $learners = Learner::where('class_id', $class->id)->orderBy('id')->get()->all();
+        $learners[0]->update(['first_name' => 'Maria', 'last_name' => 'Santos']);
+        $default = ReadingMaterial::factory()->create(['title' => 'A Grade Six Passage', 'grade_level' => 6]);
+        $easy = ReadingMaterial::factory()->create(['title' => 'The Little Cat', 'grade_level' => 1]);
+
+        $this->actingAs($teacher)->post(
+            route('assessments.batch.review'),
+            $this->payload($learners, $default, [$learners[0]->id => $easy->id])
+        )
+            ->assertOk()
+            ->assertSee('Maria (Grade 6)')
+            ->assertSee('will read a Grade 1 passage')
+            ->assertSee('5 grades below their own grade')
+            // Nothing is blocked and nothing is asked twice: the confirm button
+            // is still the only step.
+            ->assertSee('Create batch');
+
+        $this->assertNothingCreated();
+    }
+
+    /**
+     * The threshold is two grades. One grade off is the ordinary case - it is
+     * what the old cap quietly permitted - so it is stated plainly and not
+     * marked; two or more carries the marker.
+     */
+    public function test_two_grades_is_flagged_and_one_grade_is_only_stated(): void
+    {
+        $teacher = $this->bareTeacher();
+        $class = $this->classFor($teacher, 6, 'Rizal', 2);
+        $learners = Learner::where('class_id', $class->id)->orderBy('id')->get()->all();
+        $default = ReadingMaterial::factory()->create(['grade_level' => 6]);
+        $oneBelow = ReadingMaterial::factory()->create(['grade_level' => 5]);
+
+        $html = $this->actingAs($teacher)->post(
+            route('assessments.batch.review'),
+            $this->payload($learners, $default, [$learners[0]->id => $oneBelow->id])
+        )->assertOk()->getContent();
+
+        $this->assertStringContainsString('1 grade below their own grade', $html);
+        $this->assertStringNotContainsString('exclamation-triangle', $html);
+        $this->assertStringNotContainsString('or more grades from their own grade', $html);
+
+        $twoBelow = ReadingMaterial::factory()->create(['grade_level' => 4]);
+        $html = $this->actingAs($teacher)->post(
+            route('assessments.batch.review'),
+            $this->payload($learners, $default, [$learners[0]->id => $twoBelow->id])
+        )->assertOk()->getContent();
+
+        $this->assertStringContainsString('2 grades below their own grade', $html);
+        $this->assertStringContainsString('exclamation-triangle', $html);
+        $this->assertStringContainsString('One child is', $html);
+    }
+
+    /** A passage above the child’s grade is a mis-tap too, and is said the same way. */
+    public function test_a_passage_above_the_childs_grade_is_stated_as_above(): void
+    {
+        $teacher = $this->bareTeacher();
+        $class = $this->classFor($teacher, 2, 'Mabini', 2);
+        $learners = Learner::where('class_id', $class->id)->orderBy('id')->get()->all();
+        $default = ReadingMaterial::factory()->create(['grade_level' => 2]);
+        $hard = ReadingMaterial::factory()->create(['grade_level' => 6]);
+
+        $this->actingAs($teacher)->post(
+            route('assessments.batch.review'),
+            $this->payload($learners, $default, [$learners[0]->id => $hard->id])
+        )
+            ->assertOk()
+            ->assertSee('4 grades above their own grade');
+    }
+
+    /** A roster reading its own grade is not remarked on at all. */
+    public function test_a_roster_reading_its_own_grade_says_nothing_about_gaps(): void
+    {
+        $teacher = $this->bareTeacher();
+        $class = $this->classFor($teacher, 3, 'Bonifacio', 2);
+        $learners = Learner::where('class_id', $class->id)->orderBy('id')->get()->all();
+        $default = ReadingMaterial::factory()->create(['grade_level' => 3]);
+
+        $html = $this->actingAs($teacher)
+            ->post(route('assessments.batch.review'), $this->payload($learners, $default))
+            ->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('will read a Grade', $html);
+        $this->assertStringNotContainsString('their own grade', $html);
+    }
 }

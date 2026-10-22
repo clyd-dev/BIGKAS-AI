@@ -10,7 +10,26 @@
     @php
         $types = ['oral_reading' => 'Oral Reading', 'comprehension' => 'Comprehension', 'combined' => 'Combined'];
         $languages = ['en' => 'English', 'fil' => 'Filipino'];
+
+        // Two grades, not one. A child reading one grade off their own is the
+        // ordinary case - it is what the old ±1 cap quietly permitted, and
+        // calling it out would teach the teacher to ignore the marking. Two or
+        // more is a different statement about that child: still legitimate, and
+        // still hers to make, but worth her eye before fifteen readings start.
+        $flagFrom = 2;
+        $flagged = collect($rows)->filter(fn ($row) => abs($row['gap']) >= $flagFrom)->count();
     @endphp
+
+    @if($flagged > 0)
+        <div class="alert alert-warning d-flex gap-2 py-2 small" role="alert">
+            <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+            <div>
+                {{ ($flagged === 1 ? 'One child is' : $flagged . ' children are') . ' set to read ' . $flagFrom . ' or more grades from their own grade.' }}
+                That is often exactly the point of a reading assessment, so nothing is stopping you - just
+                check below that it is what you meant.
+            </div>
+        </div>
+    @endif
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
@@ -52,6 +71,24 @@
                         <span class="badge text-bg-light">Grade {{ $row['material']->grade_level }}</span>
                         @if($row['override'])
                             <span class="badge text-bg-info-subtle text-info-emphasis">their own reading</span>
+                        @endif
+                        @if($row['gap'] !== 0)
+                            @php
+                                $big = abs($row['gap']) >= $flagFrom;
+                                $grades = abs($row['gap']);
+                                // Built as one string, not laid out across lines:
+                                // a sentence broken by template whitespace is a
+                                // sentence nobody can assert on.
+                                $gapLine = $row['learner']->first_name . ' (Grade ' . $row['learner']->grade_level
+                                    . ') will read a Grade ' . $row['material']->grade_level . ' passage - '
+                                    . $grades . ($grades === 1 ? ' grade ' : ' grades ')
+                                    . ($row['gap'] < 0 ? 'below' : 'above') . ' their own grade.';
+                            @endphp
+                            {{-- The gap in words, per child: the one thing a mis-tap
+                                 can be caught by without reading the whole roster. --}}
+                            <div class="small mt-1 {{ $big ? 'text-warning-emphasis fw-semibold' : 'text-muted' }}">
+                                @if($big)<i class="bi bi-exclamation-triangle-fill me-1"></i>@endif{{ $gapLine }}
+                            </div>
                         @endif
                     </span>
                 </li>

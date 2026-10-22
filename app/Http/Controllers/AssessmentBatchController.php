@@ -195,11 +195,23 @@ class AssessmentBatchController extends Controller
         $rows = [];
         foreach (Directory::sortLearners($learners->values()) as $learner) {
             [$key, $entry] = $byLearner[$learner->id];
+            $material = $materials->get($entry['material_id'] ?? null)
+                ?? $materials->get($input['default_material_id']);
             $rows[] = [
                 'key' => $key,
                 'learner' => $learner,
-                'material' => $materials->get($entry['material_id'] ?? null) ?? $materials->get($input['default_material_id']),
+                'material' => $material,
                 'override' => filled($entry['material_id']),
+                // The grade gap, signed: negative is a passage below the child's
+                // own grade, positive above it. Computed here rather than in the
+                // view so the summary and any test of it read the same number.
+                //
+                // Nothing is blocked on it. A Grade 6 child reading at Grade 1 is
+                // precisely what Phil-IRI exists to find, and the +/-1 cap that
+                // used to sit here would have refused the case the assessment is
+                // for. What the summary owes the teacher instead is to say the
+                // gap out loud, so a mis-tap is caught by reading the page.
+                'gap' => (int) ($material?->grade_level ?? $learner->grade_level) - (int) $learner->grade_level,
             ];
         }
 

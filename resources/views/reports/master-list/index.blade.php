@@ -3,12 +3,21 @@
 @section('title', 'Learner Reading Master List')
 
 @section('content')
-    @php $q = array_filter(['school_year' => $schoolYear, 'grade' => $grade, 'class_id' => $classId, 'language' => $language]); @endphp
-    <x-page-header title="Learner Reading Master List" icon="bi-list-check" subtitle="Every learner's reading levels, scores and progress, by grade and section">
+    @php
+        // A teacher's copy is pinned to their own section by the server, so the URL carries only year and language.
+        $q = $mine ? array_filter(['school_year' => $schoolYear, 'language' => $language])
+                   : array_filter(['school_year' => $schoolYear, 'grade' => $grade, 'class_id' => $classId, 'language' => $language]);
+        $routePrefix = $mine ? 'learners.master-list' : 'reports.master-list';
+    @endphp
+    <x-page-header title="Learner Reading Master List" icon="bi-list-check"
+        :subtitle="$mine ? 'Your section: every learner\'s reading levels, scores and progress' : 'Every learner\'s reading levels, scores and progress, by grade and section'">
         <x-slot:actions>
+            @if($mine)
+                <a href="{{ route('learners.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Learners</a>
+            @endif
             @if($list['totals']['learners'] > 0)
-                <a href="{{ route('reports.master-list.print', $q) }}" target="_blank" class="btn btn-primary btn-sm"><i class="bi bi-printer me-1"></i> Print</a>
-                <a href="{{ route('reports.master-list.pdf', $q) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
+                <a href="{{ route($routePrefix . '.print', $q) }}" target="_blank" class="btn btn-primary btn-sm"><i class="bi bi-printer me-1"></i> Print</a>
+                <a href="{{ route($routePrefix . '.pdf', $q) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
             @endif
         </x-slot:actions>
     </x-page-header>
@@ -21,6 +30,7 @@
                     @foreach($schoolYears as $y)<option value="{{ $y }}" @selected($y === $schoolYear)>{{ $y }}</option>@endforeach
                 </select>
             </div>
+            @unless($mine)
             <div class="col-6 col-md-2">
                 <label class="form-label small mb-1">Grade</label>
                 <select name="grade" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -37,6 +47,7 @@
                     @endforeach
                 </select>
             </div>
+            @endunless
             <div class="col-6 col-md-2">
                 <label class="form-label small mb-1">Language</label>
                 <select name="language" class="form-select form-select-sm" onchange="this.form.submit()">

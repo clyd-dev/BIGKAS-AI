@@ -8,6 +8,9 @@
     <x-page-header title="Learners" icon="bi-people">
         <x-slot:actions>
             @if($canManage)
+                <a href="{{ route('learners.master-list') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-list-check me-1"></i> Reading List
+                </a>
                 <a href="{{ route('learners.create') }}" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-circle me-1"></i> Add Learner
                 </a>

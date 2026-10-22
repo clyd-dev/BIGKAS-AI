@@ -133,4 +133,55 @@ class LearnerMasterListTest extends TestCase
             ->assertOk()->assertHeader('content-type', 'application/pdf');
         $this->assertSame(2, ActivityLog::where('action', 'print_master_list')->count());
     }
+
+    private function otherSection(): SchoolClass
+    {
+        $other = SchoolClass::create(['school_id' => $this->school->id, 'teacher_id' => $this->user('teacher')->id,
+            'grade_level' => 5, 'section' => 'Bonifacio', 'school_year' => '2026-2027', 'is_active' => true]);
+        $this->learner('Eve', 'Dela', $other, 5);
+
+        return $other;
+    }
+
+    public function test_a_teacher_gets_only_their_own_section_whatever_the_url_says(): void
+    {
+        $this->learner('Ana', 'Cruz');
+        $other = $this->otherSection();
+
+        $this->actingAs($this->teacher)->get(route('learners.master-list'))
+            ->assertOk()->assertSee('CRUZ, Ana')->assertSee('Grade 4 - Rizal')
+            ->assertDontSee('DELA, Eve')->assertDontSee('Bonifacio');
+
+        // Forged grade / section / school-wide filters are ignored.
+        $this->actingAs($this->teacher)->get(route('learners.master-list.print', ['class_id' => $other->id, 'grade' => 5]))
+            ->assertOk()->assertSee('CRUZ, Ana')->assertDontSee('DELA, Eve');
+        $this->actingAs($this->teacher)->get(route('learners.master-list.pdf', ['class_id' => $other->id]))->assertOk();
+
+        $this->assertSame(2, ActivityLog::where('action', 'print_master_list')->count());
+    }
+
+    public function test_the_teacher_copy_is_closed_to_others_and_to_a_teacher_without_a_section(): void
+    {
+        $this->learner('Ana', 'Cruz');
+        $this->otherSection();
+        $unassigned = $this->user('teacher');
+
+        $this->actingAs($this->user('admin'))->get(route('learners.master-list'))->assertForbidden();
+        $this->actingAs($this->user('parent'))->get(route('learners.master-list'))->assertForbidden();
+
+        // No section: sent back, never shown the school's learners.
+        $this->actingAs($unassigned)->get(route('learners.master-list'))->assertRedirect(route('dashboard'));
+        $this->actingAs($unassigned)->get(route('learners.master-list.print'))->assertRedirect(route('dashboard'));
+    }
+
+    public function test_a_section_id_that_matches_nothing_never_widens_to_the_whole_school(): void
+    {
+        $this->learner('Ana', 'Cruz');
+        $this->otherSection();
+
+        $list = LearnerMasterList::build('2026-2027', null, 0);
+
+        $this->assertSame([], $list['sections']);
+        $this->assertSame(0, $list['totals']['learners']);
+    }
 }

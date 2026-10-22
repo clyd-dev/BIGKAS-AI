@@ -146,6 +146,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/learners', [LearnerController::class, 'store'])->name('learners.store');
             Route::post('/learners/import/preview', [LearnerImportController::class, 'preview'])->name('learners.import.preview');
             Route::post('/learners/import/confirm', [LearnerImportController::class, 'confirm'])->name('learners.import.confirm');
+
+            // Printable reading list of the teacher's own section (the section is taken from the account, not the URL).
+            Route::get('/my-class/master-list', [LearnerMasterListController::class, 'mine'])->name('learners.master-list');
+            Route::get('/my-class/master-list/print', [LearnerMasterListController::class, 'minePrint'])->name('learners.master-list.print');
+            Route::get('/my-class/master-list/pdf', [LearnerMasterListController::class, 'minePdf'])->name('learners.master-list.pdf');
         });
 
         // The teacher who adds a learner issues the student-portal PIN (admin does not).

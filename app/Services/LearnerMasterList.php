@@ -40,7 +40,7 @@ class LearnerMasterList
         $classes = SchoolClass::with('teacher')
             ->when($schoolYear, fn ($q) => $q->where('school_year', $schoolYear))
             ->when($grade, fn ($q) => $q->where('grade_level', $grade))
-            ->when($classId, fn ($q) => $q->where('id', $classId))
+            ->when($classId !== null, fn ($q) => $q->where('id', $classId))
             ->orderBy('grade_level')->orderBy('section')
             ->get();
 
@@ -48,7 +48,7 @@ class LearnerMasterList
             ->where(function ($q) use ($classes, $grade, $classId) {
                 $q->whereIn('class_id', $classes->pluck('id'));
                 // Learners with no section still belong on the sheet (under their grade), unless one section was asked for.
-                if (! $classId) {
+                if ($classId === null) {
                     $q->orWhere(fn ($u) => $u->whereNull('class_id')->when($grade, fn ($g) => $g->where('grade_level', $grade)));
                 }
             })

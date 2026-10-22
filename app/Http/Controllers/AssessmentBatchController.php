@@ -853,6 +853,22 @@ class AssessmentBatchController extends Controller
                 . 'first, then take ' . $name . ' out of the batch.');
         }
 
+        // A batch she has stopped may still be tidied - cancelling is not
+        // abandoning, and refusing remove here would leave her a board she can
+        // read and cannot clear. What is refused is the *destruction*: she
+        // believes this batch is closed, so nothing she taps on it may take a
+        // child's recording off the disk. An entry carrying audio is therefore
+        // detached instead, the same answer a measured reading already gets.
+        //
+        // Deliberately narrower than refuseIfCancelled(), which guards the
+        // writes that feed the lane (upload, answers, send): those add work to
+        // a closed batch, while this one only ever takes a child off it.
+        if ($batch->status === AssessmentBatch::STATUS_CANCELLED && $entry->hasAudio()) {
+            return $this->detachEntry($request, $batch, $entry, $name, $name
+                . '’s recording was taken off this closed board and kept on their own history - '
+                . 'nothing was deleted.');
+        }
+
         // The allow-list, with the measurement checked again on the way in:
         // deleteEntry() refuses outright if either half is untrue.
         if (in_array($chip, ['waiting', 'recorded'], true) && $entry->result === null) {
@@ -880,13 +896,22 @@ class AssessmentBatchController extends Controller
      * One method rather than two call sites, so the measured-therefore-detach
      * rule has one implementation and cannot drift between them.
      */
-    private function detachEntry(Request $request, AssessmentBatch $batch, Assessment $entry, string $name)
-    {
+    private function detachEntry(
+        Request $request,
+        AssessmentBatch $batch,
+        Assessment $entry,
+        string $name,
+        ?string $message = null
+    ) {
         $entry->forceFill(['batch_id' => null])->save();
 
         $this->restatus($batch);
 
-        return $this->done($request, $batch, $name . ' is no longer on this board. Their reading, its result '
+        // The caller may say it differently - an unsent recording coming off a
+        // cancelled board has no result or verdict to speak of - but the act is
+        // the same one, so it has one implementation.
+        return $this->done($request, $batch, $message
+            ?? $name . ' is no longer on this board. Their reading, its result '
             . 'and any verdict you had given are all kept on their own history.');
     }
 

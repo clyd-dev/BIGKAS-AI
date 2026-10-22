@@ -1099,4 +1099,103 @@ class BatchCancelTest extends TestCase
         $this->assertSame(AssessmentBatch::STATUS_COLLECTING, $batch->fresh()->status);
         $this->assertNull($batch->fresh()->completed_at);
     }
+
+    // ── Tidying a batch she has already stopped ───────────────
+
+    /**
+     * A cancelled batch may still be tidied - but never destructively.
+     *
+     * Cancelling is not the same act as abandoning: the board stays, and a
+     * teacher who has stopped a batch may legitimately want to take a child off
+     * it. So remove is not refused on a cancelled batch, which would leave her
+     * a board she can read and cannot clear.
+     *
+     * What is refused is the deletion. A recording is a child's own work and the
+     * teacher believes this batch is closed, so nothing she taps on it may take
+     * a recording off the disk: a cancelled batch’s entry with audio is
+     * detached - batch_id to null, the recording kept on the child’s own
+     * history - exactly as a measured reading already is.
+     */
+    public function test_removing_a_recorded_entry_from_a_cancelled_batch_keeps_the_recording(): void
+    {
+        $batch = $this->batchOf($this->teacher(), 2);
+        $entries = $batch->entries()->orderBy('id')->get();
+        $recorded = $this->record($entries[0]);
+        $audio = $recorded->audio_file;
+
+        $this->actingAs($batch->teacher)->post(route('assessments.batch.cancel', $batch))->assertRedirect();
+        $this->assertSame(AssessmentBatch::STATUS_CANCELLED, $batch->fresh()->status);
+        $this->assertDatabaseHas('assessments', ['id' => $recorded->id, 'batch_id' => $batch->id]);
+
+        $this->actingAs($batch->teacher)->delete($this->removeUrl($batch, $recorded))
+            ->assertRedirect(route('assessments.batch.board', $batch));
+
+        // Off the board, as she asked - and the reading still exists.
+        $this->assertDatabaseHas('assessments', ['id' => $recorded->id, 'batch_id' => null]);
+        Storage::disk('public')->assertExists($audio);
+    }
+
+    /**
+     * The same thing said from the teacher’s side: she is told the recording
+     * was kept, not that the child was deleted.
+     */
+    public function test_the_message_says_the_recording_was_kept(): void
+    {
+        $batch = $this->batchOf($this->teacher(), 2);
+        $recorded = $this->record($batch->entries()->orderBy('id')->first());
+
+        $this->actingAs($batch->teacher)->post(route('assessments.batch.cancel', $batch))->assertRedirect();
+
+        $this->actingAs($batch->teacher)->delete($this->removeUrl($batch, $recorded))
+            ->assertSessionHas('success', fn ($message) => str_contains($message, 'kept')
+                && ! str_contains($message, 'not been sent'));
+    }
+
+    /**
+     * A card with nothing recorded is still deleted outright, cancelled or not:
+     * there is no recording to protect and no measurement to keep, and leaving
+     * a detached pending assessment on the child’s record would put a reading
+     * in their history that never happened.
+     *
+     * cancel() deletes every waiting entry itself, so this state is reached
+     * only by a board a moment out of date - which is exactly why it is checked
+     * at write time.
+     */
+    public function test_a_waiting_entry_on_a_cancelled_batch_is_still_deleted(): void
+    {
+        $batch = $this->batchOf($this->teacher(), 2);
+        $waiting = $batch->entries()->orderBy('id')->first();
+
+        $batch->forceFill(['status' => AssessmentBatch::STATUS_CANCELLED, 'cancelled_at' => now()])->save();
+
+        $this->actingAs($batch->teacher)->delete($this->removeUrl($batch, $waiting))->assertRedirect();
+
+        $this->assertDatabaseMissing('assessments', ['id' => $waiting->id]);
+        $this->assertDatabaseMissing('assessment_sessions', ['assessment_id' => $waiting->id]);
+    }
+
+    /**
+     * Un-send is not refused on a cancelled batch either, and that is the
+     * deliberate half of this: un-sending only ever takes a reading *out* of
+     * the lane. Refusing it is the one answer that could do harm - a reading
+     * left in the lane on a batch the teacher has stopped, with no way for her
+     * to stop it being scored.
+     *
+     * cancel() un-sends every queued entry itself, so the status is forced here
+     * rather than cancelled through the action: this is the stale-board race, and
+     * it must write nothing worse than a null stamp.
+     */
+    public function test_un_sending_on_a_cancelled_batch_takes_the_reading_out_of_the_lane(): void
+    {
+        $batch = $this->batchOf($this->teacher(), 2);
+        $queued = $this->queue($batch->entries()->orderBy('id')->first());
+
+        $batch->forceFill(['status' => AssessmentBatch::STATUS_CANCELLED, 'cancelled_at' => now()])->save();
+
+        $this->actingAs($batch->teacher)->post($this->unsendUrl($batch, $queued))->assertRedirect();
+
+        $this->assertNull($queued->fresh()->submitted_for_analysis_at);
+        $this->assertSame('recorded', BatchEntryState::for($queued->fresh())['chip']);
+        Storage::disk('public')->assertExists($queued->audio_file);
+    }
 }

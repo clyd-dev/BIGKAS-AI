@@ -57,7 +57,10 @@ class BatchSelfRecordTest extends TestCase
             'entries' => $learners->take($children)->map(fn ($l) => [
                 'learner_id' => $l->id, 'material_id' => null, 'allow_fallback' => false,
             ])->all(),
-        ]);
+        // The floor said out loud: the builder's own default is the configured
+        // two, and this suite deliberately builds one-entry batches to exercise
+        // a board with a single card on it.
+        ], 1);
     }
 
     private function asChild(Assessment $entry)

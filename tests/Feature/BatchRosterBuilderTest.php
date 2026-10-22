@@ -181,9 +181,10 @@ class BatchRosterBuilderTest extends TestCase
 
     /**
      * The setup form asks for a floor of two - a batch of one is a single-child
-     * assessment, which has its own screen. The floor is a parameter rather than
-     * a constant because the board, cancel and self-record suites legitimately
-     * build one-entry batches straight through the builder.
+     * assessment, which has its own screen. The floor stays a parameter because
+     * the board, cancel and self-record suites legitimately build one-entry
+     * batches straight through the builder - but its default is the configured
+     * floor, never the lenient one.
      */
     public function test_a_roster_below_the_given_minimum_is_rejected(): void
     {
@@ -203,12 +204,45 @@ class BatchRosterBuilderTest extends TestCase
         $this->assertCount(2, app(BatchRosterBuilder::class)->build($teacher, $this->input([$a, $b]), 2)->entries);
     }
 
-    public function test_a_single_child_roster_is_allowed_when_no_minimum_is_asked_for(): void
+    /**
+     * The floor a caller that names none gets is the **configured** one, not one.
+     *
+     * It used to default to 1, so a future call site that simply forgot the
+     * argument would silently accept a batch of one - a permissive, silent
+     * failure, which is the worst shape a default can have. There is now one
+     * definition of the floor, in config/assessment.php beside the cap, and a
+     * caller that wants something looser has to say so out loud.
+     */
+    public function test_a_caller_that_names_no_floor_gets_the_configured_one(): void
     {
         $teacher = $this->teacher();
         [$a] = $this->learnersOf($teacher);
 
-        $this->assertCount(1, app(BatchRosterBuilder::class)->build($teacher, $this->input([$a]))->entries);
+        $errors = $this->errorsOf(fn () => app(BatchRosterBuilder::class)->build($teacher, $this->input([$a])));
+
+        $this->assertSame(
+            ['Pick at least 2 children for a batch. For one child, use the single-learner assessment.'],
+            $errors['entries']
+        );
+        $this->assertNothingCreated();
+
+        // And it is read from config rather than hard-coded in two places.
+        config(['assessment.batch_min_learners' => 3]);
+        [, $b] = $this->learnersOf($teacher);
+        $errors = $this->errorsOf(fn () => app(BatchRosterBuilder::class)->build($teacher, $this->input([$a, $b])));
+        $this->assertSame(
+            ['Pick at least 3 children for a batch. For one child, use the single-learner assessment.'],
+            $errors['entries']
+        );
+    }
+
+    /** A caller that deliberately wants one entry still says 1 and gets it. */
+    public function test_a_single_child_roster_is_allowed_when_the_caller_asks_for_a_floor_of_one(): void
+    {
+        $teacher = $this->teacher();
+        [$a] = $this->learnersOf($teacher);
+
+        $this->assertCount(1, app(BatchRosterBuilder::class)->build($teacher, $this->input([$a]), 1)->entries);
     }
 
     public function test_the_same_learner_cannot_appear_twice(): void
@@ -246,7 +280,8 @@ class BatchRosterBuilderTest extends TestCase
         $this->assertNothingCreated();
 
         // Control: the same learner is accepted for the teacher who does own them.
-        $batch = app(BatchRosterBuilder::class)->build($other, $this->input([$foreign]));
+        // Floor of 1 said out loud: this control is about ownership, not size.
+        $batch = app(BatchRosterBuilder::class)->build($other, $this->input([$foreign]), 1);
         $this->assertCount(1, $batch->entries);
     }
 
@@ -465,7 +500,7 @@ class BatchRosterBuilderTest extends TestCase
 
             $errors = [];
             try {
-                app(BatchRosterBuilder::class)->build($user, $this->input([$learner]));
+                app(BatchRosterBuilder::class)->build($user, $this->input([$learner]), 1);
             } catch (ValidationException $e) {
                 $errors = $e->errors();
             }

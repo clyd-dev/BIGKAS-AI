@@ -32,13 +32,20 @@ use Illuminate\Validation\ValidationException;
 class BatchRosterBuilder
 {
     /**
-     * @param  int  $minLearners  The floor this caller wants. The setup form asks
-     *   for config('assessment.batch_min_learners') - a batch of one is a
-     *   single-child assessment, which has its own screen. It is a parameter and
-     *   not a constant because the board, cancel and self-record suites build
-     *   one-entry batches straight through here to exercise edge cases.
+     * @param  int|null  $minLearners  The floor this caller wants, or null for the
+     *   configured one. A batch of one is a single-child assessment, which has its
+     *   own screen, so the floor is config('assessment.batch_min_learners') - two -
+     *   and that is what a caller naming nothing gets.
+     *
+     *   It stays a parameter because the board, cancel and self-record suites build
+     *   one-entry batches straight through here to exercise edge cases. But it does
+     *   **not** default to their value: a default of 1 meant a future call site that
+     *   simply forgot the argument would silently accept a batch of one, which is a
+     *   permissive, silent failure - the worst shape a default can have. A caller
+     *   that wants something looser now has to say so out loud, and there is one
+     *   definition of the floor rather than a constant beside a default.
      */
-    public function build(User $teacher, array $input, int $minLearners = 1): AssessmentBatch
+    public function build(User $teacher, array $input, ?int $minLearners = null): AssessmentBatch
     {
         $errors = $this->check($teacher, $input, $minLearners);
 
@@ -102,8 +109,12 @@ class BatchRosterBuilder
      *
      * @return array<string, string[]>
      */
-    public function check(User $teacher, array $input, int $minLearners = 1): array
+    public function check(User $teacher, array $input, ?int $minLearners = null): array
     {
+        // One place resolves it, so build() and check() cannot disagree about the
+        // floor - the summary screen asks check() and the confirm asks build().
+        $minLearners ??= (int) config('assessment.batch_min_learners');
+
         $errors = [];
         $add = function (string $key, string $message) use (&$errors) {
             $errors[$key][] = $message;

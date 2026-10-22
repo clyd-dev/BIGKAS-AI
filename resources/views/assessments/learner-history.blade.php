@@ -129,7 +129,9 @@
             @php
                 $accuracy = $assessment->effectiveAccuracy();
                 $level = $assessment->effectiveReadingLevel();
-                $reviewed = $assessment->verdict !== null;
+                // Measured, not merely reviewed: a result feeds the child's
+                // reading level whether or not a teacher has looked at it yet.
+                $measured = $assessment->result !== null || $assessment->verdict !== null;
             @endphp
             <div class="modal fade" id="delete-reading-{{ $assessment->id }}" tabindex="-1"
                  aria-labelledby="delete-reading-{{ $assessment->id }}-title" aria-hidden="true">
@@ -172,12 +174,14 @@
                                 recommends and which interventions are suggested for them.
                             </p>
 
-                            @if($reviewed)
-                                {{-- A reviewed reading is a record with an audit trail behind
-                                     it, so it takes a typed name rather than a click. --}}
+                            @if($measured)
+                                {{-- A measured reading feeds the child’s reading level, so it
+                                     takes a typed name rather than a click - whether or not a
+                                     teacher has reviewed it yet. --}}
                                 <hr>
                                 <label for="learner-name-{{ $assessment->id }}" class="form-label small mb-1">
-                                    This reading has already been reviewed. To delete it,
+                                    This reading has been scored, so it counts towards
+                                    {{ $learner->first_name }}’s reading level. To delete it,
                                     type the learner’s name — <strong>{{ $learner->first_name }} {{ $learner->last_name }}</strong>
                                 </label>
                                 <input type="text" class="form-control" name="learner_name" autocomplete="off"

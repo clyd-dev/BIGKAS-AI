@@ -147,7 +147,7 @@ class AssessmentDeleteTest extends TestCase
         $audio = $assessment->audio_file;
 
         $this->actingAs($teacher)
-            ->delete(route('assessments.destroy', $assessment))
+            ->delete(route('assessments.destroy', $assessment), ['learner_name' => $learner->getFullName()])
             ->assertRedirect(route('assessments.learner-history', $learner))
             ->assertSessionHas('success');
 
@@ -214,13 +214,13 @@ class AssessmentDeleteTest extends TestCase
 
         // Delete the most recent reading: the level must fall back to the one
         // the remaining reading supports, not stay at the deleted reading's.
-        $this->actingAs($teacher)->delete(route('assessments.destroy', $newer))->assertRedirect();
+        $this->actingAs($teacher)->delete(route('assessments.destroy', $newer), ['learner_name' => $learner->getFullName()])->assertRedirect();
 
         $this->assertSame(Learner::LEVEL_FRUSTRATION, $learner->fresh()->reading_level);
 
         // And deleting the only reading left clears it, rather than leaving a
         // level that no reading on record supports.
-        $this->actingAs($teacher)->delete(route('assessments.destroy', $older))->assertRedirect();
+        $this->actingAs($teacher)->delete(route('assessments.destroy', $older), ['learner_name' => $learner->getFullName()])->assertRedirect();
 
         $this->assertNull($learner->fresh()->reading_level);
     }
@@ -269,7 +269,7 @@ class AssessmentDeleteTest extends TestCase
         $learner = $this->learnerOf($teacher, ['first_name' => 'Juan', 'last_name' => 'Cruz', 'middle_name' => null]);
         $assessment = $this->scoredReading($learner, $teacher, [], ['created_at' => now()->subDay()]);
 
-        $this->actingAs($teacher)->delete(route('assessments.destroy', $assessment))->assertRedirect();
+        $this->actingAs($teacher)->delete(route('assessments.destroy', $assessment), ['learner_name' => $learner->getFullName()])->assertRedirect();
 
         $log = ActivityLog::latest('id')->first();
 
@@ -414,14 +414,42 @@ class AssessmentDeleteTest extends TestCase
         $assessment = $this->scoredReading($learner, $teacher);
         $id = $assessment->id;
 
-        $this->actingAs($teacher)->delete(route('assessments.destroy', $assessment))->assertRedirect();
+        $this->actingAs($teacher)->delete(route('assessments.destroy', $assessment), ['learner_name' => $learner->getFullName()])->assertRedirect();
         $this->actingAs($teacher)->delete(route('assessments.destroy', $id))->assertNotFound();
 
         $this->assertSame(1, ActivityLog::where('action', 'Assessment Deleted')->count());
     }
 
-    /** An unmeasured reading is deletable with one click: there is no reviewed record to protect. */
-    public function test_an_unreviewed_reading_needs_no_typed_name(): void
+    /**
+     * A score nobody has reviewed yet is still a score: it already feeds the
+     * child's reading level, the parent portal and Practice Center. So the
+     * typed name is asked for the result, not only for the verdict - the gate
+     * the brief put on `verdict` alone would have let this one go on a click.
+     */
+    public function test_deleting_a_scored_but_unreviewed_reading_also_requires_the_typed_name(): void
+    {
+        $teacher = $this->teacherWithClass();
+        $learner = $this->learnerOf($teacher, ['first_name' => 'Juan', 'last_name' => 'Cruz']);
+        $assessment = $this->scoredReading($learner, $teacher);
+
+        $this->assertNull($assessment->verdict, 'This reading must be scored but unreviewed.');
+
+        $this->actingAs($teacher)
+            ->from(route('assessments.learner-history', $learner))
+            ->delete(route('assessments.destroy', $assessment))
+            ->assertRedirect(route('assessments.learner-history', $learner))
+            ->assertSessionHasErrors('learner_name');
+        $this->assertDatabaseHas('assessments', ['id' => $assessment->id]);
+
+        // And the typed name still gets it through.
+        $this->actingAs($teacher)
+            ->delete(route('assessments.destroy', $assessment), ['learner_name' => 'Juan Cruz'])
+            ->assertRedirect();
+        $this->assertDatabaseMissing('assessments', ['id' => $assessment->id]);
+    }
+
+    /** An unmeasured reading is deletable with one click: there is nothing measured to protect. */
+    public function test_an_unmeasured_reading_needs_no_typed_name(): void
     {
         $teacher = $this->teacherWithClass();
         $learner = $this->learnerOf($teacher);

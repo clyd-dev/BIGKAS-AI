@@ -231,11 +231,17 @@ class AssessmentController extends Controller
         $learner = $assessment->learner;
         $assessment->loadMissing(['result', 'verdict', 'material']);
 
-        // An assessment carrying a verdict is a reviewed record with an audit
-        // trail behind it: a teacher looked at the AI's numbers and accepted,
-        // overrode or invalidated them. Destroying that takes the learner's
-        // typed name, so a click cannot do it and neither can a confirm-through.
-        if ($assessment->verdict !== null && ! $this->typedNameMatches($request->input('learner_name'), $learner)) {
+        // A measured reading takes the learner's typed name, so a click cannot
+        // destroy it and neither can a confirm-through.
+        //
+        // The gate is the result, not only the verdict. A verdict proves a
+        // teacher invested attention; the *result* is the thing worth
+        // protecting - it is what Learner::readingLevelFromAssessments() reads,
+        // what the parent portal shows and what Practice Center recommends
+        // from. A scored reading nobody has reviewed yet still moves all three,
+        // so it is no less dangerous to lose than a reviewed one.
+        if (($assessment->result !== null || $assessment->verdict !== null)
+            && ! $this->typedNameMatches($request->input('learner_name'), $learner)) {
             return back()->withErrors([
                 'learner_name' => 'This reading has already been reviewed. To delete it, type '
                     . $learner->getFullName() . ' to confirm.',

@@ -278,3 +278,38 @@ whole class.
 - whether the unwatched batch reached `completed` on its own
 - anything in Section C that behaved differently from "Expect"
 - whether Section D forced a change to `--limit` / `withoutOverlapping`
+
+## E. The setup form's per-child reading and Cancel (added 2026-10-22)
+
+None of this has run in a browser — it is read and syntax-checked only. Shoot
+at **500px wide or more**; narrower fakes an overflow bug in headless Edge.
+
+1. **The child tick.** Open *Assess a group*. Each child's checkbox should be
+   large (1.6rem), outlined, and hit-sized with the name beside it. Tick one:
+   the row tints pale blue. *If the tick is small or the row does not tint, the
+   CSS did not load — check `view:clear` and a hard refresh.*
+2. **The stated reading.** Choose a language, type and material grade, then a
+   batch material. Every ticked row should now read "📖 <that material's
+   title>". Change the batch material: **every row's stated title changes with
+   it.** *If a row still names the old passage, `syncBatchReading()` is not
+   firing on the `default_material_id` change.*
+3. **The override tick.** A ticked child shows "A different reading for
+   <name>". Tick it: a dropdown appears and the stated line disappears. Choose a
+   passage from a different grade — it is allowed on purpose.
+4. **Turning the override off.** Untick it: the dropdown disappears and the
+   stated line returns. **Submit now and that child must read the batch
+   material, not the one you had briefly chosen.** *If the child reads the
+   abandoned passage, the control is hidden but still submitting — the one bug
+   this design exists to prevent.*
+5. **Unticking the child.** With an override chosen, untick the **child**. The
+   override tick and dropdown both disappear. Re-tick the child: the override
+   starts off again, not remembered.
+6. **The sixteenth child.** Tick fifteen; the sixteenth checkbox disables
+   itself and the counter reads "15 of 15". Untick one and the others re-enable.
+7. **Mixed grades.** Tick children from two grades. The grade select should
+   preselect nothing and a note should name both grades. Pick a grade by hand,
+   then tick another child: the select must **stop** following your ticks.
+8. **Cancel on the summary.** Review a batch, then press *Cancel and discard*.
+   It is an outlined red button, it asks before discarding, and Cancel-ing the
+   confirmation leaves you on the page with your ticks. Confirming lands you on
+   the batches list with **no batch created** — check the list is unchanged.

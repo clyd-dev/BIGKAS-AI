@@ -7,6 +7,7 @@ use App\Models\AssessmentBatch;
 use App\Models\ReadingMaterial;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Tests\Concerns\MakesBatchAssessments;
 use Tests\TestCase;
 
 /**
@@ -15,6 +16,7 @@ use Tests\TestCase;
  */
 class AssessmentBatchTest extends TestCase
 {
+    use MakesBatchAssessments;
     use RefreshDatabase;
 
     public function test_an_assessment_with_no_batch_is_a_single_child_assessment(): void
@@ -43,9 +45,19 @@ class AssessmentBatchTest extends TestCase
         $batch = AssessmentBatch::factory()->create();
         $entry = Assessment::factory()->create(['batch_id' => $batch->id]);
 
+        // The result is the half of this test's name that used to go unproven,
+        // and it is the half that matters: a measurement about a child must not
+        // leave with the roster it happened to be made on.
+        $entry->createResult($this->classifiedAnalysis());
+        $this->assertDatabaseHas('assessment_results', ['assessment_id' => $entry->id]);
+
         $batch->delete();
 
         $this->assertDatabaseHas('assessments', ['id' => $entry->id, 'batch_id' => null]);
+        $this->assertDatabaseHas('assessment_results', [
+            'assessment_id' => $entry->id,
+            'reading_level' => 'independent',
+        ]);
     }
 
     public function test_a_material_cited_by_a_batch_cannot_be_deleted(): void
@@ -59,6 +71,11 @@ class AssessmentBatchTest extends TestCase
     public function test_a_new_batch_starts_collecting_and_has_no_submitted_entries(): void
     {
         $entry = Assessment::factory()->create(['batch_id' => AssessmentBatch::factory()]);
+
+        // "Starts collecting" is half the claim, so it is asserted: a new batch
+        // is collecting recordings, not analysing them.
+        $this->assertSame(AssessmentBatch::STATUS_COLLECTING, $entry->batch->status);
+        $this->assertNull($entry->batch->completed_at);
 
         $this->assertNull($entry->submitted_for_analysis_at);
         $this->assertNull($entry->analysis_started_at);

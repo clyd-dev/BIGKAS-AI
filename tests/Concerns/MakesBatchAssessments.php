@@ -89,8 +89,17 @@ trait MakesBatchAssessments
         ], $overrides);
     }
 
-    /** Flask up or down, per part: transcription and the classifier. */
-    protected function fakeEngine(bool $stt = true, bool $classifier = true): void
+    /**
+     * A healthy Flask: transcription answers, the classifier answers.
+     *
+     * It takes no arguments on purpose. It used to accept $stt and $classifier,
+     * and no call site in the suite ever passed either - but fakeEngine(stt: false)
+     * read like an outage while still answering /api/transcribe with a full
+     * transcript, so a test built on it scored the reading happily and proved
+     * nothing. The parameters are gone so that call cannot be written: an outage
+     * is deadSpeechEngine(), which is the only helper that produces one.
+     */
+    protected function fakeEngine(): void
     {
         $t = 0.0;
         $words = array_map(function ($w) use (&$t) {
@@ -103,31 +112,30 @@ trait MakesBatchAssessments
         Http::swap(new \Illuminate\Http\Client\Factory());
         Http::fake([
             '*/api/health' => Http::response([
-                'whisper_loaded' => $stt, 'classifier_loaded' => $classifier,
+                'whisper_loaded' => true, 'classifier_loaded' => true,
                 'model_stale' => false, 'model_version' => '3.0.0-test',
             ]),
             '*/api/transcribe' => Http::response([
                 'text' => self::BATCH_PASSAGE, 'words' => $words, 'duration' => 6.5, 'language' => 'en',
             ]),
-            '*/api/classify' => $classifier
-                ? Http::response([
-                    'primary_weakness' => 'Independent Reader', 'secondary_weakness' => null,
-                    'confidence' => 0.8, 'scores' => [], 'model_version' => '3.0.0-test',
-                ])
-                : Http::response('no model', 503),
+            '*/api/classify' => Http::response([
+                'primary_weakness' => 'Independent Reader', 'secondary_weakness' => null,
+                'confidence' => 0.8, 'scores' => [], 'model_version' => '3.0.0-test',
+            ]),
         ]);
     }
 
     /**
      * A speech engine that is genuinely down - nothing can transcribe anything.
      *
-     * Read this before reaching for fakeEngine(stt: false): that is **not** an
-     * outage. It only reports whisper_loaded = false on /api/health, while its
-     * own /api/transcribe stub still answers 200 with a full transcript - and
-     * SpeechToTextService::transcribe() posts straight to that endpoint without
-     * ever consulting health. A test built on it scores the reading happily and
-     * proves nothing. Layering a second Http::fake() on top cannot rescue it
-     * either: fake() appends stubs and the first match wins, so the 200 stays.
+     * The only helper that produces one. fakeEngine() cannot be talked into it:
+     * it used to take $stt, and reporting whisper_loaded = false on /api/health
+     * was **not** an outage - its own /api/transcribe stub still answered 200
+     * with a full transcript, and SpeechToTextService::transcribe() posts
+     * straight to that endpoint without ever consulting health, so a test built
+     * on it scored the reading happily and proved nothing. Layering a second
+     * Http::fake() on top could not rescue it either: fake() appends stubs and
+     * the first match wins, so the 200 stayed. That parameter is now gone.
      *
      * So this helper builds the outage from a clean factory instead: health
      * down, transcribe dead, classifier dead, and the cloud Whisper key cleared

@@ -455,9 +455,10 @@ class BatchEntryPanelTest extends TestCase
      * The dead engine itself, pinned.
      *
      * MakesBatchAssessments::deadSpeechEngine() is the only thing in this suite
-     * that really simulates an outage - fakeEngine(stt: false) leaves
-     * /api/transcribe answering 200, so a test built on it scores the reading
-     * and proves nothing. This test exists so the helper cannot quietly become
+     * that simulates an outage - fakeEngine()'s old stt: false left
+     * /api/transcribe answering 200, so a test built on it scored the reading
+     * and proved nothing, and that parameter has since been removed outright.
+     * This test exists so the helper cannot quietly become
      * another engine that still answers, and so the regression guard above
      * keeps meaning what it says.
      */
@@ -476,8 +477,8 @@ class BatchEntryPanelTest extends TestCase
         $this->assertNotNull($summary['skipped']);
         $this->assertSame(0, $summary['scored']);
 
-        // 3. And the transcription itself genuinely fails - the assertion that
-        //    fakeEngine(stt: false) would not have survived.
+        // 3. And the transcription itself genuinely fails - the assertion the
+        //    old fakeEngine(stt: false) would not have survived.
         $this->expectException(SpeechServiceUnavailable::class);
         app(SpeechToTextService::class)->transcribe($entry->getAudioPath(), 'en');
     }

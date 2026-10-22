@@ -177,10 +177,16 @@ class ResetData extends Command
         // One transaction, constraints off: the tables reference each other in
         // both directions (a class points at a teacher, a teacher's logs point
         // back), so no delete order satisfies every constraint on its own.
+        //
+        // DELETE, never TRUNCATE. On MySQL, TRUNCATE is DDL and performs an
+        // implicit commit, which ends this transaction mid-run: every later
+        // statement then auto-commits with nothing to roll back, and the final
+        // commit fails with "There is no active transaction". SQLite turns
+        // truncate into a delete, so only a real MySQL run shows it.
         DB::transaction(function () use ($tables, $keep) {
             Schema::withoutForeignKeyConstraints(function () use ($tables, $keep) {
                 foreach ($tables as $table) {
-                    DB::table($table)->truncate();
+                    DB::table($table)->delete();
                 }
 
                 User::whereNotIn('id', array_keys($keep))->delete();

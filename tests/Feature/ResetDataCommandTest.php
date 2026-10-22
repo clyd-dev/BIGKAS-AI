@@ -202,4 +202,54 @@ class ResetDataCommandTest extends TestCase
 
         $this->assertDatabaseCount('sessions', 0);
     }
+
+    /**
+     * The first run on the real server died with "There is no active
+     * transaction". TRUNCATE is DDL on MySQL and performs an implicit commit,
+     * which ended the transaction mid-wipe: everything after it auto-committed
+     * and the final commit had nothing to commit. SQLite rewrites truncate as
+     * a delete, so no amount of testing here would have shown it — this test
+     * pins the statement itself instead.
+     */
+    public function test_the_wipe_never_issues_a_truncate(): void
+    {
+        $this->seedPilotData();
+
+        $statements = [];
+        DB::listen(function ($query) use (&$statements) {
+            $statements[] = strtolower(trim($query->sql));
+        });
+
+        $this->artisan('bigkas:reset-data --keep=keep@example.com --force')->assertExitCode(0);
+
+        $truncates = array_values(array_filter($statements, fn ($sql) => str_starts_with($sql, 'truncate')));
+        $this->assertSame([], $truncates, 'TRUNCATE implicitly commits on MySQL and breaks the transaction.');
+    }
+
+    /** Because the wipe is one transaction, a failure part-way must undo it all. */
+    public function test_a_failure_part_way_through_leaves_everything_intact(): void
+    {
+        $this->seedPilotData();
+        $learnersBefore = Learner::count();
+        $usersBefore = User::count();
+
+        // Blow up once the wipe reaches the learners table, after earlier
+        // tables have already been emptied inside the transaction.
+        DB::listen(function ($query) {
+            if (str_contains(strtolower($query->sql), 'delete from "learners"')) {
+                throw new \RuntimeException('simulated failure mid-wipe');
+            }
+        });
+
+        try {
+            $this->artisan('bigkas:reset-data --keep=keep@example.com --force')->run();
+            $this->fail('The simulated failure should have propagated.');
+        } catch (\Throwable $e) {
+            $this->assertStringContainsString('simulated failure', $e->getMessage());
+        }
+
+        $this->assertSame($learnersBefore, Learner::count(), 'A failed wipe must roll back completely.');
+        $this->assertSame($usersBefore, User::count());
+        $this->assertDatabaseCount('activity_logs', 1);
+    }
 }

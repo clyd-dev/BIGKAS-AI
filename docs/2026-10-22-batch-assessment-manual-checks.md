@@ -313,3 +313,30 @@ at **500px wide or more**; narrower fakes an overflow bug in headless Edge.
    It is an outlined red button, it asks before discarding, and Cancel-ing the
    confirmation leaves you on the page with your ticks. Confirming lands you on
    the batches list with **no batch created** — check the list is unchanged.
+
+## F. Add child, and the loading indications (added 2026-10-23)
+
+Neither screen below has been opened in a browser. Shoot at **500px or wider**.
+
+1. **The loading indications.** Open a board with cards in several states. A
+   spinner in the chip and a striped moving bar must appear on a `transcribing`
+   card **and on no other** — not on recorded, queued, needs verdict, done or
+   failed. Let a reading finish: both must stop. *They previously showed on
+   every card for ever; if that returns, an element has two `class` attributes
+   again.*
+2. **Add child is offered only when it can work.** The button sits in the board
+   header. Cancel a batch: the button disappears. Fill a batch to fifteen: it
+   disappears. Visit `/assessments/batch/<id>/add` directly in either case —
+   you should land back on the board with a warning, not an error.
+3. **The picker.** It lists only children not already on this board. Tick one,
+   optionally give them their own reading, and add. The new card appears as
+   **waiting**, and the counter respects the batch as a whole — a board of
+   fourteen offers one more place, not fifteen.
+4. **A late child on a finished batch.** Complete every reading in a batch, then
+   add a child. The batch must read **collecting**, not analysing — nothing is
+   being analysed until that child reads and you send it. Send their reading and
+   it should read analysing.
+5. **Two tabs (known gap).** Two browser tabs each adding children can between
+   them pass fifteen, because the cap is not row-locked. The result is a
+   sixteenth card and a longer queue — no data is lost. Worth knowing; tell me
+   if you want it closed.

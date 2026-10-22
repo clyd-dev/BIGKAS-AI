@@ -23,6 +23,7 @@ use App\Http\Controllers\ClassReportController;
 use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\GstScreeningController;
 use App\Http\Controllers\Form2Controller;
+use App\Http\Controllers\LearnerMasterListController;
 use App\Http\Controllers\LearnerForm4Controller;
 use App\Http\Controllers\AssessmentForm3Controller;
 use App\Http\Controllers\VerificationCodeController;
@@ -280,6 +281,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/form2/pdf', [Form2Controller::class, 'pdf'])->name('reports.form2.pdf');
         Route::post('/reports/form2/submit', [Form2Controller::class, 'submit'])->name('reports.form2.submit');
         Route::get('/reports/form2/submissions/{depedSubmission}', [Form2Controller::class, 'show'])->name('reports.form2.show');
+
+        // Principal: printable master list of every learner's reading results (read-only)
+        Route::get('/reports/master-list', [LearnerMasterListController::class, 'index'])->name('reports.master-list.index');
+        Route::get('/reports/master-list/print', [LearnerMasterListController::class, 'print'])->name('reports.master-list.print');
+        Route::get('/reports/master-list/pdf', [LearnerMasterListController::class, 'pdf'])->name('reports.master-list.pdf');
 
         Route::post('/reports/submissions/{classReport}/review', [ClassReportController::class, 'review'])->name('reports.submissions.review');
     });

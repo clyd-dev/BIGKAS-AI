@@ -195,6 +195,166 @@ class AssessmentController extends Controller
         ]);
     }
 
+    /**
+     * Destroy one reading, on the learner's own history screen.
+     *
+     * The only place in the application where a measured reading can be
+     * destroyed. The batch board deliberately refuses to: there a teacher is
+     * moving through fifteen cards and one misplaced tap would be one child's
+     * record gone, so a scored card leaves that board by having batch_id set to
+     * null and nothing else. Here she is in front of one child's own history,
+     * one row at a time, behind a confirmation that shows the reading.
+     *
+     * What this costs, so the guards below read as necessary rather than
+     * ceremonial: the row's result, verdict, comprehension answers and sessions
+     * all go with it, and Learner::readingLevelFromAssessments() derives the
+     * child's reading level from their assessments - so the delete changes what
+     * the parent portal shows, what the Practice Center recommends, which
+     * interventions are chosen for that child and what the admin chart counts.
+     * Hence: a real confirmation, an audit line that outlives the row, and a
+     * recompute rather than a stale level.
+     *
+     * Outside the batch feature and outside config('assessment.batch_enabled').
+     */
+    public function destroy(Request $request, Assessment $assessment)
+    {
+        $this->authorizeLearnerAccess($assessment->learner);
+
+        // authorizeLearnerAccess() admits the admin (principal) to every
+        // learner by design - it is written for reading. Deleting is the
+        // assessing teacher's act, per the LearnerAdminReadOnlyTest precedent,
+        // so it is refused here as well as by the route's teacher-only group.
+        // Two guards on purpose: this one travels with the method if the route
+        // is ever moved.
+        abort_if(auth()->user()->isAdmin(), 403, 'Deleting a reading is the assessing teacher’s decision.');
+
+        $learner = $assessment->learner;
+        $assessment->loadMissing(['result', 'verdict', 'material']);
+
+        // An assessment carrying a verdict is a reviewed record with an audit
+        // trail behind it: a teacher looked at the AI's numbers and accepted,
+        // overrode or invalidated them. Destroying that takes the learner's
+        // typed name, so a click cannot do it and neither can a confirm-through.
+        if ($assessment->verdict !== null && ! $this->typedNameMatches($request->input('learner_name'), $learner)) {
+            return back()->withErrors([
+                'learner_name' => 'This reading has already been reviewed. To delete it, type '
+                    . $learner->getFullName() . ' to confirm.',
+            ]);
+        }
+
+        $key = $assessment->getKey();
+        $audio = $assessment->audio_file;
+        $batchId = $assessment->batch_id;
+        $narrative = $this->deletionNarrative($assessment, $learner);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($assessment, $key, $narrative, $learner) {
+            // Written before the row goes, and inside the transaction so a
+            // failure part-way cannot leave a log line claiming a deletion
+            // that was rolled back. The subject is the learner, not the
+            // assessment: an assessment id is a dangling pointer the moment
+            // this commits, and the description carries the rest.
+            ActivityLog::log('Assessment Deleted', $narrative, 'learner', $learner->getKey());
+
+            // The children are deleted explicitly rather than left to the
+            // foreign keys, so this holds the same on every engine the app
+            // runs on - the same precedent as the batch board's deleteEntry().
+            \App\Models\ComprehensionAnswer::where('assessment_id', $key)->delete();
+            \App\Models\AssessmentVerdict::where('assessment_id', $key)->delete();
+            \App\Models\AssessmentResult::where('assessment_id', $key)->delete();
+            AssessmentSession::where('assessment_id', $key)->delete();
+
+            $assessment->delete();
+        });
+
+        // After the commit: a deleted file is the one thing a rollback cannot
+        // bring back. Left behind it would be a child's voice that nothing on
+        // record refers to any more.
+        if ($audio) {
+            Storage::disk('public')->delete($audio);
+        }
+
+        // The level must never reflect a reading that is gone. Same mechanism
+        // as learners:recompute-levels - Learner::updateReadingLevel() over
+        // readingLevelFromAssessments() - so the rule has one definition and
+        // cannot drift between the command and this screen. When no usable
+        // reading is left the level is cleared rather than kept.
+        $learner->updateReadingLevel();
+
+        // A reading still sitting on a batch board leaves a board deriving its
+        // status from a card that no longer exists. A delete fires no saved
+        // event, so AssessmentObserver cannot do this one.
+        if ($batchId) {
+            \App\Models\AssessmentBatch::find($batchId)?->refreshStatus();
+        }
+
+        return redirect()->route('assessments.learner-history', $learner)
+            ->with('success', 'That reading was deleted, with its result, any verdict over it and its '
+                . 'comprehension answers. ' . $learner->getFullName() . '’s reading level is now '
+                . ($learner->fresh()->reading_level
+                    ? ucfirst($learner->fresh()->reading_level)
+                    : 'not set, because no reading on record supports one') . '.');
+    }
+
+    /**
+     * Does what the teacher typed name this child?
+     *
+     * Forgiving about what hands do to a name that is on the screen in front of
+     * them - leading and trailing space, doubled spaces, case, and the full
+     * stop or apostrophe in "Juan D. Cruz" or "O’Brien" - and forgiving about
+     * the middle initial, since the heading shows it but asking a teacher to
+     * reproduce it is asking her to fight the form rather than read it. So both
+     * "Juan D. Cruz" and "Juan Cruz" are accepted for the same child.
+     *
+     * Not forgiving about anything else. Nothing typed, a first name alone, a
+     * surname alone or another child's name are all refused, which is the point:
+     * a blind confirm-through must not pass.
+     */
+    private function typedNameMatches(?string $typed, Learner $learner): bool
+    {
+        if ($typed === null || trim($typed) === '') {
+            return false;
+        }
+
+        $normalise = function (string $name): string {
+            // Punctuation inside a name is dropped before comparing, not the
+            // name's words: what is required is the whole name.
+            $name = str_replace(['.', "'", '’', '`', '-'], '', $name);
+
+            return trim(preg_replace('/\s+/u', ' ', mb_strtolower($name)));
+        };
+
+        return in_array($normalise($typed), [
+            $normalise($learner->getFullName()),
+            $normalise($learner->first_name . ' ' . $learner->last_name),
+        ], true);
+    }
+
+    /**
+     * The audit line, built while the assessment still exists.
+     *
+     * It has to still mean something once it does not: "deleted assessment 41"
+     * is useless the moment 41 is gone. So the child, the date, the material,
+     * the level and the score are in the text itself, and the consequences are
+     * named rather than left to be inferred from the action word.
+     */
+    private function deletionNarrative(Assessment $assessment, Learner $learner): string
+    {
+        $accuracy = $assessment->effectiveAccuracy();
+        $level = $assessment->effectiveReadingLevel();
+
+        return sprintf(
+            'Deleted the %s reading of %s — material “%s”, level %s, accuracy %s. '
+            . 'Its result, any verdict over it and its comprehension answers were deleted with it. '
+            . 'The learner’s reading level was %s before the deletion and was recomputed from the readings that remain.',
+            $assessment->created_at?->format('M d, Y') ?? 'undated',
+            $learner->getFullName(),
+            $assessment->material?->title ?? 'unknown',
+            $level !== null ? ucfirst($level) : 'none recorded',
+            $accuracy !== null ? number_format((float) $accuracy, 1) . '%' : 'not measured',
+            $learner->reading_level !== null ? ucfirst($learner->reading_level) : 'not set'
+        );
+    }
+
     public function status(Assessment $assessment)
     {
         $this->authorizeLearnerAccess($assessment->learner);

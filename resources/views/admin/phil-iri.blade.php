@@ -23,6 +23,11 @@
                 @if($schoolYear) <span class="ms-2"><i class="bi bi-calendar3 me-1"></i>S.Y. {{ $schoolYear }}</span> @endif
             </p>
         </x-slot:meta>
+        <x-slot:actions>
+            <a href="{{ route('reports.master-list.index') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-list-check me-1"></i> Learner Master List
+            </a>
+        </x-slot:actions>
     </x-page-header>
 
     {{-- The official forms --}}

@@ -94,6 +94,16 @@
         return '';
     }
 
+    /**
+     * The panel's own rendering of a card, which deliberately carries neither
+     * the one action nor the row that takes a child off the board - both lead
+     * back to the page it is already on. The server leaves them out; this
+     * script must not put them back.
+     */
+    function isCompact(card) {
+        return card.hasAttribute('data-compact');
+    }
+
     /** True when this state needs server-rendered markup we cannot build here. */
     function needsServerMarkup(card, state) {
         if (state.chip === 'done' && !card.querySelector('[data-done]')) {
@@ -102,10 +112,15 @@
 
         // A card that has moved between manage rows - a queued reading the lane
         // has now started, say - must be re-rendered rather than patched: an
-        // un-send form left behind would offer to stop a running Whisper.
-        var manage = card.querySelector('[data-manage]');
-        if ((manage ? manage.getAttribute('data-manage') : '') !== manageFor(state)) {
-            return true;
+        // un-send form left behind would offer to stop a running Whisper. A
+        // compact card has no such row in any state, so there is nothing here
+        // that could fall out of step: asking for markup on every state change
+        // would just be a fetch per chip.
+        if (!isCompact(card)) {
+            var manage = card.querySelector('[data-manage]');
+            if ((manage ? manage.getAttribute('data-manage') : '') !== manageFor(state)) {
+                return true;
+            }
         }
 
         return state.playable && !card.querySelector('audio');
@@ -152,7 +167,7 @@
                 + '<i class="bi bi-clipboard-data me-1"></i> Check Result</a>';
         }
 
-        if (state.action) {
+        if (state.action && !isCompact(card)) {
             html += '<a href="' + encodeURI(card.dataset.entryUrl || '#') + '" class="btn btn-sm btn-outline-primary">'
                 + escapeText(state.action) + '</a>';
         }
@@ -197,10 +212,18 @@
         }
 
         var body = replacement.querySelector('.card-body') || replacement;
-        var actions = body.querySelector('[data-actions]');
 
-        if (actions) {
-            body.insertBefore(live, actions);
+        // Above the button row, which is now a wrapper holding both the actions
+        // and the manage row - so insertBefore is given the wrapper, not the
+        // row nested inside it. Handed a node that is not its own child,
+        // insertBefore throws and the live recording would be dropped.
+        var anchor = body.querySelector('[data-actions]');
+        while (anchor && anchor.parentElement !== body) {
+            anchor = anchor.parentElement;
+        }
+
+        if (anchor) {
+            body.insertBefore(live, anchor);
         } else {
             body.appendChild(live);
         }
@@ -220,13 +243,17 @@
             return !replacing[request.id];
         });
 
-        if (!config.boardUrl || wanted.length === 0) {
+        // The panel points this at itself, so a card re-rendered there is the
+        // panel's compact one and not the board's.
+        var source = config.cardUrl || config.boardUrl;
+
+        if (!source || wanted.length === 0) {
             return;
         }
 
         wanted.forEach(function (request) { replacing[request.id] = request.sig; });
 
-        fetch(config.boardUrl, { headers: { Accept: 'text/html' } })
+        fetch(source, { headers: { Accept: 'text/html' } })
             .then(function (response) { return response.ok ? response.text() : null; })
             .then(function (html) {
                 if (!html) {

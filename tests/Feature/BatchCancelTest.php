@@ -775,9 +775,11 @@ class BatchCancelTest extends TestCase
             'an unescaped apostrophe makes the handler a syntax error, so Remove submits with no dialog at all'
         );
 
-        // The panel shares the card, so it is safe there too.
+        // The panel includes the same card compact, which carries no Remove at
+        // all: a child leaves the board from the board. So there is no second
+        // copy of this dialog to be escaped - and none to go unescaped either.
         $this->actingAs($batch->teacher)->get(route('assessments.batch.entry', [$batch, $entry]))->assertOk()
-            ->assertSee('onsubmit="return confirm(\'Remove Mary O\\&#039;Brien', false);
+            ->assertDontSee('onsubmit="return confirm(', false);
     }
 
     /** The detach confirmation carries a name too, so it is escaped as well. */

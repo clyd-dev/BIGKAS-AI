@@ -340,3 +340,30 @@ Neither screen below has been opened in a browser. Shoot at **500px or wider**.
    them pass fifteen, because the cap is not row-locked. The result is a
    sixteenth card and a longer queue — no data is lost. Worth knowing; tell me
    if you want it closed.
+
+## G. The buttons on a card, and the panel's layout (added 2026-10-23)
+
+Not opened in a browser either. Shoot at **500px or wider**, and once wide.
+
+1. **One row, not two.** On the board, a `waiting` card's **Conduct here** and
+   **Remove** must sit beside each other on one line, and when the card is too
+   narrow for both they wrap together rather than one sitting under the other.
+   Check `done` too: **Check Result** and **Remove from batch** on one row.
+2. **A transcribing card.** The sentence "Being analysed now — this one cannot
+   be stopped." takes the whole width; it must not try to sit beside a button.
+3. **The panel's card.** Open a child's panel. The card at the top fills the
+   left column — not a third of it — and carries **no** Conduct here, no Send
+   button of its own and no Remove. The chip, the words, Check Result and the
+   player are all still there, and the player still plays.
+4. **The panel's card keeps its shape while it changes.** Leave the panel open
+   on a reading that is being analysed and let it finish. The card repaints to
+   `needs verdict` (it is fetched from this page, not the board) and must
+   **still** have no Conduct here and no Remove. If either appears, the poll is
+   pulling the board's copy of the card.
+5. **What the panel stopped showing.** No "Sit with … tap Start reading"
+   sentence above the recorder, and no "On …'s own device" card. The session
+   code is still on the card itself while the child is `waiting` — and nowhere
+   once they have read, which is deliberate.
+6. **Comprehension order.** On a comprehension reading, the passage card comes
+   **first** and the questions below it. Read down the page as a teacher would:
+   text, then questions, then Save answers.

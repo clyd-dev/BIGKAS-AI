@@ -7,6 +7,16 @@
     (the board passes its own one-query map, the panel passes its $session), so
     the card never runs a query of its own.
 
+    $compact (optional, default false) is the panel's rendering of the same
+    card. The panel IS the child's own screen, so every door the board card
+    offers would lead back to the page it is already on: the one action and the
+    row that takes the child off the board are left off, the card fills its
+    column instead of being a third of one, and the name is plain text rather
+    than a link to here. What remains is what the panel came for - the chip, the
+    words, the result link and the player. public/js/batch-board.js reads
+    data-compact and holds to the same rule, so a poll cannot put back a button
+    the server deliberately left out.
+
     The whole card is clickable through a stretched link, so the buttons inside
     it sit above that link rather than nested inside an anchor.
 
@@ -18,6 +28,8 @@
     nothing at all.
 --}}
 @php
+    $compact = $compact ?? false;
+
     $weakness = $entry->weaknessOutcome();
     $level = $entry->effectiveReadingLevel();
     $accuracy = $entry->effectiveAccuracy();
@@ -105,15 +117,22 @@
     };
 @endphp
 
-<div class="col-12 col-sm-6 col-lg-4">
+<div @class(['col-12', 'col-sm-6 col-lg-4' => ! $compact])>
     <div class="card h-100 border-0 shadow-sm bb-card position-relative"
+         @if($compact) data-compact @endif
          data-entry="{{ $entry->id }}"
          data-entry-url="{{ $entryUrl }}"
          data-sig="{{ $signature }}">
         <div class="card-body d-flex flex-column gap-2">
             <div class="d-flex justify-content-between align-items-start gap-2">
-                <h2 class="h6 mb-0 fw-bold">
-                    <a class="stretched-link text-decoration-none text-body" href="{{ $entryUrl }}">{{ $childName }}</a>
+                {{-- min-w-0 so a long name wraps inside the panel's wider card
+                     instead of pushing the chip off the edge. --}}
+                <h2 class="h6 mb-0 fw-bold text-break" style="min-width: 0;">
+                    @if($compact)
+                        {{ $childName }}
+                    @else
+                        <a class="stretched-link text-decoration-none text-body" href="{{ $entryUrl }}">{{ $childName }}</a>
+                    @endif
                 </h2>
                 <span class="pp-pill pp-{{ $state['tone'] }} bb-chip" data-chip>
                     {{-- One class attribute, not two. Written as
@@ -201,62 +220,79 @@
                        aria-label="Recording for {{ $childName }}"></audio>
             @endif
 
-            <div class="mt-auto d-flex flex-wrap gap-2 bb-act" data-actions>
-                @if($state['result_url'])
-                    <a href="{{ $state['result_url'] }}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-clipboard-data me-1"></i> Check Result
-                    </a>
-                @endif
-
-                @if($state['action'])
-                    <a href="{{ $entryUrl }}" class="btn btn-sm btn-outline-primary">{{ $state['action'] }}</a>
-                @endif
-            </div>
-
             {{--
-                Kept out of [data-actions] deliberately: the poll rebuilds that
-                row's HTML from JSON, which would wipe a form and its CSRF
-                token. data-manage is what the poll compares instead - when the
-                state calls for a different one, the card is re-rendered by the
-                server rather than patched here.
+                Every button this card offers, on one line.
+
+                Conduct here and Remove used to be two stacked rows, which read
+                as two separate decisions when they are the two things a teacher
+                does with a waiting child. They sit beside each other now, and
+                wrap onto a second line together when the card is too narrow for
+                both.
+
+                The two inner rows stay distinct elements, though, because the
+                poll treats them differently: it rebuilds [data-actions] from
+                JSON, which would wipe a form and its CSRF token, so the forms
+                live in [data-manage] as a sibling - never nested inside - and
+                the poll compares that row's value instead and asks the server
+                to re-render the card when it has to change.
             --}}
-            @if($state['chip'] === 'transcribing' && $state['running'])
-                <p class="small text-muted mb-0 fst-italic" data-manage="">
-                    Being analysed now — this one cannot be stopped. The result appears on this card when it is done.
-                </p>
-            @elseif($manage !== '')
-                <div class="d-flex flex-wrap gap-2 bb-act" data-manage="{{ $manage }}">
-                    @if($manage === 'unsend')
-                        <form method="POST" action="{{ route('assessments.batch.unsend', [$batch, $entry]) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i> Cancel analysis
-                            </button>
-                        </form>
-                    @elseif($manage === 'detach')
-                        {{-- Nothing is deleted here: this only takes the child off
-                             the board. The reading, its result, your verdict and
-                             the comprehension answers stay on their history. --}}
-                        <form method="POST" action="{{ route('assessments.batch.entry.remove', [$batch, $entry]) }}"
-                              onsubmit="return confirm('Take {{ $confirmName }} off this board? Their reading, its result and any verdict you had given are all kept on their own history — only the batch link is removed.')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-box-arrow-right me-1"></i> Remove from batch
-                            </button>
-                        </form>
-                    @else
-                        <form method="POST" action="{{ route('assessments.batch.entry.remove', [$batch, $entry]) }}"
-                              onsubmit="return confirm('{{ $state['chip'] === 'recorded' ? 'Remove ' . $confirmName . ' and delete the recording that has not been sent? Nothing has been measured yet, so nothing is lost from their record.' . $answerLoss : 'Remove ' . $confirmName . ' from this batch? Nothing has been recorded for them yet.' . $answerLoss }}')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-x-lg me-1"></i> Remove
-                            </button>
-                        </form>
+            <div class="mt-auto d-flex flex-wrap align-items-center gap-2">
+                <div class="d-flex flex-wrap gap-2 bb-act" data-actions>
+                    @if($state['result_url'])
+                        <a href="{{ $state['result_url'] }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-clipboard-data me-1"></i> Check Result
+                        </a>
+                    @endif
+
+                    {{-- The action always leads to the child's own panel, so on
+                         that panel it is a button back to this page. --}}
+                    @if($state['action'] && ! $compact)
+                        <a href="{{ $entryUrl }}" class="btn btn-sm btn-outline-primary">{{ $state['action'] }}</a>
                     @endif
                 </div>
-            @endif
+
+                @if($compact)
+                    {{-- Nothing: a child leaves the board from the board. --}}
+                @elseif($state['chip'] === 'transcribing' && $state['running'])
+                    {{-- w-100 because this is a sentence, not a button: it takes the
+                         whole line rather than sitting beside Check Result. --}}
+                    <p class="small text-muted mb-0 fst-italic w-100" data-manage="">
+                        Being analysed now — this one cannot be stopped. The result appears on this card when it is done.
+                    </p>
+                @elseif($manage !== '')
+                    <div class="d-flex flex-wrap gap-2 bb-act" data-manage="{{ $manage }}">
+                        @if($manage === 'unsend')
+                            <form method="POST" action="{{ route('assessments.batch.unsend', [$batch, $entry]) }}">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Cancel analysis
+                                </button>
+                            </form>
+                        @elseif($manage === 'detach')
+                            {{-- Nothing is deleted here: this only takes the child off
+                                 the board. The reading, its result, your verdict and
+                                 the comprehension answers stay on their history. --}}
+                            <form method="POST" action="{{ route('assessments.batch.entry.remove', [$batch, $entry]) }}"
+                                  onsubmit="return confirm('Take {{ $confirmName }} off this board? Their reading, its result and any verdict you had given are all kept on their own history — only the batch link is removed.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Remove from batch
+                                </button>
+                            </form>
+                        @else
+                            <form method="POST" action="{{ route('assessments.batch.entry.remove', [$batch, $entry]) }}"
+                                  onsubmit="return confirm('{{ $state['chip'] === 'recorded' ? 'Remove ' . $confirmName . ' and delete the recording that has not been sent? Nothing has been measured yet, so nothing is lost from their record.' . $answerLoss : 'Remove ' . $confirmName . ' from this batch? Nothing has been recorded for them yet.' . $answerLoss }}')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-x-lg me-1"></i> Remove
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 </div>

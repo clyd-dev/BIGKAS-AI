@@ -772,4 +772,121 @@ class BatchEntryPanelTest extends TestCase
 
         $this->assertNull($entry->fresh()->submitted_for_analysis_at);
     }
+    // ── What the panel shows, and what it stopped showing ─────────────
+
+    /**
+     * The card at the top of the panel is the board's card, included compact.
+     *
+     * Every door the board's copy offers leads to this page: the one action is
+     * a link to the panel it is already on, and Remove is a decision about the
+     * board, taken on the board. So the compact card carries neither - what is
+     * left is the chip, the words, the result link and the player.
+     */
+    public function test_the_panel_card_offers_no_button_that_leads_back_to_this_page(): void
+    {
+        $teacher = $this->teacher();
+        $entry = $this->waitingEntry($teacher);
+
+        $panel = $this->actingAs($teacher)
+            ->get(route('assessments.batch.entry', [$entry->batch_id, $entry->id]))->assertOk();
+
+        // The card is there, and it knows it is the compact one - which is also
+        // what public/js/batch-board.js reads before patching it.
+        $panel->assertSee('data-compact', false);
+
+        // No action link back to here, and no row that takes the child off the
+        // board. The board's own copy of this card has both.
+        $panel->assertDontSee('data-manage', false);
+        $panel->assertDontSee('btn btn-sm btn-outline-primary', false);
+
+        // It fills this column instead of taking a third of it.
+        $panel->assertDontSee('col-sm-6 col-lg-4', false);
+
+        $board = $this->actingAs($teacher)
+            ->get(route('assessments.batch.board', $entry->batch_id))->assertOk();
+
+        $board->assertSee('data-manage="remove"', false)
+            ->assertSee('col-sm-6 col-lg-4', false);
+    }
+
+    /**
+     * Conduct here and Remove are the two things a teacher does with a waiting
+     * child, so they sit beside each other rather than on two stacked rows.
+     *
+     * Asserted on the structure, not on the classes: the two rows share one
+     * parent element. They stay two elements on purpose - the poll rebuilds the
+     * actions row's HTML from JSON and would wipe a form and its CSRF token -
+     * so what matters is that they are siblings in one flex row.
+     */
+    public function test_the_action_and_the_remove_button_share_one_row(): void
+    {
+        $teacher = $this->teacher();
+        $entry = $this->waitingEntry($teacher);
+
+        $html = $this->actingAs($teacher)
+            ->get(route('assessments.batch.board', $entry->batch_id))->assertOk()->getContent();
+
+        $document = new \DOMDocument();
+        $document->loadHTML($html, LIBXML_NOERROR);
+        $xpath = new \DOMXPath($document);
+
+        $card = $xpath->query('//*[@data-entry="' . $entry->id . '"]')->item(0);
+        $this->assertNotNull($card, 'the board must render this child a card');
+
+        $actions = $xpath->query('.//*[@data-actions]', $card)->item(0);
+        $manage = $xpath->query('.//*[@data-manage]', $card)->item(0);
+
+        $this->assertNotNull($actions, 'the waiting card must offer Conduct here');
+        $this->assertNotNull($manage, 'the waiting card must offer Remove');
+
+        $this->assertSame(
+            $actions->parentNode,
+            $manage->parentNode,
+            'Conduct here and Remove must sit in one row, not two stacked ones'
+        );
+
+        // And the forms are beside the actions row, never inside it: the poll
+        // rebuilds that row's innerHTML and would take the CSRF token with it.
+        $this->assertSame(0, $xpath->query('.//*[@data-manage]', $actions)->length);
+    }
+
+    /**
+     * A child cannot be asked what happened in a story that is further down the
+     * page, so the questions follow the passage.
+     */
+    public function test_the_comprehension_questions_come_after_the_passage(): void
+    {
+        $teacher = $this->teacher();
+        $entry = $this->comprehensionEntry($teacher);
+
+        $html = $this->actingAs($teacher)
+            ->get(route('assessments.batch.entry', [$entry->batch_id, $entry->id]))->assertOk()->getContent();
+
+        $passageAt = strpos($html, $entry->material->content);
+        $questionAt = strpos($html, 'Question 1: what colour is Max?');
+
+        $this->assertNotFalse($passageAt, 'the panel must show the passage');
+        $this->assertNotFalse($questionAt, 'the panel must show the questions');
+        $this->assertGreaterThan($passageAt, $questionAt, 'the questions belong below the passage');
+    }
+
+    /**
+     * Two things the panel used to repeat are gone: a sentence naming the two
+     * buttons directly beneath it, and a card of its own for a way of reading
+     * that needs no screen - the child signs in with their PIN, the reading is
+     * waiting on their dashboard, and the recording lands here either way.
+     */
+    public function test_the_panel_does_not_repeat_the_recorder_or_give_the_portal_a_card(): void
+    {
+        $teacher = $this->teacher();
+        $entry = $this->waitingEntry($teacher);
+
+        $this->actingAs($teacher)
+            ->get(route('assessments.batch.entry', [$entry->batch_id, $entry->id]))->assertOk()
+            ->assertDontSee('tap Start reading')
+            ->assertDontSee('own device</h2>', false)
+            // The buttons themselves stay, of course.
+            ->assertSee('Start reading')
+            ->assertSee('Send for analysis');
+    }
 }

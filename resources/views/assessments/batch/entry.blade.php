@@ -2,19 +2,21 @@
     One child's panel: where the teacher conducts this reading, listens to it
     and sends it.
 
-    Two ways to read are offered side by side, not chosen at setup: the teacher
-    can conduct the reading on this device, or the child can read it on their own
-    device after signing in to the student portal with their PIN. Which one suits
-    a child is known in the moment, not an hour earlier. The session code below
-    is a reference for the teacher’s records, never a way in: no screen in
-    this application accepts a code.
+    Either way of reading still works and neither is chosen at setup: the
+    teacher conducts the reading here, or the child reads it on their own device
+    after signing in to the student portal with their PIN - there is no code for
+    them to type, the reading is simply waiting on their dashboard, and the
+    recording lands on this panel whichever way it was made. That needs no
+    screen of its own, so this page is only the one it used to be half of.
 
-    The chip, the label and the one action come from the board's own
+    The chip, the label and the result link come from the board's own
     _card.blade.php, included here rather than written again, so the panel can
-    never say something different about a child than the board does. The card is
-    kept up to date by public/js/batch-board.js - the same poll, patching this
-    one card in place - so sending or recording here never reloads the page and
-    never stops a recording the teacher is listening to.
+    never say something different about a child than the board does. It is
+    included compact: the buttons that lead back to this page, and the row that
+    takes a child off the board, belong to the board. The card is kept up to
+    date by public/js/batch-board.js - the same poll, patching this one card in
+    place - so sending or recording here never reloads the page and never stops
+    a recording the teacher is listening to.
 
     Expects: $batch, $entry, $state, $lane, $material, $questions, $answers, $session.
     $state already carries this reading's place in the scoring lane and its wait,
@@ -64,12 +66,14 @@
 
     <div class="row g-3">
         <div class="col-lg-5">
-            {{-- What the board says about this child, rendered by the board's own card. --}}
+            {{-- What the board says about this child, rendered by the board's own
+                 card - compact, so it fills this column instead of sitting in a
+                 third of it. --}}
             <div class="row g-3 mb-3">
-                @include('assessments.batch._card', ['batch' => $batch, 'entry' => $entry, 'state' => $state, 'joinCode' => $session?->session_code])
+                @include('assessments.batch._card', ['batch' => $batch, 'entry' => $entry, 'state' => $state, 'joinCode' => $session?->session_code, 'compact' => true])
             </div>
 
-            <div class="card border-0 shadow-sm mb-3">
+            <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white">
                     <h2 class="h6 mb-0"><i class="bi bi-mic-fill text-danger me-1"></i> Conduct here</h2>
                 </div>
@@ -95,11 +99,6 @@
                     </div>
                 @else
                 <div class="card-body" data-recorder>
-                    <p class="small text-muted">
-                        Sit with {{ $firstName }}, tap Start reading, and let them read the passage aloud.
-                        Nothing is sent for analysis until you tap Send for analysis.
-                    </p>
-
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <button type="button" class="btn btn-danger rounded-pill px-4" data-record-start>
                             <i class="bi bi-mic-fill me-1"></i> Start reading
@@ -130,40 +129,31 @@
                 </div>
                 @endif
             </div>
+        </div>
 
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h2 class="h6 mb-0"><i class="bi bi-phone me-1"></i> On {{ $firstName }}'s own device</h2>
+        <div class="col-lg-7">
+            {{-- The passage comes first: the questions below it ask about this text,
+                 and a child should not be asked what happened in a story that
+                 is further down the page. mb-3 only when something follows. --}}
+            <div @class(['card', 'border-0', 'shadow-sm', 'mb-3' => $questions->isNotEmpty()])>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h2 class="h6 mb-0">{{ $material?->title ?? 'Reading Passage' }}</h2>
+                    <span class="badge bg-light text-dark">{{ $material?->word_count ?? 0 }} words</span>
                 </div>
                 <div class="card-body">
-                    @if($session)
-                        <p class="small text-muted mb-2">
-                            {{ $firstName }} signs in to the student portal with their PIN, and this reading is
-                            waiting on their dashboard — there is no code for them to type. The code below
-                            identifies this session in your own records. The recording lands on this panel
-                            either way.
-                        </p>
-                        <div class="d-flex align-items-baseline gap-2">
-                            <span class="small text-muted">Session code (for your records):</span>
-                            <span class="fs-4 fw-bold text-primary font-monospace">{{ $session->session_code }}</span>
-                        </div>
+                    @if($material)
+                        <div class="p-4 bg-light rounded" style="font-size: 1.3rem; line-height: 2;">{{ $material->content }}</div>
                     @else
-                        {{-- Every entry in a batch is issued a code when the batch is
-                             created, so this is only ever empty for a batch made
-                             before session codes existed. The code is only a
-                             reference, so its absence costs the child nothing. --}}
-                        <p class="small text-muted mb-0">
-                            No session code was issued for {{ $firstName }}. They can still sign in with their
-                            PIN and read on their own device, or you can conduct this reading here.
+                        <p class="text-muted mb-0">
+                            No passage has been chosen for {{ $firstName }} yet. Pick one on the group setup
+                            screen before conducting this reading.
                         </p>
                     @endif
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-7">
             @if($questions->isNotEmpty())
-                <div class="card border-0 shadow-sm mb-3">
+                <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h2 class="h6 mb-0"><i class="bi bi-patch-question me-1"></i> Comprehension Questions</h2>
                         @if($answers->isNotEmpty())
@@ -240,23 +230,6 @@
                     @endif
                 </div>
             @endif
-
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h2 class="h6 mb-0">{{ $material?->title ?? 'Reading Passage' }}</h2>
-                    <span class="badge bg-light text-dark">{{ $material?->word_count ?? 0 }} words</span>
-                </div>
-                <div class="card-body">
-                    @if($material)
-                        <div class="p-4 bg-light rounded" style="font-size: 1.3rem; line-height: 2;">{{ $material->content }}</div>
-                    @else
-                        <p class="text-muted mb-0">
-                            No passage has been chosen for {{ $firstName }} yet. Pick one on the group setup
-                            screen before conducting this reading.
-                        </p>
-                    @endif
-                </div>
-            </div>
         </div>
     </div>
 @endsection
@@ -268,6 +241,11 @@
         window.BATCH_BOARD = {
             pollUrl: '{{ route("assessments.batch.poll", $batch) }}',
             boardUrl: '{{ route("assessments.batch.board", $batch) }}',
+            // Where a card whose new state needs server-rendered markup is
+            // fetched from. This page, not the board: the board's copy of this
+            // card carries the buttons that lead back here, and swapping it in
+            // would put them on the panel the moment a reading finished.
+            cardUrl: '{{ route("assessments.batch.entry", [$batch, $entry]) }}',
             status: '{{ $batch->status }}',
         };
 

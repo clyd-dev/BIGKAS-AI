@@ -811,6 +811,22 @@ cd ml-service/ && venv\Scripts\activate && python app.py
 php artisan queue:listen --tries=1
 ```
 
+**Windows shortcut — the engine and the scheduler in one window.** Instead of the
+ML-service terminal above plus a second terminal for `php artisan schedule:work`,
+double-click `start-bigkas.bat` (or run `.\start-bigkas.ps1`). It starts the Python
+engine, waits for the speech model to load, then starts the scheduler, and shows both
+in one window tagged `[engine]` and `[scheduler]`. Ctrl+C or closing the window stops
+both; nothing is left running behind.
+
+```powershell
+.\start-bigkas.ps1                # engine + scheduler (needed for batch assessments)
+.\start-bigkas.ps1 -NoScheduler   # engine only, exactly as before (single-child assessments)
+```
+
+The scheduler only matters for **batch** assessments and for re-scoring readings saved
+while the engine was down. A single-child assessment is scored by the Analyze button
+itself and does not depend on it.
+
 ### Quick Setup (All-in-One)
 
 ```bash

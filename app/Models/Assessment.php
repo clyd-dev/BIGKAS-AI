@@ -23,6 +23,16 @@ class Assessment extends Model
     const STATUS_COMPLETED = 'completed';
     const STATUS_FAILED = 'failed';
 
+    /**
+     * How long a run may sit at `processing` before it counts as abandoned.
+     *
+     * One number, named once: scopeAwaitingRescore() re-claims a stuck run past
+     * it, and BatchEntryState::isRunningNow() stops calling such a run "being
+     * analysed now" at the same moment - so the lane and the board cannot
+     * disagree about whether anything is still working on a recording.
+     */
+    const STALE_PROCESSING_MINUTES = 15;
+
     // Assessment type constants
     const TYPE_ORAL_READING = 'oral_reading';
     const TYPE_COMPREHENSION = 'comprehension';
@@ -32,6 +42,7 @@ class Assessment extends Model
         'learner_id',
         'material_id',
         'assessor_id',
+        'batch_id',
         'audio_file',
         'transcription',
         'language',
@@ -53,6 +64,11 @@ class Assessment extends Model
     }
 
     // ── Relationships ──
+
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(AssessmentBatch::class, 'batch_id');
+    }
 
     public function learner(): BelongsTo
     {
@@ -591,8 +607,8 @@ class Assessment extends Model
      * Readings that could not be scored and are waiting for the engine.
      *
      *  - a saved recording with no result (analysis failed, or was left
-     *    "processing" for over 15 minutes - a run that finished would have
-     *    stored a result), or
+     *    "processing" for longer than STALE_PROCESSING_MINUTES - a run that
+     *    finished would have stored a result), or
      *  - a result the model could not classify, which has no teacher verdict
      *    over it yet (a teacher's decision is never overwritten).
      *
@@ -606,7 +622,11 @@ class Assessment extends Model
                 $unscored->doesntHave('result')->where(function ($s) {
                     $s->where('status', self::STATUS_FAILED)
                         ->orWhere(fn ($stuck) => $stuck->where('status', self::STATUS_PROCESSING)
-                            ->where('updated_at', '<', now()->subMinutes(15)));
+                            ->where('updated_at', '<', now()->subMinutes(self::STALE_PROCESSING_MINUTES)))
+                        // A batch entry the teacher has sent is owed a score at
+                        // once; an unsent one is only a stored recording.
+                        ->orWhere(fn ($sent) => $sent->whereNotNull('batch_id')
+                            ->whereNotNull('submitted_for_analysis_at'));
                 });
             })->orWhere(function ($unclassified) {
                 $unclassified->whereHas('result', fn ($r) => $r->where('classification_status', AssessmentResult::STATUS_UNAVAILABLE))

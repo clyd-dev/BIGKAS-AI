@@ -30,6 +30,11 @@ class AssessmentScorer
     {
         $assessment->updateStatus(Assessment::STATUS_PROCESSING);
 
+        // Started and not yet timed is "being transcribed right now"; clearing
+        // the duration keeps a re-run from looking finished while it works.
+        $startedAt = hrtime(true);
+        $assessment->forceFill(['analysis_started_at' => now(), 'analysis_duration_ms' => null])->save();
+
         // Always the saved copy, so what was played back is what was analysed.
         $transcription = $this->stt->transcribe($assessment->getAudioPath(), $assessment->language ?? 'en');
 
@@ -66,7 +71,14 @@ class AssessmentScorer
         // can see whether to trust it (see AnalysisAdvisorService).
         $analysis['provenance'] = $this->provenance($transcription, $classification);
 
-        return $assessment->createResult($analysis);
+        $result = $assessment->createResult($analysis);
+
+        // At least 1 ms, so a timed run is never mistaken for an untimed one.
+        $assessment->forceFill([
+            'analysis_duration_ms' => max(1, (int) round((hrtime(true) - $startedAt) / 1_000_000)),
+        ])->save();
+
+        return $result;
     }
 
     /**

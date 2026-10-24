@@ -7,6 +7,7 @@
  */
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AssessmentBatchController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AssessmentVerdictController;
 use App\Http\Controllers\AuthController;
@@ -191,7 +192,50 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/assessments/new', [AssessmentController::class, 'create'])->name('assessments.create');
         Route::get('/assessments/start/{learner}', [AssessmentController::class, 'start'])->name('assessments.start');
         Route::post('/assessments', [AssessmentController::class, 'store'])->name('assessments.store');
+
+        // Batch assessment: a whole group at once, dark until BATCH_ASSESSMENT_ENABLED.
+        // Every route here 404s while the flag is off.
+        // Declared before /assessments/{assessment}, and here that order IS load
+        // bearing: GET /assessments/batch (the list of a teacher's batches) is two
+        // segments, exactly the shape {assessment} matches, so moving this group
+        // below the wildcard would have the list read as an assessment id and 404.
+        // The three-segment URLs below could not be shadowed either way.
+        Route::middleware('batch.enabled')->group(function () {
+            Route::get('/assessments/batch', [AssessmentBatchController::class, 'index'])->name('assessments.batch.index');
+            Route::get('/assessments/batch/create', [AssessmentBatchController::class, 'create'])->name('assessments.batch.create');
+            // The summary step. It only reads, so nothing exists until the
+            // teacher confirms on POST /assessments/batch below.
+            Route::post('/assessments/batch/review', [AssessmentBatchController::class, 'review'])->name('assessments.batch.review');
+            Route::post('/assessments/batch', [AssessmentBatchController::class, 'store'])->name('assessments.batch.store');
+            Route::get('/assessments/batch/{batch}', [AssessmentBatchController::class, 'board'])->name('assessments.batch.board');
+            Route::get('/assessments/batch/{batch}/poll', [AssessmentBatchController::class, 'poll'])->name('assessments.batch.poll');
+            // Adding one more child to a board that is already running: the
+            // roster was frozen at creation before this, so a child who arrived
+            // late needed a whole second batch.
+            Route::get('/assessments/batch/{batch}/add', [AssessmentBatchController::class, 'addChild'])->name('assessments.batch.add');
+            Route::post('/assessments/batch/{batch}/add', [AssessmentBatchController::class, 'addEntries'])->name('assessments.batch.add.store');
+            Route::get('/assessments/batch/{batch}/entry/{assessment}', [AssessmentBatchController::class, 'entry'])->name('assessments.batch.entry');
+            Route::post('/assessments/batch/{batch}/entry/{assessment}/upload-audio', [AssessmentBatchController::class, 'uploadAudio'])->name('assessments.batch.upload-audio');
+            Route::post('/assessments/batch/{batch}/entry/{assessment}/answers', [AssessmentBatchController::class, 'answers'])->name('assessments.batch.answers');
+            Route::post('/assessments/batch/{batch}/entry/{assessment}/send', [AssessmentBatchController::class, 'send'])->name('assessments.batch.send');
+            // Taking a child off the board, and un-sending a reading the lane has
+            // not started yet. DELETE never means "destroy this reading": for a
+            // scored card removeEntry() only clears batch_id - see the controller.
+            Route::delete('/assessments/batch/{batch}/entry/{assessment}', [AssessmentBatchController::class, 'removeEntry'])->name('assessments.batch.entry.remove');
+            Route::post('/assessments/batch/{batch}/entry/{assessment}/unsend', [AssessmentBatchController::class, 'unsendEntry'])->name('assessments.batch.unsend');
+            Route::post('/assessments/batch/{batch}/send-all', [AssessmentBatchController::class, 'sendAll'])->name('assessments.batch.send-all');
+            Route::post('/assessments/batch/{batch}/cancel', [AssessmentBatchController::class, 'cancel'])->name('assessments.batch.cancel');
+        });
+
         Route::get('/assessments/{assessment}', [AssessmentController::class, 'show'])->name('assessments.show');
+        // The one place in the application where a reading can be destroyed, on
+        // the learner's own history screen. Not behind batch.enabled: it is a
+        // gap in the existing app, not part of the batch feature. Teacher-only
+        // by this group, and again inside destroy() - deleting is the assessing
+        // teacher's act, never the principal's. It cannot shadow
+        // /assessments/batch/... above: that is three segments, and POST
+        // /assessments differs from this by method.
+        Route::delete('/assessments/{assessment}', [AssessmentController::class, 'destroy'])->name('assessments.destroy');
         Route::get('/assessments/{assessment}/status', [AssessmentController::class, 'status'])->name('assessments.status');
         Route::post('/assessments/{assessment}/upload-audio', [AssessmentController::class, 'uploadAudio'])->name('assessments.upload-audio');
         Route::post('/assessments/{assessment}/retry', [AssessmentController::class, 'retry'])->name('assessments.retry');
@@ -344,6 +388,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/users/import', [\App\Http\Controllers\ParentImportController::class, 'form'])->name('users.import');
         Route::post('/users/import/preview', [\App\Http\Controllers\ParentImportController::class, 'preview'])->name('users.import.preview');
         Route::post('/users/import/confirm', [\App\Http\Controllers\ParentImportController::class, 'confirm'])->name('users.import.confirm');
+        // Same for teachers (name login, shared pilot password, grade & section from the sheet)
+        Route::get('/teachers/import', [\App\Http\Controllers\TeacherImportController::class, 'form'])->name('teachers.import');
+        Route::post('/teachers/import/preview', [\App\Http\Controllers\TeacherImportController::class, 'preview'])->name('teachers.import.preview');
+        Route::post('/teachers/import/confirm', [\App\Http\Controllers\TeacherImportController::class, 'confirm'])->name('teachers.import.confirm');
+
         // Same for teachers (name login, shared pilot password, grade & section from the sheet)
         Route::get('/teachers/import', [\App\Http\Controllers\TeacherImportController::class, 'form'])->name('teachers.import');
         Route::post('/teachers/import/preview', [\App\Http\Controllers\TeacherImportController::class, 'preview'])->name('teachers.import.preview');

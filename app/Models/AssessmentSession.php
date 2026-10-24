@@ -121,6 +121,27 @@ class AssessmentSession extends Model
         $this->update(['status' => 'recording']);
     }
 
+    /**
+     * Nothing calls this, and that is deliberate (R40).
+     *
+     * It is the only writer of the `completed` status that scopeActive() and
+     * isCompleted() read, so a session reaches none of them: once issued, a
+     * session stays active for ever and Learner::getActiveSession() goes on
+     * returning it. The student dashboard was fixed by asking the *reading*
+     * whether anything is pending (StudentAssessmentController::pendingFor())
+     * rather than by calling this from the scoring pipeline - the pipeline is
+     * shared with the single-child flow and the scheduled re-score, and reaching
+     * into it to repair a display problem would have changed behaviour for both.
+     *
+     * What would legitimately call it: a session lifecycle owner - the student
+     * portal stamping the session when the child finishes reading, or the batch
+     * board when an entry becomes terminal. Whoever does it must fix the elapsed
+     * figure below first: on Carbon 3 now()->diffInSeconds($past) is **negative**,
+     * so the first caller would start storing negative reading times. Kept rather
+     * than deleted because `completed` is live vocabulary in two readers here, and
+     * deleting the only thing that can write it would leave them unreachable with
+     * nothing saying why.
+     */
     public function complete(): void
     {
         $elapsed = $this->reading_started_at

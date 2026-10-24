@@ -1,5 +1,11 @@
 * text=auto eol=lf
 
+# Windows launchers: cmd.exe needs CRLF, and PowerShell here-strings
+# are safer with it too.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
 *.blade.php diff=html
 *.css diff=css
 *.html diff=html

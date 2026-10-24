@@ -42,6 +42,14 @@ class StaffNav
                     $dash,
                     self::item('bi-people', 'Learners', 'learners.index', ['learners.*'], tab: true),
                     self::item('bi-clipboard-check', 'Assessments', 'assessments.index', ['assessments.*'], tab: true),
+                    // Group assessment lives beside Assessments rather than inside it,
+                    // because closing a board and finding the way back was the thing a
+                    // teacher could not do. Only while the feature is on: with the flag
+                    // off every batch route answers 404, and a link to a 404 is worse
+                    // than no link.
+                    ...(config('assessment.batch_enabled')
+                        ? [self::item('bi-people-fill', 'Group Assessment', 'assessments.batch.index', ['assessments.batch.*'])]
+                        : []),
                     self::item('bi-ui-checks-grid', 'Screening Test', 'screening.index', ['screening.*']),
                     self::item('bi-journal-text', 'Materials', 'materials.index', ['materials.*']),
                     self::item('bi-lightbulb', 'Interventions', 'interventions.index', ['interventions.*']),

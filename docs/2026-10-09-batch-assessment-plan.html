@@ -32,6 +32,7 @@
   pre code{background:none;border:none;padding:0;font-size:12.5px;line-height:1.55}
   strong{font-weight:600}
   a{color:var(--accent)}
+  a.rev{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-decoration:none;white-space:nowrap;background:var(--warn-soft);border:1px solid #f3d9b5;color:var(--warn);border-radius:3px;padding:0 4px;vertical-align:1px}
 
   .sub{color:var(--muted);font-size:14px;margin:0 0 4px}
   .meta{display:flex;flex-wrap:wrap;gap:8px 28px;margin:18px 0 0;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
@@ -106,10 +107,25 @@
 <p class="sub">Implementation plan &amp; pipeline specification — BIGKAS&#8209;AI</p>
 
 <div class="meta">
-  <span><b>Date</b> 9 October 2026</span>
-  <span><b>Status</b> Awaiting go signal — not implemented</span>
-  <span><b>Branch</b> master @ 72b0f9d</span>
-  <span><b>Approach</b> A (delegate)</span>
+  <span><b>Drafted</b> 9 October 2026</span>
+  <span><b>Revised</b> 21 October 2026 — rev. 2</span>
+  <span><b>Revised</b> 22 October 2026 — <a href="#rev5">rev. 5</a></span>
+  <span><b>Status</b> Approved; Phases 0–1 already satisfied upstream</span>
+  <span><b>Branch</b> <code>feat/batch-assessment</code> @ dbfb7cb</span>
+  <span><b>Rollback point</b> tag <code>pre-batch-assessment</code></span>
+</div>
+
+<div class="callout c-warn" id="rev5">
+  <span class="lbl">Revision note — 22 October 2026 (rev.&nbsp;5): the join code is a reference, not a way in</span>
+  <p><b>What this document promised.</b> Seven places in this plan — the <i>Recording mode</i> decision in §1, the dropped <code>recording_mode</code> note in §6, the card-panel figure and its caption, the <code>waiting</code> row of the seven-states table, the <code>waiting</code> row of the cancel-and-remove table, and the batch-cancel list — describe a <b>join code</b> as one of the two routes a recording can be captured by: &ldquo;a join code for a child with a device&rdquo;, &ldquo;its join code stops working&rdquo;. Read plainly, that promises a screen where a child types a code and starts reading.</p>
+  <p><b>What was built.</b> There is no code-entry screen, and no screen anywhere in this application accepts a code. A child reaches their reading the one way they reach everything else: they <b>sign in with their own PIN</b>, and the reading the teacher set up is waiting on their dashboard (<code>StudentAssessmentController::pendingFor()</code>). The code is still issued — one <code>AssessmentSession</code> per entry, created with the batch — and the board and the card panel still show it, but only as a <b>reference for the teacher&#8217;s own records</b>, which is how both screens now label it. Nothing in the system reads it back.</p>
+  <p><b>Why a code-entry screen was declined.</b> It was considered. A code box that starts a reading is an <b>unauthenticated door onto a named child&#8217;s assessment</b>: anyone holding six characters — a classmate, a sibling, anyone who saw the board over a shoulder — could open that child&#8217;s reading and record audio against their record, with no sign-in and nothing tying the recording to the child it is filed under. The child is already authenticated by their PIN, and their dashboard already knows what they owe, so the door would add a weaker way in to reach something the stronger way already reaches. The measurement is about a child; its provenance has to be at least as strong as the rest of their record.</p>
+  <p><b>So, for the next reader:</b> wherever this plan says <i>join code</i>, read <i>session code, shown to the teacher for her records</i>. &ldquo;Its join code stops working&rdquo; means only that the session row is deleted with the entry — nothing stopped working for the child, because nothing was ever typed in. <b>Do not build the code-entry screen</b> on the strength of the sentences below; they are the draft&#8217;s language, kept so the history reads honestly, each marked <a class="rev" href="#rev5">rev&nbsp;5</a>. The rest of this plan stands as written.</p>
+</div>
+
+<div class="callout c-info">
+  <span class="lbl">Revision note — 21 October 2026</span>
+  <p>Master moved four commits between draft and approval, and two of them changed this plan materially. <b>Phases&nbsp;0 and&nbsp;1 are already done</b> — commit <code>bc85b8c</code> extracted the scoring pipeline into <code>App\Services\AssessmentScorer</code>, with the same signature and the same throw-and-let-the-caller-decide contract this plan specified. That commit also shipped <code>App\Services\RescoreQueue</code>, an already-serial database-backed scoring queue, so <b>batch analysis now extends that mechanism instead of introducing Laravel's queue</b> (§4.2, §7, §8). The October defense separately removed the rule-based weakness fallback and the placeholder transcript, which corrects pipeline steps&nbsp;3, 5 and&nbsp;6 (§4.3).</p>
 </div>
 
 <h2>1. What this builds</h2>
@@ -118,10 +134,13 @@
 
 <h4>Decisions locked</h4>
 <ul class="decisions">
-  <li><span class="k">Recording mode</span><span class="v">Batch holds a roster; each child is <code>self</code> (own device) or <code>teacher</code> (teacher-led), set per child.</span></li>
+  <li><span class="k">Recording mode</span><span class="v">Not chosen in advance. <b>Every child's card offers both</b> — a join code for a child with a device, and <i>Conduct here</i> for a child without one. The teacher decides in the moment. <a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a></span></li>
+  <li><span class="k">Before analysis</span><span class="v">A recording rests at <code>recorded</code> with its audio playable. The teacher listens, then <b>Send for analysis</b> — or re-records. Nothing reaches the lane unsent.</span></li>
+  <li><span class="k">Leaving the page</span><span class="v">Changes nothing. Scoring runs server-side under cron, and the batch completes itself with nobody watching.</span></li>
+  <li><span class="k">Cancel &amp; remove</span><span class="v">Every card can be cancelled or removed, and the batch cancelled behind a confirmation. <b>Nothing on this board can destroy a measured reading</b> — real deletion lives on the child's learner-history screen.</span></li>
   <li><span class="k">Material</span><span class="v">One batch default, overridable per child. Grade policy runs per child, unchanged.</span></li>
   <li><span class="k">Assessment type</span><span class="v">All three supported — <code>oral_reading</code>, <code>comprehension</code>, <code>combined</code> — one type per batch.</span></li>
-  <li><span class="k">Analysis</span><span class="v">Everything queued. Live progress board with polling. Teacher may close the laptop and return.</span></li>
+  <li><span class="k">Analysis</span><span class="v">Everything queued, on the <b>existing</b> <code>RescoreQueue</code> lane. Live progress board with polling. Teacher may close the laptop and return.</span></li>
   <li><span class="k">Guardrail</span><span class="v">Hard roster cap of <strong>15</strong>, plus a wait estimate computed from measured job durations.</span></li>
   <li><span class="k">Single-child flow</span><span class="v">Behaviour frozen. Batch is a separate route and view; the only change to the existing screen is one added link.</span></li>
   <li><span class="k">Verdict</span><span class="v">Stays per child. No bulk-accept button.</span></li>
@@ -258,17 +277,23 @@
   <p>The shipped RF reports <code>cv_accuracy</code> <strong>0.4993</strong> (±0.105) and <code>test_accuracy</code> 0.625, and class&nbsp;4 (<i>Reading Comprehension</i>) was trained on <strong>3 samples</strong>. Batch assessment multiplies how many of these predictions a teacher sees at once. The board therefore presents RF output as a <em>suggestion awaiting the teacher</em>, keeps the existing per-child verdict step (<code>AssessmentVerdictController</code>) mandatory, and offers no "accept all" control. Ten unreviewed predictions accepted in one click is the single thing this feature must not make easy.</p>
 </div>
 
-<h2>3. The tension, and the resolution</h2>
+<h2>3. The tension, and how it resolved itself</h2>
 
-<p>Single-child behaviour must not change. But <code>AssessmentController::analyze()</code> (<code>app/Http/Controllers/AssessmentController.php:242–372</code>) is ~130 lines of pipeline living inside a controller method that returns HTTP responses, and <strong>a queued job cannot call a controller action</strong>. There were only two routes forward:</p>
+<div class="callout c-go">
+  <span class="lbl">Already done — no work remains in this section</span>
+  <p>When this plan was drafted, <code>analyze()</code> held ~130 lines of pipeline inside a controller method, and the hard question was how to share it with a background worker without disturbing single-child behaviour. Commit <code>bc85b8c</code> (19 Oct) settled it independently: the pipeline now lives in <code>App\Services\AssessmentScorer</code> and <code>analyze()</code> is 77 lines that delegate to it. The service's own docblock states the contract this plan asked for — <i>"One pipeline for the Analyze button, 'Re-analyze' and the scheduled re-score… It needs no logged-in user, so it can run from the scheduler… It throws when nothing could be measured and the caller decides what to tell whom. It never stands in for a missing engine."</i></p>
+  <p>The reasoning below is kept because it still explains <b>why there must be exactly one scoring implementation</b> — the constraint that governs every change in §7.</p>
+</div>
+
+<p>Single-child behaviour must not change. But <code>analyze()</code> returned HTTP responses from inside the pipeline, and <strong>a background worker cannot call a controller action</strong>. There were only two routes forward:</p>
 
 <table>
   <thead><tr><th>Option</th><th>Effect on single-child</th><th>Cost</th></tr></thead>
   <tbody>
     <tr>
-      <td><b>Delegate</b><br><span style="color:#1d6b3f;font-weight:600;font-size:12px">SELECTED</span></td>
+      <td><b>Delegate</b><br><span style="color:#1d6b3f;font-weight:600;font-size:12px">SELECTED — AND SHIPPED</span></td>
       <td>Route, request shape, JSON responses, status codes and side effects stay <b>identical</b>. The method body becomes ~30 lines calling a new service. Behaviour untouched; the file is edited.</td>
-      <td>One careful refactor, guarded by tests written <i>before</i> it.</td>
+      <td>One careful refactor, guarded by tests written <i>before</i> it. <b>Delivered by <code>bc85b8c</code> as <code>AssessmentScorer</code>.</b></td>
     </tr>
     <tr>
       <td>Zero-touch</td>
@@ -279,77 +304,104 @@
 </table>
 
 <div class="callout c-go">
-  <span class="lbl">How "untouched" is proven, not claimed</span>
-  <p>Before anything is refactored, characterization tests pin the current behaviour of <code>analyze()</code>. Most of that net already exists — <code>ReanalyzeAssessmentTest</code>, <code>SpeechEngineRequiredTest</code>, <code>RecordingKeptTest</code>, <code>WeaknessMatchesEvidenceTest</code>, <code>MiscueDetectionTest</code>, <code>ComprehensionTestTest</code>, <code>DecisionSupportTest</code>. All must pass after the refactor <strong>with no edits to the test files</strong>. If a test needs changing to go green, behaviour changed, and the refactor is wrong.</p>
+  <span class="lbl">How "untouched" stays proven from here on</span>
+  <p>The refactor arrived with its own net, and the suite has grown since the draft: <code>ClassificationOutcomeTest</code>, <code>ClassificationPagesTest</code>, <code>ClassifierProvenanceTest</code>, <code>NotMeasuredTest</code>, <code>RescoreQueueTest</code> and <code>SpeechEngineRequiredTest</code> now sit alongside <code>ReanalyzeAssessmentTest</code>, <code>RecordingKeptTest</code>, <code>WeaknessMatchesEvidenceTest</code>, <code>MiscueDetectionTest</code>, <code>ComprehensionTestTest</code> and <code>DecisionSupportTest</code>.</p>
+  <p>The rule for the batch work is the same rule, pointed forward: <strong>every one of those tests must stay green with no edits to the test files.</strong> If a test has to change to go green, single-child behaviour changed, and the batch change is wrong. <code>ClassificationPagesTest</code> in particular fails if any view or service reads <code>-&gt;primary_weakness</code> directly instead of going through <code>Assessment::weaknessOutcome()</code> — the batch board must obey that too.</p>
 </div>
 
 <h2>4. The new pipeline, in detail</h2>
 
-<h3>4.1 Today — synchronous, inside the request</h3>
+<h3>4.1 What already exists</h3>
 
-<pre><code>POST /assessments/{id}/analyze
-  └─ AssessmentController::analyze()        ← validation + 130 lines of pipeline + 3 HTTP branches
-       teacher's browser waits 1–3 minutes, holding one PHP-FPM worker</code></pre>
+<p>Three callers already share one scoring pipeline, and one of them is already a serial background lane:</p>
 
-<h3>4.2 After — one pipeline, two callers</h3>
+<pre><code>  ANALYZE BUTTON            RE-ANALYZE                SCHEDULED RE-SCORE
+  POST .../analyze          POST .../reanalyze        assessments:rescore
+       │                         │                    (every 5 min, cron)
+       │                         │                         │
+       │                         │                         ▼
+       │                         │                    App\Services\RescoreQueue
+       │                         │                     • "the queue is the database"
+       │                         │                     • Assessment::awaitingRescore()
+       │                         │                     • MAX_ATTEMPTS 3, retry after 10 min
+       │                         │                     • engine down ⇒ attempt NOT consumed
+       │                         │                         │
+       └─────────────────────────┴─────────────────────────┘
+                                 ▼
+                    App\Services\AssessmentScorer
+                      score(Assessment, ?referenceText, ?comprehensionScore): AssessmentResult
+                      • knows nothing about HTTP, needs no logged-in user
+                      • throws on failure; callers decide what that means
+                      • never stands in for a missing engine</code></pre>
 
-<pre><code>  SINGLE-CHILD (unchanged for the teacher)        BATCH (new)
-  POST /assessments/{id}/analyze                  POST .../upload-audio  →  queue
-       │                                                │
-       ▼                                                ▼
-  AssessmentController::analyze()                  AnalyzeAssessmentJob
-   • validate, keepRecording()                      • queue: analysis, concurrency 1
-   • 3 HTTP response branches                       • tries 2, timeout 420s
-   • returns JSON, as it does today                 • ShouldBeUnique on assessment id
-       │                                                │
-       └──────────────────┬─────────────────────────────┘
-                          ▼
-            App\Services\AssessmentAnalysisPipeline
-              run(Assessment $a, ?array $answers = null): AssessmentResult
-              • knows nothing about HTTP
-              • throws on failure; callers decide what that means</code></pre>
+<h3>4.2 What batch adds — a fourth caller, not a second mechanism</h3>
 
-<p>The pipeline is the <strong>single source of truth</strong> for how a reading is scored. Both callers get identical results because there is only one implementation.</p>
+<pre><code>  BATCH (new)
+  POST .../entry/{assessment}/upload-audio      teacher records, or child self-records
+       │
+       │  audio saved — card shows "recorded", audio playable
+       ▼
+  POST .../entry/{assessment}/send              teacher listens, then releases it
+       │
+       │  stamps submitted_for_analysis_at, returns immediately
+       ▼
+  RescoreQueue  ← extended: a SENT batch entry is claimed at once,
+       │          not after the 15-minute stale rule
+       ▼
+  AssessmentScorer   (unchanged)</code></pre>
 
-<h3>4.3 Inside <code>AssessmentAnalysisPipeline::run()</code></h3>
+<p>The scorer is the <strong>single source of truth</strong> for how a reading is scored; <code>RescoreQueue</code> is the single source of truth for <em>when</em>. Every caller gets identical results because there is only one implementation of each.</p>
 
-<p>Moved <em>verbatim</em> from <code>analyze()</code> — same order, same rules. The ordering is not incidental: comprehension answers are recorded first so that a Whisper failure can never cost the learner's answers.</p>
+<div class="callout c-stop">
+  <span class="lbl">Why not Laravel's queue — the bug the draft would have shipped</span>
+  <p>The draft proposed an <code>AnalyzeAssessmentJob</code> holding each entry in <code>processing</code> while it waited its turn. But <code>Assessment::scopeAwaitingRescore()</code> already claims any recording that is <code>status = 'processing' AND updated_at &lt; now()-&gt;subMinutes(15)</code>.</p>
+  <p>A child sitting 14th in a 15-child batch waits roughly <b>40 minutes</b> in <code>processing</code>. At the 15-minute mark the scheduler would claim that recording and score it <strong>concurrently with the worker that already owned it</strong> — two Whisper runs, two results racing into <code>createResult()</code>, on a host with headroom for one model. Adding a second background mechanism alongside <code>RescoreQueue</code> is what creates the hazard, so the plan does not add one.</p>
+</div>
+
+<h3>4.3 Inside <code>AssessmentScorer::score()</code></h3>
+
+<p>This is the shipped pipeline as of <code>dbfb7cb</code>. <strong>Batch changes none of it.</strong> Steps marked <span style="color:#1d4ed8;font-weight:600">NEW</span> are the only additions, and both are additive stamps that leave every existing behaviour alone.</p>
+
+<div class="callout c-warn">
+  <span class="lbl">What the caller must do first — the batch caller's obligation</span>
+  <p><code>score()</code> takes a comprehension score as a <em>parameter</em>; it does not collect one. Recording the learner's answers via <code>ComprehensionService::record()</code>, and keeping the browser recording via <code>keepRecording()</code>, are the <strong>caller's</strong> job — today <code>analyze()</code> does both before calling. The ordering is not incidental: answers are stored <b>before</b> any transcription, so a Whisper failure can never cost the learner's answers, and missing answers abort before a minute of CPU is spent. <b>The batch upload endpoint must honour the same order</b>, or a dead engine will throw away a child's comprehension answers.</p>
+</div>
 
 <div class="pipe">
 
   <div class="step">
-    <span class="n">1</span><span class="t">Record comprehension answers</span>
-    <div class="d">Via <code>ComprehensionService::record()</code> when the assessment needs a test. Answers already submitted from the learner's own portal are kept as-is. <b>Runs before any transcription</b> — a failure further down never discards them. Missing answers abort the run here, before a minute of CPU is spent.</div>
+    <span class="n">1</span><span class="t">Status → <code>processing</code></span>
+    <div class="d"><code>$assessment-&gt;updateStatus()</code>. Note the interaction with <code>awaitingRescore()</code>'s 15-minute stale rule described in §4.2 — this is why batch must not hold entries in <code>processing</code> while they wait.</div>
   </div>
   <div class="arrow">▼</div>
 
   <div class="step">
-    <span class="n">2</span><span class="t">Stamp <code>analysis_started_at</code></span>
-    <div class="d"><b>New, additive.</b> Starts the duration clock. Invisible to the single-child flow; feeds the batch estimator.</div>
+    <span class="n">2</span><span class="t"><span style="color:#1d4ed8">NEW</span> &nbsp;Stamp <code>analysis_started_at</code></span>
+    <div class="d">Starts the duration clock. Additive and behaviour-neutral; invisible to the single-child flow, and feeds the batch estimator (§4.5).</div>
   </div>
   <div class="arrow">▼</div>
 
   <div class="step">
     <span class="n">3</span><span class="t">Speech to text</span>
-    <div class="d"><code>SpeechToTextService::transcribe()</code> against the <b>saved</b> audio copy, so what the teacher plays back is what was analysed. Priority order unchanged: local Whisper → OpenAI cloud (if keyed) → placeholder (local/testing only). <b>This is the 1–3 minutes.</b> Throws <code>SpeechServiceUnavailable</code> when no engine answers.</div>
+    <div class="d"><code>SpeechToTextService::transcribe()</code> against the <b>saved</b> audio copy, so what the teacher plays back is what was analysed. <b>This is the 1–3 minutes.</b> Throws <code>SpeechServiceUnavailable</code> when no engine answers.<br><b>Changed since the draft:</b> the placeholder "mock" transcript was removed in <em>every</em> environment. A reading not measured from the child's voice now carries <code>Assessment::notMeasuredReason()</code> (<code>mock</code> / <code>no_speech</code>), stores no numbers, cannot be accepted, and is excluded by <code>AssessmentResult::measured()</code>. The draft's "placeholder (local/testing only)" fallback no longer exists.</div>
   </div>
   <div class="arrow">▼</div>
 
   <div class="step">
     <span class="n">4</span><span class="t">Alignment &amp; reading metrics</span>
-    <div class="d"><code>ReadingAnalyzerService::analyze()</code> — transcript vs. reference text. Produces accuracy, WPM, fluency, the miscue breakdown and the 12-feature ML vector. Pure PHP, fast.</div>
+    <div class="d"><code>ReadingAnalyzerService::analyze()</code> — transcript vs. reference text, now also passed the assessment language. Produces accuracy, WPM, fluency, the miscue breakdown and the 12-feature ML vector. Pure PHP, fast.</div>
   </div>
   <div class="arrow">▼</div>
 
   <div class="step">
     <span class="n">5</span><span class="t">RF classification</span>
-    <div class="d"><code>MLClassificationService::classify()</code> posts the 12 features to Flask <code>/api/classify</code>. Milliseconds. Falls back to the rule-based classifier when the model is absent — recorded in provenance either way.</div>
+    <div class="d"><code>MLClassificationService::classify()</code> posts the 12 features to Flask <code>/api/classify</code>. Milliseconds.<br><b>Changed since the draft:</b> there is <b>no rule-based fallback.</b> When the service is down, has no model loaded, errors, or is disabled, the result is saved with its measurements, a <b>null label, null confidence and <code>classification_status = 'unavailable'</code></b>.</div>
   </div>
   <div class="arrow">▼</div>
 
   <div class="step">
-    <span class="n">6</span><span class="t">Reconcile prediction against measured evidence</span>
-    <div class="d"><code>resolveWeaknessId()</code> + <code>WeaknessEvidence::statuses()</code>. A weakness is only stored when the measured numbers support it, so a result never names a skill the teacher's own rows call fine. <b>The rule that must never be duplicated</b> — the whole reason for delegate over zero-touch.</div>
+    <span class="n">6</span><span class="t">Model-or-nothing weakness resolution</span>
+    <div class="d"><code>MLClassificationService::resolve()</code> checks the model's answer against <code>WeaknessEvidence::statuses()</code> and keeps what the model actually said, so a result never names a skill the teacher's own measured rows call fine. If the model could not answer, <b>no label is stored and the result says so</b>.<br><b>The rule that must never be duplicated or stood in for.</b> Three doors were closed deliberately at the October defense — the service fallback, the analyzer's own rule label, and the gate's "clearest problem" pick. The gate may only choose among the model's own ranked classes. <b>Batch must not reopen any of them</b>, and must read weaknesses through <code>Assessment::weaknessOutcome()</code>, never <code>-&gt;primary_weakness</code>.</div>
   </div>
   <div class="arrow">▼</div>
 
@@ -361,13 +413,13 @@
 
   <div class="step">
     <span class="n">8</span><span class="t">Build provenance</span>
-    <div class="d">Which STT engine ran, whether it was mock, mean word confidence, whether the classifier was ML or rule-based, model version (read from the shipped <code>model_metadata.json</code>, not a second service call), timestamp. This is what <code>AnalysisAdvisorService</code> uses to tell the teacher how far to trust the result.</div>
+    <div class="d">Which STT engine ran, whether it was mock, mean word confidence, and timestamp — merged with <code>MLClassificationService::classifierProvenance()</code>, so <b>the classifier records itself</b>. This replaced reading <code>model_metadata.json</code> off disk, which used to stamp a model version onto rule-based results and kept doing so after the model files were deleted. <code>AnalysisAdvisorService</code> uses this to tell the teacher how far to trust the result.</div>
   </div>
   <div class="arrow">▼</div>
 
   <div class="step">
-    <span class="n">9</span><span class="t">Persist result + stamp <code>analysis_duration_ms</code></span>
-    <div class="d"><code>$assessment-&gt;createResult()</code>, status → <code>completed</code>, <code>ActivityLog</code> entry. The duration stamp is <b>new and additive</b>, written on <b>every</b> run including single-child — so the batch estimator is fed by real measurements from day one instead of a guessed constant.</div>
+    <span class="n">9</span><span class="t">Persist result <span style="color:#1d4ed8">+ NEW</span> stamp <code>analysis_duration_ms</code></span>
+    <div class="d"><code>$assessment-&gt;createResult()</code> — which also <b>replaces</b> any earlier result, so a later re-analysis supersedes an unclassified one. The duration stamp is additive, written on <b>every</b> run including single-child, so the batch estimator is fed by real measurements from day one instead of a guessed constant.</div>
   </div>
   <div class="arrow">▼</div>
 
@@ -375,7 +427,7 @@
     <span class="n">✕</span><span class="t">On failure — the pipeline throws; the caller decides</span>
     <div class="d">
       <b>Single-child:</b> unchanged — <code>markFailed()</code>, then <code>503</code> with <code>$e-&gt;forTeacher()</code> for a dead engine, or <code>500</code> with the actionable generic message. Detail goes to the log only.<br>
-      <b>Batch:</b> <code>SpeechServiceUnavailable</code> → <b>fail immediately, no retry</b>; retrying into a dead engine would burn 10&nbsp;×&nbsp;5&nbsp;min for nothing. The batch is marked <code>engine_unavailable</code> and the board says so once: <i>"speech engine offline — your recordings are saved, retry when it's back."</i> Any other exception → one retry, then <code>markFailed()</code>. <b>A failed child never stops the batch.</b> The recording always survives; re-analysing is all it takes.
+      <b>Batch:</b> nothing new is invented, because <code>RescoreQueue</code> already does exactly what the draft designed from scratch. Its rule: <i>"a failure caused by the engine being unavailable does not use up a recording's attempts — only a recording that fails while the engine is up does."</i> So a dead engine costs the batch nothing and every entry is simply still owed a score; one genuinely bad file is given up on after <code>MAX_ATTEMPTS</code>&nbsp;=&nbsp;3 rather than retried forever, stays visible to the admin, and the teacher can still press Analyze. <b>A failed child never stops the batch.</b> The recording always survives.
     </div>
   </div>
 
@@ -383,68 +435,122 @@
 
 <h3>4.4 Batch state machine, per child</h3>
 
-<pre><code>waiting ──recording captured──▶ recorded ──enqueued──▶ queued
-                                                          │
-                                              worker picks it up
-                                                          ▼
-                                                    transcribing
-                                        ┌─────────────────┴─────────────────┐
-                                     success                            failure
-                                        ▼                                  ▼
-                                 needs verdict                          failed
-                                        │                         (retry → queued)
-                            teacher decides (per child)
-                                        ▼
-                                      done
+<p>The board's chips are a <em>presentation</em> of state the database already holds — derived from <code>status</code>, whether a result exists, its <code>classification_status</code>, whether a verdict exists, and <code>rescore_attempts</code>. No parallel state machine is stored.</p>
+
+<pre><code>waiting ──audio captured──▶ recorded ──teacher sends──▶ queued ──lane picks it up──▶ transcribing
+            (teacher-led      │ audio playable;        (owed a score)                     │
+             or self-record)   └─ re-record ─▶ waiting                                    │
+                                                          ▲                               │
+                                                          │ engine was down —             │
+                                                          │ attempt NOT consumed          │
+                                                          └───────────────────────────────┤
+                                            ┌─────────────────────────────────────────────┘
+                                         success                              failure
+                                            ▼                                    ▼
+                                     needs verdict               attempts < 3 ─▶ queued
+                                            │                    attempts = 3 ─▶ failed
+                                teacher decides (per child)                      (Analyze still works)
+                                            ▼
+                                          done
 
 Batch status: collecting ─▶ analyzing ─▶ completed
                    └──────────────────────▶ cancelled
-                   └──────────────────────▶ engine_unavailable (recoverable)
 </code></pre>
 
-<p>The batch reaches <code>completed</code> when every entry is terminal (<code>done</code> or <code>failed</code>). A failed entry does not block completion — it is reported, retryable, and the batch moves on.</p>
+<p>The batch reaches <code>completed</code> when every entry is terminal (<code>done</code> or <code>given up</code>). A given-up entry does not block completion — it is reported, the teacher can still press Analyze, and the batch moves on.</p>
+
+<p>Note what is <strong>no longer needed</strong>: the draft's batch-level <code>engine_unavailable</code> status. Because an engine outage does not consume attempts, an outage is not a batch state at all — the entries simply remain owed a score and resume on their own when the engine returns. <code>ServiceHealthMonitor</code> and the <code>health:check</code> schedule already tell the admin the engine is down; the board only needs to surface that, not track it.</p>
 
 <h3>4.5 Wait estimate</h3>
 
-<p>New <code>App\Services\AnalysisQueueEstimator</code>. Takes the <strong>median of the last 20</strong> <code>analysis_duration_ms</code> values (seeded at 150&nbsp;s until data exists), multiplies by queue depth ahead of the given child, and returns a per-child ETA, a batch ETA, and how many jobs ahead belong to other teachers. Median, not mean, so one 5-minute outlier does not distort every estimate on screen.</p>
+<p>New <code>App\Services\AnalysisQueueEstimator</code>. Takes the <strong>median of the last 20</strong> <code>analysis_duration_ms</code> values (seeded at 150&nbsp;s until data exists) and multiplies by the depth of <code>RescoreQueue::due()</code> ahead of the given child. Median, not mean, so one 5-minute outlier does not distort every estimate on screen.</p>
 
-<p>The board shows this as <i>"about 18 min remaining · 4 ahead of you from other classes"</i>. Teachers self-regulate when they can see the truth, and a slow queue becomes distinguishable from a broken one.</p>
+<p>Two honesty terms the draft did not have to account for, both consequences of a scheduler-driven lane rather than a resident worker:</p>
+<ul>
+  <li><strong>Tick latency.</strong> Work starts on the next <code>assessments:rescore</code> run, so the estimate must add up to one tick interval. This is the real cost of reusing <code>RescoreQueue</code>, and §8 covers how the tick and <code>--limit</code> get tuned for a 15-child batch.</li>
+  <li><strong>Other teachers' recordings.</strong> <code>due()</code> is global, so a batch genuinely queues behind other classes' work — which the board already intended to say.</li>
+</ul>
+
+<p>The board shows this as <i>"about 18 min remaining · 4 ahead of you from other classes"</i>. Teachers self-regulate when they can see the truth, and a slow lane becomes distinguishable from a broken one.</p>
 
 <h2>5. Schema</h2>
 
+<h4>Migration files</h4>
+<p>Two migrations, in this order. <strong>The timestamps matter:</strong> <code>2026_10_21_000000</code> is already taken by <code>add_rescore_queue_and_service_health</code>, so these take the next free slots rather than colliding with it.</p>
+<pre><code>database/migrations/2026_10_21_010000_create_assessment_batches_table.php
+database/migrations/2026_10_21_010001_add_batch_columns_to_assessments_table.php</code></pre>
+
 <h4>New table: <code>assessment_batches</code></h4>
 <table>
-  <thead><tr><th>Column</th><th>Notes</th></tr></thead>
+  <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
   <tbody>
-    <tr><td><code>teacher_id</code></td><td>Owner. Batches are per-teacher.</td></tr>
-    <tr><td><code>school_class_id</code></td><td>Nullable — a batch may be hand-picked learners instead of a class.</td></tr>
-    <tr><td><code>title</code></td><td>Nullable, teacher's own label.</td></tr>
-    <tr><td><code>language</code>, <code>assessment_type</code></td><td>Batch-wide. One type per batch.</td></tr>
-    <tr><td><code>default_material_id</code></td><td>The batch default; each child may override.</td></tr>
-    <tr><td><code>status</code></td><td><code>collecting</code> / <code>analyzing</code> / <code>completed</code> / <code>cancelled</code> / <code>engine_unavailable</code></td></tr>
-    <tr><td><code>created_at</code>, <code>completed_at</code>, <code>cancelled_at</code></td><td>Lifecycle timestamps.</td></tr>
+    <tr><td><code>id</code></td><td><code>id()</code></td><td>—</td></tr>
+    <tr><td><code>teacher_id</code></td><td><code>foreignId</code> → <code>users</code>, <code>restrictOnDelete</code></td><td>Owner; batches are per-teacher. Restrict, matching how <code>assessments.assessor_id</code> already guards the user who administered an assessment — a teacher with history is never silently deleted.</td></tr>
+    <tr><td><code>school_class_id</code></td><td><code>foreignId</code> nullable → <code>classes</code>, <code>nullOnDelete</code></td><td>Nullable: a batch may be hand-picked learners rather than a class. If the class is later deleted the batch survives as a historical record. <b>The table is <code>classes</code></b> (<code>SchoolClass::$table</code>), not <code>school_classes</code>; the column keeps the <code>school_class_id</code> name.</td></tr>
+    <tr><td><code>title</code></td><td><code>string</code> nullable</td><td>Teacher's own label.</td></tr>
+    <tr><td><code>language</code></td><td><code>string(8)</code></td><td>Comment: <code>en | fil | hil</code>. Mirrors the values of <code>assessments.language</code>.</td></tr>
+    <tr><td><code>assessment_type</code></td><td><code>string(16)</code></td><td>Comment: <code>oral_reading | comprehension | combined</code>. Batch-wide; one type per batch.</td></tr>
+    <tr><td><code>default_material_id</code></td><td><code>foreignId</code> → <code>reading_materials</code>, <code>restrictOnDelete</code></td><td>The batch default; each child may override on their own entry. Restrict, exactly as <code>assessments.material_id</code> does — a material cited by a batch cannot be deleted out from under it.</td></tr>
+    <tr><td><code>status</code></td><td><code>string(16)</code></td><td>Comment: <code>collecting | analyzing | completed | cancelled</code>. <b>No <code>engine_unavailable</code></b> — see §4.4.</td></tr>
+    <tr><td><code>completed_at</code>, <code>cancelled_at</code></td><td><code>timestamp</code> nullable</td><td>Lifecycle.</td></tr>
+    <tr><td><code>created_at</code>, <code>updated_at</code></td><td><code>timestamps()</code></td><td>—</td></tr>
   </tbody>
 </table>
+<p><b>Indexes:</b> <code>teacher_id</code> (the teacher's own batch list), <code>status</code> (finding live batches). Both match the pattern already used on <code>assessments</code>.</p>
+
+<div class="callout c-info">
+  <span class="lbl">Why <code>string</code> + comment and not <code>enum</code></span>
+  <p>The original <code>assessments</code> table uses <code>enum()</code> for <code>language</code>, <code>status</code> and <code>assessment_type</code>. The <b>newest</b> migration in the project moved away from that — <code>service_health_events.state</code> and <code>.level</code> are <code>string(24)</code> with a <code>-&gt;comment()</code> listing the permitted values. These tables follow the newer convention, for a concrete reason: adding one more batch status later would otherwise require an <code>ALTER</code> on a MySQL enum, and the allowed values are already enforced in PHP by the model's constants and by validation.</p>
+</div>
 
 <h4>Added to <code>assessments</code> — all nullable, all additive</h4>
 <table>
-  <thead><tr><th>Column</th><th>Notes</th></tr></thead>
+  <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
   <tbody>
-    <tr><td><code>batch_id</code></td><td>Nullable FK, indexed. <b><code>NULL</code> means single-child.</b> Every existing row stays <code>NULL</code>; every existing query keeps working; the single-child flow never writes it.</td></tr>
-    <tr><td><code>recording_mode</code></td><td><code>self</code> / <code>teacher</code>. Batch-only.</td></tr>
-    <tr><td><code>queued_at</code>, <code>analysis_started_at</code>, <code>analysis_duration_ms</code></td><td>Queue and timing telemetry; feeds the estimator.</td></tr>
+    <tr><td><code>batch_id</code></td><td><code>foreignId</code> nullable → <code>assessment_batches</code>, <strong><code>nullOnDelete</code></strong>, <code>-&gt;after('assessor_id')</code></td><td><b><code>NULL</code> means single-child.</b> Every existing row stays <code>NULL</code>; every existing query keeps working; the single-child flow never writes it. <code>nullOnDelete</code> is deliberate and load-bearing: <b>deleting a batch must never delete a child's assessment or their result.</b> The batch is an organising wrapper, not the owner of the data.</td></tr>
+    <tr><td><code>submitted_for_analysis_at</code></td><td><code>timestamp</code> nullable, <code>-&gt;after('last_rescore_at')</code></td><td>Set when the teacher taps <b>Send for analysis</b>. This is what separates <code>recorded</code> from <code>queued</code>, and it is the gate the widened <code>awaitingRescore</code> branch checks — an unsent recording is never claimed. Also the audit trail for who released a recording and when.</td></tr>
+    <tr><td><code>analysis_started_at</code></td><td><code>timestamp</code> nullable</td><td>Stamped by <code>AssessmentScorer</code>. With <code>analysis_duration_ms</code> still null, this is exactly the <code>transcribing</code> state — no extra column needed to know what the lane is working on right now.</td></tr>
+    <tr><td><code>analysis_duration_ms</code></td><td><code>unsignedInteger</code> nullable</td><td>Written on <b>every</b> run, single-child included, so the estimator has real data from day one. Unsigned int caps at ~49 days; a 5-minute ceiling is nowhere near it.</td></tr>
   </tbody>
 </table>
+
+<p><b>Indexes added to <code>assessments</code>:</b></p>
+<ul>
+  <li><code>batch_id</code> — the board loads one batch's entries on every poll; this is the hottest new query in the feature.</li>
+  <li>Composite <code>(batch_id, submitted_for_analysis_at)</code> — serves queries that filter a batch's entries by whether they have been sent: the board, the estimator, and the widened <code>awaitingRescore</code> branch read in isolation.</li>
+</ul>
+
+<div class="callout c-warn">
+  <span class="lbl">Correction — what the composite index does <em>not</em> buy</span>
+  <p>An earlier revision claimed this index stops <code>awaitingRescore</code> scanning <code>assessments</code> every scheduler tick. <strong>It does not.</strong> That scope is a disjunction — the batch branch is OR&#8209;ed with unindexed <code>status</code> and <code>updated_at</code> conditions and with <code>doesntHave()</code>, which compiles to <code>NOT EXISTS</code> — and a planner generally cannot drive an index through an OR of that shape. <code>EXPLAIN QUERY PLAN</code> on SQLite reports <code>SCAN assessments</code> with the index in place.</p>
+  <p>The scan was already happening before batch assessment existed, so nothing regressed, and <code>audio_file IS NOT NULL</code> already limits the rows examined. At one school&#8217;s volume — hundreds to low thousands of assessments — a scan once a minute is not a cost worth restructuring the scope for. The indexes still earn their place on the board&#8217;s own <code>where batch_id = ?</code> query, which is the genuinely hot one. <strong>Verify with a MySQL <code>EXPLAIN</code> on realistic data before relying on either claim</strong>; rewriting the batch branch as a <code>UNION</code> would be a bigger change and is not warranted now.</p>
+</div>
+
+<p><b>Not indexed, on purpose:</b> <code>analysis_started_at</code> and <code>analysis_duration_ms</code>. The estimator reads at most the last 20 rows ordered by <code>id</code>, and the <code>transcribing</code> check is always already narrowed by <code>batch_id</code>.</p>
+
+<div class="callout c-warn">
+  <span class="lbl">Dropped from the draft: <code>recording_mode</code></span>
+  <p><a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a> The draft stored <code>self</code> / <code>teacher</code> per child, chosen at setup. <b>The column is gone.</b> Every card now offers both a join code and <i>Conduct here</i>, so there is nothing to record in advance — the teacher decides per child in the moment, which is how a classroom actually behaves. This removes a column, a setup decision, a validation path and a whole class of "the teacher guessed wrong at setup" problem.</p>
+</div>
+
+<h4>Already present — reused, not re-added</h4>
+<p><code>rescore_attempts</code> and <code>last_rescore_at</code> already exist on <code>assessments</code> (shipped with <code>RescoreQueue</code>), and <code>classification_status</code> already exists on <code>assessment_results</code>. Batch reads all three and adds none of them. The draft's <code>queued_at</code> is dropped — <code>last_rescore_at</code> plus the <code>awaitingRescore</code> scope already express everything the board needs.</p>
 
 <h4>Deliberately <em>not</em> added</h4>
 <ul>
   <li><b>No roster-entry table.</b> A roster entry <i>is</i> an <code>Assessment</code>. Per-child material override is simply that child's existing <code>material_id</code>.</li>
   <li><b>No join-code table.</b> Self-record reuses one <code>AssessmentSession</code> per entry, with the existing <code>generateCode()</code> and student join flow.</li>
+  <li><b>No <code>STATUS_QUEUED</code> constant.</b> The draft added one. It is now unnecessary and actively harmful: "owed a score" is already expressed by <code>Assessment::scopeAwaitingRescore()</code>, and a sixth status would need auditing against every existing <code>status</code> check for no gain. <b>Dropped.</b></li>
+  <li><b>No <code>jobs</code> / <code>failed_jobs</code> usage.</b> <code>app/Jobs/</code> stays empty. The lane is the scheduler plus the database, as it already is.</li>
+  <li><b>No <code>recording_mode</code>.</b> See above.</li>
+  <li><b>No per-entry state column.</b> All seven card states are derived (§6). Storing them would create a second truth that can disagree with the data.</li>
 </ul>
 
 <div class="callout c-warn">
-  <span class="lbl">New status constant — the one place to be careful</span>
-  <p><code>Assessment::STATUS_QUEUED</code> joins the existing five. The single-child flow never sets it, so no existing check changes meaning — but that must be <b>verified, not assumed</b>. Before this ships, every <code>status</code> comparison and every <code>whereIn([...])</code> in the codebase gets grepped and read, to confirm the new value cannot fall through a condition written when there were only five states. <code>Assessment::canRetry()</code> and <code>needsAnalysis()</code> are the first two to check.</p>
+  <span class="lbl">The one place to be careful — the <code>awaitingRescore</code> scope</span>
+  <p>Batch needs its entries claimed <b>promptly once sent</b>, whereas the scope today claims an unscored recording only once it is <code>failed</code>, or <code>processing</code> and stale by 15 minutes. Widening that scope is the single riskiest edit in this plan, because <code>RescoreQueue</code> is shared with the outage-recovery path that already works in production.</p>
+  <p>The new branch is narrow and additive: <strong><code>batch_id IS NOT NULL AND submitted_for_analysis_at IS NOT NULL</code></strong> and no result. The <code>failed</code> and stale-<code>processing</code> conditions are left exactly as they are, so a non-batch recording behaves identically. <code>RescoreQueueTest</code> must stay green with no edits, proving it.</p>
+  <p>The <code>submitted_for_analysis_at</code> gate does more than serve the UI: it means <b>a half-finished batch cannot leak into the lane.</b> A teacher who sets up fifteen children and records three has three recordings in the system and nothing queued until they say so.</p>
 </div>
 
 <h2>6. Teacher-facing UI</h2>
@@ -455,47 +561,208 @@ Batch status: collecting ─▶ analyzing ─▶ completed
 <p><code>/assessments/new</code> gains <strong>one added link</strong> — "Assess a group" — pointing at the new <code>assessments/batch/create</code>. The existing single-learner screen is otherwise not modified.</p>
 
 <h4>Batch setup — <code>/assessments/batch/create</code></h4>
-<p>Pick a class or hand-pick learners → language → type → default material → a roster table where each row can override the material and choose <code>self</code> or <code>teacher</code>. The cap comes from <code>config('assessment.batch_max_learners')</code>, default <strong>15</strong>, enforced in validation with a clear message. Grade policy runs per child under today's rules: a cross-grade child must be ticked individually, never silently.</p>
+<p>Pick a class or hand-pick learners → language → type → default material → a roster list where each child's material can be overridden. <b>No recording-mode choice</b> — that is decided per card, in the moment. The cap comes from <code>config('assessment.batch_max_learners')</code>, default <strong>15</strong>, enforced in validation with a clear message. Grade policy runs per child under today's rules: a cross-grade child must be ticked individually, never silently.</p>
 
 <h4>Batch board — <code>/assessments/batch/{batch}</code></h4>
-<p>The roster, polling <code>/batch/{batch}/poll</code> — the same polling pattern as the existing <code>pollSession</code>, so no new transport. Each row shows a state chip (<code>waiting</code> / <code>recorded</code> / <code>queued</code> / <code>transcribing</code> / <code>needs verdict</code> / <code>done</code> / <code>failed</code>), the ETA, and one action.</p>
+
+<p><strong>A card per child</strong>, in a responsive grid, polling <code>/batch/{batch}/poll</code> — the same polling pattern as the existing <code>pollSession</code>, so no new transport. Each card carries the child's name, a state chip, and the one action that state calls for. The whole card is clickable and opens that child's panel.</p>
+
+<figure>
+<svg viewBox="0 0 780 250" role="img" aria-label="A grid of child cards in different states, and the detail panel that opens when one is clicked">
+  <rect x="0" y="0" width="780" height="250" fill="#fff"/>
+
+  <!-- grid of cards -->
+  <g font-family="Segoe UI,sans-serif">
+    <!-- card 1 waiting -->
+    <rect x="8" y="26" width="118" height="68" rx="6" fill="#fff" stroke="#d8dee6"/>
+    <text x="20" y="46" font-size="11" font-weight="600" fill="#1b1f24">Ana R.</text>
+    <rect x="20" y="54" width="52" height="15" rx="7.5" fill="#eceff3"/>
+    <text x="46" y="65" font-size="8.5" fill="#5b6672" text-anchor="middle">waiting</text>
+    <text x="20" y="84" font-size="8.5" fill="#1d4ed8">Conduct here ▸</text>
+
+    <!-- card 2 recorded -->
+    <rect x="134" y="26" width="118" height="68" rx="6" fill="#fff" stroke="#1d4ed8" stroke-width="1.5"/>
+    <text x="146" y="46" font-size="11" font-weight="600" fill="#1b1f24">Ben T.</text>
+    <rect x="146" y="54" width="60" height="15" rx="7.5" fill="#eaf0ff"/>
+    <text x="176" y="65" font-size="8.5" fill="#1d4ed8" text-anchor="middle">recorded</text>
+    <text x="146" y="84" font-size="8.5" fill="#1d4ed8">▶ listen · Send ▸</text>
+
+    <!-- card 3 queued -->
+    <rect x="260" y="26" width="118" height="68" rx="6" fill="#fff" stroke="#d8dee6"/>
+    <text x="272" y="46" font-size="11" font-weight="600" fill="#1b1f24">Cris D.</text>
+    <rect x="272" y="54" width="52" height="15" rx="7.5" fill="#fff4e6"/>
+    <text x="298" y="65" font-size="8.5" fill="#9a4a05" text-anchor="middle">queued</text>
+    <text x="272" y="84" font-size="8.5" fill="#5b6672">3rd in line · ~9 min</text>
+
+    <!-- card 4 transcribing -->
+    <rect x="386" y="26" width="118" height="68" rx="6" fill="#fff" stroke="#c2691a" stroke-width="1.5"/>
+    <text x="398" y="46" font-size="11" font-weight="600" fill="#1b1f24">Dina M.</text>
+    <rect x="398" y="54" width="72" height="15" rx="7.5" fill="#fff4e6"/>
+    <text x="434" y="65" font-size="8.5" fill="#9a4a05" text-anchor="middle">transcribing</text>
+    <rect x="398" y="78" width="94" height="4" rx="2" fill="#f3d9b5"/>
+    <rect x="398" y="78" width="46" height="4" rx="2" fill="#c2691a"/>
+
+    <!-- card 5 needs verdict -->
+    <rect x="512" y="26" width="118" height="68" rx="6" fill="#fff" stroke="#d8dee6"/>
+    <text x="524" y="46" font-size="11" font-weight="600" fill="#1b1f24">Elan P.</text>
+    <rect x="524" y="54" width="80" height="15" rx="7.5" fill="#eaf0ff"/>
+    <text x="564" y="65" font-size="8.5" fill="#1d4ed8" text-anchor="middle">needs verdict</text>
+    <text x="524" y="84" font-size="8.5" fill="#1d4ed8">Review ▸</text>
+
+    <!-- card 6 done -->
+    <rect x="638" y="26" width="118" height="68" rx="6" fill="#fff" stroke="#d8dee6"/>
+    <text x="650" y="46" font-size="11" font-weight="600" fill="#1b1f24">Fe G.</text>
+    <rect x="650" y="54" width="40" height="15" rx="7.5" fill="#e9f6ee"/>
+    <text x="670" y="65" font-size="8.5" fill="#1d6b3f" text-anchor="middle">done</text>
+    <text x="650" y="84" font-size="8.5" fill="#5b6672">Instructional · 94%</text>
+
+    <text x="8" y="18" font-size="9.5" fill="#5b6672" font-weight="600">BATCH BOARD — one card per child, every card clickable</text>
+
+    <!-- arrow down -->
+    <path d="M193 100 L193 116" stroke="#5b6672" stroke-width="1.2" marker-end="url(#ar)"/>
+    <defs><marker id="ar" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#5b6672"/></marker></defs>
+    <text x="203" y="113" font-size="9" fill="#5b6672">teacher clicks Ben's card</text>
+
+    <!-- detail panel -->
+    <rect x="8" y="124" width="420" height="118" rx="6" fill="#fff" stroke="#1d4ed8" stroke-width="1.5"/>
+    <text x="22" y="143" font-size="11.5" font-weight="600" fill="#1b1f24">Ben T. — Grade 4 · "Ang Munting Ibon"</text>
+    <rect x="22" y="151" width="60" height="15" rx="7.5" fill="#eaf0ff"/>
+    <text x="52" y="162" font-size="8.5" fill="#1d4ed8" text-anchor="middle">recorded</text>
+
+    <rect x="22" y="174" width="392" height="26" rx="4" fill="#f4f6f9" stroke="#d8dee6"/>
+    <circle cx="36" cy="187" r="7" fill="#1d4ed8"/>
+    <path d="M33.5 183.5 L40 187 L33.5 190.5 z" fill="#fff"/>
+    <rect x="50" y="185.5" width="300" height="3" rx="1.5" fill="#d8dee6"/>
+    <rect x="50" y="185.5" width="92" height="3" rx="1.5" fill="#1d4ed8"/>
+    <text x="362" y="190" font-size="8.5" fill="#5b6672">0:47</text>
+
+    <rect x="22" y="210" width="104" height="22" rx="4" fill="#1d4ed8"/>
+    <text x="74" y="225" font-size="9.5" fill="#fff" text-anchor="middle" font-weight="600">Send for analysis</text>
+    <rect x="134" y="210" width="76" height="22" rx="4" fill="#fff" stroke="#d8dee6"/>
+    <text x="172" y="225" font-size="9.5" fill="#5b6672" text-anchor="middle">Re-record</text>
+    <text x="224" y="225" font-size="8.5" fill="#5b6672">join code: 4821</text>
+
+    <text x="446" y="143" font-size="9.5" fill="#5b6672" font-weight="600">The card panel is where the work happens</text>
+    <text x="446" y="160" font-size="9" fill="#5b6672">· the passage, for the child to read from</text>
+    <text x="446" y="175" font-size="9" fill="#5b6672">· record here, for a child with no device</text>
+    <text x="446" y="190" font-size="9" fill="#5b6672">· a join code, for a child who has one</text>
+    <text x="446" y="205" font-size="9" fill="#5b6672">· play back what was captured</text>
+    <text x="446" y="220" font-size="9" fill="#5b6672">· comprehension questions, when the type</text>
+    <text x="452" y="233" font-size="9" fill="#5b6672">needs them</text>
+  </g>
+</svg>
+<figcaption>Every card offers both routes, so the teacher never has to have predicted at setup which children would have a working device. The figure&#8217;s &ldquo;join code: 4821&rdquo; and &ldquo;a join code, for a child who has one&rdquo; are the draft&#8217;s language: the code is a reference for the teacher, and the child signs in with their PIN — see <a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a>.</figcaption>
+</figure>
+
+<h4>The seven states, and what each card shows</h4>
+<table>
+  <thead><tr><th>Chip</th><th>Derived from</th><th>Card shows</th></tr></thead>
+  <tbody>
+    <tr><td><code>waiting</code></td><td>no <code>audio_file</code></td><td><i>Conduct here</i>, and the join code <a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a></td></tr>
+    <tr><td><code>recorded</code></td><td>audio saved, <code>submitted_for_analysis_at</code> null, no result</td><td><b>Audio player</b>, <i>Send for analysis</i>, <i>Re-record</i></td></tr>
+    <tr><td><code>queued</code></td><td>sent and owed a score, not currently being scored</td><td>Place in line and ETA; audio still playable</td></tr>
+    <tr><td><code>transcribing</code></td><td><code>analysis_started_at</code> set, <code>analysis_duration_ms</code> still null</td><td>Live progress; audio still playable</td></tr>
+    <tr><td><code>needs verdict</code></td><td>result exists and is classified, no verdict</td><td><b><i>Check Result</i></b> → the existing per-child results screen</td></tr>
+    <tr><td><code>done</code></td><td>verdict recorded</td><td>Reading level and accuracy at a glance, plus <b><i>Check Result</i></b></td></tr>
+    <tr><td><code>failed</code></td><td><code>rescore_attempts &gt;= 3</code> and no result</td><td>What went wrong, and <i>Analyze</i> to try by hand</td></tr>
+  </tbody>
+</table>
+
+<p><strong><i>Check Result</i> appears the moment a reading has been analysed</strong> — at <code>needs verdict</code> and at <code>done</code> alike. It is the same results screen the single-child flow already uses, so there is one place a reading is ever read, and the verdict is recorded there as it always has been.</p>
+
+<p><strong>Audio is playable in the card from <code>recorded</code> onward</strong> — not only at <code>recorded</code>. Once a recording exists the teacher can always hear what was captured, including after it is scored, which is what makes a surprising result checkable.</p>
+
+<div class="callout c-warn">
+  <span class="lbl">Two honesty rules this board must not break</span>
+  <p><b>An outage is not a failure.</b> <code>RescoreQueue::rescore()</code> calls <code>markFailed()</code> when the <em>engine</em> is down, deliberately leaving the attempt uncounted. An entry whose <code>status</code> is <code>failed</code> but which <code>awaitingRescore()</code> still claims reads as <strong><code>queued</code>, waiting for the speech engine</strong> — never <code>failed</code>. Rendering raw <code>status</code> would tell a teacher that ten children failed when nothing did.</p>
+  <p><b>An unclassified result is not <code>done</code>.</b> A result with <code>classification_status = 'unavailable'</code> has measurements but no weakness label, so it stays <code>queued</code> — waiting for the model — and the card says so. It must never present as finished.</p>
+</div>
+
+<h4>Comprehension, and the Send gate</h4>
+<p>For a <code>comprehension</code> or <code>combined</code> batch, the card panel carries the question set. Answers are recorded through the existing <code>ComprehensionService</code> <strong>before</strong> <i>Send for analysis</i> becomes available — which means the spec's ordering obligation (§4.3) is enforced by the UI rather than merely hoped for: a dead engine can never discard a child's answers, because the answers were stored before anything was sent.</p>
+
+<h4>Leaving the page must not stop the work</h4>
+
+<p>Nothing about analysis lives in the browser. A recording is scored by <code>assessments:rescore</code> under cron, on the server, so <strong>closing the laptop, pressing Back, losing Wi-Fi or shutting the lid changes nothing</strong> — the lane keeps working and the results are waiting when the teacher returns. The board is a window onto server state, never the engine driving it.</p>
+
+<div class="callout c-stop">
+  <span class="lbl">A flaw in the draft that this requirement exposed</span>
+  <p>The draft had <code>AssessmentBatch::refreshStatus()</code> called from <code>poll()</code>. Scoring would have continued correctly with the page closed — but the <b>batch's own status</b> would have frozen at <code>analyzing</code> until somebody reopened the board, so a batch that finished overnight would still claim to be running.</p>
+  <p>Fixed by moving it to an <strong>observer on <code>Assessment</code></strong>: when an entry gains a result or exhausts its attempts, its batch refreshes itself. The batch now completes with nobody watching, and <code>poll()</code> only reads. A stored status that only updates while someone is looking at it is not a stored status, it is a rendering artefact.</p>
+</div>
+
+<p>The board says so plainly, so the teacher does not sit and wait out of doubt: <i>"Analysis continues even if you close this page — you can come back any time."</i></p>
+
+<p><strong>The one thing that is not safe</strong>, stated rather than glossed: a recording still being captured in the card panel exists only in the browser until it is uploaded. If the laptop closes mid-reading, <em>that</em> recording is lost and the child reads again. Everything that reached the server is safe, including recordings that are <code>recorded</code> but not yet sent.</p>
+
+<h4>Cancelling and removing</h4>
+
+<p>Every card carries a cancel or remove action, and <strong>no action available on this board can destroy a measured reading.</strong> That is a deliberate boundary: a teacher working through fifteen cards is moving fast, and one misplaced tap must not delete a child's record. What each state offers:</p>
+
+<table>
+  <thead><tr><th>State</th><th>Action</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>waiting</code></td><td><i>Remove</i></td><td>Deletes the entry outright. Nothing was recorded, nothing is lost. Its join code stops working. <a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a></td></tr>
+    <tr><td><code>recorded</code></td><td><i>Re-record</i> / <i>Remove</i></td><td>Discards the recording and returns to <code>waiting</code>, or removes the entry entirely. Nothing was measured.</td></tr>
+    <tr><td><code>queued</code></td><td><i>Cancel analysis</i></td><td>Clears <code>submitted_for_analysis_at</code>, so the lane stops taking it, and the card returns to <code>recorded</code> with its audio intact. The true "I sent that by mistake".</td></tr>
+    <tr><td><code>transcribing</code></td><td><b>none</b></td><td>A running Whisper process cannot be aborted honestly. The card says <i>"being analysed now — about N min left"</i> and offers nothing, rather than a button that would not do what it says.</td></tr>
+    <tr><td><code>needs verdict</code> · <code>done</code></td><td><i>Remove from batch</i></td><td><strong>Sets <code>batch_id</code> to null and nothing more.</strong> The card leaves the board; the assessment, result, verdict and comprehension answers all survive and stay reachable from the child's learner history. Their reading level is unaffected.</td></tr>
+    <tr><td><code>failed</code></td><td><i>Remove from batch</i></td><td>Also <code>batch_id</code> to null, keeping the recording so the teacher can still press Analyze from the child's history.</td></tr>
+  </tbody>
+</table>
+
+<div class="callout c-warn">
+  <span class="lbl">Why "remove from batch" and not "delete"</span>
+  <p>Deleting an <code>Assessment</code> cascade-deletes its <code>assessment_results</code>, <code>assessment_verdicts</code>, <code>comprehension_answers</code> and <code>assessment_sessions</code> rows. Worse, <code>Learner::readingLevelFromAssessments()</code> derives the child's reading level from their assessments, so a delete <b>silently changes that child's level</b> — which is what parents see, what Practice Center recommends from, what interventions are chosen on, and what the admin chart counts.</p>
+  <p>That is far too much consequence for a button on a card. <strong>Destroying a reading lives on the child's own learner-history screen instead</strong>, where the teacher sees the whole record they are about to remove rather than one card among fifteen, and confirms it there.</p>
+</div>
+
+<h4>Cancelling the whole batch</h4>
+
+<p>Behind a confirmation dialog naming what will and will not be affected — <i>"Cancel this batch? 4 children already assessed keep their results. 6 waiting and 5 queued will be stopped."</i> On confirm:</p>
 <ul>
-  <li><b>Teacher-led rows</b> record inline, reusing <code>_audio_capture.blade.php</code>.</li>
-  <li><b>Self-record rows</b> display the child's join code.</li>
-  <li><b>Comprehension</b> answers come from the child's own device in <code>self</code> mode, or from an inline per-child panel in teacher-led mode — posted through the existing <code>ComprehensionService</code> path <i>before</i> the job is queued.</li>
-  <li><b>Failed rows</b> offer per-child Retry, with today's retry semantics.</li>
+  <li>Batch status becomes <code>cancelled</code>, stamped with <code>cancelled_at</code></li>
+  <li>Every <code>queued</code> entry is <strong>un-sent</strong>, so the lane stops taking them</li>
+  <li>Entries with no recording are removed, and their join codes stop working <a class="rev" href="#rev5" title="Revision note, rev. 5: the join code is not a way in">rev&nbsp;5</a></li>
+  <li><strong>Every child already scored keeps their reading</strong>, in their own history</li>
+  <li>An entry mid-<code>transcribing</code> is left to finish; its result is kept, because it cost the time either way and the measurement is valid</li>
 </ul>
+<p><strong>Cancelling abandons the session, not the measurements.</strong> A teacher who cancels because the bell rang has not thrown away the nine children who did read.</p>
+
+<h4>One bulk action, and only one</h4>
+<p>The board offers <strong>Send all ready</strong> — releasing every <code>recorded</code> card at once, for the common case where fifteen children read simultaneously on their own devices and the teacher reviews them in a batch.</p>
+<p>This is deliberately <em>not</em> a contradiction of §2's no-bulk-accept rule, and the distinction matters: sending a recording for analysis asks the machine to measure something, and a bad send costs lane time. Accepting a verdict records a <strong>judgement about a child</strong> in their permanent record. The first is safe to do fifteen at a time; the second never is.</p>
 
 <h2>7. Build order</h2>
 
 <p>Each phase is independently green and independently revertible. <strong>A phase does not start until the one before it is proven.</strong></p>
 
-<div class="phase">
-  <div class="phase-h"><span class="name">Phase 0 — Safety net</span><span class="gate">no production code</span></div>
+<div class="phase" style="opacity:.62">
+  <div class="phase-h"><span class="name">Phase 0 — Safety net</span><span class="gate" style="color:#1d6b3f">✓ satisfied upstream</span></div>
   <div class="phase-b">
-    <p>Pin the current behaviour of <code>analyze()</code>: the success JSON (<code>redirect_url</code>), the <code>503</code> on a dead engine, the <code>500</code> on generic failure, the <code>markFailed</code> side effect, the comprehension-before-STT ordering, and the recording surviving a failed analysis. Fill whatever gap the existing seven tests leave. <b>These tests are never edited afterwards.</b></p>
+    <p>Superseded. The refactor arrived with its own tests, and the suite has since grown by six relevant files (§3). <b>Nothing to do</b> — but the no-test-edits rule carries forward to every phase below.</p>
+  </div>
+</div>
+
+<div class="phase" style="opacity:.62">
+  <div class="phase-h"><span class="name">Phase 1 — Extract the pipeline</span><span class="gate" style="color:#1d6b3f">✓ done by <code>bc85b8c</code></span></div>
+  <div class="phase-b">
+    <p>Delivered as <code>App\Services\AssessmentScorer</code>, with the signature and contract this plan specified. <code>analyze()</code> delegates to it in 77 lines. <b>Nothing to do.</b></p>
   </div>
 </div>
 
 <div class="phase">
-  <div class="phase-h"><span class="name">Phase 1 — Extract the pipeline</span><span class="gate">gate: all Phase 0 tests green,<br>zero test-file edits</span></div>
+  <div class="phase-h"><span class="name">Phase 2 — Schema</span><span class="gate">gate: <code>migrate:rollback</code> verified clean;<br>full suite green, zero test-file edits</span></div>
   <div class="phase-b">
-    <p>Create <code>AssessmentAnalysisPipeline</code>; move the nine steps and <code>buildProvenance()</code> into it verbatim. <code>analyze()</code> keeps its validation, <code>keepRecording()</code>, status transition and all three response branches, and calls the pipeline in the middle.</p>
-    <p><strong>Phase 1 ships with zero new features.</strong> It is a pure, behaviour-neutral refactor — and the gate before anything else begins.</p>
+    <p><code>assessment_batches</code>, plus <code>batch_id</code> / <code>submitted_for_analysis_at</code> / <code>analysis_started_at</code> / <code>analysis_duration_ms</code> on <code>assessments</code>, with the two indexes in §5. No new status constant, no <code>recording_mode</code>. Every migration carries a working, exercised <code>down()</code>.</p>
   </div>
 </div>
 
 <div class="phase">
-  <div class="phase-h"><span class="name">Phase 2 — Schema</span><span class="gate">gate: <code>migrate:rollback</code> verified clean</span></div>
+  <div class="phase-h"><span class="name">Phase 3 — Extend the existing lane</span><span class="gate">gate: 15 recordings scored serially on the VPS;<br><code>RescoreQueueTest</code> green, unedited</span></div>
   <div class="phase-b">
-    <p><code>assessment_batches</code> + the nullable columns on <code>assessments</code> + <code>STATUS_QUEUED</code>, plus the status-check audit described in §5. Every migration carries a working, tested <code>down()</code>.</p>
-  </div>
-</div>
-
-<div class="phase">
-  <div class="phase-h"><span class="name">Phase 3 — Queue</span><span class="gate">gate: 15 jobs run serially on the VPS<br>without a timeout kill</span></div>
-  <div class="phase-b">
-    <p><code>AnalyzeAssessmentJob</code> (the app's first job), <code>AnalysisQueueEstimator</code>, and the systemd fix in §8. Verified with a real 15-recording run against local Whisper, not just in tests.</p>
+    <p>Widen <code>Assessment::scopeAwaitingRescore()</code> additively so a batch entry is owed a score as soon as its audio is saved (§5). Add <code>AnalysisQueueEstimator</code>. Tune the schedule and <code>--limit</code> per §8.</p>
+    <p><strong>No <code>AnalyzeAssessmentJob</code>, no <code>queue:work</code>, no systemd unit change.</strong> Verified with a real 15-recording run against local Whisper, not only in tests — and specifically checked for the double-scoring hazard in §4.2.</p>
   </div>
 </div>
 
@@ -513,34 +780,103 @@ Batch status: collecting ─▶ analyzing ─▶ completed
   </div>
 </div>
 
-<h2>8. Latent bug this work exposes</h2>
+<h2>8. Throughput tuning — and the lock that must not be ignored</h2>
+
+<p>Reusing <code>RescoreQueue</code> removes a deploy change but introduces a tuning problem. Today's schedule is built for trickle recovery after an outage, not for 15 recordings arriving at once:</p>
+
+<pre><code>Schedule::command('assessments:rescore')->everyFiveMinutes()->withoutOverlapping(30);
+// signature: assessments:rescore {--limit=5}</code></pre>
+
+<table>
+  <thead><tr><th>Setting</th><th>Today</th><th>Effect on a 15-child batch</th></tr></thead>
+  <tbody>
+    <tr><td>Tick interval</td><td>5 min</td><td>Up to 5 minutes of dead air before the first child is even picked up, and a gap after every run.</td></tr>
+    <tr><td><code>--limit</code></td><td>5</td><td>One run scores at most 5, taking 5–15 min. Fifteen children need three runs.</td></tr>
+    <tr><td><code>withoutOverlapping</code></td><td>30 min</td><td><b>The hazard.</b> This is a lock <i>expiry</i>, not a guarantee.</td></tr>
+  </tbody>
+</table>
 
 <div class="callout c-stop">
-  <span class="lbl">The installed queue worker would kill every Whisper job</span>
-  <p><code>bigkas_first_day_setup.sh:285</code> installs:</p>
-  <pre style="margin:8px 0;background:#fff"><code>ExecStart=/usr/bin/php artisan queue:work --sleep=3 --tries=3 --max-time=3600</code></pre>
-  <p>Laravel's default per-job timeout is <strong>60 seconds</strong>. A 300-second Whisper transcription would be killed mid-run, every time. The unit needs <code>--queue=analysis --timeout=420 --tries=2</code>.</p>
-  <p>Nobody has hit this because the worker is installed but <code>app/Jobs/</code> is empty — it has never run a job. Batch assessment is what first puts work on that queue, so the fix belongs to Phase&nbsp;3, and <code>docs/deployment-vps.md</code> must carry it too.</p>
+  <span class="lbl">Raising <code>--limit</code> without raising the lock re-creates the double-scoring bug</span>
+  <p><code>withoutOverlapping(30)</code> means the lock is <b>released after 30 minutes</b> whether the run finished or not. At <code>--limit=5</code> a run takes at most ~15 minutes and this never matters. But a naive "just raise the limit to 15" gives a run of up to <b>45 minutes</b> — the lock expires at 30, the next tick starts a <b>second concurrent run</b>, and two Whisper processes fight over one model's worth of RAM, scoring the same recordings twice.</p>
+  <p>The rule: <strong><code>--limit</code> × worst-case per-recording time must stay comfortably below the <code>withoutOverlapping</code> window.</strong> Any change to one requires changing the other, and the plan treats them as a single setting.</p>
+</div>
+
+<h4>Settings</h4>
+<pre><code>Schedule::command('assessments:rescore --limit=20')
+    ->everyMinute()
+    ->withoutOverlapping(120);</code></pre>
+
+<table>
+  <thead><tr><th>Setting</th><th>Was</th><th>Now</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><code>--limit</code></td><td>5</td><td><b>20</b></td><td>A full 15-child batch clears in <b>one run</b>, with room for a few single assessments alongside it. At 5 it took three runs.</td></tr>
+    <tr><td>worst-case run</td><td>15 min</td><td><b>60 min</b></td><td>20 × 3 min.</td></tr>
+    <tr><td>× 1.5 margin</td><td>22.5 min</td><td><b>90 min</b></td><td>The figure the lock must clear.</td></tr>
+    <tr><td><code>withoutOverlapping</code></td><td>30 min</td><td><b>120 min</b></td><td>Comfortably above 90, so the lock protects rather than merely delays.</td></tr>
+    <tr><td>tick</td><td>5 min</td><td><b>1 min</b></td><td>See below.</td></tr>
+  </tbody>
+</table>
+
+<p><strong>everyMinute, not everyFiveMinutes</strong> — counter-intuitive but correct. <code>withoutOverlapping</code> already prevents pile-up, so a one-minute tick means "start again as soon as the lane is free" rather than "idle until the next multiple of five". It removes nearly all tick latency and every between-run gap, and costs nothing when there is no work: the command exits immediately.</p>
+
+<div class="callout c-warn">
+  <span class="lbl">What a 60-minute run costs, stated plainly</span>
+  <p><b>A 15-child batch holds the single lane for up to an hour.</b> Another teacher's one-off assessment, created mid-batch, waits behind it. <code>RescoreQueue</code> already orders <code>oldest('id')</code> first, so this is fair FIFO rather than starvation — but with one serial lane, fair still means slow. This is inherent to the hardware (§2), not a defect, and it is the price of clearing a batch in one run instead of three.</p>
+</div>
+
+<div class="callout c-stop">
+  <span class="lbl">A 120-minute lock is a 120-minute liability if the process dies</span>
+  <p><code>withoutOverlapping</code> releases its cache lock on normal exit, but a <code>SIGKILL</code> — an OOM kill, a <code>systemctl</code> stop mid-run, a reboot — leaves the lock sitting there. Until it expires, <strong>nothing is rescored at all</strong>, including outage recovery for ordinary single-child assessments. At the old 30 minutes that was an annoyance; at 120 it is half a school day.</p>
+  <p>The unstick command must be in the runbook and in <code>docs/deployment-vps.md</code>:</p>
+  <pre style="margin:8px 0;background:#fff"><code>php artisan schedule:clear-cache</code></pre>
+  <p>The symptom to document alongside it: recordings sitting at <code>queued</code> with the engine demonstrably healthy, and no <code>Rescored assessment</code> lines appearing in the log.</p>
+</div>
+
+<p>These numbers are a starting point to be <strong>confirmed against the Phase&nbsp;3 measurement</strong>, not an assumption. Once <code>analysis_duration_ms</code> holds real data the estimator's own median is the right basis for a final value — and if the measured worst case per recording exceeds 3 minutes, <code>--limit=20</code> breaches the invariant and both numbers must move together. The cron prerequisite (<code>schedule:run</code> every minute) is already documented in <code>routes/console.php</code>.</p>
+
+<div class="callout c-info">
+  <span class="lbl">Retired from the draft — and still worth knowing</span>
+  <p>The draft's §8 flagged that <code>bigkas_first_day_setup.sh:285</code> installs <code>queue:work</code> with Laravel's default <b>60-second</b> job timeout, which would kill any 300-second Whisper job. <b>That fix is no longer part of this work</b>, because nothing here puts anything on Laravel's queue and <code>app/Jobs/</code> stays empty.</p>
+  <p>The misconfiguration is still there, still harmless, and still a trap for whoever first adds a real job to this project. Worth fixing on its own someday; not in this plan's scope.</p>
 </div>
 
 <h2>9. Backup &amp; rollback</h2>
 
 <p>Six independent ways back, strongest first. The first two mean that in the common case <strong>nothing has to be rolled back at all.</strong></p>
 
-<h3>9.1 Feature flag — the instant off switch</h3>
-<p><code>BATCH_ASSESSMENT_ENABLED=false</code> behind <code>config('assessment.batch_enabled')</code> hides the "Assess a group" link and makes every batch route <code>404</code>. The single-child flow is untouched code either way, so it keeps working.</p>
+<h3>9.1 Feature flag — the instant off switch <span style="color:#9a4a05;font-size:12px;font-weight:600">— REQUIRED, LANDS BEFORE ANY UI</span></h3>
+<p><code>BATCH_ASSESSMENT_ENABLED=false</code> behind <code>config('assessment.batch_enabled')</code> hides the "Assess a group" link and makes every batch route <code>404</code> via a <code>batch.enabled</code> middleware. The single-child flow is untouched code either way, so it keeps working.</p>
+<p>This is not an optional nicety and not a late addition: the flag and its middleware land in <strong>Task&nbsp;5, before any batch screen exists</strong>, and the task's own tests assert that the default is <code>false</code> and that every batch route 404s when it is off. No batch UI is written until that is proven.</p>
 <p>This ships <strong>off</strong>. It is turned on deliberately, and turning it back off takes one <code>.env</code> edit — <b>no code rollback, no migration rollback, no downtime.</b> Remember that an <code>.env</code> edit does nothing until <code>config:cache</code> runs again.</p>
 
-<h3>9.2 Branch + tag</h3>
-<p>Before any work starts:</p>
-<pre><code># on the dev machine, from clean master
-git tag -a pre-batch-assessment -m "Last state before batch assessment work"
-git push origin pre-batch-assessment
-git switch -c feat/batch-assessment</code></pre>
-<p><code>master</code> is never committed to during the build. The tag is a permanent, named return point — the repo has no tags today, so this is also the project's first.</p>
+<h3>9.2 Branch + tag <span style="color:#1d6b3f;font-size:12px;font-weight:600">— DONE</span></h3>
+<pre><code>git tag -a pre-batch-assessment -m "Last state before batch assessment work"   # done
+git push origin pre-batch-assessment                                           # done
+git switch -c feat/batch-assessment                                            # done</code></pre>
+<p><code>master</code> is never committed to during the build. The tag is a permanent, named return point, pushed to <code>origin</code> — the repo had no tags before, so this is also the project's first.</p>
 
-<h3>9.3 One commit per phase</h3>
-<p>Each phase lands as its own commit, each independently green. Rollback granularity is therefore <strong>a phase, not the whole feature</strong>. Phase&nbsp;1 in particular — the pipeline extraction — is behaviour-neutral and committed alone, so if anything about it smells, that single commit reverts without touching the schema or the queue.</p>
+<h3>9.3 A branch per phase, merged into an integration branch</h3>
+
+<p>Every phase gets its <strong>own branch</strong>. Nothing is committed to <code>master</code> at any point.</p>
+
+<pre><code>master                                      ← untouched throughout
+  │
+  └── feat/batch-assessment                 ← integration branch (already cut)
+        │
+        ├── feat/batch-t01-schema      ──merge --no-ff──▶
+        ├── feat/batch-t02-claim       ──merge --no-ff──▶
+        ├── feat/batch-t03-estimator   ──merge --no-ff──▶
+        └── …                               one branch per task</code></pre>
+
+<p>Each task branches off the <em>current</em> integration branch, is proven green on its own, and merges back with <code>--no-ff</code>. The tasks are sequentially dependent — Task&nbsp;8 consumes Task&nbsp;3's estimator, Task&nbsp;9 consumes Task&nbsp;8's card states — so they cannot be developed in parallel isolation; branching off the integration branch each time is what keeps each one reviewable without pretending they are independent.</p>
+
+<p><code>--no-ff</code> matters: it means every phase stays a <strong>single, named, revertible merge commit</strong>. Rollback granularity is a phase, not the whole feature:</p>
+
+<pre><code>git revert -m 1 &lt;merge-commit&gt;     # undo exactly one phase, keep the rest
+git switch feat/batch-assessment && git reset --hard &lt;earlier-merge&gt;   # or rewind to a phase boundary</code></pre>
+
+<p>Merging the finished feature into <code>master</code> is a separate, explicit decision taken after §9.5's measured run — never a side effect of finishing a task.</p>
 
 <h3>9.4 Database</h3>
 <p>Every schema change is <strong>additive</strong>: one new table, and nullable columns on <code>assessments</code>. Nothing is renamed, retyped or dropped, so no existing data can be lost and <code>down()</code> is genuinely safe. Each migration's <code>down()</code> is written <em>and exercised</em> (<code>migrate:rollback</code>) before the phase is called done.</p>
@@ -577,20 +913,33 @@ php artisan up</code></pre>
   <p>To read a 500 there, <code>tail</code> is useless (Laravel writes one long line):<br><code>grep -oE '(local|production)\.(ERROR|CRITICAL):.{0,500}' storage/logs/laravel.log | tail -2</code></p>
 </div>
 
-<h3>9.6 Draining the queue before a rollback</h3>
-<p>Jobs are serialized with a class name. Rolling back code while <code>analyze</code> jobs sit in the <code>jobs</code> table leaves rows referencing a class that no longer exists, and the worker will fail them in a loop.</p>
-<pre><code># before checking out the older code:
-php artisan queue:pause        # stop taking new work (or: systemctl stop bigkas-queue)
+<h3>9.6 Stopping the lane before a rollback</h3>
+<p>Reusing <code>RescoreQueue</code> makes this markedly simpler than the draft's version, because <strong>there is no serialized job payload to go stale.</strong> As its docblock puts it: <em>"Nothing is held anywhere else, so nothing can be lost from a queue that was never written."</em> Pending work is just rows that match a scope — roll the code back and the scope reverts with it.</p>
+<p>So there is nothing to drain and nothing to clear. The only requirement is that a scoring run is not <em>mid-flight</em> while the code changes underneath it:</p>
+<pre><code># 1. stop the scheduler from starting another run
+sudo crontab -e        # comment out the `schedule:run` line
+#    (or, if the cron entry is in /etc/cron.d/, move the file aside)
 
-php artisan queue:clear analysis   # discard pending jobs — recordings are SAFE,
-                                   # they stay on disk and can be re-analysed later</code></pre>
-<p>This loses no learner data. The audio and the comprehension answers are already persisted; only the <em>pending instruction to analyse</em> is discarded, and the single-child Analyze button can re-run any of them.</p>
+# 2. let any in-flight run finish — it is at most one recording away from done
+ps aux | grep '[a]ssessments:rescore'
+
+# 3. roll back (§9.5), then restore the cron line
+
+# 4. if a run was killed rather than allowed to finish, release its lock —
+#    otherwise NOTHING is rescored until the 120-minute window expires
+php artisan schedule:clear-cache</code></pre>
+<p>No learner data is at risk at any point. Audio and comprehension answers are persisted the moment they arrive; a rollback mid-batch leaves every recording on disk, still owed a score, and the single-child Analyze button can score any of them by hand. A batch interrupted by a rollback resumes by itself once the cron line is restored.</p>
+<div class="callout c-warn">
+  <span class="lbl">If the rollback crosses the Phase 2 migration</span>
+  <p><code>migrate:rollback</code> drops <code>batch_id</code>. Entries that were owed a score <em>because</em> they were batch entries become ordinary unscored recordings, which the <b>original</b> <code>awaitingRescore</code> rules will claim only once they are <code>failed</code> or 15-minutes stale in <code>processing</code>. They are not lost — they are merely slower to be picked up, and Analyze still works on each. Worth telling the teacher rather than letting them think the batch vanished.</p>
+</div>
 
 <h2>10. Out of scope</h2>
 
 <p>Each of these is a clean follow-up once the queue is proven in a real classroom — none is blocked by this design.</p>
 <ul>
   <li><b>Parallel Whisper.</b> CPU-bound, ≈1&nbsp;GB resident per model, 4&nbsp;GB host. Concurrency 1 is the correct setting, not a limitation to work around.</li>
+  <li><b>Fixing the <code>queue:work</code> timeout</b> in the systemd unit (§8) — latent, harmless, and no longer touched by this work.</li>
   <li><b>GPU inference.</b> Different hosting conversation entirely.</li>
   <li><b>Websockets / live push.</b> Polling matches the existing <code>pollSession</code> and needs no new infrastructure.</li>
   <li><b>Batch-level PDF or Form 3 export.</b> Per-child export already works.</li>
@@ -603,7 +952,7 @@ php artisan queue:clear analysis   # discard pending jobs — recordings are SAF
   <p>A 15-child batch is roughly <strong>25–45 minutes of transcription after the last child stops reading</strong>. This design makes that wait <em>visible, interruptible and safe to walk away from</em>. It does not make it shorter — on this hardware, nothing in software can.</p>
 </div>
 
-<p class="foot">BIGKAS&#8209;AI · Batch Assessment implementation plan · 9 October 2026 · plan only, no code written · awaiting go signal</p>
+<p class="foot">BIGKAS&#8209;AI · Batch Assessment implementation plan · drafted 9 October 2026, revised 21 October 2026 (rev.&nbsp;2) · Phases&nbsp;0–1 satisfied upstream; Phases&nbsp;2–5 outstanding · branch <code>feat/batch-assessment</code>, rollback tag <code>pre-batch-assessment</code></p>
 
 </div>
 </body>

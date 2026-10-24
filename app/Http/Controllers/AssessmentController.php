@@ -62,7 +62,23 @@ class AssessmentController extends Controller
 
         $learners = Directory::paginate(Directory::sortLearners($learnerQuery->withCount('assessments')->get()), 10);
 
-        return view('assessments.index', compact('learners'));
+        // The group assessment she has not finished - the one she is trying to
+        // get back to. One query, and only while the feature is on; with the
+        // flag off this page is exactly what it was. Nothing about the
+        // single-child flow below changes either way.
+        $openBatches = collect();
+
+        if (config('assessment.batch_enabled')) {
+            $openBatches = \App\Models\AssessmentBatch::where('teacher_id', $user->id)
+                ->whereIn('status', [
+                    \App\Models\AssessmentBatch::STATUS_COLLECTING,
+                    \App\Models\AssessmentBatch::STATUS_ANALYZING,
+                ])
+                ->orderByDesc('id')
+                ->get();
+        }
+
+        return view('assessments.index', compact('learners', 'openBatches'));
     }
 
     /**
@@ -140,7 +156,7 @@ class AssessmentController extends Controller
         }
         if ($gradeDiff > 1) {
             return back()
-                ->withErrors(['material_id' => 'Cross-grade fallback is limited to one grade above or below the learner\u2019s grade.'])
+                ->withErrors(['material_id' => 'Cross-grade fallback is limited to one grade above or below the learner’s grade.'])
                 ->withInput();
         }
 
@@ -195,15 +211,262 @@ class AssessmentController extends Controller
         ]);
     }
 
+    /**
+     * Destroy one reading, on the learner's own history screen.
+     *
+     * The only place in the application where a measured reading can be
+     * destroyed. The batch board deliberately refuses to: there a teacher is
+     * moving through fifteen cards and one misplaced tap would be one child's
+     * record gone, so a scored card leaves that board by having batch_id set to
+     * null and nothing else. Here she is in front of one child's own history,
+     * one row at a time, behind a confirmation that shows the reading.
+     *
+     * What this costs, so the guards below read as necessary rather than
+     * ceremonial: the row's result, verdict, comprehension answers and sessions
+     * all go with it, and Learner::readingLevelFromAssessments() derives the
+     * child's reading level from their assessments - so the delete changes what
+     * the parent portal shows, what the Practice Center recommends, which
+     * interventions are chosen for that child and what the admin chart counts.
+     * Hence: a real confirmation, an audit line that outlives the row, and a
+     * recompute rather than a stale level.
+     *
+     * Outside the batch feature and outside config('assessment.batch_enabled').
+     */
+    public function destroy(Request $request, Assessment $assessment)
+    {
+        $this->authorizeLearnerAccess($assessment->learner);
+
+        // Deleting is the assessing teacher's act, per the
+        // LearnerAdminReadOnlyTest precedent, and this guard is here as well as
+        // on the route's teacher-only group so that it travels with the method
+        // if the route is ever moved.
+        //
+        // Stated positively - only a teacher - rather than as a list of who is
+        // turned away, so that a role added later is refused by default instead
+        // of admitted by omission. It is needed because
+        // authorizeLearnerAccess() admits the admin (principal) to every
+        // learner by design: it is written for reading.
+        abort_unless(auth()->user()->isTeacher(), 403, 'Deleting a reading is the assessing teacher’s decision.');
+
+        $learner = $assessment->learner;
+        $assessment->loadMissing(['result', 'verdict', 'material']);
+
+        // A measured reading takes the learner's typed name, so a click cannot
+        // destroy it and neither can a confirm-through.
+        //
+        // The gate is the result, not only the verdict. A verdict proves a
+        // teacher invested attention; the *result* is the thing worth
+        // protecting - it is what Learner::readingLevelFromAssessments() reads,
+        // what the parent portal shows and what Practice Center recommends
+        // from. A scored reading nobody has reviewed yet still moves all three,
+        // so it is no less dangerous to lose than a reviewed one.
+        if (($assessment->result !== null || $assessment->verdict !== null)
+            && ! $this->typedNameMatches($request->input('learner_name'), $learner)) {
+            return back()->withErrors([
+                // The reason given is the true one - the reading is scored, so
+                // it counts towards the level - and the name asked for is the
+                // one the modal shows beneath the box, so the message and the
+                // field cannot disagree about what to type.
+                'learner_name' => 'This reading has been scored, so it counts towards '
+                    . $learner->first_name . '’s reading level. To delete it, type '
+                    . $learner->first_name . ' ' . $learner->last_name . ' to confirm.',
+            ]);
+        }
+
+        $key = $assessment->getKey();
+        $audio = $assessment->audio_file;
+        $batchId = $assessment->batch_id;
+        $narrative = $this->deletionNarrative($assessment, $learner);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($assessment, $key, $narrative, $learner) {
+            // Written before the row goes, and inside the transaction so a
+            // failure part-way cannot leave a log line claiming a deletion
+            // that was rolled back. The subject is the learner, not the
+            // assessment: an assessment id is a dangling pointer the moment
+            // this commits, and the description carries the rest.
+            ActivityLog::log('Assessment Deleted', $narrative, 'learner', $learner->getKey());
+
+            // The children are deleted explicitly rather than left to the
+            // foreign keys, so this holds the same on every engine the app
+            // runs on - the same precedent as the batch board's deleteEntry().
+            \App\Models\ComprehensionAnswer::where('assessment_id', $key)->delete();
+            \App\Models\AssessmentVerdict::where('assessment_id', $key)->delete();
+            \App\Models\AssessmentResult::where('assessment_id', $key)->delete();
+            AssessmentSession::where('assessment_id', $key)->delete();
+
+            $assessment->delete();
+        });
+
+        // The level must never reflect a reading that is gone. Same mechanism
+        // as learners:recompute-levels - Learner::updateReadingLevel() over
+        // readingLevelFromAssessments() - so the rule has one definition and
+        // cannot drift between the command and this screen. When no usable
+        // reading is left the level is cleared rather than kept.
+        //
+        // Before the file delete, deliberately. These are both after the
+        // commit, so order decides which survives a failure in the other: a
+        // disk error must not be able to leave the child's level describing a
+        // reading that no longer exists. An orphaned audio file is untidy; a
+        // stale reading level is what the parent sees.
+        $learner->updateReadingLevel();
+
+        // A deleted file is the one thing a rollback cannot bring back, so it
+        // goes last. Left behind it would be a child's voice that nothing on
+        // record refers to any more.
+        if ($audio) {
+            Storage::disk('public')->delete($audio);
+        }
+
+        // A reading still sitting on a batch board leaves a board deriving its
+        // status from a card that no longer exists. A delete fires no saved
+        // event, so AssessmentObserver cannot do this one.
+        if ($batchId) {
+            \App\Models\AssessmentBatch::find($batchId)?->refreshStatus();
+        }
+
+        return redirect()->route('assessments.learner-history', $learner)
+            ->with('success', 'That reading was deleted, with its result, any verdict over it and its '
+                . 'comprehension answers. ' . $learner->getFullName() . '’s reading level is now '
+                . ($learner->fresh()->reading_level
+                    ? ucfirst($learner->fresh()->reading_level)
+                    : 'not set, because no reading on record supports one') . '.');
+    }
+
+    /**
+     * Does what the teacher typed name this child?
+     *
+     * Forgiving about what hands do to a name that is on the screen in front of
+     * them - leading and trailing space, doubled spaces, case, and the full
+     * stop or apostrophe in "Juan D. Cruz" or "O’Brien" - and forgiving about
+     * the middle initial, since the heading shows it but asking a teacher to
+     * reproduce it is asking her to fight the form rather than read it. So both
+     * "Juan D. Cruz" and "Juan Cruz" are accepted for the same child.
+     *
+     * Not forgiving about anything else. Nothing typed, a first name alone, a
+     * surname alone or another child's name are all refused, which is the point:
+     * a blind confirm-through must not pass.
+     */
+    private function typedNameMatches(mixed $typed, Learner $learner): bool
+    {
+        // `mixed`, not `?string`: a form field can arrive as an array
+        // (learner_name[]=x) and a typed signature would make that a
+        // TypeError - a 500 where the honest answer is "that is not the
+        // child's name". Nothing was destroyed either way, but a crash is not
+        // a refusal.
+        if (! is_string($typed) || trim($typed) === '') {
+            return false;
+        }
+
+        $normalise = function (string $name): string {
+            // Punctuation inside a name is dropped before comparing, not the
+            // name's words: what is required is the whole name.
+            $name = str_replace(['.', "'", '’', '`', '-'], '', $name);
+
+            return trim(preg_replace('/\s+/u', ' ', mb_strtolower($name)));
+        };
+
+        return in_array($normalise($typed), [
+            $normalise($learner->getFullName()),
+            $normalise($learner->first_name . ' ' . $learner->last_name),
+        ], true);
+    }
+
+    /**
+     * The audit line, built while the assessment still exists.
+     *
+     * It has to still mean something once it does not: "deleted assessment 41"
+     * is useless the moment 41 is gone. So the child, the date, the material,
+     * the level and the score are in the text itself, and the consequences are
+     * named rather than left to be inferred from the action word.
+     */
+    private function deletionNarrative(Assessment $assessment, Learner $learner): string
+    {
+        $accuracy = $assessment->effectiveAccuracy();
+        $level = $assessment->effectiveReadingLevel();
+
+        return sprintf(
+            'Deleted the %s reading of %s — material “%s”, level %s, accuracy %s. '
+            . 'Its result, any verdict over it and its comprehension answers were deleted with it. '
+            . 'The learner’s reading level was %s before the deletion and was recomputed from the readings that remain.',
+            $assessment->created_at?->format('M d, Y') ?? 'undated',
+            $learner->getFullName(),
+            $assessment->material?->title ?? 'unknown',
+            $level !== null ? ucfirst($level) : 'none recorded',
+            $accuracy !== null ? number_format((float) $accuracy, 1) . '%' : 'not measured',
+            $learner->reading_level !== null ? ucfirst($learner->reading_level) : 'not set'
+        );
+    }
+
     public function status(Assessment $assessment)
     {
         $this->authorizeLearnerAccess($assessment->learner);
         return response()->json(['status' => $assessment->status]);
     }
 
+    /**
+     * The convergence guard on the single-child doors.
+     *
+     * The same shape and the same position as the batch side's
+     * AssessmentBatchController::refuseIfAnalysed() and the student side's
+     * StudentAssessmentController::refuseIfSent(): called before anything is
+     * validated, written or deleted, returning a response to send straight back
+     * when it refuses and null when there is nothing to refuse.
+     *
+     * What it protects is the governing principle of the batch feature: a
+     * recording rests at `recorded` and consumes no analysis time until the
+     * teacher listens and deliberately sends it. These two actions predate the
+     * feature and know nothing about it - uploadAudio() would leave `processing`
+     * with no send stamp, which scopeAwaitingRescore() claims once it is stale,
+     * and retry() would delete an unsent recording off the disk - and both are
+     * reachable from a learner's history, so a teacher gets here by following a
+     * link rather than by meaning any harm. She is pointed at the screen the
+     * action really belongs to instead.
+     *
+     * A single-child reading has batch_id === null and is handed straight back
+     * to the identical path: nothing about it changes.
+     */
+    private function refuseIfInBatch(Request $request, Assessment $assessment)
+    {
+        if ($assessment->batch_id === null) {
+            return null;
+        }
+
+        $message = 'This reading belongs to a group assessment, so it is conducted from the batch board: '
+            . 'each child’s recording waits there until you listen to it and send it yourself.';
+
+        // The recorder on the single-child screen posts here with fetch, so a
+        // redirect would be swallowed; it gets the refusal as a 409 it can read,
+        // the same code the student door answers an already-sent reading with.
+        if ($request->expectsJson()) {
+            return response()->json(['success' => false, 'message' => $message], 409);
+        }
+
+        // With the feature switched off the batch routes 404, so sending her
+        // there would strand her. The learner's own history is where the link
+        // she followed came from, it is flag-independent, and - unlike going
+        // back to this reading's page - it does not offer the same button
+        // again. She is told plainly why there is nothing she can do here.
+        if (! config('assessment.batch_enabled')) {
+            return redirect()->route('assessments.learner-history', $assessment->learner_id)
+                ->with('error', $message . ' Group assessment is switched off on this system, so the board '
+                    . 'cannot be opened - ask your administrator to switch it on.');
+        }
+
+        return redirect()
+            ->route('assessments.batch.entry', [$assessment->batch_id, $assessment])
+            ->with('error', $message);
+    }
+
     public function uploadAudio(Request $request, Assessment $assessment)
     {
         $this->authorizeLearnerAccess($assessment->learner);
+
+        // Before the validation and before any file is written - see
+        // refuseIfInBatch().
+        if ($refusal = $this->refuseIfInBatch($request, $assessment)) {
+            return $refusal;
+        }
+
         $request->validate([
             'audio' => 'required|file|max:25600',
         ]);
@@ -228,9 +491,15 @@ class AssessmentController extends Controller
         ]);
     }
 
-    public function retry(Assessment $assessment)
+    public function retry(Request $request, Assessment $assessment)
     {
         $this->authorizeLearnerAccess($assessment->learner);
+
+        // Before storage is touched: one click here used to delete a batch
+        // entry's unsent recording. See refuseIfInBatch().
+        if ($refusal = $this->refuseIfInBatch($request, $assessment)) {
+            return $refusal;
+        }
 
         // Delete the existing audio file if it exists
         if ($assessment->audio_file && Storage::disk('public')->exists($assessment->audio_file)) {
@@ -277,9 +546,57 @@ class AssessmentController extends Controller
         };
     }
 
+    /**
+     * The conditional guard on the one door that scores in the request (R51).
+     *
+     * analyze() runs the whole pipeline synchronously, so pointed at a batch
+     * entry it does two things at once that the feature exists to prevent: it
+     * scores a reading the teacher never sent, and it takes the host’s single
+     * scoring slot while the rest of the batch waits in a strictly serial lane.
+     * There is no button for it on that screen any more - R48 gated the conduct
+     * card - but the route is still a route.
+     *
+     * It cannot simply be shut, because reanalyze() calls analyze() and
+     * re-analysing a batch result the model could not classify is the only way
+     * out of the circular unclassified state (R45). So the rule is conditional
+     * and the condition is the measurement itself:
+     *
+     *   no result  -> a Send bypass. Refused.
+     *   a result   -> the Send already happened and the reading has already been
+     *                 measured; this is a re-analysis of something the teacher
+     *                 asked for. Permitted.
+     *
+     * Always a JSON 409, never a redirect: analyze() answers JSON on every
+     * other path, its callers are fetch, and reanalyze() reads this response
+     * with getData() - a redirect here would crash the teacher’s re-analysis
+     * instead of explaining itself to her.
+     *
+     * A single-child reading has batch_id === null and is handed straight back
+     * to the identical path.
+     */
+    private function refuseIfUnmeasuredBatchEntry(Assessment $assessment): ?\Illuminate\Http\JsonResponse
+    {
+        if ($assessment->batch_id === null || $assessment->result !== null) {
+            return null;
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'This reading belongs to a group assessment and has not been sent for analysis yet, '
+                . 'so it is not analysed from here: send it from the batch board when you have listened to it, '
+                . 'and it is scored in turn with the rest of the group.',
+        ], 409);
+    }
+
     public function analyze(Request $request, Assessment $assessment, \App\Services\MLClassificationService $mlService)
     {
         $this->authorizeLearnerAccess($assessment->learner);
+
+        // Before the comprehension write and before the scorer: see
+        // refuseIfUnmeasuredBatchEntry().
+        if ($refusal = $this->refuseIfUnmeasuredBatchEntry($assessment)) {
+            return $refusal;
+        }
         // For testing the ML pipeline, we accept the audio directly in the analyze endpoint.
         if (!$request->hasFile('audio') && !$assessment->hasAudio()) {
             return response()->json(['success' => false, 'message' => 'No audio recording provided.'], 400);

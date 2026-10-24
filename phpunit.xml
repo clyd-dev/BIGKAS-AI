@@ -33,5 +33,8 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- Pinned so a developer who turns the batch feature on in their own
+             .env cannot change what the suite tests. -->
+        <env name="BATCH_ASSESSMENT_ENABLED" value="false"/>
     </php>
 </phpunit>

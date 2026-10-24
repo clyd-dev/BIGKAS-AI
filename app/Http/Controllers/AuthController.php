@@ -29,8 +29,11 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        // Most accounts log in with a real email. Some pilot accounts (e.g. a parent
+        // with no email, bulk-created with their name as the login) don't have one —
+        // so this only requires "some text", not the email format.
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|string|max:255',
             'password' => 'required',
         ]);
 

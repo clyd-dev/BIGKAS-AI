@@ -777,36 +777,122 @@ class BatchEntryPanelTest extends TestCase
     /**
      * The card at the top of the panel is the board's card, included compact.
      *
-     * Every door the board's copy offers leads to this page: the one action is
-     * a link to the panel it is already on, and Remove is a decision about the
-     * board, taken on the board. So the compact card carries neither - what is
-     * left is the chip, the words, the result link and the player.
+     * The one action is a link to the page it is already on, so it goes; the
+     * row that takes a child off the board goes too, but only from the card -
+     * it is rendered again at the foot of Conduct here, where a teacher who has
+     * just sent a reading can still cancel it. What is left on the card is the
+     * chip, the words, the result link and the player.
      */
     public function test_the_panel_card_offers_no_button_that_leads_back_to_this_page(): void
     {
         $teacher = $this->teacher();
         $entry = $this->waitingEntry($teacher);
 
-        $panel = $this->actingAs($teacher)
-            ->get(route('assessments.batch.entry', [$entry->batch_id, $entry->id]))->assertOk();
+        $html = $this->actingAs($teacher)
+            ->get(route('assessments.batch.entry', [$entry->batch_id, $entry->id]))->assertOk()->getContent();
 
-        // The card is there, and it knows it is the compact one - which is also
-        // what public/js/batch-board.js reads before patching it.
-        $panel->assertSee('data-compact', false);
+        [$xpath, $card] = $this->cardIn($html, $entry);
 
-        // No action link back to here, and no row that takes the child off the
-        // board. The board's own copy of this card has both.
-        $panel->assertDontSee('data-manage', false);
-        $panel->assertDontSee('btn btn-sm btn-outline-primary', false);
+        // It knows it is the compact one - which is also what
+        // public/js/batch-board.js reads before patching it.
+        $this->assertTrue($card->hasAttribute('data-compact'));
+
+        // Nothing inside the card leads back to this page, and nothing inside
+        // it takes the child off the board.
+        $this->assertSame(0, $xpath->query('.//*[@data-manage]', $card)->length);
+        $this->assertSame(0, $xpath->query('.//a[contains(@class, "btn-outline-primary")]', $card)->length);
 
         // It fills this column instead of taking a third of it.
-        $panel->assertDontSee('col-sm-6 col-lg-4', false);
+        $this->assertStringNotContainsString('col-sm-6 col-lg-4', $html);
 
-        $board = $this->actingAs($teacher)
-            ->get(route('assessments.batch.board', $entry->batch_id))->assertOk();
+        // And the door off the board is on the page, below the card.
+        $holder = $xpath->query('//*[@data-manage-for="' . $entry->id . '"]')->item(0);
+        $this->assertNotNull($holder, 'the panel must still offer a way off the board');
+        $this->assertSame(0, $xpath->query('.//*[@data-manage-for]', $card)->length, 'but not from inside the card');
+        $this->assertSame(1, $xpath->query('.//*[@data-manage]', $holder)->length);
 
-        $board->assertSee('data-manage="remove"', false)
+        // The board's own copy of the card keeps both, and its own width.
+        $this->actingAs($teacher)
+            ->get(route('assessments.batch.board', $entry->batch_id))->assertOk()
+            ->assertSee('data-manage="remove"', false)
             ->assertSee('col-sm-6 col-lg-4', false);
+    }
+
+    /**
+     * A recorded reading: the player stays on the card, and the two buttons
+     * that were under it do not come back.
+     *
+     * This is the state the poll re-renders rather than patches - the card was
+     * rendered without a player and has gained one - so it is the state where a
+     * stale script showed the board's card instead, collapsed to a third of the
+     * column with Send for analysis and Remove inside it.
+     */
+    public function test_a_recorded_reading_keeps_its_player_and_gains_no_buttons(): void
+    {
+        $teacher = $this->teacher();
+        $entry = $this->recordedEntry($teacher);
+
+        $html = $this->actingAs($teacher)
+            ->get(route('assessments.batch.entry', [$entry->batch_id, $entry->id]))->assertOk()->getContent();
+
+        [$xpath, $card] = $this->cardIn($html, $entry);
+
+        $this->assertSame('recorded', BatchEntryState::for($entry)['chip']);
+
+        // The recording is still there to listen to.
+        $this->assertSame(1, $xpath->query('.//audio', $card)->length);
+
+        // And neither button is.
+        $this->assertSame(0, $xpath->query('.//*[@data-manage]', $card)->length);
+        $this->assertSame(0, $xpath->query('.//a[contains(@class, "btn-outline-primary")]', $card)->length);
+
+        // Full width, as in every other state.
+        $this->assertStringNotContainsString('col-sm-6 col-lg-4', $html);
+
+        // Remove is at the foot of Conduct here, naming what it deletes.
+        $this->assertStringContainsString('delete the recording that has not been sent', $html);
+    }
+
+    /**
+     * The panel's own script carries a version, so a browser cannot run an
+     * older one against markup this page has just changed.
+     *
+     * That disagreement is what put the buttons back: the server rendered the
+     * compact card correctly, a cached batch-board.js fetched the *board's*
+     * card instead and swapped it in, and a reading that had just been recorded
+     * came back a third of a column wide with Send for analysis and Remove on
+     * it. asset() alone would have gone on serving that script for ever.
+     */
+    public function test_the_panel_script_is_versioned_so_a_cached_one_cannot_run(): void
+    {
+        $teacher = $this->teacher();
+        $entry = $this->waitingEntry($teacher);
+
+        $version = filemtime(public_path('js/batch-board.js'));
+
+        $this->actingAs($teacher)
+            ->get(route('assessments.batch.entry', [$entry->batch_id, $entry->id]))->assertOk()
+            ->assertSee('js/batch-board.js?v=' . $version, false)
+            ->assertSee('js/batch-recorder.js?v=' . filemtime(public_path('js/batch-recorder.js')), false);
+
+        // The board loads the same script, so it is versioned there too - the
+        // two pages must never be running different copies of it.
+        $this->actingAs($teacher)
+            ->get(route('assessments.batch.board', $entry->batch_id))->assertOk()
+            ->assertSee('js/batch-board.js?v=' . $version, false);
+    }
+
+    /** The card element for an entry, with an XPath over the document it is in. */
+    private function cardIn(string $html, Assessment $entry): array
+    {
+        $document = new \DOMDocument();
+        $document->loadHTML($html, LIBXML_NOERROR);
+        $xpath = new \DOMXPath($document);
+
+        $card = $xpath->query('//*[@data-entry="' . $entry->id . '"]')->item(0);
+        $this->assertNotNull($card, 'the page must render this child a card');
+
+        return [$xpath, $card];
     }
 
     /**

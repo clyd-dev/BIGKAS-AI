@@ -5,7 +5,9 @@
 @push('styles')
     {{-- The good / ok / help / none tone palette, shared with the parent portal. --}}
     <link href="{{ asset('css/parent.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/batch-board.css') }}" rel="stylesheet">
+    {{-- Versioned by the file's own mtime: a cached script that disagrees with
+         the markup this page sends is worse than either on its own. --}}
+    <link href="{{ \App\Support\Asset::url('css/batch-board.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')
@@ -170,5 +172,5 @@
             status: '{{ $batch->status }}',
         };
     </script>
-    <script src="{{ asset('js/batch-board.js') }}"></script>
+    <script src="{{ \App\Support\Asset::url('js/batch-board.js') }}"></script>
 @endpush

@@ -96,12 +96,36 @@
 
     /**
      * The panel's own rendering of a card, which deliberately carries neither
-     * the one action nor the row that takes a child off the board - both lead
-     * back to the page it is already on. The server leaves them out; this
+     * the one action nor the row that takes a child off the board - the action
+     * leads back to the page it is already on. The server leaves them out; this
      * script must not put them back.
      */
     function isCompact(card) {
         return card.hasAttribute('data-compact');
+    }
+
+    /**
+     * The panel's way off the board, which lives at the foot of its Conduct
+     * here card rather than inside the card above.
+     *
+     * It is outside the card because that is where a teacher who has just sent
+     * a reading looks for Cancel analysis - but it still has to move with the
+     * state, so the poll finds it by the entry it belongs to and carries it
+     * into a replacement along with the card.
+     */
+    function manageHolder(id) {
+        return document.querySelector('[data-manage-for="' + id + '"]');
+    }
+
+    /** The row the server built for this card's state, wherever it lives. */
+    function manageRow(card) {
+        if (!isCompact(card)) {
+            return card.querySelector('[data-manage]');
+        }
+
+        var holder = manageHolder(card.dataset.entry);
+
+        return holder ? holder.querySelector('[data-manage]') : null;
     }
 
     /** True when this state needs server-rendered markup we cannot build here. */
@@ -112,15 +136,13 @@
 
         // A card that has moved between manage rows - a queued reading the lane
         // has now started, say - must be re-rendered rather than patched: an
-        // un-send form left behind would offer to stop a running Whisper. A
-        // compact card has no such row in any state, so there is nothing here
-        // that could fall out of step: asking for markup on every state change
-        // would just be a fetch per chip.
-        if (!isCompact(card)) {
-            var manage = card.querySelector('[data-manage]');
-            if ((manage ? manage.getAttribute('data-manage') : '') !== manageFor(state)) {
-                return true;
-            }
+        // un-send form left behind would offer to stop a running Whisper. On
+        // the panel that row sits below the card instead of in it, so the
+        // lookup follows it there; a page with no row at all (a board card in
+        // a state that offers no door) compares '' against '' and is skipped.
+        var manage = manageRow(card);
+        if ((manage ? manage.getAttribute('data-manage') : '') !== manageFor(state)) {
+            return true;
         }
 
         return state.playable && !card.querySelector('audio');
@@ -274,6 +296,20 @@
 
                     if (!current || !replacement) {
                         return;
+                    }
+
+                    // The panel's row of forms, which is outside the card and
+                    // must change with it: after a Send, Remove has to become
+                    // Cancel analysis without the page being reloaded. Swapped
+                    // from the same fetched document, so the two can never
+                    // disagree about the state they were built for.
+                    var holder = manageHolder(request.id);
+                    var newHolder = holder
+                        ? parsed.querySelector('[data-manage-for="' + request.id + '"]')
+                        : null;
+
+                    if (holder && newHolder) {
+                        holder.innerHTML = newHolder.innerHTML;
                     }
 
                     var currentCol = current.parentElement;

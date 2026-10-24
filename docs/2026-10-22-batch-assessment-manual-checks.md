@@ -367,3 +367,29 @@ Not opened in a browser either. Shoot at **500px or wider**, and once wide.
 6. **Comprehension order.** On a comprehension reading, the passage card comes
    **first** and the questions below it. Read down the page as a teacher would:
    text, then questions, then Save answers.
+
+## H. The recorded card, and Remove on the panel (added 2026-10-24)
+
+**Before anything else:** these checks are worthless on a stale script. The
+batch pages now carry `?v=<mtime>` on batch-board.js, so an ordinary reload is
+enough — but confirm it: view source on a panel and check the `<script>` URL has
+a `?v=`. If it does not, the deploy did not take.
+
+1. **Record, then look at the card.** Open a child's panel, record a reading.
+   The card at the top must stay **full width** and keep the player, and must
+   **not** gain Send for analysis or Remove. *Collapsed to a third of the column
+   with those two buttons on it is the old script running.*
+2. **Remove is at the foot of Conduct here.** For a `recorded` child it reads
+   **Remove**, and the dialog names the recording it deletes. For a `waiting`
+   child it says nothing has been recorded yet.
+3. **Send, and watch that row change itself.** Press Send for analysis and stay
+   on the page. Within a few seconds the row at the foot of Conduct here must
+   turn into **Cancel analysis** — without a reload. Press it: the reading comes
+   back out of the lane and the row becomes Remove again.
+4. **While it is really being analysed.** The row becomes the sentence "Being
+   analysed now — this one cannot be stopped." and offers no button at all.
+5. **Once it is done.** The row reads **Remove from batch**, and its dialog
+   promises the result and the verdict are kept. Check Result appears on the
+   card above.
+6. **The board is unchanged by all this.** Conduct here and Remove still sit
+   beside each other on one row there.

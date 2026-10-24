@@ -34,7 +34,9 @@
 @push('styles')
     {{-- The good / ok / help / none tone palette the chips wear, as on the board. --}}
     <link href="{{ asset('css/parent.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/batch-board.css') }}" rel="stylesheet">
+    {{-- Versioned by the file's own mtime, so this page can never be running
+         a cached script older than the card it just rendered. --}}
+    <link href="{{ \App\Support\Asset::url('css/batch-board.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')
@@ -128,6 +130,25 @@
                     </div>
                 </div>
                 @endif
+
+                {{--
+                    The way off the board, at the foot of the screen where the
+                    reading is conducted - the same form the board's card
+                    offers, rendered by the same partial, so Remove here and
+                    Remove there cannot come to mean different things.
+
+                    It is the whole reason this row left the card above: on the
+                    card it sat beside a button leading to this very page, and
+                    a child who has been sent for analysis needs Cancel
+                    analysis within reach of the person who sent them.
+
+                    data-manage-for is how public/js/batch-board.js finds it:
+                    the row lives outside the card, so a state that calls for a
+                    different door has to bring this element with it.
+                --}}
+                <div class="card-footer bg-white" data-manage-for="{{ $entry->id }}">
+                    @include('assessments.batch._manage', ['batch' => $batch, 'entry' => $entry, 'state' => $state])
+                </div>
             </div>
         </div>
 
@@ -261,6 +282,6 @@
             csrf: '{{ csrf_token() }}',
         };
     </script>
-    <script src="{{ asset('js/batch-board.js') }}"></script>
-    <script src="{{ asset('js/batch-recorder.js') }}"></script>
+    <script src="{{ \App\Support\Asset::url('js/batch-board.js') }}"></script>
+    <script src="{{ \App\Support\Asset::url('js/batch-recorder.js') }}"></script>
 @endpush

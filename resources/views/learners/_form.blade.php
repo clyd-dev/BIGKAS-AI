@@ -89,10 +89,16 @@
         <select class="form-select" id="parent_ids" name="parent_ids[]" multiple>
             @foreach($parents as $parent)
                 <option value="{{ $parent->id }}" {{ in_array($parent->id, old('parent_ids', $selectedParents)) ? 'selected' : '' }}>
-                    {{ $parent->name }} ({{ $parent->email }})
+                    {{ $parent->name }}@if(mb_strtolower($parent->email) !== mb_strtolower($parent->name)) ({{ $parent->email }}) @endif
+                    @if($parent->grades()) &mdash; Grade {{ implode(' & ', $parent->grades()) }} @endif
                 </option>
             @endforeach
         </select>
-        <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple parents. You must create parent accounts in the Users panel first.</div>
+        <div class="form-text">
+            Hold Ctrl (Windows) or Cmd (Mac) to select multiple parents. You must create parent accounts in the Users panel first.
+            @if(auth()->user()->isTeacher())
+                Only parents assigned to your grade are listed.
+            @endif
+        </div>
     </div>
 </div>

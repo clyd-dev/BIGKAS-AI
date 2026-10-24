@@ -28,6 +28,15 @@
             <a href="{{ route('admin.users', ['role' => 'teacher', 'unassigned' => 1]) }}" class="btn btn-sm btn-warning">Show them</a>
         </div>
     @endif
+    @if($parentsWithoutGrade > 0 && request('grade') !== 'none')
+        <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>{{ $parentsWithoutGrade }}</strong> parent{{ $parentsWithoutGrade === 1 ? '' : 's' }} not assigned to a grade yet &mdash; no teacher can see them.
+            </div>
+            <a href="{{ route('admin.users', ['grade' => 'none']) }}" class="btn btn-sm btn-warning">Show them</a>
+        </div>
+    @endif
     @if(request()->boolean('unassigned'))
         <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div><i class="bi bi-funnel me-2"></i>Showing teachers without a grade &amp; section. Use <strong>Assign</strong> on a row to give one.</div>
@@ -49,6 +58,15 @@
                         @foreach(['admin','teacher','parent'] as $r)
                             <option value="{{ $r }}" {{ request('role') === $r ? 'selected' : '' }}>{{ ucfirst($r) }}</option>
                         @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="grade" class="form-select form-select-sm" title="Parents assigned to a grade">
+                        <option value="">All Grades</option>
+                        @foreach($gradeOptions as $g)
+                            <option value="{{ $g }}" {{ (string) request('grade') === (string) $g ? 'selected' : '' }}>Parents of Grade {{ $g }}</option>
+                        @endforeach
+                        <option value="none" {{ request('grade') === 'none' ? 'selected' : '' }}>Parents with no grade</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -83,7 +101,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
-                            <th>Grade &amp; Section</th>
+                            <th>Grade / Linked children</th>
                             <th>Status</th>
                             <th>Joined</th>
                             <th>Last Login</th>
@@ -124,6 +142,20 @@
                                                 data-bs-toggle="modal" data-bs-target="#editUser{{ $user->id }}">
                                             <i class="bi bi-plus-circle me-1"></i>Assign
                                         </button>
+                                    @elseif($user->role === 'parent')
+                                        @if($user->grades())
+                                            <span class="badge bg-primary bg-opacity-10 text-primary">Grade {{ implode(' & ', $user->grades()) }}</span>
+                                        @else
+                                            <span class="badge bg-warning text-dark">No grade</span>
+                                        @endif
+                                        @forelse($user->learners as $child)
+                                            <div>
+                                                <a href="{{ route('learners.show', $child) }}" class="text-decoration-none">{{ $child->full_name }}</a>
+                                                <span class="text-muted">&middot; Gr.{{ $child->grade_level }}</span>
+                                            </div>
+                                        @empty
+                                            <div class="text-muted">No child linked yet</div>
+                                        @endforelse
                                     @else
                                         <span class="text-muted">—</span>
                                     @endif
@@ -225,6 +257,20 @@
                                 <div class="form-text">The class this teacher advises.</div>
                             </div>
                         </div>
+                        <div class="mb-3" data-grade-wrap>
+                            <label class="form-label fw-semibold">Grade(s) of this parent's children</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                @foreach($gradeOptions as $g)
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="grades[]" value="{{ $g }}" id="cu_grade_{{ $g }}"
+                                               {{ in_array($g, (array) old('grades', [])) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="cu_grade_{{ $g }}">Grade {{ $g }}</label>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="form-text">Only teachers of the chosen grade(s) can see and link this parent. Tick two for a parent with children in two grades.</div>
+                        </div>
+
                         <div class="mb-2">
                             <label for="create_user_password" class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
                             <x-password-input name="password" id="create_user_password" autocomplete="new-password" />
@@ -297,6 +343,31 @@
                                     @endforeach
                                 </select>
                                 <div class="form-text">A section has one teacher; sections that already have one can't be picked.</div>
+                            </div>
+
+                            <div class="mb-3" data-grade-wrap>
+                                <input type="hidden" name="sync_grades" value="1">
+                                <label class="form-label fw-semibold">Grade(s) of this parent's children</label>
+                                <div class="d-flex flex-wrap gap-3">
+                                    @foreach($gradeOptions as $g)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="grades[]" value="{{ $g }}" id="eu{{ $user->id }}_grade_{{ $g }}"
+                                                   {{ in_array($g, $user->grades()) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="eu{{ $user->id }}_grade_{{ $g }}">Grade {{ $g }}</label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="form-text">Only teachers of the chosen grade(s) can see and link this parent.</div>
+                                @if($user->role === 'parent')
+                                    <div class="mt-2 small">
+                                        <span class="fw-semibold">Linked children:</span>
+                                        @forelse($user->learners as $child)
+                                            <div>{{ $child->full_name }} <span class="text-muted">&middot; Grade {{ $child->grade_level }}</span></div>
+                                        @empty
+                                            <span class="text-muted">none yet</span>
+                                        @endforelse
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -379,12 +450,21 @@
         // Grade & Section only applies to teachers: hide (and don't submit) it for any other role.
         document.querySelectorAll('form select[name="role"]').forEach(function (role) {
             var wrap = role.closest('form').querySelector('[data-class-wrap]');
-            if (!wrap) return;
-            var cls = wrap.querySelector('select');
+            var gradeWrap = role.closest('form').querySelector('[data-grade-wrap]');
+            if (!wrap && !gradeWrap) return;
+            var cls = wrap ? wrap.querySelector('select') : null;
             function sync() {
-                var show = role.value === 'teacher';
-                wrap.classList.toggle('d-none', !show);
-                cls.disabled = !show;
+                if (wrap) {
+                    var show = role.value === 'teacher';
+                    wrap.classList.toggle('d-none', !show);
+                    cls.disabled = !show;
+                }
+                if (gradeWrap) {
+                    // Grades only apply to parents: hide and don't submit them for any other role.
+                    var showGrades = role.value === 'parent';
+                    gradeWrap.classList.toggle('d-none', !showGrades);
+                    gradeWrap.querySelectorAll('input').forEach(function (i) { i.disabled = !showGrades; });
+                }
             }
             role.addEventListener('change', sync);
             sync();

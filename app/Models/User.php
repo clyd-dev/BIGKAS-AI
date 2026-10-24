@@ -134,6 +134,29 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->unsetRelation('parentGrades');
     }
 
+    /**
+     * Parents this staff member may see and link to learners.
+     *  - Admin: every parent.
+     *  - Teacher: parents assigned to the grade of their own class, plus any parent
+     *    already linked to a learner the teacher can access (so nobody drops out).
+     */
+    public function scopeLinkableParentsFor($query, User $staff)
+    {
+        $query->where('role', self::ROLE_PARENT);
+
+        if ($staff->isAdmin()) {
+            return $query;
+        }
+
+        $grades     = $staff->taughtClasses()->pluck('grade_level')->unique()->all();
+        $learnerIds = $staff->accessibleLearnersQuery()->pluck('learners.id');
+
+        return $query->where(function ($w) use ($grades, $learnerIds) {
+            $w->whereHas('parentGrades', fn ($g) => $g->whereIn('grade_level', $grades))
+              ->orWhereHas('learners', fn ($l) => $l->whereIn('learners.id', $learnerIds));
+        });
+    }
+
     public function assessments(): HasMany
     {
         return $this->hasMany(Assessment::class, 'assessor_id');

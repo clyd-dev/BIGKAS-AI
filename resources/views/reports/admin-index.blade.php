@@ -5,6 +5,9 @@
 @section('content')
     <x-page-header title="Reports" icon="bi-bar-chart">
         <x-slot:actions>
+            <a href="{{ route('reports.master-list.index') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-list-check me-1"></i> Master List
+            </a>
             <a href="{{ route('reports.form2.index') }}" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-file-earmark-check me-1"></i> DepEd Form 2
             </a>

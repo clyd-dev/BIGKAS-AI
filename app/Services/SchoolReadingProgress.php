@@ -74,29 +74,43 @@ class SchoolReadingProgress
         $up = $same = $down = 0;
 
         foreach ($results->groupBy(fn ($r) => $r->assessment->learner_id) as $rows) {
-            $series = $rows->groupBy(fn ($r) => $r->assessment->language)
-                ->sortByDesc(fn ($g) => [$g->count(), $g->max(fn ($r) => $r->assessment->created_at->timestamp)])
-                ->first()
-                ->sortBy(fn ($r) => $r->assessment->created_at)
-                ->values();
-
-            if ($series->count() < 2) {
-                continue;
-            }
-            $first  = self::LEVEL_RANK[$series->first()->reading_level] ?? null;
-            $latest = self::LEVEL_RANK[$series->last()->reading_level] ?? null;
-            if ($first === null || $latest === null) {
-                continue;
-            }
-
-            match (true) {
-                $latest > $first => $up++,
-                $latest < $first => $down++,
-                default          => $same++,
+            match (self::direction($rows)) {
+                'up'     => $up++,
+                'down'   => $down++,
+                'steady' => $same++,
+                default  => null,
             };
         }
 
         return ['improved' => $up, 'steady' => $same, 'declined' => $down, 'total' => $up + $same + $down];
+    }
+
+    /**
+     * One learner's movement: 'up', 'steady' or 'down', or null when there is nothing to compare
+     * (fewer than two readings in one language, or a reading with no level).
+     */
+    public static function direction($rows): ?string
+    {
+        $series = $rows->groupBy(fn ($r) => $r->assessment->language)
+            ->sortByDesc(fn ($g) => [$g->count(), $g->max(fn ($r) => $r->assessment->created_at->timestamp)])
+            ->first()
+            ?->sortBy(fn ($r) => $r->assessment->created_at)
+            ->values();
+
+        if ($series === null || $series->count() < 2) {
+            return null;
+        }
+        $first  = self::LEVEL_RANK[$series->first()->reading_level] ?? null;
+        $latest = self::LEVEL_RANK[$series->last()->reading_level] ?? null;
+        if ($first === null || $latest === null) {
+            return null;
+        }
+
+        return match (true) {
+            $latest > $first => 'up',
+            $latest < $first => 'down',
+            default          => 'steady',
+        };
     }
 
     private static function coverage($results): array

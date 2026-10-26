@@ -18,6 +18,16 @@ class SystemStatus
     private const CACHE_KEY = 'system-status';
     private const CACHE_SECONDS = 30;
 
+    /**
+     * The service answers /api/health out of the same request queue it
+     * transcribes in, and a transcription runs for minutes, so a probe sent
+     * while a reading is being scored can wait seconds for its answer. At 3s
+     * these two cards read "Offline" for a service that was up with both
+     * models loaded. This page is read by one admin, not by every teacher, so
+     * it waits for a right answer rather than hurrying to a wrong one.
+     */
+    private const PROBE_TIMEOUT = 10;
+
     public static function all(bool $fresh = false): array
     {
         if ($fresh) {
@@ -67,7 +77,7 @@ class SystemStatus
         }
 
         try {
-            $response = Http::timeout(3)->get($url . '/api/health');
+            $response = Http::timeout(self::PROBE_TIMEOUT)->get($url . '/api/health');
 
             return $response->successful()
                 ? ['probed' => true, 'up' => true, 'url' => $url, 'data' => (array) $response->json()]

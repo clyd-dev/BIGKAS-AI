@@ -29,7 +29,8 @@ class ServiceHealthMonitor
     /** Probe now, record any change, send any alert that is due. */
     public function check(): ServiceHealthEvent
     {
-        $status = $this->ml->serviceStatus(fresh: true);
+        // patient: a probe that gives up early reads a busy service as down.
+        $status = $this->ml->serviceStatus(fresh: true, patient: true);
         $level = $this->levelOf($status);
 
         $latest = ServiceHealthEvent::latest('id')->first();

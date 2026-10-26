@@ -59,7 +59,8 @@ class RescoreQueue
     {
         $summary = ['scored' => 0, 'still_waiting' => 0, 'failed' => 0, 'skipped' => null];
 
-        $status = $this->ml->serviceStatus(fresh: true);
+        // patient: giving up early here skips the whole run (see below).
+        $status = $this->ml->serviceStatus(fresh: true, patient: true);
         $canTranscribe = ($status['stt_ok'] ?? true) !== false;
         $canClassify = (bool) ($status['ok'] ?? false);
 

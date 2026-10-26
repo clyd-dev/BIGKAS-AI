@@ -18,6 +18,24 @@ use Illuminate\Support\Facades\Log;
  */
 class MLClassificationService
 {
+    /**
+     * How long to wait for /api/health. The service answers that endpoint out
+     * of the same request queue it transcribes in, and a transcription runs for
+     * minutes, so a probe sent while a reading is being scored can wait
+     * seconds for its answer. A probe that gives up early reports a working
+     * service as unreachable.
+     *
+     * PATIENT is for callers that act on the answer: the health monitor, and
+     * the rescore loop, which skips an entire run when it reads the speech
+     * engine as down. Being wrong there costs more than waiting.
+     *
+     * BRIEF is for a page a teacher is waiting on, where the status is only an
+     * advisory banner. A few seconds of delay on every page load is worse than
+     * an occasional stale banner.
+     */
+    private const PROBE_TIMEOUT_PATIENT = 10;
+    private const PROBE_TIMEOUT_BRIEF = 3;
+
     protected string $apiUrl;
     protected int $timeout;
     protected bool $enabled;
@@ -272,18 +290,23 @@ class MLClassificationService
      * Is the analysis service able to classify right now? Cached for a few
      * seconds so a page that asks does not hold up the teacher.
      *
+     * $patient buys a longer wait for the answer - pass it when the caller
+     * acts on the result rather than displaying it (see PROBE_TIMEOUT_*).
+     *
      * @return array{state: string, ok: bool, message: string, version: ?string}
      */
-    public function serviceStatus(bool $fresh = false): array
+    public function serviceStatus(bool $fresh = false, bool $patient = false): array
     {
         if ($fresh) {
             Cache::forget('ml.service.status');
         }
 
-        return Cache::remember('ml.service.status', 10, fn () => $this->probeService());
+        $timeout = $patient ? self::PROBE_TIMEOUT_PATIENT : self::PROBE_TIMEOUT_BRIEF;
+
+        return Cache::remember('ml.service.status', 10, fn () => $this->probeService($timeout));
     }
 
-    protected function probeService(): array
+    protected function probeService(int $timeout = self::PROBE_TIMEOUT_BRIEF): array
     {
         // Transcription can also run through a cloud key, independent of Flask.
         $cloudStt = ! empty(config('services.openai.api_key'));
@@ -293,7 +316,7 @@ class MLClassificationService
         }
 
         try {
-            $response = Http::timeout(3)->get($this->apiUrl . '/api/health');
+            $response = Http::timeout($timeout)->get($this->apiUrl . '/api/health');
         } catch (\Exception $e) {
             return $cloudStt
                 ? $this->status('unreachable', false, 'The analysis service is not running. You can still record, but weakness classification will be unavailable until it is back.', null, true)

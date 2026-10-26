@@ -308,10 +308,13 @@ class Learner extends Model
 
     // ── Student Portal / Gamification ──
 
+    /** PINs a child would guess for someone else: never issued. */
+    public const COMMON_PINS = ['000000', '123456', '111111', '222222', '654321', '987654'];
+
     /** A new 6-digit PIN that no other learner currently has. */
     public static function generatePin(): string
     {
-        $commonPins = ['000000', '123456', '111111', '222222', '654321', '987654'];
+        $commonPins = self::COMMON_PINS;
         $holders = self::whereNotNull('pin')->get(['id', 'pin']);
 
         do {
@@ -336,6 +339,12 @@ class Learner extends Model
         $plain = $this->pin;
 
         return $plain !== null && hash_equals($plain, $pin);
+    }
+
+    /** Holds a PIN of any kind, readable or not. */
+    public function hasPin(): bool
+    {
+        return filled($this->getRawOriginal('pin'));
     }
 
     /** True when a PIN exists but was stored as an unreadable bcrypt hash (issued before PINs could be viewed). */

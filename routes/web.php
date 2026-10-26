@@ -25,6 +25,7 @@ use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\GstScreeningController;
 use App\Http\Controllers\Form2Controller;
 use App\Http\Controllers\LearnerMasterListController;
+use App\Http\Controllers\LearnerPinController;
 use App\Http\Controllers\LearnerForm4Controller;
 use App\Http\Controllers\AssessmentForm3Controller;
 use App\Http\Controllers\VerificationCodeController;
@@ -156,6 +157,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // The teacher who adds a learner issues the student-portal PIN (admin does not).
         Route::post('/learners/{learner}/generate-pin', [AssessmentController::class, 'generatePin'])->name('learners.generate-pin');
+
+        // Issue PINs to a whole section at once, and print them. Registered here so
+        // /learners/pins is not read as a learner called "pins".
+        Route::get('/learners/pins', [LearnerPinController::class, 'index'])->name('learners.pins.index');
+        Route::post('/learners/pins', [LearnerPinController::class, 'store'])->name('learners.pins.store');
+        Route::get('/learners/pins/sheet', [LearnerPinController::class, 'sheet'])->name('learners.pins.sheet');
 
         // Student portal: reset a learner's XP/streak, and manage the achievement badges (Learners page).
         Route::post('/learners/{learner}/reset-xp', [LearnerController::class, 'resetXp'])->name('learners.reset-xp');

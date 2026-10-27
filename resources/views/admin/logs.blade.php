@@ -44,8 +44,10 @@
                     @forelse($logs as $log)
                         <tr>
                             <td class="ps-4 text-muted small whitespace-nowrap">
-                                {{ $log->created_at ? $log->created_at->format('M d, Y h:i A') : 'N/A' }}
-                                <div class="text-secondary" style="font-size: 0.7rem;">{{ $log->created_at?->diffForHumans() }}</div>
+                                @php $at = $log->created_at?->copy()->timezone('Asia/Manila'); @endphp
+                                {{ $at ? $at->format('M d, Y') : 'N/A' }}
+                                <div class="text-body">{{ $at?->format('h:i:s A') }} <span class="text-secondary" style="font-size: 0.7rem;">PHT</span></div>
+                                <div class="text-secondary" style="font-size: 0.7rem;">{{ $at?->diffForHumans() }}</div>
                             </td>
                             <td class="fw-semibold">
                                 @if($log->subject_type === 'learner')

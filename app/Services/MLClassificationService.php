@@ -112,7 +112,7 @@ class MLClassificationService
         // all_scores are probabilities in class order 0-4 (RF classes_).
         $scores = $classification['all_scores'] ?? [];
 
-        if (count($scores) === 5) {
+        if (in_array(count($scores), [4, 5], true)) {
             arsort($scores);
 
             foreach (array_keys($scores) as $candidate) {

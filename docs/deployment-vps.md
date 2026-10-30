@@ -84,7 +84,7 @@ MAIL_PASSWORD=<brevo SMTP key>
 MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=<verified Brevo sender>
 
-ML_API_ENABLED=false     # Flask comes in Phase 5; rule-based fallback covers you
+ML_API_ENABLED=false     # Flask comes in Phase 5; until then no weakness is classified
 ```
 
 Then:
@@ -140,7 +140,7 @@ systemctl restart php8.3-fpm
 server {
     listen 80;
     server_name <SERVER-IP>;
-    root /var/www/bigkas/public;
+    root /var/www/bigkas-ai/public;
     index index.php;
 
     client_max_body_size 20M;  # audio uploads (UPLOAD_MAX_SIZE is 10MB)
@@ -209,12 +209,13 @@ posture.
 
 ## Phase 5 — ML sidecar (optional, anytime)
 
-The app runs on rule-based fallback without this — enable only when ready.
+Without this, readings are still recorded, measured and saved, but no
+weakness is classified: nothing stands in for the model. Enable when ready.
 `ml-service/requirements.txt` is committed in the repo (top-level deps;
 never freeze a Windows venv into it).
 
 ```bash
-cd /var/www/bigkas/ml-service
+cd /var/www/bigkas-ai/ml-service
 python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
 # Pre-download Whisper weights NOW, not at first inference (~500MB,
@@ -231,8 +232,8 @@ After=network.target
 
 [Service]
 User=www-data
-WorkingDirectory=/var/www/bigkas/ml-service
-ExecStart=/var/www/bigkas/ml-service/venv/bin/gunicorn --workers 1 --threads 2 --timeout 420 --bind 127.0.0.1:5000 app:app
+WorkingDirectory=/var/www/bigkas-ai/ml-service
+ExecStart=/var/www/bigkas-ai/ml-service/venv/bin/gunicorn --workers 1 --threads 2 --timeout 420 --bind 127.0.0.1:5000 app:app
 Restart=always
 RestartSec=5
 
@@ -247,12 +248,14 @@ systemctl daemon-reload && systemctl enable --now bigkas-ml
 php artisan config:cache
 ```
 
-Model files: `ml-service/bigkas_rf_model.pkl` ships with git and Flask
-loads it automatically as its fallback model. (The newer
-`weakness_classifier.joblib` + `feature_scaler.joblib` are NOT in the
-repo — if you want them served, copy both files into `ml-service/` on
-the server before starting the service; otherwise the `.pkl` serves.)
-Verify with: `curl -s http://127.0.0.1:5000/api/health`.
+Model files: `weakness_classifier.joblib`, `feature_scaler.joblib` and
+`model_metadata.json` are all tracked in git, so a `git pull` brings the
+current model with it — nothing to copy by hand. Flask prefers them over
+the older `bigkas_rf_model.pkl`, which is also tracked.
+
+Verify with `curl -s http://127.0.0.1:5000/api/health` and check that
+`model_version` is the model you expect: results scored under different
+versions should not be mixed.
 
 RAM guidance: 2 GB is fine with `ML_API_ENABLED=false`; run local
 Whisper on 4 GB, or keep 2 GB with the OpenAI fallback
@@ -308,12 +311,12 @@ and `php artisan assessments:rescore`.
 
 ```bash
 # Laravel scheduler heartbeat
-(crontab -l 2>/dev/null; echo "* * * * * cd /var/www/bigkas && php artisan schedule:run >> /dev/null 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "* * * * * cd /var/www/bigkas-ai && php artisan schedule:run >> /dev/null 2>&1") | crontab -
 
 # Nightly backups: database AND uploaded audio (DB dump alone
 # doesn't recover .wav files). Keep 7 days.
 mkdir -p /root/backups
-(crontab -l 2>/dev/null; echo '0 2 * * * mysqldump -u bigkas -p"<DB_PASSWORD>" bigkas_prod | gzip > /root/backups/bigkas_$(date +\%F).sql.gz && tar -czf /root/backups/storage_$(date +\%F).tar.gz /var/www/bigkas/storage/app/public/ && find /root/backups -mtime +7 -delete') | crontab -
+(crontab -l 2>/dev/null; echo '0 2 * * * mysqldump -u bigkas -p"<DB_PASSWORD>" bigkas_prod | gzip > /root/backups/bigkas_$(date +\%F).sql.gz && tar -czf /root/backups/storage_$(date +\%F).tar.gz /var/www/bigkas-ai/storage/app/public/ && find /root/backups -mtime +7 -delete') | crontab -
 
 # Security updates
 apt install -y unattended-upgrades && dpkg-reconfigure -plow unattended-upgrades

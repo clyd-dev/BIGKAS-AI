@@ -1,9 +1,9 @@
 {
   "model_type": "Random Forest",
-  "version": "3.0.0-12feature-5class-combo-aware",
-  "test_accuracy": 0.625,
-  "cv_accuracy": 0.4993,
-  "cv_std": 0.1049,
+  "version": "3.1.0-12feature-4class-round4-grouped",
+  "test_accuracy": 0.8796,
+  "cv_accuracy": 0.8927,
+  "cv_std": 0.0061,
   "feature_columns": [
     "accuracy_rate",
     "words_per_minute",
@@ -29,29 +29,113 @@
     0,
     1,
     2,
-    3,
+    3
+  ],
+  "classes_missing_from_training": [
     4
   ],
-  "classes_missing_from_training": [],
-  "training_samples": 415,
-  "test_samples": 104,
-  "total_samples": 519,
-  "rows_with_combo_labels": 253,
-  "label_source": "teacher_confirmed_label",
+  "training_samples": 786,
+  "test_samples": 382,
+  "total_samples": 1168,
+  "rows_with_combo_labels": 528,
+  "label_source": "reading expert (teacher_confirmed_label column; source confirmed by the research team)",
   "trained_with": "real_annotated_data",
-  "data_source": "BIGKAS-AI Grade 3-6 collected audio (EN/FIL), teacher-validated labels",
+  "data_source": "BIGKAS-AI Grade 3-6 collected audio (EN/FIL), labels from the reading expert",
   "scaler": "StandardScaler",
   "class_distribution": {
-    "0": 68,
-    "1": 145,
-    "2": 86,
-    "3": 217,
-    "4": 3
+    "0": 258,
+    "1": 247,
+    "2": 116,
+    "3": 165
+  },
+  "evaluation": {
+    "approach": "grouped by student; settings chosen by grouped CV",
+    "holdout": "students never used for training or tuning",
+    "holdout_rows": 382,
+    "holdout_students": 31,
+    "holdout_accuracy": 0.8796,
+    "holdout_label_set_accuracy": 0.8927,
+    "holdout_macro_f1": 0.8595,
+    "holdout_balanced_accuracy": 0.8599,
+    "per_class": [
+      {
+        "class": 0,
+        "name": "Independent Reader / No Weakness",
+        "accuracy": 0.9844,
+        "precision": 0.9618,
+        "f1": 0.973,
+        "test_samples": 128
+      },
+      {
+        "class": 1,
+        "name": "Phonemic Awareness",
+        "accuracy": 0.8547,
+        "precision": 0.885,
+        "f1": 0.8696,
+        "test_samples": 117
+      },
+      {
+        "class": 2,
+        "name": "Decoding Accuracy",
+        "accuracy": 0.7857,
+        "precision": 0.7857,
+        "f1": 0.7857,
+        "test_samples": 56
+      },
+      {
+        "class": 3,
+        "name": "Oral Reading Fluency",
+        "accuracy": 0.8148,
+        "precision": 0.8049,
+        "f1": 0.8098,
+        "test_samples": 81
+      }
+    ],
+    "confusion_matrix": {
+      "labels": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "rows_true_cols_predicted": [
+        [
+          126,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          100,
+          4,
+          12
+        ],
+        [
+          1,
+          8,
+          44,
+          3
+        ],
+        [
+          3,
+          5,
+          7,
+          66
+        ]
+      ]
+    },
+    "hyperparameters": {
+      "max_depth": 12,
+      "min_samples_leaf": 1
+    },
+    "tag": "round4",
+    "created": "2026-10-30T14:22:34",
+    "csv": "labeled_features_master_round4_4class.csv"
   },
   "notes": [
-    "Model uses 12 features (rates/scores, not raw counts).",
-    "Combined teacher labels (e.g. \"1,3\", \"1,4,2\") were reduced to a PRIMARY class for training. Secondary/tertiary weaknesses preserved in source CSV (secondary_label, tertiary_label columns) but not used for this classifier.",
-    "Feature scaler (StandardScaler) MUST be loaded alongside the model.",
-    "Flask app.py loads weakness_classifier.joblib + feature_scaler.joblib."
+    "test_accuracy is measured on held-out STUDENTS, not on a random row split.",
+    "Combined teacher labels were reduced to the PRIMARY class for training.",
+    "Feature scaler (StandardScaler) MUST be loaded alongside the model."
   ]
 }

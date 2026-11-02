@@ -528,7 +528,7 @@ InterventionLog
 | Table | Important Fields |
 |---|---|
 | `learners` | `lrn`, `pin` (6-digit), `reading_level`, `total_xp`, `current_streak`, `longest_streak`, `last_activity_date` |
-| `assessments` | `audio_file`, `transcription` (JSON), `language` (en/fil/hil), `status` |
+| `assessments` | `audio_file`, `transcription` (JSON), `language` (en/fil), `status` |
 | `assessment_results` | `accuracy_rate`, `words_per_minute`, `fluency_score`, `primary_weakness` (int **0–4**, nullable), `confidence_score`, `ml_analysis_json` |
 | `interventions` | `target_weakness` (1–4), `activity_type`, `for_teacher`, `for_parent`, `grade_level_min/max`, `effectiveness_score` |
 | `badges` | `slug`, `criteria` (JSON), `xp_reward`, `category` |
@@ -1157,7 +1157,6 @@ A reading that was never measured from the child's voice (a stored placeholder r
 | **Local STT not fine-tuned** | `faster-whisper` runs the stock pre-trained `small` model. Accuracy on Filipino and noisy classroom recordings has not been measured (no WER). A LoRA fine-tuning script exists but has not been run. |
 | **No end-to-end validation** | The whole pipeline has not yet been compared against a teacher's manual Phil-IRI marking in a classroom. |
 | **Prosody is an estimate** | Training used a teacher's 0–10 rating; the live value is a heuristic from word confidence and timing, not an acoustic measure. |
-| **No Hiligaynon support** | Reading assessment supports English and Filipino only. `hil` still appears as a schema/locale value but is not supported in practice. |
 | **Synchronous analysis** | Analysis runs inside the request (seconds to minutes on a small CPU server). There is no job queue. |
 | **Polling-based live sessions** | Live teacher↔student sessions poll every 3 seconds instead of using WebSockets. |
 | **Open-ended answers not auto-scored** | Comprehension questions are scored as multiple choice; open-ended answer evaluation is not automated. |

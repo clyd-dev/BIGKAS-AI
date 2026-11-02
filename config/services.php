@@ -71,7 +71,6 @@ return [
         'languages' => [
             'en' => 'en-PH',
             'fil' => 'fil-PH',
-            'hil' => 'fil-PH',
         ],
     ],
 

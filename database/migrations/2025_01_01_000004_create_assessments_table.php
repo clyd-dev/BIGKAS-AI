@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('assessor_id')->constrained('users')->restrictOnDelete()->comment('Teacher or parent who administered');
             $table->string('audio_file')->nullable()->comment('Recorded audio filename');
             $table->json('transcription')->nullable()->comment('Speech-to-text result JSON');
-            $table->enum('language', ['en', 'fil', 'hil'])->default('en');
+            $table->enum('language', ['en', 'fil'])->default('en');
             $table->enum('status', ['pending', 'recording', 'processing', 'completed', 'failed'])->default('pending');
             $table->timestamp('assessed_at')->nullable();
             $table->text('notes')->nullable();

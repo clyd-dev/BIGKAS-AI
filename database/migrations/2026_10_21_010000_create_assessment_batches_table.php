@@ -24,7 +24,7 @@ return new class extends Migration
             $table->foreignId('school_class_id')->nullable()->constrained('classes')->nullOnDelete()
                 ->comment('null for a hand-picked batch');
             $table->string('title')->nullable()->comment("the teacher's own label");
-            $table->string('language', 8)->comment('en | fil | hil');
+            $table->string('language', 8)->comment('en | fil');
             $table->string('assessment_type', 16)->comment('oral_reading | comprehension | combined');
             $table->foreignId('default_material_id')->constrained('reading_materials')->restrictOnDelete();
             $table->string('status', 16)->comment('collecting | analyzing | completed | cancelled');

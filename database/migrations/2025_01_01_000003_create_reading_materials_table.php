@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('content');
-            $table->enum('language', ['en', 'fil', 'hil'])->default('en');
+            $table->enum('language', ['en', 'fil'])->default('en');
             $table->tinyInteger('grade_level')->unsigned()->default(1);
             $table->enum('difficulty', ['easy', 'medium', 'hard'])->default('medium');
             $table->unsignedInteger('word_count')->default(0);

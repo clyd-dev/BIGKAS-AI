@@ -83,7 +83,7 @@ class SpeechToTextService
 
     protected function callWhisperApi(string $audioPath, string $language): array
     {
-        $languageMap = ['en' => 'en', 'fil' => 'tl', 'hil' => 'tl'];
+        $languageMap = ['en' => 'en', 'fil' => 'tl'];
 
         $response = Http::timeout($this->timeout)
             ->withToken($this->apiKey)

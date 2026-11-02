@@ -7,7 +7,7 @@
 
 return [
     // Supported locales
-    'locales' => ['en', 'fil', 'hil'],
+    'locales' => ['en', 'fil'],
 
     // Upload settings
     'upload' => [

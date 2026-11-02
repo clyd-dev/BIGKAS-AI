@@ -188,7 +188,7 @@ def transcribe():
     try:
         audio_file.save(temp_path)
 
-        language_map = {'en': 'en', 'fil': 'tl', 'hil': 'tl'}
+        language_map = {'en': 'en', 'fil': 'tl'}
         lang_code = language_map.get(request.form.get('language', 'en'), 'en')
 
         # Measure the recording before transcribing it. Given silence, Whisper

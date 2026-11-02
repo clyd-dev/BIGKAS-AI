@@ -177,7 +177,8 @@ git diff --stat HEAD..origin/master -- composer.json composer.lock package.json 
 
 <div class="step"><input type="checkbox" id="s-b0" aria-labelledby="t-b0"><h3 id="t-b0"><span class="num">B0</span> Connect</h3></div>
 <div class="body">
-  <div class="cmd solo"><pre><code>ssh root@84.247.158.7</code></pre><button type="button">Copy</button></div>
+  <div class="cmd solo"><pre><code>ssh root@&lt;vps-ip&gt;</code></pre><button type="button">Copy</button></div>
+  <p>Replace <code>&lt;vps-ip&gt;</code> with the server's address from the Contabo panel (or use the hostname you already have in your SSH config). The address is kept out of this file on purpose: it is committed to a repository, and a root login address does not belong in one.</p>
   <p>The prompt should look like <code>root@vmi...:~#</code>. Then move into the app folder for everything below:</p>
   <div class="cmd solo"><pre><code>cd /var/www/bigkas-ai</code></pre><button type="button">Copy</button></div>
 </div>
@@ -338,6 +339,28 @@ cat /etc/cron.d/bigkas-scheduler</code></pre><button type="button">Copy</button>
 <p class="why">A4 needs the commit the server is running to work out which steps are required. This is where that hash lives.</p>
 <div class="scroll"><table>
   <tr><th>Date</th><th>Commit</th><th>What it contained</th><th>Steps run</th></tr>
+  <tr>
+    <td>2026-11-02<br><em style="color:var(--muted)">not yet recorded as deployed</em></td>
+    <td><code>199beeb</code><br><span style="color:var(--muted)">from <code>200ca03</code></span></td>
+    <td>
+      Ten commits since the batch release:
+      <ul style="margin:4px 0 0 18px">
+        <li><b>Four-class model.</b> The promoted Random Forest (<code>weakness_classifier.joblib</code>, scaler, metadata) and the code that accepts four scores. Comprehension now comes only from the questions: a learner with none asked shows "Not checked" instead of a percentage, and the fluency bars no longer render at a tenth of their value.</li>
+        <li><b>English and Filipino only.</b> Hiligaynon removed, with a migration that deletes the three seeded passages and narrows two enums.</li>
+        <li><b>Bulk student PINs</b> for many learners at once.</li>
+        <li><b>Grade transfer.</b> <code>bigkas:export-data</code> and <code>bigkas:import-data</code> move a graded class and its recordings between installations.</li>
+        <li><b>Fixes.</b> A busy analysis service no longer reads as dead (health check); activity-log entries now save their timestamp, shown to the second in PHT.</li>
+        <li>The ignore rule for <code>ml-service/*.zip</code>, and this runbook.</li>
+      </ul>
+    </td>
+    <td>
+      <b>Needed:</b> B1 backup, B3, <b>B6</b> (one migration actually runs: <code>remove_hiligaynon_language</code>; three others are edits to ones already run and do nothing here), B7, B8 including <b>restart <code>bigkas-ml</code></b> (model files and <code>app.py</code> changed). B4 and B5 skipped &mdash; no <code>composer.lock</code> or front-end change.
+      <div class="box warn" style="margin:8px 0 0"><b class="t">Before B6</b>
+        <p style="margin:0">The migration refuses to run if any assessment or batch was recorded in Hiligaynon. Check first: <code>SELECT COUNT(*) FROM assessments WHERE language='hil';</code> must be 0. It also deletes the seeded <code>hil</code> passages. Its MySQL <code>ALTER</code> has only been read, not run, so the backup matters.</p>
+      </div>
+      <em style="color:var(--muted)">Edit this cell when it is done: date, steps actually run, anything unexpected.</em>
+    </td>
+  </tr>
   <tr>
     <td>2026-10-24</td>
     <td><code>200ca03</code></td>

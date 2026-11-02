@@ -102,14 +102,22 @@
                 <div class="card-header bg-white"><h6 class="mb-0">Skill Breakdown</h6></div>
                 <div class="card-body">
                     <div class="row g-3">
+                        {{-- Comprehension comes from the questions, so it is null when none
+                             were asked. An empty bar says "not checked"; 0% would read as a
+                             score the child earned. --}}
                         @foreach(['phonemic' => 'Phonemic Awareness', 'decoding' => 'Decoding Accuracy', 'fluency' => 'Oral Reading Fluency', 'comprehension' => 'Reading Comprehension'] as $key => $label)
+                            @php $score = $skillScores[$key] ?? null; @endphp
                             <div class="col-md-6">
                                 <h6 class="small text-muted text-center">{{ $label }}</h6>
                                 <div class="progress mb-1" style="height: 10px;">
-                                    <div class="progress-bar {{ ($skillScores[$key] ?? 0) >= 80 ? 'bg-success' : (($skillScores[$key] ?? 0) >= 60 ? 'bg-warning' : 'bg-danger') }}"
-                                        style="width: {{ $skillScores[$key] ?? 0 }}%"></div>
+                                    @if($score !== null)
+                                        <div class="progress-bar {{ $score >= 80 ? 'bg-success' : ($score >= 60 ? 'bg-warning' : 'bg-danger') }}"
+                                            style="width: {{ $score }}%"></div>
+                                    @endif
                                 </div>
-                                <p class="text-center fw-bold small mb-0">{{ number_format($skillScores[$key] ?? 0, 1) }}%</p>
+                                <p class="text-center fw-bold small mb-0 {{ $score === null ? 'text-muted fw-normal' : '' }}">
+                                    {{ $score === null ? 'Not checked' : number_format($score, 1) . '%' }}
+                                </p>
                             </div>
                         @endforeach
                     </div>

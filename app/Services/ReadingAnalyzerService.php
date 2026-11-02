@@ -792,7 +792,8 @@ class ReadingAnalyzerService
      * - Phonemic: Inversely related to phonetic error count
      * - Decoding: Directly mapped from accuracy rate
      * - Fluency: Scaled from the 0-10 fluency score
-     * - Comprehension: Estimated from accuracy and fluency combined
+     *
+     * Comprehension is deliberately absent: nothing in the audio measures it.
      */
     protected function calculateSkillScores(float $accuracy, float $fluency, array $errorAnalysis): array
     {
@@ -808,14 +809,16 @@ class ReadingAnalyzerService
         // Fluency score (scaled to 0-100)
         $fluencyScore = $fluency * 10;
 
-        // Comprehension score (estimated from patterns)
-        $comprehensionScore = ($accuracy * 0.3) + ($fluency * 7);
+        // No comprehension score here. It used to be estimated from accuracy and
+        // fluency, which is a guess at comprehension from the voice - the very
+        // thing the model was cut down to four classes to stop doing. The only
+        // comprehension number is Assessment::comprehensionScore(), from the
+        // questions, and it is null when no questions were asked.
 
         return [
             'phonemic' => round($phonemicScore, 1),
             'decoding' => round($decodingScore, 1),
             'fluency' => round($fluencyScore, 1),
-            'comprehension' => round($comprehensionScore, 1),
         ];
     }
 }

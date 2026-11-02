@@ -837,7 +837,7 @@ class ReadingInterpretationService
         $score = $assessment->comprehensionScore();
 
         if ($score === null) {
-            $comprehension = $row(4, 'unknown', 'No comprehension questions were asked, so this can\'t be checked directly. The model can only guess it from how the reading went.');
+            $comprehension = $row(4, 'unknown', 'No comprehension questions were asked, so this can\'t be checked. The model does not judge comprehension at all: only the questions measure it.');
         } else {
             $answers = $assessment->comprehensionAnswers;
             $right = $answers->where('is_correct', true)->count();

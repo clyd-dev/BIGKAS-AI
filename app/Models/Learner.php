@@ -244,7 +244,9 @@ class Learner extends Model
             'phonemic_awareness' => $mlAnalysis['skill_scores']['phonemic'] ?? null,
             'decoding' => $latestResult->accuracy_rate ?? null,
             'fluency' => $latestResult->fluency_score ?? null,
-            'comprehension' => $mlAnalysis['skill_scores']['comprehension'] ?? null,
+            // From the comprehension questions only, and null when none were
+            // asked. Never estimated from how the reading sounded.
+            'comprehension' => $latestResult->assessment?->comprehensionScore(),
         ];
     }
 

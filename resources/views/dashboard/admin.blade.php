@@ -319,7 +319,9 @@
         type: 'doughnut',
         data: {
             labels: {!! json_encode($weaknessLabels) !!},
-            datasets: [{ data: {!! json_encode($weaknessData) !!}, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'], borderWidth: 1 }]
+            {{-- One colour per category in config('bigkas.weakness_categories'), Independent Reader first.
+                 A short list leaves the last slices uncoloured. --}}
+            datasets: [{ data: {!! json_encode($weaknessData) !!}, backgroundColor: ['#8BC34A', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'], borderWidth: 1 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });

@@ -353,6 +353,15 @@ class LearnerController extends Controller
         $stats = $learner->getStats();
         $skillBreakdown = $learner->getSkillBreakdown();
 
-        return view('learners.progress', compact('learner', 'progressData', 'assessmentResults', 'interventionLogs', 'stats', 'skillBreakdown'));
+        // The view reads $skillScores; without it every bar rendered 0%.
+        $skillScores = [
+            'phonemic'      => $skillBreakdown['phonemic_awareness'] ?? null,
+            'decoding'      => $skillBreakdown['decoding'] ?? null,
+            // fluency_score is 0-10; these bars are percentages.
+            'fluency'       => isset($skillBreakdown['fluency']) ? $skillBreakdown['fluency'] * 10 : null,
+            'comprehension' => $skillBreakdown['comprehension'],
+        ];
+
+        return view('learners.progress', compact('learner', 'progressData', 'assessmentResults', 'interventionLogs', 'stats', 'skillBreakdown', 'skillScores'));
     }
 }

@@ -321,7 +321,8 @@ class AssessmentResult extends Model
             'accuracy' => $this->accuracy_rate,
             'fluency' => ($this->fluency_score ?? 0) * 10,
             'phonemic' => $mlAnalysis['skill_scores']['phonemic'] ?? 50,
-            'comprehension' => $mlAnalysis['skill_scores']['comprehension'] ?? 50,
+            // From the comprehension questions only; null when none were asked.
+            'comprehension' => $this->assessment?->comprehensionScore(),
             'prosody' => ($this->prosody_score ?? 5) * 10,
         ];
     }

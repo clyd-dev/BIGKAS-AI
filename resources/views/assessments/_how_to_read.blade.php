@@ -46,7 +46,9 @@
             </li>
             <li class="list-group-item border-0 bg-body-tertiary mb-2 rounded">
                 <strong>Suggest.</strong> A Random Forest model looks at 12 of those rates together and suggests the
-                one skill that looks weakest. It is a suggestion, not a measurement.
+                one skill that looks weakest &mdash; phonemic awareness, decoding or fluency, or no weakness at all.
+                It never suggests comprehension, which only the questions can measure. It is a suggestion, not a
+                measurement.
             </li>
             <li class="list-group-item border-0 bg-body-tertiary mb-2 rounded">
                 <strong>Check.</strong> The suggestion is kept only if the measured evidence supports it. If the
@@ -143,11 +145,11 @@
                     ['Is the AI deciding the learner\'s level?',
                         'No. The reading level comes from counting: accuracy and, when asked, the comprehension score, compared with the Phil-IRI cut-offs. The AI only suggests which skill looks weakest, and you confirm, override or invalidate it.'],
                     ['What is the difference between the level and the weakness?',
-                        'The level says how hard this passage was for the learner (independent, instructional or frustration). The weakness says which skill is most likely behind the difficulty: phonemic awareness, decoding, fluency or comprehension.'],
+                        'The level says how hard this passage was for the learner (independent, instructional or frustration). The weakness says which skill is most likely behind the difficulty: phonemic awareness, decoding or fluency. The model suggests one of those three; comprehension is judged from the questions, and only you can record it as the weakness, by overriding.'],
                     ['What does "No significant weakness detected" mean?',
                         'The measured numbers showed no skill below its cut-off. It is not a guarantee: it describes this one reading of one passage.'],
                     ['Why does the page say "Can\'t tell" for a skill?',
-                        'There was not enough evidence to judge it. Comprehension is the usual case: it can only be judged when questions were answered. The system shows "Can\'t tell" instead of guessing.'],
+                        'There was not enough evidence to judge it. Comprehension is the usual case: it can only be judged when questions were answered, and the model does not predict it. The system shows "Can\'t tell" instead of guessing.'],
                     ['The model is confident but the numbers look fine. Which do I trust?',
                         'Trust the measured numbers and your own listening. Confidence only says the trees agreed. If the evidence does not support the pick the page marks it as weak, and you can override it.'],
                     ['Why were some words marked as mispronounced when the child said them correctly?',

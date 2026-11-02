@@ -93,4 +93,36 @@ class ResolveWeaknessTest extends TestCase
 
         $this->assertSame(0, ML::resolveWeaknessId($c, $this->statuses('ok', 'ok', 'ok', 'ok')));
     }
+
+    /**
+     * The 4-class model returns four scores, not five. The walk used to run
+     * only on exactly five, so every reading from the new model skipped it:
+     * an unsupported pick was dropped outright instead of falling through to
+     * the next class the evidence does back.
+     */
+    public function test_four_scores_still_walk_to_the_next_supported_class(): void
+    {
+        $c = ['primary' => '1', 'all_scores' => [0.05, 0.45, 0.2, 0.3]];
+
+        $this->assertSame(
+            3,
+            ML::resolveWeaknessId($c, $this->statuses('ok', 'watch', 'concern', 'unknown')),
+            'Four scores must be walked the same way five are.'
+        );
+    }
+
+    public function test_four_scores_may_walk_to_no_weakness(): void
+    {
+        $c = ['primary' => '1', 'all_scores' => [0.3, 0.4, 0.2, 0.1]];
+
+        $this->assertSame(0, ML::resolveWeaknessId($c, $this->statuses('ok', 'ok', 'ok', 'ok')));
+    }
+
+    /** A four-score prediction the evidence backs is kept untouched. */
+    public function test_a_supported_four_score_prediction_is_kept(): void
+    {
+        $c = ['primary' => '2', 'all_scores' => [0.1, 0.1, 0.6, 0.2]];
+
+        $this->assertSame(2, ML::resolveWeaknessId($c, $this->statuses('ok', 'concern', 'ok', 'ok')));
+    }
 }

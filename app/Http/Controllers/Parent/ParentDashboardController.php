@@ -98,8 +98,10 @@ class ParentDashboardController extends Controller
         $skillScores = [
             'phonemic'      => $rawSkill['phonemic_awareness'] ?? 0,
             'decoding'      => $rawSkill['decoding'] ?? 0,
-            'fluency'       => $rawSkill['fluency'] ?? 0,
-            'comprehension' => $rawSkill['comprehension'] ?? 0,
+            // fluency_score is 0-10; the stars are read off a 0-100 scale.
+            'fluency'       => ($rawSkill['fluency'] ?? 0) * 10,
+            // null, not 0: no comprehension questions means not checked, not a zero score.
+            'comprehension' => $rawSkill['comprehension'],
         ];
 
         // Progress chart data

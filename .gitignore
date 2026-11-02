@@ -38,3 +38,6 @@ ml-service/training/bigkas_whisper_data/
 
 # Large training archives (never push)
 ml-service/training/*.zip
+
+# Model exports dropped beside the live files (GitHub refuses over 100 MB)
+ml-service/*.zip

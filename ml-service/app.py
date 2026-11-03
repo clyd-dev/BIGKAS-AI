@@ -98,6 +98,81 @@ except ImportError:
 except Exception as e:
     print(f"Error loading Whisper model: {e}")
 
+# Where the loaded Whisper weights live on disk, so a later check can tell
+# whether they are still there. (The "small" fallback sits in the HF cache.)
+WHISPER_DIR = None
+if whisper_model is not None:
+    try:
+        if os.path.isdir(os.path.join(BASE_DIR, 'bigkas-whisper-ct2')):
+            WHISPER_DIR = os.path.join(BASE_DIR, 'bigkas-whisper-ct2')
+        else:
+            from faster_whisper.utils import download_model
+            WHISPER_DIR = download_model("small", local_files_only=True)
+    except Exception as e:
+        print(f"Could not locate Whisper files on disk ({e}); they will not be re-checked.")
+
+
+# ============================================================
+# "LOADED" MEANS LOADED AND STILL ON DISK
+# ============================================================
+# The objects above live in memory, so moving or deleting the files under a
+# running process changes nothing - it kept classifying and transcribing as if
+# they were there. Every request now re-checks the files, so what the service
+# reports and does matches what is on disk.
+#
+# The reverse matters too: if the service was (re)started while a file was
+# missing, nothing was loaded, and putting the file back must not need another
+# restart. So a missing object is loaded the moment its file is back.
+def _reload_classifier():
+    global model, scaler, MODEL_VERSION
+    if not os.path.exists(NEW_MODEL_PATH):
+        return
+    try:
+        model = joblib.load(NEW_MODEL_PATH)
+        try:
+            with open(METADATA_PATH, encoding='utf-8') as fh:
+                MODEL_VERSION = json.load(fh).get('version', '(unknown)')
+        except Exception:
+            MODEL_VERSION = '(unknown)'
+        if scaler is None and os.path.exists(SCALER_PATH):
+            scaler = joblib.load(SCALER_PATH)
+        print("BIGKAS RF Model reloaded from:", NEW_MODEL_PATH)
+    except Exception as e:
+        model = None
+        print(f"Could not reload model: {e}")
+
+
+def _reload_whisper():
+    global whisper_model, WHISPER_DIR
+    try:
+        from faster_whisper import WhisperModel
+        finetuned = os.path.join(BASE_DIR, 'bigkas-whisper-ct2')
+        if os.path.isdir(finetuned):
+            whisper_model = WhisperModel(finetuned, device="cpu", compute_type="int8")
+            WHISPER_DIR = finetuned
+        else:
+            # Cache only: never start a download from inside a request.
+            whisper_model = WhisperModel("small", device="cpu", compute_type="int8", local_files_only=True)
+            from faster_whisper.utils import download_model
+            WHISPER_DIR = download_model("small", local_files_only=True)
+        print("Whisper model reloaded from:", WHISPER_DIR)
+    except Exception:
+        whisper_model = None  # still not there; try again on the next request
+
+
+def classifier_usable():
+    if model is None:
+        _reload_classifier()
+    return model is not None and os.path.exists(NEW_MODEL_PATH)
+
+
+def whisper_usable():
+    if whisper_model is None:
+        _reload_whisper()
+    if whisper_model is None:
+        return False
+    return WHISPER_DIR is None or os.path.isdir(WHISPER_DIR)
+
 # ============================================================
 # VERBATIM TRANSCRIPTION + AUDIO QUALITY
 # ============================================================
@@ -135,8 +210,8 @@ def measure_audio_quality(path):
 # ============================================================
 @app.route('/api/classify', methods=['POST'])
 def classify_reading():
-    if model is None:
-        return jsonify({'status': 'error', 'message': 'RF model not loaded'}), 503
+    if not classifier_usable():
+        return jsonify({'status': 'error', 'message': 'RF model not loaded (or its file is missing)'}), 503
 
     data = request.json
 
@@ -173,8 +248,8 @@ def classify_reading():
 # ============================================================
 @app.route('/api/transcribe', methods=['POST'])
 def transcribe():
-    if whisper_model is None:
-        return jsonify({'error': 'Whisper model not loaded. Install faster-whisper.'}), 503
+    if not whisper_usable():
+        return jsonify({'error': 'Whisper model not loaded (or its files are missing). Install faster-whisper.'}), 503
 
     if 'audio' not in request.files:
         return jsonify({'error': 'No audio file provided'}), 400
@@ -279,8 +354,8 @@ def health():
         'feature_columns': FEATURE_COLUMNS,
         'scaler_loaded': scaler is not None,
         'scaler_file_present': os.path.exists(SCALER_PATH),
-        'whisper_loaded': whisper_model is not None,
-        'classifier_loaded': model is not None,
+        'whisper_loaded': whisper_usable(),
+        'classifier_loaded': classifier_usable(),
         'model_file_present': model_file,
         'model_stale': stale,
         'warning': (

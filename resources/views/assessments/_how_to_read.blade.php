@@ -127,9 +127,10 @@
                             <th scope="row">Model accuracy</th>
                             <td class="fw-semibold text-nowrap">{{ $hrN((float) $hrTestAcc) }}%</td>
                             <td class="small text-body-secondary">
-                                How often the model matched teachers' labels on held-out clips during development.
-                                It means about four suggestions in ten can disagree with a teacher, which is why
-                                the teacher confirms every result.
+                                How often the model matched the reviewer's labels on clips from students it had
+                                never seen during development. Roughly {{ max(0, (int) round(100 - (float) $hrTestAcc)) }}
+                                in every 100 suggestions disagreed, and a real classroom can differ from that test,
+                                which is why the teacher confirms every result.
                             </td>
                         </tr>
                     @endif

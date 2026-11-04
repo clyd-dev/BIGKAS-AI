@@ -187,6 +187,27 @@
                     <div class="card-body">
                         <h2 class="mb-0 text-secondary">{{ $result->error_count }}</h2>
                         <small class="text-muted">Total Errors</small>
+                        {{-- Word Accuracy is correct words out of the passage's words, so only
+                             substitutions and omissions lower it. Extra words and repetitions
+                             are still miscues but add nothing to the passage, so they are
+                             split out; otherwise "100%" beside "2 errors" reads as a contradiction.
+                             A teacher's manual re-score replaces the accuracy, so the split
+                             would no longer line up with it and is left off. --}}
+                        @unless($edited && $assessment->verdict->manual_scoring)
+                            @php
+                                $wordErrors = (int) $result->substitutions + (int) $result->omissions;
+                                $extraTalk = (int) $result->insertions + (int) $result->repetitions;
+                            @endphp
+                            @if($result->error_count > 0)
+                                <div class="small text-muted mt-1">
+                                    {{ $wordErrors }} word {{ $wordErrors === 1 ? 'error' : 'errors' }}
+                                    @if($extraTalk > 0)
+                                        <br>{{ $extraTalk }} extra {{ $extraTalk === 1 ? 'word/repeat' : 'words/repeats' }}
+                                        <span class="d-block" style="font-size: .75em;">not counted in accuracy</span>
+                                    @endif
+                                </div>
+                            @endif
+                        @endunless
                     </div>
                 </div>
             </div>

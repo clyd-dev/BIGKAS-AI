@@ -516,4 +516,40 @@ class NotMeasuredTest extends TestCase
             ->assertOk()
             ->assertDontSee('speech engine is not loaded');
     }
+
+    public function test_perfect_accuracy_beside_extra_words_explains_the_error_total(): void
+    {
+        $html = $this->page($this->assessment(
+            ['accuracy_rate' => 100.0, 'reading_level' => 'independent', 'error_count' => 2,
+             'insertions' => 1, 'repetitions' => 1],
+            ['total_words' => 46, 'provenance' => ['stt_engine' => 'local_whisper', 'classifier' => 'ml']]
+        ));
+
+        $this->assertStringContainsString('Total Errors', $html);
+        $this->assertStringContainsString('0 word errors', $html);
+        $this->assertStringContainsString('2 extra words/repeats', $html);
+        $this->assertStringContainsString('not counted in accuracy', $html);
+    }
+
+    public function test_word_errors_are_split_from_extra_words_in_the_error_tile(): void
+    {
+        $html = $this->page($this->assessment(
+            ['accuracy_rate' => 93.3, 'error_count' => 3, 'substitutions' => 1, 'omissions' => 1, 'insertions' => 1],
+            ['provenance' => ['stt_engine' => 'local_whisper', 'classifier' => 'ml']]
+        ));
+
+        $this->assertStringContainsString('2 word errors', $html);
+        $this->assertStringContainsString('1 extra word/repeat', $html);
+    }
+
+    public function test_a_clean_reading_shows_no_error_split(): void
+    {
+        $html = $this->page($this->assessment(
+            ['accuracy_rate' => 100.0, 'reading_level' => 'independent', 'error_count' => 0],
+            ['provenance' => ['stt_engine' => 'local_whisper', 'classifier' => 'ml']]
+        ));
+
+        $this->assertStringNotContainsString('not counted in accuracy', $html);
+        $this->assertStringNotContainsString('word errors', $html);
+    }
 }

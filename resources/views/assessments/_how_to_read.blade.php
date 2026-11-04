@@ -111,6 +111,8 @@
                         <td class="small text-body-secondary">
                             Mispronunciations, substitutions, omissions, insertions, repetitions and words not reached.
                             Self-corrections, hesitations and pauses are shown but are <em>not</em> counted as errors.
+                            Word accuracy only drops for passage words that were missed or misread, so a reading with
+                            extra words or repeats can still be 100% accurate while showing errors here.
                         </td>
                     </tr>
                     <tr>
